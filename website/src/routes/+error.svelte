@@ -10,7 +10,7 @@
 	function getDefaultMessage(status: number) {
 		switch (status) {
 			case 404:
-				return "This page doesn't exist. Just like the original Vyntr!";
+				return "This page doesn't exist. Just like the original Vyntr! Or the context mismatch popups in Bliptext";
 			case 403:
 				return "You don't have permission to access this page. Your credentials are likely ####.";
 			case 429:

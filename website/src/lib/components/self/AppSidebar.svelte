@@ -7,7 +7,6 @@
 	import {
 		Moon,
 		Sun,
-		ShieldAlert,
 		Home,
 		Store,
 		BriefcaseBusiness,
@@ -24,7 +23,9 @@
 		Gift,
 		Shield,
 		Ticket,
-		BarChart3
+		PiggyBank,
+		ChartColumn,
+		TrendingUpDown
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -37,15 +38,17 @@
 	import { signOut } from '$lib/auth-client';
 	import { formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
-	import { liveTradesStore, isLoadingTrades, type LiveTrade } from '$lib/stores/websocket';
+	import { liveTradesStore, isLoadingTrades } from '$lib/stores/websocket';
 
 	const data = {
 		navMain: [
 			{ title: 'Home', url: '/', icon: Home },
 			{ title: 'Market', url: '/market', icon: Store },
-			{ title: 'Portfolio', url: '/portfolio', icon: BriefcaseBusiness },
+			{ title: 'Hopium', url: '/hopium', icon: TrendingUpDown },
+			{ title: 'Gambling', url: '/gambling', icon: PiggyBank },
 			{ title: 'Leaderboard', url: '/leaderboard', icon: Trophy },
-			{ title: 'Treemap', url: '/treemap', icon: BarChart3 },
+			{ title: 'Portfolio', url: '/portfolio', icon: BriefcaseBusiness },
+			{ title: 'Treemap', url: '/treemap', icon: ChartColumn },
 			{ title: 'Create coin', url: '/coin/create', icon: Coins }
 		]
 	};
@@ -364,7 +367,12 @@
 									<Settings />
 									Settings
 								</DropdownMenu.Item>
-								<DropdownMenu.Item onclick={() => { showPromoCode = true; setOpenMobile(false); }}>
+								<DropdownMenu.Item
+									onclick={() => {
+										showPromoCode = true;
+										setOpenMobile(false);
+									}}
+								>
 									<Gift />
 									Promo code
 								</DropdownMenu.Item>

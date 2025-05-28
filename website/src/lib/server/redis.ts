@@ -1,19 +1,17 @@
-import Redis from 'ioredis';
-import { building } from '$app/environment';
+import { createClient } from 'redis';
 import { REDIS_URL } from '$env/static/private';
+import { building } from '$app/environment';
 
-if (building) {
-    throw new Error('Redis cannot be used during build');
+const redisUrl = REDIS_URL || 'redis://localhost:6379';
+
+const client = createClient({
+    url: redisUrl
+});
+
+client.on('error', (err: any) => console.error('Redis Client Error:', err));
+
+if (!building) {
+    await client.connect().catch(console.error);
 }
 
-const redis = new Redis(REDIS_URL);
-
-redis.on('error', (err) => {
-    console.error('Redis connection error:', err);
-});
-
-redis.on('connect', () => {
-    console.log('Redis connected successfully');
-});
-
-export { redis };
+export { client as redis };

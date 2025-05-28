@@ -95,6 +95,15 @@ export function formatDate(timestamp: string): string {
     });
 }
 
+export function formatDateWithYear(timestamp: string): string {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+}
+
 export function formatRelativeTime(timestamp: string | Date): string {
     const now = new Date();
     const past = new Date(timestamp);
@@ -161,6 +170,26 @@ export function formatTimeRemaining(timeMs: number): string {
         return `${hours}h ${minutes}m`;
     }
     return `${minutes}m`;
+}
+
+export function formatTimeUntil(dateString: string): string {
+    const now = new Date();
+    const target = new Date(dateString);
+    const diffMs = target.getTime() - now.getTime();
+
+    if (diffMs <= 0) return 'Ended';
+
+    const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    const hours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    const minutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000));
+
+    if (days > 0) {
+        return `${days}d ${hours}h`;
+    } else if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    } else {
+        return `${minutes}m`;
+    }
 }
 
 export function getExpirationDate(option: string): string | null {

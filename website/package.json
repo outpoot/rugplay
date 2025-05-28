@@ -22,7 +22,7 @@
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@types/node": "^22.15.21",
 		"autoprefixer": "^10.4.20",
-		"bits-ui": "^1.5.0",
+		"bits-ui": "^2.1.0",
 		"clsx": "^2.1.1",
 		"drizzle-kit": "^0.22.0",
 		"prettier": "^3.3.2",
@@ -47,11 +47,12 @@
 		"apexcharts": "^4.7.0",
 		"better-auth": "^1.2.8",
 		"drizzle-orm": "^0.33.0",
-		"ioredis": "^5.6.1",
 		"lightweight-charts": "^5.0.7",
 		"lucide-svelte": "^0.511.0",
 		"mode-watcher": "^1.0.7",
+		"openai": "^4.103.0",
 		"postgres": "^3.4.4",
+		"redis": "^5.1.0",
 		"svelte-apexcharts": "^1.0.2",
 		"svelte-lightweight-charts": "^2.2.0"
 	}

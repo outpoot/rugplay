@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "prediction_bet_created_at_idx" ON "prediction_bet" USING btree ("created_at");

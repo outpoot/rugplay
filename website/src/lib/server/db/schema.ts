@@ -1,6 +1,8 @@
-import { pgTable, text, timestamp, boolean, decimal, serial, varchar, integer, primaryKey, pgEnum, index, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, decimal, serial, varchar, integer, primaryKey, pgEnum, index, unique, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const transactionTypeEnum = pgEnum('transaction_type', ['BUY', 'SELL']);
+export const predictionMarketEnum = pgEnum('prediction_market_status', ['ACTIVE', 'RESOLVED', 'CANCELLED']);
 
 export const user = pgTable("user", {
 	id: serial("id").primaryKey(),
@@ -141,23 +143,65 @@ export const commentLike = pgTable("comment_like", {
 });
 
 export const promoCode = pgTable('promo_code', {
-    id: serial('id').primaryKey(),
-    code: varchar('code', { length: 50 }).notNull().unique(),
-    description: text('description'),
-    rewardAmount: decimal('reward_amount', { precision: 20, scale: 8 }).notNull(),
-    maxUses: integer('max_uses'), // null = unlimited
-    isActive: boolean('is_active').notNull().default(true),
-    expiresAt: timestamp('expires_at', { withTimezone: true }),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-    createdBy: integer('created_by').references(() => user.id),
+	id: serial('id').primaryKey(),
+	code: varchar('code', { length: 50 }).notNull().unique(),
+	description: text('description'),
+	rewardAmount: decimal('reward_amount', { precision: 20, scale: 8 }).notNull(),
+	maxUses: integer('max_uses'), // null = unlimited
+	isActive: boolean('is_active').notNull().default(true),
+	expiresAt: timestamp('expires_at', { withTimezone: true }),
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+	createdBy: integer('created_by').references(() => user.id),
 });
 
 export const promoCodeRedemption = pgTable('promo_code_redemption', {
-    id: serial('id').primaryKey(),
-    userId: integer('user_id').notNull().references(() => user.id),
-    promoCodeId: integer('promo_code_id').notNull().references(() => promoCode.id),
-    rewardAmount: decimal('reward_amount', { precision: 20, scale: 8 }).notNull(),
-    redeemedAt: timestamp('redeemed_at', { withTimezone: true }).notNull().defaultNow(),
+	id: serial('id').primaryKey(),
+	userId: integer('user_id').notNull().references(() => user.id),
+	promoCodeId: integer('promo_code_id').notNull().references(() => promoCode.id),
+	rewardAmount: decimal('reward_amount', { precision: 20, scale: 8 }).notNull(),
+	redeemedAt: timestamp('redeemed_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
-    userPromoUnique: unique().on(table.userId, table.promoCodeId),
+	userPromoUnique: unique().on(table.userId, table.promoCodeId),
 }));
+
+export const predictionQuestion = pgTable("prediction_question", {
+	id: serial("id").primaryKey(),
+	creatorId: integer("creator_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	question: varchar("question", { length: 200 }).notNull(),
+	status: predictionMarketEnum("status").notNull().default("ACTIVE"),
+	resolutionDate: timestamp("resolution_date", { withTimezone: true }).notNull(),
+	aiResolution: boolean("ai_resolution"), // true = YES, false = NO, null = unresolved
+	totalYesAmount: decimal("total_yes_amount", { precision: 20, scale: 8 }).notNull().default("0.00000000"),
+	totalNoAmount: decimal("total_no_amount", { precision: 20, scale: 8 }).notNull().default("0.00000000"),
+
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+
+	requiresWebSearch: boolean("requires_web_search").notNull().default(false),
+	validationReason: text("validation_reason"),
+}, (table) => {
+	return {
+		creatorIdIdx: index("prediction_question_creator_id_idx").on(table.creatorId),
+		statusIdx: index("prediction_question_status_idx").on(table.status),
+		resolutionDateIdx: index("prediction_question_resolution_date_idx").on(table.resolutionDate),
+	};
+});
+
+export const predictionBet = pgTable("prediction_bet", {
+	id: serial("id").primaryKey(),
+	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	questionId: integer("question_id").notNull().references(() => predictionQuestion.id, { onDelete: "cascade" }),
+	side: boolean("side").notNull(), // true = YES, false = NO
+	amount: decimal("amount", { precision: 20, scale: 8 }).notNull(),
+	actualWinnings: decimal("actual_winnings", { precision: 20, scale: 8 }),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	settledAt: timestamp("settled_at", { withTimezone: true }),
+}, (table) => {
+	return {
+		userIdIdx: index("prediction_bet_user_id_idx").on(table.userId),
+		questionIdIdx: index("prediction_bet_question_id_idx").on(table.questionId),
+		userQuestionIdx: index("prediction_bet_user_question_idx").on(table.userId, table.questionId),
+		createdAtIdx: index("prediction_bet_created_at_idx").on(table.createdAt),
+		amountCheck: check("amount_positive", sql`amount > 0`),
+	};
+});

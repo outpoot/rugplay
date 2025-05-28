@@ -11,12 +11,12 @@
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import {
 		Loader2,
-		CheckCircle,
-		XCircle,
 		Calculator,
 		History,
 		ChartColumn,
-		MessageCircleQuestion
+		MessageCircleQuestion,
+		CheckIcon,
+		XIcon
 	} from 'lucide-svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
@@ -231,10 +231,10 @@
 				{#if question.status === 'RESOLVED'}
 					<Badge variant="destructive" class={question.aiResolution ? 'bg-success/80!' : ''}>
 						{#if question.aiResolution}
-							<CheckCircle class="h-4 w-4" />
+							<CheckIcon class="h-4 w-4" />
 							RESOLVED: YES
 						{:else}
-							<XCircle class="h-4 w-4" />
+							<XIcon class="h-4 w-4" />
 							RESOLVED: NO
 						{/if}
 					</Badge>

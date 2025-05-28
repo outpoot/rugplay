@@ -20,7 +20,9 @@
 		Globe,
 		Loader2,
 		CheckCircle,
-		XCircle
+		XCircle,
+		CheckIcon,
+		XIcon
 	} from 'lucide-svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
@@ -225,14 +227,16 @@
 									<div class="flex flex-col items-end gap-2">
 										{#if question.status === 'RESOLVED'}
 											<Badge
-												variant={question.aiResolution ? 'default' : 'destructive'}
-												class="flex flex-shrink-0 items-center gap-1"
+												variant="destructive"
+												class="flex flex-shrink-0 items-center gap-1 {question.aiResolution
+													? 'bg-success/80!'
+													: ''}"
 											>
 												{#if question.aiResolution}
-													<CheckCircle class="h-3 w-3" />
+													<CheckIcon class="h-3 w-3" />
 													YES
 												{:else}
-													<XCircle class="h-3 w-3" />
+													<XIcon class="h-3 w-3" />
 													NO
 												{/if}
 											</Badge>

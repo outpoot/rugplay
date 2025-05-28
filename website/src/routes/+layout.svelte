@@ -89,15 +89,23 @@
 			'/coin/create': 'Create Coin',
 			'/settings': 'Settings',
 			'/admin': 'Admin',
-			'/transactions': 'Transactions'
+			'/admin/promo': 'Promo Codes',
+			'/transactions': 'Transactions',
+			'/hopium': 'Hopium',
+			'/gambling': 'Gambling',
+			'/live': 'Live Trades',
+			'/treemap': 'Treemap'
 		};
 
 		// Handle dynamic routes
 		if (routeId.startsWith('/coin/[coinSymbol]')) {
 			return 'Coin Details';
 		}
-		if (routeId.startsWith('/user/[userId]')) {
+		if (routeId.startsWith('/user/[username]')) {
 			return 'User Profile';
+		}
+		if (routeId.startsWith('/hopium/[id]')) {
+			return 'Prediction Question';
 		}
 
 		return titleMap[routeId] || 'Rugplay';

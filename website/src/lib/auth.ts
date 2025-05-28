@@ -36,7 +36,7 @@ export const auth = betterAuth({
                             const blob = await response.blob();
                             const arrayBuffer = await blob.arrayBuffer();
                             s3ImageKey = await uploadProfilePicture(
-                                profile.sub, // Using Google 'sub' for a unique identifier
+                                profile.sub,
                                 new Uint8Array(arrayBuffer),
                                 blob.type,
                                 blob.size
@@ -50,7 +50,7 @@ export const auth = betterAuth({
                 return {
                     name: profile.name,
                     email: profile.email,
-                    image: s3ImageKey, // Store S3 key in the standard 'image' field
+                    image: s3ImageKey,
                     username: newUsername,
                 };
             },
@@ -64,9 +64,6 @@ export const auth = betterAuth({
             banReason: { type: "string", required: false, input: false },
             baseCurrencyBalance: { type: "string", required: false, input: false },
             bio: { type: "string", required: false },
-            // Ensure 'image' is not listed here if it's a core field,
-            // or ensure 'avatarUrl' is used consistently if it is an additional field.
-            // Based on current setup, 'image' is core.
         }
     },
     session: {

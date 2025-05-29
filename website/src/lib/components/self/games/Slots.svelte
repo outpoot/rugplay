@@ -42,8 +42,10 @@
 
 	const BASE_SPINS_PER_REEL = [8, 10, 12];
 	const NUM_RENDERED_CYCLES = Math.max(...BASE_SPINS_PER_REEL) + 3;
+	const MAX_BET_AMOUNT = 1000000;
 
 	let betAmount = $state(10);
+	let betAmountDisplay = $state('10');
 	let isSpinning = $state(false);
 
 	const createReelStrip = () => {
@@ -66,19 +68,30 @@
 		})
 	);
 
-	let canBet = $derived(betAmount > 0 && betAmount <= balance && !isSpinning);
+	let canBet = $derived(
+		betAmount > 0 && betAmount <= balance && betAmount <= MAX_BET_AMOUNT && !isSpinning
+	);
 
 	function setBetAmount(amount: number) {
-		if (amount >= 0 && amount <= balance) {
-			betAmount = amount;
+		const clampedAmount = Math.min(amount, Math.min(balance, MAX_BET_AMOUNT));
+		if (clampedAmount >= 0) {
+			betAmount = clampedAmount;
+			betAmountDisplay = clampedAmount.toLocaleString();
 		}
 	}
 
-	function getVisibleSymbolIndex(position: number, logicalReelCycleLength: number): number {
-		const symbolHeight = 60;
-		let index = Math.round(1 - position / symbolHeight);
-		index = ((index % logicalReelCycleLength) + logicalReelCycleLength) % logicalReelCycleLength;
-		return index;
+	function handleBetAmountInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const value = target.value.replace(/,/g, '');
+		const numValue = parseFloat(value) || 0;
+		const clampedValue = Math.min(numValue, Math.min(balance, MAX_BET_AMOUNT));
+
+		betAmount = clampedValue;
+		betAmountDisplay = target.value;
+	}
+
+	function handleBetAmountBlur() {
+		betAmountDisplay = betAmount.toLocaleString();
 	}
 
 	async function spin() {
@@ -174,6 +187,13 @@
 			});
 			isSpinning = false;
 		}
+	}
+
+	function getVisibleSymbolIndex(position: number, logicalReelCycleLength: number): number {
+		const symbolHeight = 60;
+		let index = Math.round(1 - position / symbolHeight);
+		index = ((index % logicalReelCycleLength) + logicalReelCycleLength) % logicalReelCycleLength;
+		return index;
 	}
 
 	$effect(() => {
@@ -276,12 +296,16 @@
 					<label for="bet-amount" class="mb-2 block text-sm font-medium">Bet Amount</label>
 					<Input
 						id="bet-amount"
-						type="number"
-						bind:value={betAmount}
-						min="1"
-						max={balance}
+						type="text"
+						value={betAmountDisplay}
+						oninput={handleBetAmountInput}
+						onblur={handleBetAmountBlur}
 						disabled={isSpinning}
+						placeholder="Enter bet amount"
 					/>
+					<p class="text-muted-foreground mt-1 text-xs">
+						Max bet: {MAX_BET_AMOUNT.toLocaleString()}
+					</p>
 				</div>
 
 				<!-- Percentage Quick Actions -->
@@ -290,25 +314,25 @@
 						<Button
 							size="sm"
 							variant="outline"
-							onclick={() => setBetAmount(Math.floor(balance * 0.25))}
+							onclick={() => setBetAmount(Math.floor(Math.min(balance, MAX_BET_AMOUNT) * 0.25))}
 							disabled={isSpinning}>25%</Button
 						>
 						<Button
 							size="sm"
 							variant="outline"
-							onclick={() => setBetAmount(Math.floor(balance * 0.5))}
+							onclick={() => setBetAmount(Math.floor(Math.min(balance, MAX_BET_AMOUNT) * 0.5))}
 							disabled={isSpinning}>50%</Button
 						>
 						<Button
 							size="sm"
 							variant="outline"
-							onclick={() => setBetAmount(Math.floor(balance * 0.75))}
+							onclick={() => setBetAmount(Math.floor(Math.min(balance, MAX_BET_AMOUNT) * 0.75))}
 							disabled={isSpinning}>75%</Button
 						>
 						<Button
 							size="sm"
 							variant="outline"
-							onclick={() => setBetAmount(Math.floor(balance))}
+							onclick={() => setBetAmount(Math.floor(Math.min(balance, MAX_BET_AMOUNT)))}
 							disabled={isSpinning}>Max</Button
 						>
 					</div>

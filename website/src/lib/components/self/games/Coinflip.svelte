@@ -172,6 +172,7 @@
 	}
 
 	const cssEaseInOut = bezier(0.42, 0, 0.58, 1.0);
+	const MAX_BET_AMOUNT = 1000000;
 
 	let {
 		balance = $bindable(),
@@ -182,13 +183,16 @@
 	} = $props();
 
 	let betAmount = $state(10);
+	let betAmountDisplay = $state('10');
 	let selectedSide = $state('heads');
 	let isFlipping = $state(false);
 	let coinRotation = $state(0);
 	let lastResult = $state<CoinflipResult | null>(null);
 	let activeSoundTimeouts = $state<NodeJS.Timeout[]>([]);
 
-	let canBet = $derived(betAmount > 0 && betAmount <= balance && !isFlipping);
+	let canBet = $derived(
+		betAmount > 0 && betAmount <= balance && betAmount <= MAX_BET_AMOUNT && !isFlipping
+	);
 
 	function selectSide(side: string) {
 		if (!isFlipping) {
@@ -197,9 +201,25 @@
 	}
 
 	function setBetAmount(amount: number) {
-		if (amount >= 0 && amount <= balance) {
-			betAmount = amount;
+		const clampedAmount = Math.min(amount, Math.min(balance, MAX_BET_AMOUNT));
+		if (clampedAmount >= 0) {
+			betAmount = clampedAmount;
+			betAmountDisplay = clampedAmount.toLocaleString();
 		}
+	}
+
+	function handleBetAmountInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const value = target.value.replace(/,/g, '');
+		const numValue = parseFloat(value) || 0;
+		const clampedValue = Math.min(numValue, Math.min(balance, MAX_BET_AMOUNT));
+
+		betAmount = clampedValue;
+		betAmountDisplay = target.value;
+	}
+
+	function handleBetAmountBlur() {
+		betAmountDisplay = betAmount.toLocaleString();
 	}
 
 	async function flipCoin() {
@@ -395,12 +415,16 @@
 					<label for="bet-amount" class="mb-2 block text-sm font-medium">Bet Amount</label>
 					<Input
 						id="bet-amount"
-						type="number"
-						bind:value={betAmount}
-						min="1"
-						max={balance}
+						type="text"
+						value={betAmountDisplay}
+						oninput={handleBetAmountInput}
+						onblur={handleBetAmountBlur}
 						disabled={isFlipping}
+						placeholder="Enter bet amount"
 					/>
+					<p class="text-muted-foreground mt-1 text-xs">
+						Max bet: {MAX_BET_AMOUNT.toLocaleString()}
+					</p>
 				</div>
 
 				<!-- Percentage Quick Actions -->
@@ -409,25 +433,27 @@
 						<Button
 							size="sm"
 							variant="outline"
-							onclick={() => setBetAmount(Math.floor((balance || 0) * 0.25))}
+							onclick={() =>
+								setBetAmount(Math.floor(Math.min(balance || 0, MAX_BET_AMOUNT) * 0.25))}
 							disabled={isFlipping}>25%</Button
 						>
 						<Button
 							size="sm"
 							variant="outline"
-							onclick={() => setBetAmount(Math.floor((balance || 0) * 0.5))}
+							onclick={() => setBetAmount(Math.floor(Math.min(balance || 0, MAX_BET_AMOUNT) * 0.5))}
 							disabled={isFlipping}>50%</Button
 						>
 						<Button
 							size="sm"
 							variant="outline"
-							onclick={() => setBetAmount(Math.floor((balance || 0) * 0.75))}
+							onclick={() =>
+								setBetAmount(Math.floor(Math.min(balance || 0, MAX_BET_AMOUNT) * 0.75))}
 							disabled={isFlipping}>75%</Button
 						>
 						<Button
 							size="sm"
 							variant="outline"
-							onclick={() => setBetAmount(Math.floor(balance || 0))}
+							onclick={() => setBetAmount(Math.floor(Math.min(balance || 0, MAX_BET_AMOUNT)))}
 							disabled={isFlipping}>Max</Button
 						>
 					</div>

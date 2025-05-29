@@ -44,6 +44,8 @@ export const isConnectedStore = writable<boolean>(false);
 export const isLoadingTrades = writable<boolean>(false);
 export const priceUpdatesStore = writable<Record<string, PriceUpdate>>({});
 
+let hasLoadedInitialTrades = false;
+
 // Comment callbacks
 const commentSubscriptions = new Map<string, (message: any) => void>();
 
@@ -53,7 +55,9 @@ const priceUpdateSubscriptions = new Map<string, (priceUpdate: PriceUpdate) => v
 async function loadInitialTrades(): Promise<void> {
     if (!browser) return;
 
-    isLoadingTrades.set(true);
+    if (!hasLoadedInitialTrades) {
+        isLoadingTrades.set(true);
+    }
 
     try {
         const [largeTradesResponse, allTradesResponse] = await Promise.all([
@@ -70,6 +74,8 @@ async function loadInitialTrades(): Promise<void> {
             const { trades } = await allTradesResponse.json();
             allTradesStore.set(trades);
         }
+        
+        hasLoadedInitialTrades = true;
     } catch (error) {
         console.error('Failed to load initial trades:', error);
     } finally {

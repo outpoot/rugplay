@@ -21,6 +21,9 @@ export const user = pgTable("user", {
 	}).notNull().default("10000.00000000"), // 10,000 *BUSS
 	bio: varchar("bio", { length: 160 }).default("Hello am 48 year old man from somalia. Sorry for my bed england. I selled my wife for internet connection for play “conter stirk”"),
 	username: varchar("username", { length: 30 }).notNull().unique(),
+	
+	volumeMaster: decimal("volume_master", { precision: 3, scale: 2 }).notNull().default("0.70"),
+	volumeMuted: boolean("volume_muted").notNull().default(false),
 
 	lastRewardClaim: timestamp("last_reward_claim", { withTimezone: true }),
 	totalRewardsClaimed: decimal("total_rewards_claimed", {

@@ -13,6 +13,9 @@ export type User = {
 
     baseCurrencyBalance: number;
     bio: string;
+
+    volumeMaster: number;
+    volumeMuted: boolean;
 } | null;
 
 export const USER_DATA = writable<User>(undefined);

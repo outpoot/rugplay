@@ -1,6 +1,8 @@
 import { PUBLIC_B2_BUCKET, PUBLIC_B2_ENDPOINT } from "$env/static/public";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { volumeSettings } from '$lib/stores/volume-settings';
+import { get } from 'svelte/store';
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -235,16 +237,13 @@ export function getTimeframeInSeconds(timeframe: string): number {
 let availableSounds = [1, 2, 3, 4, 5, 6, 7];
 
 export function playRandomFireworkSound() {
-    // If no sounds available, reset the array
     if (availableSounds.length === 0) {
         availableSounds = [1, 2, 3, 4, 5, 6, 7];
     }
 
-    // Pick a random sound from available ones
     const randomIndex = Math.floor(Math.random() * availableSounds.length);
     const soundNumber = availableSounds[randomIndex];
 
-    // Remove the sound from available array to prevent repetition
     availableSounds = availableSounds.filter((_, index) => index !== randomIndex);
 
     playSound(`firework${soundNumber}`);
@@ -252,8 +251,14 @@ export function playRandomFireworkSound() {
 
 export function playSound(sound: string) {
     try {
-        const audio = new Audio(`sound/${sound}.mp3`);
-        audio.volume = 0.3; // TODO: volume control
+        const settings = get(volumeSettings);
+
+        if (settings.muted) {
+            return;
+        }
+
+        const audio = new Audio(`/sound/${sound}.mp3`);
+        audio.volume = Math.max(0, Math.min(1, settings.master));
         audio.play().catch(console.error);
     } catch (error) {
         console.error('Error playing sound:', error);

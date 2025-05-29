@@ -162,6 +162,8 @@
 	import confetti from 'canvas-confetti';
 	import { toast } from 'svelte-sonner';
 	import { formatValue, playSound, showConfetti } from '$lib/utils';
+	import { volumeSettings } from '$lib/stores/volume-settings';
+	import { onMount } from 'svelte';
 
 	interface CoinflipResult {
 		won: boolean;
@@ -311,6 +313,10 @@
 			activeSoundTimeouts = [];
 		}
 	}
+
+	onMount(() => {
+		volumeSettings.load();
+	});
 </script>
 
 <Card>

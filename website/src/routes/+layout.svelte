@@ -7,7 +7,7 @@
 	import AppSidebar from '$lib/components/self/AppSidebar.svelte';
 
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte'; // onDestroy is already imported
 	import { invalidateAll } from '$app/navigation';
 	import { ModeWatcher } from 'mode-watcher';
 	import { page } from '$app/state';
@@ -18,12 +18,10 @@
 		children: any;
 	}>();
 
+	USER_DATA.set(data?.userSession ?? null);
+
 	$effect(() => {
-		if (data?.userSession) {
-			USER_DATA.set(data.userSession);
-		} else {
-			USER_DATA.set(null);
-		}
+		USER_DATA.set(data?.userSession ?? null);
 	});
 
 	onMount(() => {
@@ -84,7 +82,7 @@
 		const titleMap: Record<string, string> = {
 			'/': 'Home',
 			'/market': 'Market',
-			'/portfolio': 'Portfolio', 
+			'/portfolio': 'Portfolio',
 			'/leaderboard': 'Leaderboard',
 			'/coin/create': 'Create Coin',
 			'/settings': 'Settings',

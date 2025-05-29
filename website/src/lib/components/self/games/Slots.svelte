@@ -11,6 +11,8 @@
 	import confetti from 'canvas-confetti';
 	import { toast } from 'svelte-sonner';
 	import { formatValue, playSound, showConfetti, showSchoolPrideCannons } from '$lib/utils';
+	import { volumeSettings } from '$lib/stores/volume-settings';
+	import { onMount } from 'svelte';
 
 	interface SlotsResult {
 		won: boolean;
@@ -207,6 +209,10 @@
 				displayedSymbols = newDisplayedSymbols;
 			}
 		}
+	});
+
+	onMount(() => {
+		volumeSettings.load();
 	});
 </script>
 

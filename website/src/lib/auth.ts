@@ -64,6 +64,8 @@ export const auth = betterAuth({
             banReason: { type: "string", required: false, input: false },
             baseCurrencyBalance: { type: "string", required: false, input: false },
             bio: { type: "string", required: false },
+            volumeMaster: { type: "string", required: false, input: false },
+            volumeMuted: { type: "boolean", required: false, input: false },
         }
     },
     session: {

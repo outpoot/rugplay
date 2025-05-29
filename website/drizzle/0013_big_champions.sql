@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "account_deletion_request_open_idx" ON "account_deletion_request" USING btree ("user_id") WHERE is_processed = false;

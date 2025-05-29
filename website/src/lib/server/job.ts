@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { predictionQuestion, predictionBet, user } from '$lib/server/db/schema';
+import { predictionQuestion, predictionBet, user, accountDeletionRequest, session, account, promoCodeRedemption, userPortfolio, commentLike, comment, transaction, coin } from '$lib/server/db/schema';
 import { eq, and, lte, isNull } from 'drizzle-orm';
 import { resolveQuestion, getRugplayData } from '$lib/server/ai';
 
@@ -83,7 +83,7 @@ export async function resolveExpiredQuestions() {
                             })
                             .where(eq(predictionBet.id, bet.id));
 
-                        if (won && winnings > 0) {
+                        if (won && winnings > 0 && bet.userId !== null) {
                             const [userData] = await tx
                                 .select({ baseCurrencyBalance: user.baseCurrencyBalance })
                                 .from(user)
@@ -112,5 +112,75 @@ export async function resolveExpiredQuestions() {
 
     } catch (error) {
         console.error('Error in resolveExpiredQuestions:', error);
+    }
+}
+
+export async function processAccountDeletions() {
+    const now = new Date();
+
+    try {
+        const expiredRequests = await db.select()
+            .from(accountDeletionRequest)
+            .where(
+                and(
+                    lte(accountDeletionRequest.scheduledDeletionAt, now),
+                    eq(accountDeletionRequest.isProcessed, false)
+                )
+            );
+
+        console.log(`🗑️ Processing ${expiredRequests.length} expired account deletion requests`);
+
+        for (const request of expiredRequests) {
+            try {
+                await db.transaction(async (tx) => {
+                    const userId = request.userId;
+
+                    await tx.update(transaction)
+                        .set({ userId: null })
+                        .where(eq(transaction.userId, userId));
+
+                    await tx.update(comment)
+                        .set({ userId: null, content: "[deleted]", isDeleted: true })
+                        .where(eq(comment.userId, userId));
+
+                    await tx.update(predictionBet)
+                        .set({ userId: null })
+                        .where(eq(predictionBet.userId, userId));
+
+                    await tx.update(predictionQuestion)
+                        .set({ creatorId: null })
+                        .where(eq(predictionQuestion.creatorId, userId));
+
+                    await tx.update(coin)
+                        .set({ creatorId: null })
+                        .where(eq(coin.creatorId, userId));
+
+                    await tx.delete(session).where(eq(session.userId, userId));
+                    await tx.delete(account).where(eq(account.userId, userId));
+                    await tx.delete(promoCodeRedemption).where(eq(promoCodeRedemption.userId, userId));
+                    await tx.delete(userPortfolio).where(eq(userPortfolio.userId, userId));
+                    await tx.delete(commentLike).where(eq(commentLike.userId, userId));
+
+                    await tx.update(accountDeletionRequest)
+                        .set({ isProcessed: true })
+                        .where(eq(accountDeletionRequest.id, request.id));
+
+                    await tx.delete(user).where(eq(user.id, userId));
+                });
+
+                console.log(`✅ Successfully processed account deletion for user ID: ${request.userId}`);
+            } catch (error: any) {
+                console.error(`❌ Failed to process account deletion for user ID: ${request.userId}`, error);
+
+                await db.update(accountDeletionRequest)
+                    .set({
+                        isProcessed: true, // Mark as processed to avoid retries, but log the failure
+                        reason: request.reason ? `${request.reason} - FAILED: ${error.message}` : `FAILED: ${error.message}`
+                    })
+                    .where(eq(accountDeletionRequest.id, request.id));
+            }
+        }
+    } catch (error) {
+        console.error('Error processing account deletions:', error);
     }
 }

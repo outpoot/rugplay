@@ -1,5 +1,5 @@
 import { auth } from "$lib/auth";
-import { resolveExpiredQuestions } from "$lib/server/job";
+import { resolveExpiredQuestions, processAccountDeletions } from "$lib/server/job";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { redis } from "$lib/server/redis";
 import { building } from '$app/environment';
@@ -38,9 +38,11 @@ async function initializeScheduler() {
             }, (lockTTL / 2) * 1000); // Renew at half the TTL
 
             resolveExpiredQuestions().catch(console.error);
+            processAccountDeletions().catch(console.error);
 
             const schedulerInterval = setInterval(() => {
                 resolveExpiredQuestions().catch(console.error);
+                processAccountDeletions().catch(console.error);
             }, 5 * 60 * 1000);
 
             // Cleanup on process exit

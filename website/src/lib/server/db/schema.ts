@@ -21,7 +21,7 @@ export const user = pgTable("user", {
 	}).notNull().default("10000.00000000"), // 10,000 *BUSS
 	bio: varchar("bio", { length: 160 }).default("Hello am 48 year old man from somalia. Sorry for my bed england. I selled my wife for internet connection for play “conter stirk”"),
 	username: varchar("username", { length: 30 }).notNull().unique(),
-	
+
 	volumeMaster: decimal("volume_master", { precision: 3, scale: 2 }).notNull().default("0.70"),
 	volumeMuted: boolean("volume_muted").notNull().default(false),
 
@@ -103,7 +103,7 @@ export const userPortfolio = pgTable("user_portfolio", {
 
 export const transaction = pgTable("transaction", {
 	id: serial("id").primaryKey(),
-	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	userId: integer("user_id").references(() => user.id, { onDelete: "set null" }),
 	coinId: integer("coin_id").notNull().references(() => coin.id, { onDelete: "cascade" }),
 	type: transactionTypeEnum("type").notNull(),
 	quantity: decimal("quantity", { precision: 30, scale: 8 }).notNull(),
@@ -121,7 +121,7 @@ export const priceHistory = pgTable("price_history", {
 
 export const comment = pgTable("comment", {
 	id: serial("id").primaryKey(),
-	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	userId: integer("user_id").references(() => user.id, { onDelete: "set null" }),
 	coinId: integer("coin_id").notNull().references(() => coin.id, { onDelete: "cascade" }),
 	content: varchar("content", { length: 500 }).notNull(),
 	likesCount: integer("likes_count").notNull().default(0),
@@ -154,12 +154,12 @@ export const promoCode = pgTable('promo_code', {
 	isActive: boolean('is_active').notNull().default(true),
 	expiresAt: timestamp('expires_at', { withTimezone: true }),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-	createdBy: integer('created_by').references(() => user.id),
+	createdBy: integer('created_by').references(() => user.id, { onDelete: "set null" }),
 });
 
 export const promoCodeRedemption = pgTable('promo_code_redemption', {
 	id: serial('id').primaryKey(),
-	userId: integer('user_id').notNull().references(() => user.id),
+	userId: integer('user_id').references(() => user.id, { onDelete: "cascade" }),
 	promoCodeId: integer('promo_code_id').notNull().references(() => promoCode.id),
 	rewardAmount: decimal('reward_amount', { precision: 20, scale: 8 }).notNull(),
 	redeemedAt: timestamp('redeemed_at', { withTimezone: true }).notNull().defaultNow(),
@@ -169,7 +169,7 @@ export const promoCodeRedemption = pgTable('promo_code_redemption', {
 
 export const predictionQuestion = pgTable("prediction_question", {
 	id: serial("id").primaryKey(),
-	creatorId: integer("creator_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	creatorId: integer("creator_id").references(() => user.id, { onDelete: "set null" }),
 	question: varchar("question", { length: 200 }).notNull(),
 	status: predictionMarketEnum("status").notNull().default("ACTIVE"),
 	resolutionDate: timestamp("resolution_date", { withTimezone: true }).notNull(),
@@ -192,7 +192,7 @@ export const predictionQuestion = pgTable("prediction_question", {
 
 export const predictionBet = pgTable("prediction_bet", {
 	id: serial("id").primaryKey(),
-	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	userId: integer("user_id").references(() => user.id, { onDelete: "set null" }),
 	questionId: integer("question_id").notNull().references(() => predictionQuestion.id, { onDelete: "cascade" }),
 	side: boolean("side").notNull(), // true = YES, false = NO
 	amount: decimal("amount", { precision: 20, scale: 8 }).notNull(),
@@ -206,5 +206,22 @@ export const predictionBet = pgTable("prediction_bet", {
 		userQuestionIdx: index("prediction_bet_user_question_idx").on(table.userId, table.questionId),
 		createdAtIdx: index("prediction_bet_created_at_idx").on(table.createdAt),
 		amountCheck: check("amount_positive", sql`amount > 0`),
+	};
+});
+
+export const accountDeletionRequest = pgTable("account_deletion_request", {
+	id: serial("id").primaryKey(),
+	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }).unique(),
+	requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+	scheduledDeletionAt: timestamp("scheduled_deletion_at", { withTimezone: true }).notNull(),
+	reason: text("reason"),
+	isProcessed: boolean("is_processed").notNull().default(false),
+}, (table) => {
+	return {
+		userIdIdx: index("account_deletion_request_user_id_idx").on(table.userId),
+		scheduledDeletionIdx: index("account_deletion_request_scheduled_deletion_idx").on(table.scheduledDeletionAt),
+		oneOpenRequest: index("account_deletion_request_open_idx")
+			.on(table.userId)
+			.where(sql`is_processed = false`),
 	};
 });

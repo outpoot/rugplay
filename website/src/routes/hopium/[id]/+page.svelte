@@ -570,41 +570,50 @@
 					<Card.Content class="pb-6">
 						<div class="space-y-4">
 							{#each question.recentBets as bet}
-								<div class="flex items-center justify-between rounded-xl border p-4">
-									<div class="flex items-center gap-4">
-										<HoverCard.Root>
-											<HoverCard.Trigger>
-												<button
-													class="flex cursor-pointer items-center gap-3 text-left"
-													onclick={() => goto(`/user/${bet.user.username}`)}
-												>
-													<Avatar.Root class="h-10 w-10">
-														<Avatar.Image src={getPublicUrl(bet.user.image)} alt={bet.user.name} />
-														<Avatar.Fallback class="text-sm"
-															>{bet.user.name.charAt(0)}</Avatar.Fallback
-														>
-													</Avatar.Root>
-													<div>
-														<div class="font-semibold hover:underline">{bet.user.name}</div>
-														<div class="text-muted-foreground text-sm">@{bet.user.username}</div>
-													</div>
-												</button>
-											</HoverCard.Trigger>
-											<HoverCard.Content class="w-80">
-												<UserProfilePreview userId={bet.user.id} />
-											</HoverCard.Content>
-										</HoverCard.Root>
-										<Badge variant="destructive" class={bet.side ? 'bg-success/80!' : ''}>
-											{bet.side ? 'YES' : 'NO'}
-										</Badge>
-									</div>
-									<div class="text-right">
-										<div class="text-lg font-bold">${bet.amount.toFixed(2)}</div>
-										<div class="text-muted-foreground text-sm">
-											{new Date(bet.createdAt).toLocaleDateString()}
+								{#if bet.user}
+									<div class="flex items-center justify-between rounded-xl border p-4">
+										<div class="flex items-center gap-4">
+											<HoverCard.Root>
+												<HoverCard.Trigger>
+													<button
+														class="flex cursor-pointer items-center gap-3 text-left"
+														onclick={() => goto(`/user/${bet.user?.username}`)}
+													>
+														<Avatar.Root class="h-10 w-10">
+															<Avatar.Image
+																src={getPublicUrl(bet.user?.image || null)}
+																alt={bet.user?.name || bet.user?.username}
+															/>
+															<Avatar.Fallback class="text-sm"
+																>{(bet.user?.name || bet.user?.username || 'U').charAt(
+																	0
+																)}</Avatar.Fallback
+															>
+														</Avatar.Root>
+														<div>
+															<div class="font-semibold hover:underline">{bet.user?.name || "Deleted User"}</div>
+															<div class="text-muted-foreground text-sm">@{bet.user?.username || "deleted_user"}</div>
+														</div>
+													</button>
+												</HoverCard.Trigger>
+												<HoverCard.Content class="w-80">
+													{#if bet.user?.id}
+														<UserProfilePreview userId={bet.user?.id} />
+													{/if}
+												</HoverCard.Content>
+											</HoverCard.Root>
+											<Badge variant="destructive" class={bet.side ? 'bg-success/80!' : ''}>
+												{bet.side ? 'YES' : 'NO'}
+											</Badge>
+										</div>
+										<div class="text-right">
+											<div class="text-lg font-bold">${bet.amount.toFixed(2)}</div>
+											<div class="text-muted-foreground text-sm">
+												{new Date(bet.createdAt).toLocaleDateString()}
+											</div>
 										</div>
 									</div>
-								</div>
+								{/if}
 							{/each}
 						</div>
 					</Card.Content>

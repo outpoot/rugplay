@@ -26,16 +26,17 @@ export interface PredictionQuestion {
 		estimatedYesWinnings?: number;
 		estimatedNoWinnings?: number;
 	};
+	// fuck gdpr and all that fucking shit
 	recentBets?: Array<{
-		id: number;
+		id?: number;
 		side: boolean;
 		amount: number;
 		createdAt: string;
-		user: {
-			id: number;
-			name: string;
-			username: string;
-			image: string;
+		user?: {
+			id?: number;
+			name?: string;
+			username?: string;
+			image?: string;
 		};
 	}>;
 }

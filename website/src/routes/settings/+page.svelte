@@ -9,11 +9,12 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Slider } from '$lib/components/ui/slider';
 	import { onMount, onDestroy } from 'svelte';
-	import { CheckIcon, Volume2Icon, VolumeXIcon } from 'lucide-svelte';
+	import { CheckIcon, Volume2Icon, VolumeXIcon, DownloadIcon, Trash2Icon } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { MAX_FILE_SIZE } from '$lib/data/constants';
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { USER_DATA } from '$lib/stores/user-data';
+	import * as Dialog from '$lib/components/ui/dialog';
 
 	let name = $state($USER_DATA?.name || '');
 	let bio = $state($USER_DATA?.bio ?? '');
@@ -37,9 +38,13 @@
 	let loading = $state(false);
 	let usernameAvailable: boolean | null = $state(null);
 	let checkingUsername = $state(false);
-
 	let masterVolume = $state(($USER_DATA?.volumeMaster || 0) * 100);
 	let isMuted = $state($USER_DATA?.volumeMuted || false);
+
+	let deleteDialogOpen = $state(false);
+	let deleteConfirmationText = $state('');
+	let isDeleting = $state(false);
+	let isDownloading = $state(false);
 
 	function beforeUnloadHandler(e: BeforeUnloadEvent) {
 		if (isDirty) {
@@ -155,11 +160,102 @@
 		volumeSettings.setMaster(normalizedValue);
 		saveVolumeToServer({ master: normalizedValue, muted: isMuted });
 	}
-
 	function toggleMute() {
 		isMuted = !isMuted;
 		volumeSettings.setMuted(isMuted);
 		saveVolumeToServer({ master: masterVolume / 100, muted: isMuted });
+	}
+
+	async function downloadUserData() {
+		isDownloading = true;
+		try {
+			const headResponse = await fetch('/api/settings/data-download', {
+				method: 'HEAD'
+			});
+
+			if (!headResponse.ok) {
+				throw new Error('Download service unavailable');
+			}
+
+			const contentLength = headResponse.headers.get('Content-Length');
+			if (contentLength) {
+				const sizeInMB = parseInt(contentLength) / (1024 * 1024);
+				if (sizeInMB > 50) {
+					const proceed = confirm(
+						`Your data export is ${sizeInMB.toFixed(1)}MB. This may take a while to download. Continue?`
+					);
+					if (!proceed) {
+						isDownloading = false;
+						return;
+					}
+				}
+			}
+
+			const downloadUrl = '/api/settings/data-download';
+
+			const downloadWindow = window.open(downloadUrl, '_blank');
+
+			if (!downloadWindow || downloadWindow.closed) {
+				const a = document.createElement('a');
+				a.href = downloadUrl;
+				a.style.display = 'none';
+				a.target = '_blank';
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+			} else {
+				setTimeout(() => {
+					try {
+						downloadWindow.close();
+					} catch (e) {}
+				}, 1000);
+			}
+
+			toast.success('Your data download has started');
+		} catch (error) {
+			console.error('Download error:', error);
+			toast.error('Failed to start data download: ' + (error as Error).message);
+		} finally {
+			isDownloading = false;
+		}
+	}
+
+	async function deleteAccount() {
+		if (deleteConfirmationText !== 'DELETE MY ACCOUNT') {
+			toast.error('Please type "DELETE MY ACCOUNT" to confirm');
+			return;
+		}
+
+		isDeleting = true;
+		try {
+			const response = await fetch('/api/settings/delete-account', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					confirmationText: deleteConfirmationText
+				})
+			});
+
+			if (!response.ok) {
+				const result = await response.json();
+				throw new Error(result.message || 'Failed to delete account');
+			}
+
+			toast.success('Account deleted successfully. You will be logged out shortly.');
+
+			setTimeout(() => {
+				window.location.href = '/';
+			}, 2000);
+		} catch (error: any) {
+			console.error('Delete account error:', error);
+			toast.error('Failed to delete account: ' + error.message);
+		} finally {
+			isDeleting = false;
+			deleteDialogOpen = false;
+			deleteConfirmationText = '';
+		}
 	}
 </script>
 
@@ -289,5 +385,99 @@
 				</div>
 			</Card.Content>
 		</Card.Root>
+
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>Data & Privacy</Card.Title>
+				<Card.Description>Manage your personal data and account</Card.Description>
+			</Card.Header>
+			<Card.Content class="space-y-4">
+				<div class="space-y-4">
+					<div class="flex items-center justify-between rounded-lg border p-4">
+						<div class="space-y-1">
+							<h4 class="text-sm font-medium">Download Your Data</h4>
+							<p class="text-muted-foreground text-xs">
+								Export a complete copy of your account data including transactions, bets, and
+								profile information.
+							</p>
+						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							onclick={downloadUserData}
+							disabled={isDownloading}
+							class="ml-4"
+						>
+							<DownloadIcon class="h-4 w-4" />
+							{isDownloading ? 'Downloading...' : 'Download Data'}
+						</Button>
+					</div>
+
+					<div
+						class="border-destructive/20 bg-destructive/5 flex items-center justify-between rounded-lg border p-4"
+					>
+						<div class="space-y-1">
+							<h4 class="text-destructive text-sm font-medium">Delete Account</h4>
+							<p class="text-muted-foreground text-xs">
+								Permanently delete your account. This will anonymize your data while preserving
+								transaction records for compliance.
+							</p>
+						</div>
+						<Button
+							variant="destructive"
+							size="sm"
+							onclick={() => (deleteDialogOpen = true)}
+							class="ml-4"
+						>
+							<Trash2Icon class="h-4 w-4" />
+							Delete Account
+						</Button>
+					</div>
+				</div>
+			</Card.Content>
+		</Card.Root>
 	</div>
 </div>
+
+<Dialog.Root bind:open={deleteDialogOpen}>
+	<Dialog.Content class="sm:max-w-md">
+		<Dialog.Header>
+			<Dialog.Title class="text-destructive">Delete Account</Dialog.Title>
+			<Dialog.Description>
+				This action cannot be undone. Your account will be permanently deleted and your data will be
+				anonymized.
+			</Dialog.Description>
+		</Dialog.Header>
+		<div class="space-y-4">
+			<div class="bg-destructive/10 rounded-lg p-4">
+				<h4 class="mb-2 text-sm font-medium">What happens when you delete your account:</h4>
+				<ul class="text-muted-foreground space-y-1 text-xs">
+					<li>• Your profile information will be permanently removed</li>
+					<li>• You will be logged out from all devices</li>
+					<li>• Your comments will be anonymized</li>
+					<li>• Transaction history will be preserved for compliance (anonymized)</li>
+					<li>• You will not be able to recover this account</li>
+				</ul>
+			</div>
+			<div class="space-y-2">
+				<Label for="delete-confirmation">Type "DELETE MY ACCOUNT" to confirm:</Label>
+				<Input
+					id="delete-confirmation"
+					bind:value={deleteConfirmationText}
+					placeholder="DELETE MY ACCOUNT"
+					class="font-mono"
+				/>
+			</div>
+		</div>
+		<Dialog.Footer>
+			<Button variant="outline" onclick={() => (deleteDialogOpen = false)}>Cancel</Button>
+			<Button
+				variant="destructive"
+				onclick={deleteAccount}
+				disabled={isDeleting || deleteConfirmationText !== 'DELETE MY ACCOUNT'}
+			>
+				{isDeleting ? 'Deleting...' : 'Delete Account'}
+			</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>

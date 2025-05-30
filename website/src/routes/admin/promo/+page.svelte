@@ -97,6 +97,7 @@
 				await loadPromoCodes();
 			}
 		} catch (error) {
+			console.log(error)
 			createSuccess = false;
 			createMessage = 'Failed to create promo code. Please try again.';
 			hasCreateResult = true;

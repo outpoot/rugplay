@@ -5,14 +5,25 @@ import { coin, userPortfolio, user, priceHistory, transaction } from '$lib/serve
 import { eq } from 'drizzle-orm';
 import { uploadCoinIcon } from '$lib/server/s3';
 import { CREATION_FEE, FIXED_SUPPLY, STARTING_PRICE, INITIAL_LIQUIDITY, TOTAL_COST, MAX_FILE_SIZE } from '$lib/data/constants';
+import { isNameAppropriate } from '$lib/server/moderation';
 
-function validateInputs(name: string, symbol: string, iconFile: File | null) {
+async function validateInputs(name: string, symbol: string, iconFile: File | null) {
     if (!name || name.length < 2 || name.length > 255) {
         throw error(400, 'Name must be between 2 and 255 characters');
     }
 
     if (!symbol || symbol.length < 2 || symbol.length > 10) {
         throw error(400, 'Symbol must be between 2 and 10 characters');
+    }
+
+    const nameAppropriate = await isNameAppropriate(name);
+    if (!nameAppropriate) {
+        throw error(400, 'Coin name contains inappropriate content');
+    }
+
+    const symbolAppropriate = await isNameAppropriate(symbol);
+    if (!symbolAppropriate) {
+        throw error(400, 'Coin symbol contains inappropriate content');
     }
 
     if (iconFile && iconFile.size > MAX_FILE_SIZE) {
@@ -77,7 +88,7 @@ export async function POST({ request }) {
     const normalizedSymbol = symbol?.toUpperCase();
     const userId = Number(session.user.id);
 
-    validateInputs(name, normalizedSymbol, iconFile);
+    await validateInputs(name, normalizedSymbol, iconFile);
 
     const [currentBalance] = await Promise.all([
         validateUserBalance(userId),

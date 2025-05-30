@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { user, predictionQuestion } from '$lib/server/db/schema';
 import { eq, and, gte, count } from 'drizzle-orm';
 import { validateQuestion } from '$lib/server/ai';
+import { isNameAppropriate } from '$lib/server/moderation';
 import type { RequestHandler } from './$types';
 
 const MIN_BALANCE_REQUIRED = 100000; // $100k
@@ -20,6 +21,10 @@ export const POST: RequestHandler = async ({ request }) => {
     const cleaned = (question ?? '').trim();
     if (cleaned.length < 10 || cleaned.length > 200) {
         return json({ error: 'Question must be between 10 and 200 characters' }, { status: 400 });
+    }
+
+    if (!(await isNameAppropriate(cleaned))) {
+        return json({ error: 'Question contains inappropriate content' }, { status: 400 });
     }
 
     const userId = Number(session.user.id);

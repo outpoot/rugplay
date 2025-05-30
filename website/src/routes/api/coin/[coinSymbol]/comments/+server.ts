@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { comment, coin, user, commentLike } from '$lib/server/db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
+import { isNameAppropriate } from '$lib/server/moderation';
 
 export async function GET({ params, request }) {
     const session = await auth.api.getSession({
@@ -71,6 +72,10 @@ export async function POST({ request, params }) {
 
     if (content.length > 500) {
         throw error(400, 'Comment must be 500 characters or less');
+    }
+
+    if (!(await isNameAppropriate(content.trim()))) {
+        throw error(400, 'Comment contains inappropriate content');
     }
 
     const normalizedSymbol = coinSymbol.toUpperCase();

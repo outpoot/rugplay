@@ -5,10 +5,15 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { MAX_FILE_SIZE } from '$lib/data/constants';
+import { isNameAppropriate } from '$lib/server/moderation';
 
-function validateInputs(name: string, bio: string, username: string, avatarFile: File | null) {
+async function validateInputs(name: string, bio: string, username: string, avatarFile: File | null) {
     if (name && name.length < 1) {
         throw error(400, 'Name cannot be empty');
+    }
+
+    if (name && !(await isNameAppropriate(name))) {
+        throw error(400, 'Name contains inappropriate content');
     }
 
     if (bio && bio.length > 160) {
@@ -17,6 +22,10 @@ function validateInputs(name: string, bio: string, username: string, avatarFile:
 
     if (username && (username.length < 3 || username.length > 30)) {
         throw error(400, 'Username must be between 3 and 30 characters');
+    }
+
+    if (username && !(await isNameAppropriate(username))) {
+        throw error(400, 'Username contains inappropriate content');
     }
 
     if (avatarFile && avatarFile.size > MAX_FILE_SIZE) {
@@ -39,7 +48,7 @@ export async function POST({ request }) {
     const username = formData.get('username') as string;
     const avatarFile = formData.get('avatar') as File | null;
 
-    validateInputs(name, bio, username, avatarFile);
+    await validateInputs(name, bio, username, avatarFile);
 
     const updates: Record<string, any> = {
         name,

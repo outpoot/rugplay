@@ -28,6 +28,10 @@ async function validateInputs(name: string, bio: string, username: string, avata
         throw error(400, 'Username contains inappropriate content');
     }
 
+    if (bio && !(await isNameAppropriate(bio))) {
+        throw error(400, 'Bio contains inappropriate content');
+    }
+
     if (avatarFile && avatarFile.size > MAX_FILE_SIZE) {
         throw error(400, 'Avatar file must be smaller than 1MB');
     }

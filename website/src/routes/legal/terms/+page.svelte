@@ -7,12 +7,18 @@
 	import AlertTriangle from 'lucide-svelte/icons/alert-triangle';
 	import TrendingDown from 'lucide-svelte/icons/trending-down';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import SEO from '$lib/components/self/SEO.svelte';
 
 	const LAST_UPDATED = 'May 29, 2025';
 	const CONTACT_EMAIL = 'contact@outpoot.com';
 	const MINIMUM_AGE = 18;
 </script>
+
+<SEO 
+	title="Terms of Service - Rugplay"
+	description="Terms of Service for Rugplay - cryptocurrency trading simulation game. Learn about virtual currency, rug pull mechanics, gambling features, and platform rules."
+	keywords="terms of service, legal terms, simulation game rules, virtual currency terms, rug pull simulation"
+/>
 
 <div class="container mx-auto max-w-4xl py-10">
 	<Card.Root class="p-6">

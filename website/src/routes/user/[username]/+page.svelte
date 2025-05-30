@@ -6,6 +6,7 @@
 	import DataTable from '$lib/components/self/DataTable.svelte';
 	import ProfileBadges from '$lib/components/self/ProfileBadges.svelte';
 	import ProfileSkeleton from '$lib/components/self/skeletons/ProfileSkeleton.svelte';
+	import SEO from '$lib/components/self/SEO.svelte';
 	import { getPublicUrl, formatPrice, formatValue, formatQuantity, formatDate } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -194,17 +195,22 @@
 	];
 </script>
 
-<svelte:head>
-	<title
-		>{profileData?.profile?.name
-			? `${profileData.profile.name} (@${profileData.profile.username})`
-			: 'Loading...'} - Rugplay</title
-	>
-	<meta
-		name="description"
-		content="View {profileData?.profile?.name || 'user'}'s profile and trading activity on Rugplay"
-	/>
-</svelte:head>
+<SEO
+	title={profileData?.profile?.name
+		? `${profileData.profile.name} (@${profileData.profile.username}) - Rugplay`
+		: `@${username} - Rugplay`}
+	description={profileData?.profile?.bio
+		? `${profileData.profile.bio} - View ${profileData.profile.name}'s simulated trading activity and virtual portfolio in the Rugplay cryptocurrency simulation game.`
+		: `View @${username}'s profile and simulated trading activity in Rugplay - cryptocurrency trading simulation game platform.`}
+	type="profile"
+	image={profileData?.profile?.image
+		? getPublicUrl(profileData.profile.image)
+		: '/placeholder_logo.png'}
+	imageAlt={profileData?.profile?.name
+		? `${profileData.profile.name}'s profile picture`
+		: `@${username}'s profile`}
+	keywords="crypto trader profile game, virtual trading portfolio, cryptocurrency simulation game, user portfolio simulator"
+/>
 
 <div class="container mx-auto max-w-6xl p-6">
 	{#if loading}

@@ -15,6 +15,7 @@
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import SEO from '$lib/components/self/SEO.svelte';
 
 	let name = $state($USER_DATA?.name || '');
 	let bio = $state($USER_DATA?.bio ?? '');
@@ -258,6 +259,13 @@
 		}
 	}
 </script>
+
+<SEO 
+	title="Settings - Rugplay"
+	description="Manage your Rugplay account settings, profile information, audio preferences, and privacy options."
+	noindex={true}
+	keywords="game account settings, profile settings game, privacy settings, audio settings game"
+/>
 
 <div class="container mx-auto max-w-2xl p-6">
 	<h1 class="mb-6 text-2xl font-bold">Settings</h1>

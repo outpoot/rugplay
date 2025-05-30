@@ -7,6 +7,7 @@
 	import { toast } from 'svelte-sonner';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import SEO from '$lib/components/self/SEO.svelte';
 
 	let shouldSignIn = $state(false);
 	let balance = $state(0);
@@ -36,11 +37,15 @@
 	});
 </script>
 
+<SEO 
+	title="Gambling - Rugplay"
+	description="Play virtual gambling games with simulated currency in Rugplay. Try coinflip and slots games using virtual money with no real-world value - purely for entertainment."
+	keywords="virtual gambling simulation, coinflip game, slots game, virtual casino, simulated gambling, entertainment games"
+/>
+
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
-<svelte:head>
-	<title>Gambling - Rugplay</title>
-</svelte:head>
+
 
 <div class="container mx-auto max-w-4xl p-6">
 	<h1 class="mb-6 text-center text-3xl font-bold">Gambling</h1>

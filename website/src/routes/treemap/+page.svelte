@@ -10,6 +10,7 @@
 	import { formatValue } from '$lib/utils';
 	import { allTradesStore } from '$lib/stores/websocket';
 	import { Button } from '$lib/components/ui/button';
+	import SEO from '$lib/components/self/SEO.svelte';
 
 	interface CoinData {
 		symbol: string;
@@ -192,10 +193,11 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Treemap - Rugplay</title>
-	<meta name="description" content="Cryptocurrency market treemap visualization" />
-</svelte:head>
+<SEO 
+	title="Treemap - Rugplay"
+	description="Interactive virtual cryptocurrency market treemap visualization. View simulated market cap and 24h price changes for all coins in our trading game's visual treemap format."
+	keywords="virtual cryptocurrency treemap, market visualization game, crypto market cap simulation, price changes game, market analysis simulator"
+/>
 
 <div
 	bind:this={fullscreenContainer}

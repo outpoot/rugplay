@@ -5,6 +5,7 @@
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
 	import DataTable from '$lib/components/self/DataTable.svelte';
 	import PortfolioSkeleton from '$lib/components/self/skeletons/PortfolioSkeleton.svelte';
+	import SEO from '$lib/components/self/SEO.svelte';
 	import { getPublicUrl, formatPrice, formatValue, formatQuantity, formatDate } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -161,9 +162,12 @@
 	]);
 </script>
 
-<svelte:head>
-	<title>Portfolio - Rugplay</title>
-</svelte:head>
+<SEO 
+	title="Portfolio - Rugplay"
+	description="View your virtual cryptocurrency portfolio, simulated holdings, and trading performance in the Rugplay simulation game platform."
+	noindex={true}
+	keywords="virtual portfolio management, crypto holdings game, trading performance simulator, investment tracking game"
+/>
 
 <div class="container mx-auto max-w-7xl p-6">
 	<header class="mb-8">

@@ -10,6 +10,7 @@
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import LiveTradeSkeleton from '$lib/components/self/skeletons/LiveTradeSkeleton.svelte';
+	import SEO from '$lib/components/self/SEO.svelte';
 
 	function handleUserClick(username: string) {
 		goto(`/user/${username}`);
@@ -19,6 +20,12 @@
 		goto(`/coin/${coinSymbol.toLowerCase()}`);
 	}
 </script>
+
+<SEO 
+	title="Live Trades - Rugplay"
+	description="Watch real-time virtual cryptocurrency trading activity in the Rugplay simulation game. See live trades, user activity, and market movements as they happen."
+	keywords="live crypto trades game, real-time trading simulation, virtual trading activity, crypto game stream"
+/>
 
 <svelte:head>
 	<title>Live Trades - Rugplay</title>

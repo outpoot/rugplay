@@ -6,30 +6,17 @@
 	import ShieldCheck from 'lucide-svelte/icons/shield-check';
 	import AlertTriangle from 'lucide-svelte/icons/alert-triangle';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import SEO from '$lib/components/self/SEO.svelte';
 
 	const LAST_UPDATED = 'May 29, 2025';
 	const CONTACT_EMAIL = 'privacy@outpoot.com';
 </script>
 
-<svelte:head>
-	<title>Privacy Policy - Rugplay</title>
-	<meta
-		name="description"
-		content="Learn how we protect your privacy on Rugplay and what data we retain after account deletion."
-	/>
-	<meta
-		name="keywords"
-		content="privacy, policy, data protection, crypto, trading, GDPR, rugplay"
-	/>
-	<meta property="og:title" content="Privacy Policy - Rugplay" />
-	<meta
-		property="og:description"
-		content="Learn how we protect your privacy on Rugplay and what data we retain after account deletion."
-	/>
-	<meta property="og:type" content="website" />
-	<meta property="og:url" content={page.url.href} />
-</svelte:head>
+<SEO 
+	title="Privacy Policy - Rugplay"
+	description="Privacy Policy for Rugplay cryptocurrency simulation game. Learn about data collection, account deletion process, virtual currency privacy, and your rights."
+	keywords="privacy policy, data protection, account deletion, virtual currency privacy, simulation game privacy"
+/>
 
 <div class="container mx-auto max-w-4xl py-10">
 	<Card.Root class="p-6">

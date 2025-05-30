@@ -9,20 +9,12 @@
 	import { Label } from '$lib/components/ui/label';
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
 	import MarketSkeleton from '$lib/components/self/skeletons/MarketSkeleton.svelte';
+	import SEO from '$lib/components/self/SEO.svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import {
-		Search,
-		RefreshCw,
-		SlidersHorizontal,
-		ChevronLeft,
-		ChevronRight,
-		DollarSign,
-		TrendingUp,
-		ArrowUpDown
-	} from 'lucide-svelte';
+	import { Search, RefreshCw, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { formatPrice, formatMarketCap, debounce, formatRelativeTime } from '$lib/utils';
 	import { MediaQuery } from 'svelte/reactivity';
 	import type { CoinData, FilterOption, VolatilityBadge, MarketResponse } from '$lib/types/market';
@@ -240,13 +232,11 @@
 	);
 </script>
 
-<svelte:head>
-	<title>Market - Rugplay</title>
-	<meta
-		name="description"
-		content="Discover and trade cryptocurrencies. Search, filter, and sort through all available coins."
-	/>
-</svelte:head>
+<SEO 
+	title="Market - Rugplay"
+	description="Discover and trade virtual cryptocurrencies in our simulation game. Browse all available simulated coins, filter by price and performance, and more."
+	keywords="virtual cryptocurrency market, crypto trading game, coin discovery simulation, market analysis game, trading practice"
+/>
 
 <div class="container mx-auto max-w-7xl p-6">
 	<header class="mb-8">

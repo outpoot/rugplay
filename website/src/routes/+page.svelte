@@ -7,6 +7,7 @@
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
 	import DataTable from '$lib/components/self/DataTable.svelte';
 	import HomeSkeleton from '$lib/components/self/skeletons/HomeSkeleton.svelte';
+	import SEO from '$lib/components/self/SEO.svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
@@ -75,6 +76,12 @@
 		}
 	];
 </script>
+
+<SEO 
+	title="Rugplay"
+	description="Experience realistic cryptocurrency trading simulation with AI-powered markets, rug pull mechanics, and virtual currencies. Learn crypto trading without financial risk in this educational trading game."
+	keywords="crypto simulation game, trading practice game, rug pull simulation, virtual cryptocurrency game"
+/>
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
 

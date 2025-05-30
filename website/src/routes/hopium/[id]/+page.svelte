@@ -9,6 +9,7 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import { Separator } from '$lib/components/ui/separator';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
+	import SEO from '$lib/components/self/SEO.svelte';
 	import {
 		Loader2,
 		Calculator,
@@ -194,14 +195,15 @@
 	);
 </script>
 
-<svelte:head>
-	{#if question}
-		<title>{question.question} - Rugplay</title>
-		<meta name="description" content={question.description || question.question} />
-	{:else}
-		<title>Hopium - Rugplay</title>
-	{/if}
-</svelte:head>
+<SEO
+	title={question
+		? `${question.question} - Hopium - Rugplay`
+		: 'Loading Question - Hopium - Rugplay'}
+	description={question
+		? `Bet on "${question.question}" in Rugplay's AI-powered prediction market. Current odds: ${question.yesPercentage.toFixed(1)}% YES, ${question.noPercentage.toFixed(1)}% NO. Total volume: $${question.totalAmount.toFixed(2)}.`
+		: 'AI-powered prediction market question in the Rugplay simulation game.'}
+	keywords="AI prediction market question, virtual betting, cryptocurrency prediction game, yes no betting, forecasting simulation"
+/>
 
 <div class="container mx-auto max-w-7xl p-6">
 	{#if loading}
@@ -591,8 +593,12 @@
 															>
 														</Avatar.Root>
 														<div>
-															<div class="font-semibold hover:underline">{bet.user?.name || "Deleted User"}</div>
-															<div class="text-muted-foreground text-sm">@{bet.user?.username || "deleted_user"}</div>
+															<div class="font-semibold hover:underline">
+																{bet.user?.name || 'Deleted User'}
+															</div>
+															<div class="text-muted-foreground text-sm">
+																@{bet.user?.username || 'deleted_user'}
+															</div>
 														</div>
 													</button>
 												</HoverCard.Trigger>

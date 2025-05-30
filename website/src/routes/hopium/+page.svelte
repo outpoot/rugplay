@@ -7,10 +7,10 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Skeleton } from '$lib/components/ui/skeleton';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import HopiumSkeleton from '$lib/components/self/skeletons/HopiumSkeleton.svelte';
+	import SEO from '$lib/components/self/SEO.svelte';
 	import {
 		TrendingUp,
 		TrendingDown,
@@ -19,8 +19,6 @@
 		Sparkles,
 		Globe,
 		Loader2,
-		CheckCircle,
-		XCircle,
 		CheckIcon,
 		XIcon
 	} from 'lucide-svelte';
@@ -124,13 +122,11 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Hopium - Prediction Market | Rugplay</title>
-	<meta
-		name="description"
-		content="Create and bet on prediction markets with AI-powered resolution"
-	/>
-</svelte:head>
+<SEO
+	title="Hopium - Rugplay"
+	description="AI-powered prediction markets in the Rugplay simulation game. Create yes/no questions, bet on outcomes with virtual currency, and test your forecasting skills."
+	keywords="AI prediction markets game, virtual betting simulation, cryptocurrency prediction game, forecasting game, virtual currency betting"
+/>
 
 <!-- Create Question Dialog -->
 <Dialog.Root bind:open={showCreateDialog}>

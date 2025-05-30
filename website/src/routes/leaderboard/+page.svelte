@@ -1,15 +1,14 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import DataTable from '$lib/components/self/DataTable.svelte';
 	import LeaderboardSkeleton from '$lib/components/self/skeletons/LeaderboardSkeleton.svelte';
+	import SEO from '$lib/components/self/SEO.svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { Trophy, TrendingDown, Crown, Skull, Target, RefreshCw } from 'lucide-svelte';
-	import { getPublicUrl, formatValue } from '$lib/utils';
+	import { TrendingDown, Crown, Skull, Target, RefreshCw, Trophy } from 'lucide-svelte';
+	import { formatValue } from '$lib/utils';
 
 	let leaderboardData = $state<any>(null);
 	let loading = $state(true);
@@ -197,9 +196,11 @@
 	];
 </script>
 
-<svelte:head>
-	<title>Leaderboard - Rugplay</title>
-</svelte:head>
+<SEO
+	title="Leaderboard - Rugplay"
+	description="View top performers in the Rugplay cryptocurrency simulation game. See rankings for biggest profits, losses, cash holders, and portfolio values in our virtual trading game."
+	keywords="crypto game leaderboard, trading simulation rankings, virtual portfolio rankings, crypto game winners"
+/>
 
 <div class="container mx-auto max-w-7xl p-4 md:p-6">
 	<header class="mb-6 md:mb-8">

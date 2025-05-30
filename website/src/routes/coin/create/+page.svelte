@@ -11,6 +11,7 @@
 	import { onMount } from 'svelte';
 	import { CREATION_FEE, INITIAL_LIQUIDITY, TOTAL_COST } from '$lib/data/constants';
 	import { toast } from 'svelte-sonner';
+	import SEO from '$lib/components/self/SEO.svelte';
 
 	let name = $state('');
 	let symbol = $state('');
@@ -113,9 +114,11 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Create Coin - Rugplay</title>
-</svelte:head>
+<SEO 
+	title="Create Coin - Rugplay"
+	description="Launch your own virtual cryptocurrency in the Rugplay simulation game. Create coins with custom names, symbols, and icons."
+	keywords="create virtual cryptocurrency, coin creation game, launch crypto simulation, virtual token creation, cryptocurrency game creator"
+/>
 
 <div class="container mx-auto max-w-5xl px-4 py-6">
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">

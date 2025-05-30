@@ -30,9 +30,6 @@ COPY website/. ./
 # Build the application
 RUN npm run build
 
-# List contents to debug build output
-RUN ls -la
-
 # Remove dev dependencies
 RUN npm prune --omit=dev
 
@@ -59,7 +56,7 @@ RUN bun build src/main.ts --outdir dist --target bun
 FROM base-node AS production-main
 
 # Copy built application from build stage
-COPY --from=build-main --chown=node:node /app/dist ./build
+COPY --from=build-main --chown=node:node /app/build ./build
 COPY --from=build-main --chown=node:node /app/node_modules ./node_modules
 COPY --from=build-main --chown=node:node /app/package.json ./package.json
 

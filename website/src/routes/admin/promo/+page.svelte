@@ -119,6 +119,7 @@
 
 <svelte:head>
 	<title>Promo Codes - Admin | Rugplay</title>
+	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
 {#if !$USER_DATA || !$USER_DATA.isAdmin}

@@ -54,7 +54,7 @@ RUN npm install -g pm2
 RUN echo 'module.exports = {\
   apps: [{\
     name: "rugplay-app",\
-    script: "./build/index.js",\
+    script: "./build/server/index.js",\
     instances: "max",\
     exec_mode: "cluster",\
     env: {\

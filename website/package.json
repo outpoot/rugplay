@@ -49,6 +49,7 @@
 		"better-auth": "^1.2.8",
 		"canvas-confetti": "^1.9.3",
 		"drizzle-orm": "^0.33.0",
+		"express": "^5.1.0",
 		"lightweight-charts": "^5.0.7",
 		"lucide-svelte": "^0.511.0",
 		"mode-watcher": "^1.0.7",

@@ -1,6 +1,6 @@
 export async function isNameAppropriate(name: string): Promise<boolean> {
     try {
-        const response = await fetch('http://localhost:9999', {
+        const response = await fetch('http://moderation-moderation-service-1:9999', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

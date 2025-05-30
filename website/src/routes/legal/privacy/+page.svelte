@@ -9,7 +9,7 @@
 	import SEO from '$lib/components/self/SEO.svelte';
 
 	const LAST_UPDATED = 'May 29, 2025';
-	const CONTACT_EMAIL = 'privacy@outpoot.com';
+	const CONTACT_EMAIL = 'contact@outpoot.com';
 </script>
 
 <SEO 

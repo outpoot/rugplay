@@ -51,23 +51,23 @@ COPY --from=build-main --chown=node:node /app/package.json ./package.json
 
 RUN npm install -g pm2
 
-RUN echo 'module.exports = {\n\
- apps: [{\n\
-   name: "rugplay-app",\n\
-   script: "./build/index.js",\n\
-   instances: "max",\n\
-   exec_mode: "cluster",\n\
-   env: {\n\
-     NODE_ENV: "production",\n\
-     PORT: 3000\n\
-   }\n\
- }]\n\
-};' > ecosystem.config.js
+RUN echo 'module.exports = {\
+  apps: [{\
+    name: "rugplay-app",\
+    script: "./build/index.js",\
+    instances: "max",\
+    exec_mode: "cluster",\
+    env: {\
+      NODE_ENV: "production",\
+      PORT: 3000\
+    }\
+  }]\
+};' > ecosystem.config.cjs
 
 USER node
 EXPOSE 3000
 
-CMD ["pm2-runtime", "start", "ecosystem.config.js"]
+CMD ["pm2-runtime", "start", "ecosystem.config.cjs"]
 
 FROM base-node AS production-websocket
 WORKDIR /websocket

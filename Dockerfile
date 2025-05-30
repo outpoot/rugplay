@@ -13,7 +13,8 @@ RUN apt-get update -qq && \
     pkg-config \
     python-is-python3 \
     curl \
-    ca-certificates && \
+    ca-certificates \
+    unzip && \
     rm -rf /var/lib/apt/lists/*
 
 FROM base-node AS build-main

@@ -14,6 +14,8 @@ export async function isNameAppropriate(name: string): Promise<boolean> {
         }
 
         const result = await response.json();
+        console.log('Checked name with moderation service:', name, " result: ", result.appropriate);
+
         return result.appropriate !== false;
     } catch (error) {
         console.error('Failed to check name with moderation service:', error);

@@ -64,7 +64,7 @@ RUN bun build src/main.ts --outdir dist --target bun
 
 FROM base-node AS production-main
 
-COPY --from=build-main --chown=node:node /app/.svelte-kit/output ./build
+COPY --from=build-main --chown=node:node /app/.svelte-kit/output ./
 COPY --from=build-main --chown=node:node /app/node_modules ./node_modules
 COPY --from=build-main --chown=node:node /app/package.json ./package.json
 
@@ -85,7 +85,6 @@ RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
 # Copy built websocket from build stage
-COPY --from=build-websocket /websocket/node_modules ./node_modules
 COPY --from=build-websocket /websocket/dist ./dist
 COPY --from=build-websocket /websocket/package.json ./package.json
 

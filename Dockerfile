@@ -64,9 +64,18 @@ RUN bun build src/main.ts --outdir dist --target bun
 
 FROM base-node AS production-main
 
+RUN --mount=from=build-main,source=/app/.svelte-kit/output,target=/debug \
+    echo "=== SvelteKit output structure ===" && \
+    find /debug -type f -name "*.js" | head -20 && \
+    echo "=== End debug ==="
+
 COPY --from=build-main --chown=node:node /app/.svelte-kit/output ./build
 COPY --from=build-main --chown=node:node /app/node_modules ./node_modules
 COPY --from=build-main --chown=node:node /app/package.json ./package.json
+
+RUN echo "=== Build directory contents ===" && \
+    find ./build -type f -name "*.js" | head -20 && \
+    echo "=== End debug ==="
 
 # Copy cluster server
 COPY cluster-server.js ./cluster-server.js

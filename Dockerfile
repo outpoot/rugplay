@@ -30,6 +30,15 @@ COPY website/. ./
 # Build the application
 RUN npm run build
 
+# Debug: Check what directories were created
+RUN echo "=== Checking build output ===" && \
+    ls -la && \
+    echo "=== Contents of any build-related directories ===" && \
+    (ls -la build 2>/dev/null || echo "No build directory") && \
+    (ls -la dist 2>/dev/null || echo "No dist directory") && \
+    (ls -la .svelte-kit 2>/dev/null || echo "No .svelte-kit directory") && \
+    echo "=== End debug ==="
+
 # Remove dev dependencies
 RUN npm prune --omit=dev
 

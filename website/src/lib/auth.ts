@@ -15,6 +15,10 @@ export const auth = betterAuth({
     secret: env.PRIVATE_BETTER_AUTH_SECRET,
     appName: "Rugplay",
 
+    trustedOrigins: [
+        env.BETTER_AUTH_URL, "http://rugplay.com", "http://localhost:5173",
+    ],
+
     database: drizzleAdapter(db, {
         provider: "pg",
         schema: schema,

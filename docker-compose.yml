@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: production-main
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3000"
+    env_file:
+      - website/.env
+    depends_on:
+      - websocket
+      - redis
+      - postgres
+    restart: unless-stopped
+
+  websocket:
+    build:
+      context: .
+      target: production-websocket
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    env_file:
+      - website/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    volumes:
+      - rugplay_redisdata:/data
+    command: "redis-server --save 60 1"
+    restart: unless-stopped
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: rugplay-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-rugplay}
+    ports:
+      - "5432:5432"
+    volumes:
+      - rugplay_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  rugplay_pgdata:
+  rugplay_redisdata:

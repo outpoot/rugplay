@@ -22,8 +22,7 @@ FROM base-node AS build-main
 # Copy package files
 COPY website/package.json website/package-lock.json* ./
 
-# Install dependencies
-RUN npm ci --include=dev
+RUN npm install
 
 # Copy source files
 COPY website/. ./

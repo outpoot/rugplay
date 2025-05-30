@@ -1,1 +1,0 @@
-ALTER TABLE "user" ADD COLUMN "login_streak" integer DEFAULT 0 NOT NULL;

@@ -1,1 +1,0 @@
-ALTER TABLE "coin" ADD COLUMN "icon" text;

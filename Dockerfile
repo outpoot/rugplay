@@ -30,18 +30,6 @@ COPY website/. ./
 # Build the application
 RUN npm run build
 
-# Debug: Check what directories were created
-RUN echo "=== Checking build output ===" && \
-    ls -la && \
-    echo "=== Contents of any build-related directories ===" && \
-    (ls -la build 2>/dev/null || echo "No build directory") && \
-    (ls -la dist 2>/dev/null || echo "No dist directory") && \
-    (ls -la .svelte-kit 2>/dev/null || echo "No .svelte-kit directory") && \
-    echo "=== End debug ==="
-
-# Remove dev dependencies
-RUN npm prune --omit=dev
-
 FROM base-node AS build-websocket
 WORKDIR /websocket
 
@@ -64,18 +52,9 @@ RUN bun build src/main.ts --outdir dist --target bun
 
 FROM base-node AS production-main
 
-RUN --mount=from=build-main,source=/app/.svelte-kit/output,target=/debug \
-    echo "=== SvelteKit output structure ===" && \
-    find /debug -type f -name "*.js" | head -20 && \
-    echo "=== End debug ==="
-
 COPY --from=build-main --chown=node:node /app/.svelte-kit/output ./build
 COPY --from=build-main --chown=node:node /app/node_modules ./node_modules
 COPY --from=build-main --chown=node:node /app/package.json ./package.json
-
-RUN echo "=== Build directory contents ===" && \
-    find ./build -type f -name "*.js" | head -20 && \
-    echo "=== End debug ==="
 
 # Copy cluster server
 COPY cluster-server.js ./cluster-server.js
@@ -83,7 +62,7 @@ COPY cluster-server.js ./cluster-server.js
 USER node
 EXPOSE 3000
 
-CMD ["sh", "-c", "echo '=== Build directory contents ==='; find ./build -type f | head -20; echo '=== Starting server ==='; node cluster-server.js"]
+CMD ["node", "cluster-server.js"]
 
 FROM base-node AS production-websocket
 WORKDIR /websocket

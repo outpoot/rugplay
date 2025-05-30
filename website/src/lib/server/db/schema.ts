@@ -18,7 +18,7 @@ export const user = pgTable("user", {
 	baseCurrencyBalance: decimal("base_currency_balance", {
 		precision: 20,
 		scale: 8,
-	}).notNull().default("10000.00000000"), // 10,000 *BUSS
+	}).notNull().default("100.00000000"), // $100
 	bio: varchar("bio", { length: 160 }).default("Hello am 48 year old man from somalia. Sorry for my bed england. I selled my wife for internet connection for play “conter stirk”"),
 	username: varchar("username", { length: 30 }).notNull().unique(),
 

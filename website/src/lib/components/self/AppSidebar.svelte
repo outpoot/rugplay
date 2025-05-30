@@ -25,7 +25,9 @@
 		Ticket,
 		PiggyBank,
 		ChartColumn,
-		TrendingUpDown
+		TrendingUpDown,
+		Scale,
+		ShieldCheck
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -111,6 +113,16 @@
 
 	function handlePromoCodesClick() {
 		goto('/admin/promo');
+		setOpenMobile(false);
+	}
+
+	function handleTermsClick() {
+		goto('/legal/terms');
+		setOpenMobile(false);
+	}
+
+	function handlePrivacyClick() {
+		goto('/legal/privacy');
 		setOpenMobile(false);
 	}
 </script>
@@ -377,6 +389,7 @@
 									Promo code
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
+
 							{#if $USER_DATA?.isAdmin}
 								<DropdownMenu.Separator />
 								<DropdownMenu.Group>
@@ -396,6 +409,17 @@
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>
 							{/if}
+							<DropdownMenu.Group>
+								<DropdownMenu.Separator />
+								<DropdownMenu.Item onclick={handleTermsClick}>
+									<Scale />
+									Terms of Service
+								</DropdownMenu.Item>
+								<DropdownMenu.Item onclick={handlePrivacyClick}>
+									<ShieldCheck />
+									Privacy Policy
+								</DropdownMenu.Item>
+							</DropdownMenu.Group>
 							<DropdownMenu.Separator />
 							<DropdownMenu.Item
 								onclick={() => {
@@ -410,6 +434,39 @@
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
+				</Sidebar.MenuItem>
+			</Sidebar.Menu>
+		</Sidebar.Footer>
+	{:else}
+		<Sidebar.Footer>
+			<Sidebar.Menu>
+				<Sidebar.MenuItem>
+					<Sidebar.MenuButton>
+						{#snippet child({ props }: { props: MenuButtonProps })}
+							<a
+								href="/legal/terms"
+								onclick={handleTermsClick}
+								class={`${props.class}`}
+							>
+								<Scale />
+								<span>Terms of Service</span>
+							</a>
+						{/snippet}
+					</Sidebar.MenuButton>
+				</Sidebar.MenuItem>
+				<Sidebar.MenuItem>
+					<Sidebar.MenuButton>
+						{#snippet child({ props }: { props: MenuButtonProps })}
+							<a
+								href="/legal/privacy"
+								onclick={handlePrivacyClick}
+								class={`${props.class}`}
+							>
+								<ShieldCheck />
+								<span>Privacy Policy</span>
+							</a>
+						{/snippet}
+					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
 			</Sidebar.Menu>
 		</Sidebar.Footer>

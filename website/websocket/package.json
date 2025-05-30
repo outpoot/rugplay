@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@sveltejs/adapter-node": "^5.2.12",
     "dotenv": "^16.5.0",
     "ioredis": "^5.6.1"
   }

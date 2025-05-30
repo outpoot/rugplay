@@ -131,8 +131,8 @@
 <PromoCodeDialog bind:open={showPromoCode} />
 <Sidebar.Root collapsible="offcanvas">
 	<Sidebar.Header>
-		<div class="flex items-center gap-1 px-2 py-2">
-			<img src="/placeholder_logo.png" class="h-5 w-5" alt="twoblade" />
+		<div class="flex items-center gap-2 px-2 py-2">
+			<img src="/rugplay.svg" class="h-5 w-5" alt="twoblade" />
 			<div class="flex items-center gap-2">
 				<span class="text-base font-semibold">Rugplay</span>
 				{#if $USER_DATA?.isAdmin}

@@ -5,7 +5,7 @@
 		title = 'Rugplay',
 		description = 'Experience realistic cryptocurrency trading simulation game with AI-powered markets, rug pull mechanics, and virtual currencies. Learn crypto trading without financial risk in this educational game.',
 		type = 'website',
-		image = '/placeholder_logo.png',
+		image = '/rugplay.svg',
 		imageAlt = 'Rugplay Logo',
 		keywords = '',
 		author = 'Outpoot',

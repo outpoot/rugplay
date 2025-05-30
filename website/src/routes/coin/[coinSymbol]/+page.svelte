@@ -340,7 +340,7 @@
 	keywords={coin
 		? `${coin.name} cryptocurrency game, *${coin.symbol} virtual trading, ${coin.symbol} price simulation, cryptocurrency trading game, virtual coin ${coin.symbol}`
 		: `${coinSymbol} virtual cryptocurrency, crypto trading simulation, virtual coin trading`}
-	image={coin?.icon ? getPublicUrl(coin.icon) : '/placeholder_logo.png'}
+	image={coin?.icon ? getPublicUrl(coin.icon) : '/rugplay.svg'}
 	imageAlt={coin ? `${coin.name} (${coin.symbol}) logo` : `${coinSymbol} cryptocurrency logo`}
 />
 

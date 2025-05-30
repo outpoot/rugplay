@@ -205,7 +205,7 @@
 	type="profile"
 	image={profileData?.profile?.image
 		? getPublicUrl(profileData.profile.image)
-		: '/placeholder_logo.png'}
+		: '/rugplay.svg'}
 	imageAlt={profileData?.profile?.name
 		? `${profileData.profile.name}'s profile picture`
 		: `@${username}'s profile`}

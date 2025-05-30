@@ -58,7 +58,8 @@ RUN echo 'module.exports = {\
     exec_mode: "cluster",\
     env: {\
       NODE_ENV: "production",\
-      PORT: 3000\
+      PORT: 3000,\
+      BODY_SIZE_LIMIT: "1.1M"\
     }\
   }]\
 };' > ecosystem.config.cjs

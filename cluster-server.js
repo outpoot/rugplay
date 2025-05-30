@@ -1,6 +1,6 @@
 import cluster from 'cluster';
 import { cpus } from 'os';
-import { handler } from './build/server/index.js';
+import { Server } from './build/server/index.js';
 import express from 'express';
 
 const numCPUs = cpus().length;
@@ -14,7 +14,11 @@ if (cluster.isPrimary) {
     });
 } else {
     const app = express();
-    app.use(handler);
+
+    const server = new Server();
+
+    app.use(server.handler);
+
     const port = process.env.PORT || 3000;
     app.listen(port, () =>
         console.log(`Worker ${process.pid} listening on ${port}`)

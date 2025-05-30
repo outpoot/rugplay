@@ -76,7 +76,7 @@
 				body: JSON.stringify({
 					code: code.trim().toUpperCase(),
 					rewardAmount: parseFloat(rewardAmount),
-					maxUses: maxUses.trim() ? parseInt(maxUses) : null,
+					maxUses: maxUses ? parseInt(maxUses) : null,
 					expiresAt: expirationOption ? getExpirationDate(expirationOption) : null
 				})
 			});

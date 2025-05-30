@@ -83,8 +83,7 @@ COPY cluster-server.js ./cluster-server.js
 USER node
 EXPOSE 3000
 
-# Use cluster server for better performance
-CMD ["node", "cluster-server.js"]
+CMD ["sh", "-c", "echo '=== Build directory contents ==='; find ./build -type f | head -20; echo '=== Starting server ==='; node cluster-server.js"]
 
 FROM base-node AS production-websocket
 WORKDIR /websocket

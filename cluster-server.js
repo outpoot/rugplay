@@ -1,6 +1,6 @@
 import cluster from 'cluster';
 import { cpus } from 'os';
-import { handler } from './build/handler.js';
+import { handler } from './build/server/index.js';
 import express from 'express';
 
 const numCPUs = cpus().length;

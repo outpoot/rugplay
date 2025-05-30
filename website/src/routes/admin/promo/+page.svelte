@@ -59,10 +59,10 @@
 		}
 	}
 
-	let isFormValid = $derived(code.trim() && rewardAmount.trim());
+	let isFormValid = $derived(code.trim() && rewardAmount);
 
 	async function createPromoCode() {
-		if (!code.trim() || !rewardAmount.trim()) return;
+		if (!code.trim() || !rewardAmount) return;
 
 		isCreating = true;
 		hasCreateResult = false;

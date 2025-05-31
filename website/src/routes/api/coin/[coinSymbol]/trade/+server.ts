@@ -42,34 +42,6 @@ async function calculate24hMetrics(coinId: number, currentPrice: number) {
     return { change24h: Number(change24h.toFixed(4)), volume24h: Number(volume24h.toFixed(4)) };
 }
 
-function calculateAutoPumpEffects(
-    coinData: any,
-    transactionValue: number,
-    tokensTraded: number
-) {
-    const pumpFeeRate = Number(coinData.pumpFeeRate);
-    const burnRate = Number(coinData.burnRate);
-    
-    const pumpFee = transactionValue * pumpFeeRate;
-    const tokensBurned = tokensTraded * burnRate;
-    
-    // Ensure we don't burn more tokens than available in pool
-    const maxBurnableTokens = Number(coinData.poolCoinAmount) * 0.99; // Keep 1% minimum
-    const actualTokensBurned = Math.min(tokensBurned, maxBurnableTokens);
-    
-    const newPoolBase = Number(coinData.poolBaseCurrencyAmount) + pumpFee;
-    const newPoolCoin = Number(coinData.poolCoinAmount) - actualTokensBurned;
-    const newCirculatingSupply = Number(coinData.circulatingSupply) - actualTokensBurned;
-    
-    return {
-        pumpFee,
-        tokensBurned: actualTokensBurned,
-        newPoolBase,
-        newPoolCoin,
-        newCirculatingSupply
-    };
-}
-
 export async function POST({ params, request }) {
     const session = await auth.api.getSession({
         headers: request.headers
@@ -155,13 +127,6 @@ export async function POST({ params, request }) {
                 throw error(400, 'Trade amount too small - would result in zero tokens');
             }
 
-            // Apply auto-pump effects
-            const autoPumpEffects = calculateAutoPumpEffects(coinData, amount, coinsBought);
-            
-            const finalPoolBase = autoPumpEffects.newPoolBase;
-            const finalPoolCoin = autoPumpEffects.newPoolCoin;
-            const finalPrice = finalPoolBase / finalPoolCoin;
-
             await tx.update(user)
                 .set({
                     baseCurrencyBalance: (userBalance - totalCost).toString(),
@@ -203,25 +168,22 @@ export async function POST({ params, request }) {
                 type: 'BUY',
                 quantity: coinsBought.toString(),
                 pricePerCoin: (totalCost / coinsBought).toString(),
-                totalBaseCurrencyAmount: totalCost.toString(),
-                pumpFeeApplied: autoPumpEffects.pumpFee.toString(),
-                tokensBurned: autoPumpEffects.tokensBurned.toString()
+                totalBaseCurrencyAmount: totalCost.toString()
             });
 
             await tx.insert(priceHistory).values({
                 coinId: coinData.id,
-                price: finalPrice.toString()
+                price: newPrice.toString()
             });
 
-            const metrics = await calculate24hMetrics(coinData.id, finalPrice);
+            const metrics = await calculate24hMetrics(coinData.id, newPrice);
 
             await tx.update(coin)
                 .set({
-                    currentPrice: finalPrice.toString(),
-                    marketCap: (autoPumpEffects.newCirculatingSupply * finalPrice).toString(),
-                    poolCoinAmount: finalPoolCoin.toString(),
-                    poolBaseCurrencyAmount: finalPoolBase.toString(),
-                    circulatingSupply: autoPumpEffects.newCirculatingSupply.toString(),
+                    currentPrice: newPrice.toString(),
+                    marketCap: (Number(coinData.circulatingSupply) * newPrice).toString(),
+                    poolCoinAmount: newPoolCoin.toString(),
+                    poolBaseCurrencyAmount: newPoolBaseCurrency.toString(),
                     change24h: metrics.change24h.toString(),
                     volume24h: metrics.volume24h.toString(),
                     updatedAt: new Date()
@@ -229,12 +191,12 @@ export async function POST({ params, request }) {
                 .where(eq(coin.id, coinData.id));
 
             const priceUpdateData = {
-                currentPrice: finalPrice,
-                marketCap: autoPumpEffects.newCirculatingSupply * finalPrice,
+                currentPrice: newPrice,
+                marketCap: Number(coinData.circulatingSupply) * newPrice,
                 change24h: metrics.change24h,
                 volume24h: metrics.volume24h,
-                poolCoinAmount: finalPoolCoin,
-                poolBaseCurrencyAmount: finalPoolBase
+                poolCoinAmount: newPoolCoin,
+                poolBaseCurrencyAmount: newPoolBaseCurrency
             };
 
             const tradeData = {
@@ -270,13 +232,9 @@ export async function POST({ params, request }) {
                 type: 'BUY',
                 coinsBought,
                 totalCost,
-                newPrice: finalPrice,
-                priceImpact: ((finalPrice - currentPrice) / currentPrice) * 100,
-                newBalance: userBalance - totalCost,
-                autoPumpEffects: {
-                    feeApplied: autoPumpEffects.pumpFee,
-                    tokensBurned: autoPumpEffects.tokensBurned,
-                }
+                newPrice,
+                priceImpact,
+                newBalance: userBalance - totalCost
             });
 
         } else {
@@ -317,13 +275,6 @@ export async function POST({ params, request }) {
                 throw error(400, 'Trade amount results in zero base currency received');
             }
 
-            // Apply auto-pump effects
-            const autoPumpEffects = calculateAutoPumpEffects(coinData, totalCost, amount);
-            
-            const finalPoolBase = autoPumpEffects.newPoolBase;
-            const finalPoolCoin = autoPumpEffects.newPoolCoin;
-            const finalPrice = finalPoolBase / finalPoolCoin;
-
             await tx.update(user)
                 .set({
                     baseCurrencyBalance: (userBalance + totalCost).toString(),
@@ -356,25 +307,22 @@ export async function POST({ params, request }) {
                 type: 'SELL',
                 quantity: amount.toString(),
                 pricePerCoin: (totalCost / amount).toString(),
-                totalBaseCurrencyAmount: totalCost.toString(),
-                pumpFeeApplied: autoPumpEffects.pumpFee.toString(),
-                tokensBurned: autoPumpEffects.tokensBurned.toString()
+                totalBaseCurrencyAmount: totalCost.toString()
             });
 
             await tx.insert(priceHistory).values({
                 coinId: coinData.id,
-                price: finalPrice.toString()
+                price: newPrice.toString()
             });
 
-            const metrics = await calculate24hMetrics(coinData.id, finalPrice);
+            const metrics = await calculate24hMetrics(coinData.id, newPrice);
 
             await tx.update(coin)
                 .set({
-                    currentPrice: finalPrice.toString(),
-                    marketCap: (autoPumpEffects.newCirculatingSupply * finalPrice).toString(),
-                    poolCoinAmount: finalPoolCoin.toString(),
-                    poolBaseCurrencyAmount: finalPoolBase.toString(),
-                    circulatingSupply: autoPumpEffects.newCirculatingSupply.toString(),
+                    currentPrice: newPrice.toString(),
+                    marketCap: (Number(coinData.circulatingSupply) * newPrice).toString(),
+                    poolCoinAmount: newPoolCoin.toString(),
+                    poolBaseCurrencyAmount: newPoolBaseCurrency.toString(),
                     change24h: metrics.change24h.toString(),
                     volume24h: metrics.volume24h.toString(),
                     updatedAt: new Date()
@@ -382,12 +330,12 @@ export async function POST({ params, request }) {
                 .where(eq(coin.id, coinData.id));
 
             const priceUpdateData = {
-                currentPrice: finalPrice,
-                marketCap: autoPumpEffects.newCirculatingSupply * finalPrice,
+                currentPrice: newPrice,
+                marketCap: Number(coinData.circulatingSupply) * newPrice,
                 change24h: metrics.change24h,
                 volume24h: metrics.volume24h,
-                poolCoinAmount: finalPoolCoin,
-                poolBaseCurrencyAmount: finalPoolBase
+                poolCoinAmount: newPoolCoin,
+                poolBaseCurrencyAmount: newPoolBaseCurrency
             };
 
             const tradeData = {
@@ -423,13 +371,9 @@ export async function POST({ params, request }) {
                 type: 'SELL',
                 coinsSold: amount,
                 totalReceived: totalCost,
-                newPrice: finalPrice,
-                priceImpact: ((finalPrice - currentPrice) / currentPrice) * 100,
-                newBalance: userBalance + totalCost,
-                autoPumpEffects: {
-                    feeApplied: autoPumpEffects.pumpFee,
-                    tokensBurned: autoPumpEffects.tokensBurned
-                }
+                newPrice,
+                priceImpact,
+                newBalance: userBalance + totalCost
             });
         }
     });

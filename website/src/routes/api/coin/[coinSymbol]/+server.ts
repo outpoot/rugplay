@@ -130,8 +130,6 @@ export async function GET({ params, url }) {
                 isListed: coin.isListed,
                 createdAt: coin.createdAt,
                 creatorId: coin.creatorId,
-                pumpFeeRate: coin.pumpFeeRate,
-                burnRate: coin.burnRate,
                 creatorName: user.name,
                 creatorUsername: user.username,
                 creatorBio: user.bio,
@@ -186,9 +184,7 @@ export async function GET({ params, url }) {
                 poolCoinAmount: Number(coinData.poolCoinAmount),
                 poolBaseCurrencyAmount: Number(coinData.poolBaseCurrencyAmount),
                 circulatingSupply: Number(coinData.circulatingSupply),
-                initialSupply: Number(coinData.initialSupply),
-                pumpFeeRate: Number(coinData.pumpFeeRate),
-                burnRate: Number(coinData.burnRate)
+                initialSupply: Number(coinData.initialSupply)
             },
             candlestickData,
             volumeData,

@@ -17,9 +17,11 @@
 	let portfolioData = $state<any>(null);
 	let transactions = $state<any[]>([]);
 	let loading = $state(true);
+	let error = $state<string | null>(null);
 
 	onMount(async () => {
 		await Promise.all([fetchPortfolioData(), fetchRecentTransactions()]);
+		loading = false;
 	});
 
 	async function fetchPortfolioData() {
@@ -27,11 +29,14 @@
 			const response = await fetch('/api/portfolio/total');
 			if (response.ok) {
 				portfolioData = await response.json();
+				error = null;
 			} else {
+				error = 'Failed to load portfolio data';
 				toast.error('Failed to load portfolio data');
 			}
 		} catch (e) {
 			console.error('Failed to fetch portfolio data:', e);
+			error = 'Failed to load portfolio data';
 			toast.error('Failed to load portfolio data');
 		}
 	}
@@ -48,9 +53,14 @@
 		} catch (e) {
 			console.error('Failed to fetch transactions:', e);
 			toast.error('Failed to load transactions');
-		} finally {
-			loading = false;
 		}
+	}
+
+	async function retryFetch() {
+		loading = true;
+		error = null;
+		await Promise.all([fetchPortfolioData(), fetchRecentTransactions()]);
+		loading = false;
 	}
 
 	let totalPortfolioValue = $derived(portfolioData ? portfolioData.totalValue : 0);
@@ -162,7 +172,7 @@
 	]);
 </script>
 
-<SEO 
+<SEO
 	title="Portfolio - Rugplay"
 	description="View your virtual cryptocurrency portfolio, simulated holdings, and trading performance in the Rugplay simulation game platform."
 	noindex={true}
@@ -179,11 +189,11 @@
 
 	{#if loading}
 		<PortfolioSkeleton />
-	{:else if !portfolioData}
+	{:else if error}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">Failed to load portfolio</div>
-				<Button onclick={fetchPortfolioData}>Try Again</Button>
+				<div class="text-muted-foreground mb-4 text-xl">{error}</div>
+				<Button onclick={retryFetch}>Try Again</Button>
 			</div>
 		</div>
 	{:else}

@@ -122,8 +122,17 @@
 
 	function performSearch() {
 		currentPage = 1;
-		updateURL();
 		fetchTransactions();
+	}
+
+	function updateSearchUrl() {
+		updateURL();
+	}
+
+	function handleSearchKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			updateSearchUrl();
+		}
 	}
 
 	$effect(() => {
@@ -271,6 +280,8 @@
 						bind:value={searchQuery}
 						placeholder="Search by coin name or symbol..."
 						class="pl-10 pr-4"
+						onblur={updateSearchUrl}
+						onkeydown={handleSearchKeydown}
 					/>
 				</div>
 

@@ -135,8 +135,17 @@
 
 	function performSearch() {
 		currentPage = 1;
-		updateURL();
 		fetchMarketData();
+	}
+
+	function updateSearchUrl() {
+		updateURL();
+	}
+
+	function handleSearchKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			updateSearchUrl();
+		}
 	}
 
 	$effect(() => {
@@ -232,7 +241,7 @@
 	);
 </script>
 
-<SEO 
+<SEO
 	title="Market - Rugplay"
 	description="Discover and trade virtual cryptocurrencies in our simulation game. Browse all available simulated coins, filter by price and performance, and more."
 	keywords="virtual cryptocurrency market, crypto trading game, coin discovery simulation, market analysis game, trading practice"
@@ -253,6 +262,8 @@
 						bind:value={searchQuery}
 						placeholder="Search coins by name or symbol..."
 						class="pl-10 pr-4"
+						onblur={updateSearchUrl}
+						onkeydown={handleSearchKeydown}
 					/>
 				</div>
 
@@ -434,8 +445,8 @@
 							<div class="flex items-center gap-3">
 								<CoinIcon icon={coin.icon} symbol={coin.symbol} size={8} />
 								<div>
-									<h3 class="text-lg font-semibold leading-tight truncate">{coin.name}</h3>
-									<p class="text-muted-foreground text-sm truncate">*{coin.symbol}</p>
+									<h3 class="truncate text-lg font-semibold leading-tight">{coin.name}</h3>
+									<p class="text-muted-foreground truncate text-sm">*{coin.symbol}</p>
 								</div>
 							</div>
 							<div class="text-right">

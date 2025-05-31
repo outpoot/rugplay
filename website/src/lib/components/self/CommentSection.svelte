@@ -22,6 +22,8 @@
 	let isLoading = $state(true);
 	let shouldSignIn = $state(false);
 
+	const MAX_COMMENTS = 50;
+
 	$effect(() => {
 		websocketController.setCoin(coinSymbol);
 		websocketController.subscribeToComments(coinSymbol, handleWebSocketMessage);
@@ -37,7 +39,7 @@
 				// check if comment already exists
 				const commentExists = comments.some((c) => c.id === message.data.id);
 				if (!commentExists) {
-					comments = [message.data, ...comments];
+					comments = [message.data, ...comments.slice(0, MAX_COMMENTS - 1)];
 				}
 				break;
 			case 'comment_liked':
@@ -61,7 +63,7 @@
 			const response = await fetch(`/api/coin/${coinSymbol}/comments`);
 			if (response.ok) {
 				const result = await response.json();
-				comments = result.comments;
+				comments = result.comments.slice(0, MAX_COMMENTS);
 			}
 		} catch (e) {
 			console.error('Failed to load comments:', e);
@@ -91,7 +93,7 @@
 				// check if comment already exists (from ws) before adding
 				const commentExists = comments.some((c) => c.id === result.comment.id);
 				if (!commentExists) {
-					comments = [result.comment, ...comments];
+					comments = [result.comment, ...comments.slice(0, MAX_COMMENTS - 1)];
 				}
 				newComment = '';
 			} else {

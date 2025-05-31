@@ -27,7 +27,10 @@
 		ChartColumn,
 		TrendingUpDown,
 		Scale,
-		ShieldCheck
+		ShieldCheck,
+
+		Hammer
+
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -110,6 +113,11 @@
 
 	function handleAdminClick() {
 		goto('/admin');
+		setOpenMobile(false);
+	}
+
+	function handleUserManagementClick() {
+		goto('/admin/users');
 		setOpenMobile(false);
 	}
 
@@ -401,6 +409,13 @@
 									>
 										<Shield class="text-primary" />
 										Admin Panel
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										onclick={handleUserManagementClick}
+										class="text-primary hover:text-primary!"
+									>
+										<Hammer class="text-primary" />
+										User Management
 									</DropdownMenu.Item>
 									<DropdownMenu.Item
 										onclick={handlePromoCodesClick}

@@ -7,7 +7,7 @@
 	import AppSidebar from '$lib/components/self/AppSidebar.svelte';
 
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { onMount, onDestroy } from 'svelte'; // onDestroy is already imported
+	import { onMount } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { ModeWatcher } from 'mode-watcher';
 	import { page } from '$app/state';

@@ -16,6 +16,15 @@ async function validateInputs(name: string, symbol: string, iconFile: File | nul
         throw error(400, 'Symbol must be between 2 and 10 characters');
     }
 
+    const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+    if (!alphanumericRegex.test(name)) {
+        throw error(400, 'Coin name must contain only letters and numbers');
+    }
+
+    if (!alphanumericRegex.test(symbol)) {
+        throw error(400, 'Coin symbol must contain only letters and numbers');
+    }
+
     const nameAppropriate = await isNameAppropriate(name);
     if (!nameAppropriate) {
         throw error(400, 'Coin name contains inappropriate content');

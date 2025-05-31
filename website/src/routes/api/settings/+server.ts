@@ -24,6 +24,13 @@ async function validateInputs(name: string, bio: string, username: string, avata
         throw error(400, 'Username must be between 3 and 30 characters');
     }
 
+    if (username) {
+        const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+        if (!alphanumericRegex.test(username)) {
+            throw error(400, 'Username must contain only letters and numbers');
+        }
+    }
+
     if (username && !(await isNameAppropriate(username))) {
         throw error(400, 'Username contains inappropriate content');
     }

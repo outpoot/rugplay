@@ -89,8 +89,10 @@
 		setOpenMobile(false);
 	}
 
-	function handleTradeClick(coinSymbol: string) {
-		goto(`/coin/${coinSymbol.toLowerCase()}`);
+	async function handleTradeClick(coinSymbol: string) {
+		const targetPath = `/coin/${coinSymbol.toLowerCase()}`;
+
+		await goto(targetPath, { invalidateAll: true });
 		setOpenMobile(false);
 	}
 
@@ -443,11 +445,7 @@
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton>
 						{#snippet child({ props }: { props: MenuButtonProps })}
-							<a
-								href="/legal/terms"
-								onclick={handleTermsClick}
-								class={`${props.class}`}
-							>
+							<a href="/legal/terms" onclick={handleTermsClick} class={`${props.class}`}>
 								<Scale />
 								<span>Terms of Service</span>
 							</a>
@@ -457,11 +455,7 @@
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton>
 						{#snippet child({ props }: { props: MenuButtonProps })}
-							<a
-								href="/legal/privacy"
-								onclick={handlePrivacyClick}
-								class={`${props.class}`}
-							>
+							<a href="/legal/privacy" onclick={handlePrivacyClick} class={`${props.class}`}>
 								<ShieldCheck />
 								<span>Privacy Policy</span>
 							</a>

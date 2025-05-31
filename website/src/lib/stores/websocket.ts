@@ -226,6 +226,10 @@ function connect(): void {
 }
 
 function setCoin(coinSymbol: string): void {
+    if (activeCoin !== coinSymbol && activeCoin !== '@global') {
+        unsubscribeFromPriceUpdates(activeCoin);
+    }
+
     activeCoin = coinSymbol;
     sendMessage({ type: 'set_coin', coinSymbol });
 }

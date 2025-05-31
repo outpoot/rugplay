@@ -26,9 +26,10 @@
 	import { getPublicUrl, getTimeframeInSeconds } from '$lib/utils.js';
 	import { websocketController, type PriceUpdate, isConnectedStore } from '$lib/stores/websocket';
 	import SEO from '$lib/components/self/SEO.svelte';
+	import { page } from '$app/state';
 
 	const { data } = $props();
-	const coinSymbol = data.coinSymbol;
+	let coinSymbol = $derived(data.coinSymbol);
 	let coin = $state<any>(null);
 	let loading = $state(true);
 	let chartData = $state<any[]>([]);
@@ -61,6 +62,34 @@
 		return () => {
 			websocketController.unsubscribeFromPriceUpdates(coinSymbol.toUpperCase());
 		};
+	});
+
+	// Handle route changes to update coin data
+	$effect(() => {
+		const currentCoinSymbol = page.params.coinSymbol;
+		if (currentCoinSymbol && currentCoinSymbol !== coinSymbol) {
+			loading = true;
+			coin = null;
+			chartData = [];
+			volumeData = [];
+			userHolding = 0;
+
+			// Unsubscribe from the old coin's updates
+			websocketController.unsubscribeFromPriceUpdates(coinSymbol.toUpperCase());
+
+			// Update the data prop which will trigger coinSymbol to update via $derived
+			data.coinSymbol = currentCoinSymbol;
+
+			// Load new coin data and set up new subscriptions
+			loadCoinData().then(() => {
+				loadUserHolding();
+				websocketController.setCoin(currentCoinSymbol.toUpperCase());
+				websocketController.subscribeToPriceUpdates(
+					currentCoinSymbol.toUpperCase(),
+					handlePriceUpdate
+				);
+			});
+		}
 	});
 
 	async function loadCoinData() {

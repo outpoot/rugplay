@@ -41,7 +41,9 @@
 	const typeFilterOptions = [
 		{ value: 'all', label: 'All transactions' },
 		{ value: 'BUY', label: 'Buys only' },
-		{ value: 'SELL', label: 'Sells only' }
+		{ value: 'SELL', label: 'Sells only' },
+		{ value: 'TRANSFER_IN', label: 'Received transfers' },
+		{ value: 'TRANSFER_OUT', label: 'Sent transfers' }
 	];
 
 	const sortOrderOptions = [
@@ -50,7 +52,7 @@
 	];
 
 	const debouncedSearch = debounce(performSearch, 300);
-	let previousSearchQueryForEffect = $state(searchQuery);
+	let previousSearchQueryForEffect = $state('');
 
 	onMount(() => {
 		fetchTransactions();
@@ -211,43 +213,110 @@
 		{
 			key: 'type',
 			label: 'Type',
-			class: 'w-[10%] min-w-[60px]',
-			render: (value: any) => ({
-				component: 'badge',
-				variant: value === 'BUY' ? 'success' : 'destructive',
-				text: value === 'BUY' ? 'Buy' : 'Sell',
-				class: 'text-xs'
-			})
+			class: 'w-[10%] min-w-[80px]',
+			render: (value: any, row: any) => {
+				if (row.isTransfer) {
+					return {
+						component: 'badge',
+						variant: 'default',
+						text: row.isIncoming ? 'Received' : 'Sent',
+						class: 'text-xs'
+					};
+				}
+				return {
+					component: 'badge',
+					variant: value === 'BUY' ? 'success' : 'destructive',
+					text: value === 'BUY' ? 'Buy' : 'Sell',
+					class: 'text-xs'
+				};
+			}
 		},
 		{
 			key: 'coin',
-			label: 'Coin',
+			label: 'Asset',
 			class: 'w-[20%] min-w-[120px]',
+			render: (value: any, row: any) => {
+				if (row.isTransfer) {
+					if (row.isCoinTransfer && row.coin) {
+						return {
+							component: 'coin',
+							icon: row.coin.icon,
+							symbol: row.coin.symbol,
+							name: `*${row.coin.symbol}`,
+							size: 6
+						};
+					}
+					return {
+						component: 'text',
+						text: 'Cash ($)',
+						class: 'font-medium'
+					};
+				}
+				return {
+					component: 'coin',
+					icon: row.coin.icon,
+					symbol: row.coin.symbol,
+					name: `*${row.coin.symbol}`,
+					size: 6
+				};
+			}
+		},
+		{
+			key: 'sender',
+			label: 'Sender',
+			class: 'w-[12%] min-w-[80px]',
 			render: (value: any, row: any) => ({
-				component: 'coin',
-				icon: row.coin.icon,
-				symbol: row.coin.symbol,
-				name: `*${row.coin.symbol}`,
-				size: 6
+				component: 'text',
+				text: row.isTransfer ? row.sender || 'Unknown' : '-',
+				class:
+					row.isTransfer && row.sender && row.sender !== 'Unknown'
+						? 'font-medium'
+						: 'text-muted-foreground'
+			})
+		},
+		{
+			key: 'recipient',
+			label: 'Receiver',
+			class: 'w-[12%] min-w-[80px]',
+			render: (value: any, row: any) => ({
+				component: 'text',
+				text: row.isTransfer ? row.recipient || 'Unknown' : '-',
+				class:
+					row.isTransfer && row.recipient && row.recipient !== 'Unknown'
+						? 'font-medium'
+						: 'text-muted-foreground'
 			})
 		},
 		{
 			key: 'quantity',
 			label: 'Quantity',
 			class: 'w-[15%] min-w-[100px] font-mono',
-			render: (value: any) => formatQuantity(value)
+			render: (value: any, row: any) => {
+				if (row.isTransfer && value === 0) {
+					return '-';
+				}
+				return formatQuantity(value);
+			}
 		},
 		{
 			key: 'pricePerCoin',
 			label: 'Price',
 			class: 'w-[15%] min-w-[80px] font-mono',
-			render: (value: any) => `$${formatPrice(value)}`
+			render: (value: any, row: any) => {
+				if (row.isTransfer || value === 0) {
+					return '-';
+				}
+				return `$${formatPrice(value)}`;
+			}
 		},
 		{
 			key: 'totalBaseCurrencyAmount',
 			label: 'Total',
 			class: 'w-[15%] min-w-[80px] font-mono font-medium',
-			render: (value: any) => formatValue(value)
+			render: (value: any, row: any) => {
+				const prefix = row.type === 'TRANSFER_IN' || row.type === 'BUY' ? '+' : '-';
+				return `${prefix}${formatValue(value)}`;
+			}
 		},
 		{
 			key: 'timestamp',
@@ -413,7 +482,7 @@
 				<Receipt class="h-5 w-5" />
 				History
 			</Card.Title>
-			<Card.Description>Complete record of your trading activity</Card.Description>
+			<Card.Description>Complete record of your trading activity and transfers</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			{#if loading}
@@ -426,12 +495,16 @@
 				<DataTable
 					columns={transactionsColumns}
 					data={transactions}
-					onRowClick={(tx) => goto(`/coin/${tx.coin.symbol}`)}
+					onRowClick={(tx) => {
+						if (tx.coin) {
+							goto(`/coin/${tx.coin.symbol}`);
+						}
+					}}
 					emptyIcon={Receipt}
 					emptyTitle="No transactions found"
 					emptyDescription={hasActiveFilters
 						? 'No transactions match your current filters. Try adjusting your search criteria.'
-						: "You haven't made any trades yet. Start by buying or selling coins."}
+						: "You haven't made any trades or transfers yet. Start by buying coins or sending money to other users."}
 				/>
 			{/if}
 		</Card.Content>

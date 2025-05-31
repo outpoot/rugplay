@@ -73,5 +73,9 @@ export async function handle({ event, resolve }) {
     //     'Cache-Control': 'private, no-cache, no-store, must-revalidate'
     // });
 
+    if (event.url.pathname.startsWith('/.well-known/appspecific/com.chrome.devtools')) {
+        return new Response(null, { status: 204 });
+    }
+
     return svelteKitHandler({ event, resolve, auth });
 }

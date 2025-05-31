@@ -32,7 +32,6 @@
 			loading = false;
 		}
 	});
-
 	const marketColumns = [
 		{
 			key: 'name',
@@ -40,13 +39,11 @@
 			class: 'font-medium',
 			render: (value: any, row: any) => {
 				return {
-					component: 'link',
-					href: `/coin/${row.symbol}`,
-					content: {
-						icon: row.icon,
-						symbol: row.symbol,
-						name: row.name
-					}
+					component: 'coin',
+					icon: row.icon,
+					symbol: row.symbol,
+					name: row.name,
+					size: 6
 				};
 			}
 		},
@@ -116,9 +113,8 @@
 				<p class="text-muted-foreground text-sm">Be the first to create a coin!</p>
 			</div>
 		</div>
-	{:else}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-			{#each coins.slice(0, 6) as coin}
+	{:else}		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+			{#each coins.slice(0, 6) as coin (coin.symbol)}
 				<a href={`/coin/${coin.symbol}`} class="block">
 					<Card.Root class="hover:bg-card/50 h-full transition-all hover:shadow-md">
 						<Card.Header>

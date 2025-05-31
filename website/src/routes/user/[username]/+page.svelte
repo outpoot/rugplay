@@ -21,22 +21,34 @@
 	} from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import type { UserProfileData } from '$lib/types/user-profile';
+	import { USER_DATA } from '$lib/stores/user-data';
 
 	let { data } = $props();
 	const username = data.username;
 
 	let profileData = $state<UserProfileData | null>(null);
+	let recentTransactions = $state<any[]>([]);
 	let loading = $state(true);
 
+	let isOwnProfile = $derived(
+		$USER_DATA && profileData?.profile && $USER_DATA.username === profileData.profile.username
+	);
 	onMount(async () => {
 		await fetchProfileData();
 	});
 
+	$effect(() => {
+		if (isOwnProfile && profileData) {
+			fetchTransactions();
+		}
+	});
 	async function fetchProfileData() {
 		try {
 			const response = await fetch(`/api/user/${username}`);
 			if (response.ok) {
 				profileData = await response.json();
+
+				recentTransactions = profileData?.recentTransactions || [];
 			} else {
 				toast.error('Failed to load profile data');
 			}
@@ -45,6 +57,20 @@
 			toast.error('Failed to load profile data');
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function fetchTransactions() {
+		if (!isOwnProfile) return;
+
+		try {
+			const response = await fetch('/api/transactions?limit=10');
+			if (response.ok) {
+				const data = await response.json();
+				recentTransactions = data.transactions || [];
+			}
+		} catch (e) {
+			console.error('Failed to fetch transactions:', e);
 		}
 	}
 
@@ -144,52 +170,158 @@
 			render: (value: any) => formatDate(value)
 		}
 	];
-
 	const transactionsColumns = [
 		{
 			key: 'type',
 			label: 'Type',
-			class: 'pl-6',
-			render: (value: any) => ({
-				component: 'badge',
-				variant: value === 'BUY' ? 'success' : 'destructive',
-				text: value
-			})
+			class: 'w-[12%] min-w-[60px] md:w-[8%] pl-6',
+			render: (value: any, row: any) => {
+				// Handle transfer types (TRANSFER_IN, TRANSFER_OUT) from user profile API
+				if (value === 'TRANSFER_IN' || value === 'TRANSFER_OUT') {
+					return {
+						component: 'badge',
+						variant: 'default',
+						text: value === 'TRANSFER_IN' ? 'Received' : 'Sent',
+						class: 'text-xs'
+					};
+				}
+				// Handle isTransfer format from transactions API
+				if (row.isTransfer) {
+					return {
+						component: 'badge',
+						variant: 'default',
+						text: row.isIncoming ? 'Received' : 'Sent',
+						class: 'text-xs'
+					};
+				}
+				return {
+					component: 'badge',
+					variant: value === 'BUY' ? 'success' : 'destructive',
+					text: value === 'BUY' ? 'Buy' : 'Sell',
+					class: 'text-xs'
+				};
+			}
 		},
 		{
 			key: 'coin',
 			label: 'Coin',
-			class: 'font-medium',
-			render: (value: any, row: any) => ({
-				component: 'coin',
-				icon: row.coinIcon,
-				symbol: row.coinSymbol,
-				name: row.coinName,
-				size: 6
-			})
+			class: 'w-[20%] min-w-[100px] md:w-[12%]',
+			render: (value: any, row: any) => {
+				// Handle transfer format from transactions API
+				if (row.isTransfer) {
+					if (row.isCoinTransfer && row.coin) {
+						return {
+							component: 'coin',
+							icon: row.coin.icon,
+							symbol: row.coin.symbol,
+							name: `*${row.coin.symbol}`,
+							size: 4
+						};
+					}
+					return { component: 'text', text: '-' };
+				}
+				// Handle transfer types from user profile API
+				if (row.type === 'TRANSFER_IN' || row.type === 'TRANSFER_OUT') {
+					if (row.coinSymbol && Number(row.quantity) > 0) {
+						return {
+							component: 'coin',
+							icon: row.coinIcon,
+							symbol: row.coinSymbol,
+							name: `*${row.coinSymbol}`,
+							size: 4
+						};
+					}
+					return { component: 'text', text: '-' };
+				}
+				// Handle regular transactions from both APIs
+				return {
+					component: 'coin',
+					icon: row.coinIcon || row.coin?.icon,
+					symbol: row.coinSymbol || row.coin?.symbol,
+					name: `*${row.coinSymbol || row.coin?.symbol}`,
+					size: 4
+				};
+			}
+		},
+		{
+			key: 'sender',
+			label: 'Sender',
+			class: 'w-[12%] min-w-[70px] md:w-[10%]',
+			render: (value: any, row: any) => {
+				// Handle transactions API format
+				if (row.isTransfer) {
+					return {
+						component: 'text',
+						text: row.sender || 'Unknown',
+						class: row.sender && row.sender !== 'Unknown' ? 'font-medium' : 'text-muted-foreground'
+					};
+				}
+				// Handle user profile API format (no sender/recipient data available)
+				if (row.type === 'TRANSFER_IN' || row.type === 'TRANSFER_OUT') {
+					return {
+						component: 'text',
+						text: 'Unknown',
+						class: 'text-muted-foreground'
+					};
+				}
+				return {
+					component: 'text',
+					text: '-',
+					class: 'text-muted-foreground'
+				};
+			}
+		},
+		{
+			key: 'recipient',
+			label: 'Receiver',
+			class: 'w-[12%] min-w-[70px] md:w-[10%]',
+			render: (value: any, row: any) => {
+				if (row.isTransfer) {
+					return {
+						component: 'text',
+						text: row.recipient || 'Unknown',
+						class:
+							row.recipient && row.recipient !== 'Unknown' ? 'font-medium' : 'text-muted-foreground'
+					};
+				}
+				if (row.type === 'TRANSFER_IN' || row.type === 'TRANSFER_OUT') {
+					return {
+						component: 'text',
+						text: 'Unknown',
+						class: 'text-muted-foreground'
+					};
+				}
+				return {
+					component: 'text',
+					text: '-',
+					class: 'text-muted-foreground'
+				};
+			}
 		},
 		{
 			key: 'quantity',
 			label: 'Quantity',
-			class: 'hidden font-mono sm:table-cell',
-			render: (value: any) => formatQuantity(parseFloat(value))
-		},
-		{
-			key: 'pricePerCoin',
-			label: 'Price',
-			class: 'font-mono',
-			render: (value: any) => `$${formatPrice(parseFloat(value))}`
+			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono text-sm',
+			render: (value: any, row: any) => {
+				if (
+					(row.isTransfer && value === 0) ||
+					((row.type === 'TRANSFER_IN' || row.type === 'TRANSFER_OUT') && value === 0)
+				) {
+					return '-';
+				}
+				return formatQuantity(parseFloat(value));
+			}
 		},
 		{
 			key: 'totalBaseCurrencyAmount',
-			label: 'Total',
-			class: 'hidden font-mono font-medium md:table-cell',
+			label: 'Amount',
+			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono text-sm font-medium',
 			render: (value: any) => formatValue(parseFloat(value))
 		},
 		{
 			key: 'timestamp',
 			label: 'Date',
-			class: 'text-muted-foreground hidden text-sm lg:table-cell',
+			class: 'hidden md:table-cell md:w-[18%] text-muted-foreground text-sm',
 			render: (value: any) => formatDate(value)
 		}
 	];
@@ -203,9 +335,7 @@
 		? `${profileData.profile.bio} - View ${profileData.profile.name}'s simulated trading activity and virtual portfolio in the Rugplay cryptocurrency simulation game.`
 		: `View @${username}'s profile and simulated trading activity in Rugplay - cryptocurrency trading simulation game platform.`}
 	type="profile"
-	image={profileData?.profile?.image
-		? getPublicUrl(profileData.profile.image)
-		: '/rugplay.svg'}
+	image={profileData?.profile?.image ? getPublicUrl(profileData.profile.image) : '/rugplay.svg'}
 	imageAlt={profileData?.profile?.name
 		? `${profileData.profile.name}'s profile picture`
 		: `@${username}'s profile`}
@@ -440,7 +570,7 @@
 			<Card.Content class="p-0">
 				<DataTable
 					columns={transactionsColumns}
-					data={profileData?.recentTransactions || []}
+					data={recentTransactions}
 					emptyIcon={Receipt}
 					emptyTitle="No recent activity"
 					emptyDescription="This user hasn't made any trades yet."

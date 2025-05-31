@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, boolean, decimal, serial, varchar, integer, primaryKey, pgEnum, index, unique, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-export const transactionTypeEnum = pgEnum('transaction_type', ['BUY', 'SELL']);
+export const transactionTypeEnum = pgEnum('transaction_type', ['BUY', 'SELL', 'TRANSFER_IN', 'TRANSFER_OUT']);
 export const predictionMarketEnum = pgEnum('prediction_market_status', ['ACTIVE', 'RESOLVED', 'CANCELLED']);
 
 export const user = pgTable("user", {
@@ -110,6 +110,8 @@ export const transaction = pgTable("transaction", {
 	pricePerCoin: decimal("price_per_coin", { precision: 20, scale: 8 }).notNull(),
 	totalBaseCurrencyAmount: decimal("total_base_currency_amount", { precision: 30, scale: 8 }).notNull(),
 	timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
+	recipientUserId: integer('recipient_user_id').references(() => user.id, { onDelete: 'set null' }),
+	senderUserId: integer('sender_user_id').references(() => user.id, { onDelete: 'set null' }),
 });
 
 export const priceHistory = pgTable("price_history", {

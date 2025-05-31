@@ -15,6 +15,13 @@
       "when": 1748690470287,
       "tag": "0001_yummy_meggan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1748700252762,
+      "tag": "0002_lush_guardian",
+      "breakpoints": true
     }
   ]
 }

@@ -80,7 +80,7 @@ export const coin = pgTable("coin", {
 	currentPrice: decimal("current_price", { precision: 20, scale: 8 }).notNull(), // Price in base currency
 	marketCap: decimal("market_cap", { precision: 30, scale: 2 }).notNull(),
 	volume24h: decimal("volume_24h", { precision: 30, scale: 2 }).default("0.00"),
-	change24h: decimal("change_24h", { precision: 10, scale: 4 }).default("0.0000"), // Percentage
+	change24h: decimal("change_24h", { precision: 30, scale: 4 }).default("0.0000"), // Percentage
 	poolCoinAmount: decimal("pool_coin_amount", { precision: 30, scale: 8 }).notNull().default("0.00000000"),
 	poolBaseCurrencyAmount: decimal("pool_base_currency_amount", { precision: 30, scale: 8, }).notNull().default("0.00000000"),
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

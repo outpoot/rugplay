@@ -25,9 +25,9 @@ async function validateInputs(name: string, bio: string, username: string, avata
     }
 
     if (username) {
-        const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+        const alphanumericRegex = /^[a-z0-9_]+$/;
         if (!alphanumericRegex.test(username)) {
-            throw error(400, 'Username must contain only letters and numbers');
+            throw error(400, 'Username must contain only lowercase letters, numbers, and underscores');
         }
     }
 
@@ -56,7 +56,7 @@ export async function POST({ request }) {
     const formData = await request.formData();
     const name = formData.get('name') as string;
     const bio = formData.get('bio') as string;
-    const username = formData.get('username') as string;
+    const username = (formData.get('username') as string)?.toLowerCase();
     const avatarFile = formData.get('avatar') as File | null;
 
     await validateInputs(name, bio, username, avatarFile);

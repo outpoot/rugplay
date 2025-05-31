@@ -6,10 +6,6 @@ import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import type { RequestHandler } from './$types';
 
-interface SlotsRequest {
-    amount: number;
-}
-
 function getRandomSymbol(symbols: string[]): string {
     const randomValue = randomBytes(1)[0];
     const index = Math.floor((randomValue / 256) * symbols.length);
@@ -26,7 +22,7 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     try {
-        const { amount }: SlotsRequest = await request.json();
+        const { amount } = await request.json();
 
         if (!amount || amount <= 0 || !Number.isFinite(amount)) {
             return json({ error: 'Invalid bet amount' }, { status: 400 });
@@ -37,7 +33,7 @@ export const POST: RequestHandler = async ({ request }) => {
         }
 
         const userId = Number(session.user.id);
-        const symbols = ['bliptext', 'bussin', 'griddycode', 'lyntr', 'subterfuge', 'twoblade', 'wattesigma', 'webx'];
+        const symbols = ['bussin', 'lyntr', 'subterfuge', 'twoblade', 'wattesigma', 'webx'];
 
         const result = await db.transaction(async (tx) => {
             const [userData] = await tx

@@ -35,7 +35,7 @@ Before running on your Linux machine, ensure:
 - [ ] **Environment configured**: `website/.env` file created from `website/.env.example`
 - [ ] **Permissions set**: `chmod +x build.sh` executed
 - [ ] **Minimum system requirements**: 2GB RAM, 10GB disk space
-
+- [ ] **Clothing**: Thigh Highs, and a crop top.
 ### Essential Environment Variables
 
 The following must be configured in `website/.env`:

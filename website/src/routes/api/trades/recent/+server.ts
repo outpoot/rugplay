@@ -6,7 +6,8 @@ import { validateSearchParams } from '$lib/utils/validation';
 
 export async function GET({ url }) {
     const params = validateSearchParams(url.searchParams);
-    const limit = params.getPositiveInt('limit', 100);
+    const requestedLimit = params.getPositiveInt('limit', 100);
+    const limit = Math.min(requestedLimit, 1000);
     const minValue = params.getNonNegativeFloat('minValue', 0);
 
     try {
@@ -46,7 +47,7 @@ export async function GET({ url }) {
             totalValue: Number(trade.totalValue),
             price: Number(trade.price),
             timestamp: trade.timestamp.getTime(),
-            userId: trade.userId.toString()
+            userId: trade.userId?.toString() ?? ''
         }));
 
         return json({ trades: formattedTrades });

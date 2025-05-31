@@ -49,13 +49,20 @@ export async function uploadProfilePicture(
     contentType: string,
     contentLength?: number
 ): Promise<string> {
-    let fileExtension = contentType.split('/')[1];
-    // Ensure a valid image extension or default to jpg
-    if (!fileExtension || !['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension.toLowerCase())) {
-        fileExtension = 'jpg';
+    if (!contentType || !contentType.startsWith('image/')) {
+        throw new Error('Invalid file type. Only images are allowed.');
     }
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(contentType.toLowerCase())) {
+        throw new Error('Unsupported image format. Only JPEG, PNG, GIF, and WebP are allowed.');
+    }
+
+    let fileExtension = contentType.split('/')[1];
+    if (fileExtension === 'jpeg') fileExtension = 'jpg';
+
     const key = `avatars/${identifier}.${fileExtension}`;
-    
+
     const command = new PutObjectCommand({
         Bucket: PUBLIC_B2_BUCKET,
         Key: key,
@@ -74,12 +81,20 @@ export async function uploadCoinIcon(
     contentType: string,
     contentLength?: number
 ): Promise<string> {
-    let fileExtension = contentType.split('/')[1];
-    if (!fileExtension || !['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension.toLowerCase())) {
-        fileExtension = 'png';
+    if (!contentType || !contentType.startsWith('image/')) {
+        throw new Error('Invalid file type. Only images are allowed.');
     }
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(contentType.toLowerCase())) {
+        throw new Error('Unsupported image format. Only JPEG, PNG, GIF, and WebP are allowed.');
+    }
+
+    let fileExtension = contentType.split('/')[1];
+    if (fileExtension === 'jpeg') fileExtension = 'jpg';
+
     const key = `coins/${coinSymbol.toLowerCase()}.${fileExtension}`;
-    
+
     const command = new PutObjectCommand({
         Bucket: PUBLIC_B2_BUCKET,
         Key: key,

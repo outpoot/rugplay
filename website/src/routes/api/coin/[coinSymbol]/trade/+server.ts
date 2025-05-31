@@ -58,66 +58,75 @@ export async function POST({ params, request }) {
         throw error(400, 'Invalid transaction type');
     }
 
-    if (!amount || amount <= 0) {
-        throw error(400, 'Invalid amount');
+    if (!amount || typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+        throw error(400, 'Invalid amount - must be a positive finite number');
+    }
+
+    if (amount > Number.MAX_SAFE_INTEGER) {
+        throw error(400, 'Amount too large');
     }
 
     const userId = Number(session.user.id);
     const normalizedSymbol = coinSymbol.toUpperCase();
 
-    const [coinData] = await db.select().from(coin).where(eq(coin.symbol, normalizedSymbol)).limit(1);
-
-    if (!coinData) {
+    const [coinExists] = await db.select({ id: coin.id }).from(coin).where(eq(coin.symbol, normalizedSymbol)).limit(1);
+    if (!coinExists) {
         throw error(404, 'Coin not found');
     }
 
-    if (!coinData.isListed) {
-        throw error(400, 'This coin is delisted and cannot be traded');
-    }
+    return await db.transaction(async (tx) => {
+        const [coinData] = await tx.select().from(coin).where(eq(coin.symbol, normalizedSymbol)).for('update').limit(1);
 
-    const [userData] = await db.select({
-        baseCurrencyBalance: user.baseCurrencyBalance,
-        username: user.username,
-        image: user.image
-    }).from(user).where(eq(user.id, userId)).limit(1);
-
-    if (!userData) {
-        throw error(404, 'User not found');
-    }
-
-    const userBalance = Number(userData.baseCurrencyBalance);
-    const poolCoinAmount = Number(coinData.poolCoinAmount);
-    const poolBaseCurrencyAmount = Number(coinData.poolBaseCurrencyAmount);
-    const currentPrice = Number(coinData.currentPrice);
-
-    let newPrice: number;
-    let totalCost: number;
-    let priceImpact: number = 0;
-
-    if (poolCoinAmount <= 0 || poolBaseCurrencyAmount <= 0) {
-        throw error(400, 'Liquidity pool is not properly initialized or is empty. Trading halted.');
-    }
-
-    if (type === 'BUY') {
-        // AMM BUY: amount = dollars to spend
-        const k = poolCoinAmount * poolBaseCurrencyAmount;
-        const newPoolBaseCurrency = poolBaseCurrencyAmount + amount;
-        const newPoolCoin = k / newPoolBaseCurrency;
-        const coinsBought = poolCoinAmount - newPoolCoin;
-
-        totalCost = amount;
-        newPrice = newPoolBaseCurrency / newPoolCoin;
-        priceImpact = ((newPrice - currentPrice) / currentPrice) * 100;
-
-        if (userBalance < totalCost) {
-            throw error(400, `Insufficient funds. You need *${totalCost.toFixed(6)} BUSS but only have *${userBalance.toFixed(6)} BUSS`);
+        if (!coinData) {
+            throw error(404, 'Coin not found');
         }
 
-        if (coinsBought <= 0) {
-            throw error(400, 'Trade amount too small - would result in zero tokens');
+        if (!coinData.isListed) {
+            throw error(400, 'This coin is delisted and cannot be traded');
         }
 
-        await db.transaction(async (tx) => {
+        const [userData] = await tx.select({
+            baseCurrencyBalance: user.baseCurrencyBalance,
+            username: user.username,
+            image: user.image
+        }).from(user).where(eq(user.id, userId)).for('update').limit(1);
+
+        if (!userData) {
+            throw error(404, 'User not found');
+        }
+
+        const userBalance = Number(userData.baseCurrencyBalance);
+        const poolCoinAmount = Number(coinData.poolCoinAmount);
+        const poolBaseCurrencyAmount = Number(coinData.poolBaseCurrencyAmount);
+        const currentPrice = Number(coinData.currentPrice);
+
+        let newPrice: number;
+        let totalCost: number;
+        let priceImpact: number = 0;
+
+        if (poolCoinAmount <= 0 || poolBaseCurrencyAmount <= 0) {
+            throw error(400, 'Liquidity pool is not properly initialized or is empty. Trading halted.');
+        }
+
+        if (type === 'BUY') {
+            // AMM BUY: amount = dollars to spend
+            const k = poolCoinAmount * poolBaseCurrencyAmount;
+            const newPoolBaseCurrency = poolBaseCurrencyAmount + amount;
+            const newPoolCoin = k / newPoolBaseCurrency;
+            const coinsBought = poolCoinAmount - newPoolCoin;
+
+            totalCost = amount;
+            newPrice = newPoolBaseCurrency / newPoolCoin;
+            priceImpact = ((newPrice - currentPrice) / currentPrice) * 100;
+
+            if (userBalance < totalCost) {
+                throw error(400, `Insufficient funds. You need *${totalCost.toFixed(6)} BUSS but only have *${userBalance.toFixed(6)} BUSS`);
+            }
+
+            if (coinsBought <= 0) {
+                throw error(400, 'Trade amount too small - would result in zero tokens');
+            }
+
             await tx.update(user)
                 .set({
                     baseCurrencyBalance: (userBalance - totalCost).toString(),
@@ -181,94 +190,91 @@ export async function POST({ params, request }) {
                 })
                 .where(eq(coin.id, coinData.id));
 
-            await redis.publish(`prices:${normalizedSymbol}`, JSON.stringify({
+            const priceUpdateData = {
                 currentPrice: newPrice,
                 marketCap: Number(coinData.circulatingSupply) * newPrice,
                 change24h: metrics.change24h,
                 volume24h: metrics.volume24h,
                 poolCoinAmount: newPoolCoin,
                 poolBaseCurrencyAmount: newPoolBaseCurrency
-            }));
-        });
+            };
 
-        // REDIS
-        const tradeData = {
-            type: 'BUY',
-            username: userData.username,
-            userImage: userData.image || '',
-            amount: coinsBought,
-            coinSymbol: normalizedSymbol,
-            coinName: coinData.name,
-            coinIcon: coinData.icon || '',
-            totalValue: totalCost,
-            price: newPrice,
-            timestamp: Date.now(),
-            userId: userId.toString()
-        };
+            const tradeData = {
+                type: 'BUY',
+                username: userData.username,
+                userImage: userData.image || '',
+                amount: coinsBought,
+                coinSymbol: normalizedSymbol,
+                coinName: coinData.name,
+                coinIcon: coinData.icon || '',
+                totalValue: totalCost,
+                price: newPrice,
+                timestamp: Date.now(),
+                userId: userId.toString()
+            };
 
-        await redis.publish('trades:all', JSON.stringify({
-            type: 'all-trades',
-            data: tradeData
-        }));
+            await redis.publish(`prices:${normalizedSymbol}`, JSON.stringify(priceUpdateData));
 
-        if (totalCost >= 1000) {
-            await redis.publish('trades:large', JSON.stringify({
-                type: 'live-trade',
+            await redis.publish('trades:all', JSON.stringify({
+                type: 'all-trades',
                 data: tradeData
             }));
-        }
-        // End REDIS
 
-        return json({
-            success: true,
-            type: 'BUY',
-            coinsBought,
-            totalCost,
-            newPrice,
-            priceImpact,
-            newBalance: userBalance - totalCost
-        });
+            if (totalCost >= 1000) {
+                await redis.publish('trades:large', JSON.stringify({
+                    type: 'live-trade',
+                    data: tradeData
+                }));
+            }
 
-    } else {
-        // AMM SELL: amount = number of coins to sell
-        const [userHolding] = await db
-            .select({ quantity: userPortfolio.quantity })
-            .from(userPortfolio)
-            .where(and(
-                eq(userPortfolio.userId, userId),
-                eq(userPortfolio.coinId, coinData.id)
-            ))
-            .limit(1);
+            return json({
+                success: true,
+                type: 'BUY',
+                coinsBought,
+                totalCost,
+                newPrice,
+                priceImpact,
+                newBalance: userBalance - totalCost
+            });
 
-        if (!userHolding || Number(userHolding.quantity) < amount) {
-            throw error(400, `Insufficient coins. You have ${userHolding ? Number(userHolding.quantity) : 0} but trying to sell ${amount}`);
-        }
+        } else {
+            // AMM SELL: amount = number of coins to sell
+            const [userHolding] = await tx
+                .select({ quantity: userPortfolio.quantity })
+                .from(userPortfolio)
+                .where(and(
+                    eq(userPortfolio.userId, userId),
+                    eq(userPortfolio.coinId, coinData.id)
+                ))
+                .limit(1);
 
-        // Allow more aggressive selling for rug pull simulation - prevent only mathematical breakdown
-        const maxSellable = Math.floor(poolCoinAmount * 0.995); // 99.5% instead of 99%
-        if (amount > maxSellable) {
-            throw error(400, `Cannot sell more than 99.5% of pool tokens. Max sellable: ${maxSellable} tokens`);
-        }
+            if (!userHolding || Number(userHolding.quantity) < amount) {
+                throw error(400, `Insufficient coins. You have ${userHolding ? Number(userHolding.quantity) : 0} but trying to sell ${amount}`);
+            }
 
-        const k = poolCoinAmount * poolBaseCurrencyAmount;
-        const newPoolCoin = poolCoinAmount + amount;
-        const newPoolBaseCurrency = k / newPoolCoin;
-        const baseCurrencyReceived = poolBaseCurrencyAmount - newPoolBaseCurrency;
+            // Allow more aggressive selling for rug pull simulation - prevent only mathematical breakdown
+            const maxSellable = Math.floor(poolCoinAmount * 0.995);
+            if (amount > maxSellable) {
+                throw error(400, `Cannot sell more than 99.5% of pool tokens. Max sellable: ${maxSellable} tokens`);
+            }
 
-        totalCost = baseCurrencyReceived;
-        newPrice = newPoolBaseCurrency / newPoolCoin;
-        priceImpact = ((newPrice - currentPrice) / currentPrice) * 100;
+            const k = poolCoinAmount * poolBaseCurrencyAmount;
+            const newPoolCoin = poolCoinAmount + amount;
+            const newPoolBaseCurrency = k / newPoolCoin;
+            const baseCurrencyReceived = poolBaseCurrencyAmount - newPoolBaseCurrency;
 
-        // Lower minimum liquidity for more dramatic crashes
-        if (newPoolBaseCurrency < 10) {
-            throw error(400, `Trade would drain pool below minimum liquidity (*10 BUSS). Try selling fewer tokens.`);
-        }
+            totalCost = baseCurrencyReceived;
+            newPrice = newPoolBaseCurrency / newPoolCoin;
+            priceImpact = ((newPrice - currentPrice) / currentPrice) * 100;
 
-        if (totalCost <= 0) {
-            throw error(400, 'Trade amount results in zero base currency received');
-        }
+            if (newPoolBaseCurrency < 10) {
+                throw error(400, `Trade would drain pool below minimum liquidity (*10 BUSS). Try selling fewer tokens.`);
+            }
 
-        await db.transaction(async (tx) => {
+            if (totalCost <= 0) {
+                throw error(400, 'Trade amount results in zero base currency received');
+            }
+
             await tx.update(user)
                 .set({
                     baseCurrencyBalance: (userBalance + totalCost).toString(),
@@ -323,52 +329,52 @@ export async function POST({ params, request }) {
                 })
                 .where(eq(coin.id, coinData.id));
 
-            await redis.publish(`prices:${normalizedSymbol}`, JSON.stringify({
+            const priceUpdateData = {
                 currentPrice: newPrice,
                 marketCap: Number(coinData.circulatingSupply) * newPrice,
                 change24h: metrics.change24h,
                 volume24h: metrics.volume24h,
                 poolCoinAmount: newPoolCoin,
                 poolBaseCurrencyAmount: newPoolBaseCurrency
-            }));
-        });
+            };
 
-        // REDIS
-        const tradeData = {
-            type: 'SELL',
-            username: userData.username,
-            userImage: userData.image || '',
-            amount: amount,
-            coinSymbol: normalizedSymbol,
-            coinName: coinData.name,
-            coinIcon: coinData.icon || '',
-            totalValue: totalCost,
-            price: newPrice,
-            timestamp: Date.now(),
-            userId: userId.toString()
-        };
+            const tradeData = {
+                type: 'SELL',
+                username: userData.username,
+                userImage: userData.image || '',
+                amount: amount,
+                coinSymbol: normalizedSymbol,
+                coinName: coinData.name,
+                coinIcon: coinData.icon || '',
+                totalValue: totalCost,
+                price: newPrice,
+                timestamp: Date.now(),
+                userId: userId.toString()
+            };
 
-        await redis.publish('trades:all', JSON.stringify({
-            type: 'all-trades',
-            data: tradeData
-        }));
+            await redis.publish(`prices:${normalizedSymbol}`, JSON.stringify(priceUpdateData));
 
-        if (totalCost >= 1000) {
-            await redis.publish('trades:large', JSON.stringify({
-                type: 'live-trade',
+            await redis.publish('trades:all', JSON.stringify({
+                type: 'all-trades',
                 data: tradeData
             }));
-        }
-        // End REDIS
 
-        return json({
-            success: true,
-            type: 'SELL',
-            coinsSold: amount,
-            totalReceived: totalCost,
-            newPrice,
-            priceImpact,
-            newBalance: userBalance + totalCost
-        });
-    }
+            if (totalCost >= 1000) {
+                await redis.publish('trades:large', JSON.stringify({
+                    type: 'live-trade',
+                    data: tradeData
+                }));
+            }
+
+            return json({
+                success: true,
+                type: 'SELL',
+                coinsSold: amount,
+                totalReceived: totalCost,
+                newPrice,
+                priceImpact,
+                newBalance: userBalance + totalCost
+            });
+        }
+    });
 }

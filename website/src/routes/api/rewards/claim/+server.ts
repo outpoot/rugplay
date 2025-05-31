@@ -57,6 +57,7 @@ export const POST: RequestHandler = async ({ request }) => {
         })
             .from(user)
             .where(eq(user.id, userId))
+            .for('update')
             .limit(1);
 
         if (!userData[0]) {

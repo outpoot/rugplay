@@ -37,6 +37,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 .select({ baseCurrencyBalance: user.baseCurrencyBalance })
                 .from(user)
                 .where(eq(user.id, userId))
+                .for('update')
                 .limit(1);
 
             if (!userData || Number(userData.baseCurrencyBalance) < MIN_BALANCE_REQUIRED) {

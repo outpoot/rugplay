@@ -33,6 +33,7 @@ export const POST: RequestHandler = async ({ request }) => {
             })
             .from(promoCode)
             .where(eq(promoCode.code, normalizedCode))
+            .for('update')
             .limit(1);
 
         if (!promoData) {
@@ -64,7 +65,8 @@ export const POST: RequestHandler = async ({ request }) => {
             const [{ totalUses }] = await tx
                 .select({ totalUses: count() })
                 .from(promoCodeRedemption)
-                .where(eq(promoCodeRedemption.promoCodeId, promoData.id));
+                .where(eq(promoCodeRedemption.promoCodeId, promoData.id))
+                .for('update');
 
             if (totalUses >= promoData.maxUses) {
                 return json({ error: 'This promo code has reached its usage limit' }, { status: 400 });
@@ -75,6 +77,7 @@ export const POST: RequestHandler = async ({ request }) => {
             .select({ baseCurrencyBalance: user.baseCurrencyBalance })
             .from(user)
             .where(eq(user.id, userId))
+            .for('update')
             .limit(1);
 
         if (!userData) {

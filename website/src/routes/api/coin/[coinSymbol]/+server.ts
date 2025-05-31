@@ -141,7 +141,10 @@ export async function GET({ params, url }) {
             .limit(1);
 
         if (!coinData) {
-            throw error(404, 'Coin not found');
+         return new Response(JSON.stringify({ error: 'Coin not found' }), {
+          status: 404, // this might fix the 500 issue, IDRK
+          headers: { 'Content-Type': 'application/json' }
+         });
         }
 
         const [rawPriceHistory, rawTransactions] = await Promise.all([

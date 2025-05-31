@@ -307,7 +307,7 @@ docker compose logs postgres
 
 ## License
 
-[Add your license here]
+Rugplay is licensed under the [CC BY-NC 4.0](LICENSE) license.
 
 ## Support
 

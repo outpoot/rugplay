@@ -21,38 +21,45 @@ export async function POST({ request }) {
         throw error(400, 'Invalid confirmation text');
     }
 
-    const scheduledDeletionAt = new Date();
-    scheduledDeletionAt.setDate(scheduledDeletionAt.getDate() + 14);
-
-    await db.transaction(async (tx) => {
-        const existingRequest = await tx.select()
+    try {
+        const existingRequest = await db.select()
             .from(accountDeletionRequest)
             .where(eq(accountDeletionRequest.userId, userId))
             .limit(1);
 
         if (existingRequest.length > 0) {
-            throw new Error('Account deletion already requested');
+            throw error(409, 'Account deletion already requested');
         }
 
-        await tx.insert(accountDeletionRequest).values({
-            userId,
-            scheduledDeletionAt,
-            reason: 'User requested account deletion'
+        const scheduledDeletionAt = new Date();
+        scheduledDeletionAt.setDate(scheduledDeletionAt.getDate() + 14);
+
+        await db.transaction(async (tx) => {
+            await tx.insert(accountDeletionRequest).values({
+                userId,
+                scheduledDeletionAt,
+                reason: 'User requested account deletion'
+            });
+
+            await tx.update(user)
+                .set({
+                    isBanned: true,
+                    banReason: 'Account deletion requested - scheduled for ' + scheduledDeletionAt.toISOString(),
+                    updatedAt: new Date()
+                })
+                .where(eq(user.id, userId));
         });
 
-        await tx.update(user)
-            .set({
-                isBanned: true,
-                banReason: 'Account deletion requested - scheduled for ' + scheduledDeletionAt.toISOString(),
-                updatedAt: new Date()
-            })
-            .where(eq(user.id, userId));
-    });
-
-
-    return json({
-        success: true,
-        message: `Account deletion has been scheduled for ${scheduledDeletionAt.toLocaleDateString()}. Your account has been temporarily suspended. You can cancel this request by contacting support before the scheduled date.`,
-        scheduledDeletionAt: scheduledDeletionAt.toISOString()
-    });
+        return json({
+            success: true,
+            message: `Account deletion has been scheduled for ${scheduledDeletionAt.toLocaleDateString()}. Your account has been temporarily suspended. You can cancel this request by contacting support before the scheduled date.`,
+            scheduledDeletionAt: scheduledDeletionAt.toISOString()
+        });
+    } catch (e) {
+        if (e && typeof e === 'object' && 'status' in e) {
+            throw e;
+        }
+        console.error('Account deletion error:', e);
+        throw error(500, 'Internal server error');
+    }
 }

@@ -239,16 +239,21 @@
 				})
 			});
 
+			const result = await response.json();
+
 			if (!response.ok) {
-				const result = await response.json();
-				throw new Error(result.message || 'Failed to delete account');
+				if (response.status === 409) {
+					toast.error('Account deletion already scheduled', {
+						description: 'You have already requested account deletion. Contact support to cancel.'
+					});
+				} else {
+					throw new Error(result.message || 'Failed to delete account');
+				}
+			} else {
+				toast.success('Account deletion scheduled successfully', {
+					description: result.message
+				});
 			}
-
-			toast.success('Account deleted successfully. You will be logged out shortly.');
-
-			setTimeout(() => {
-				window.location.href = '/';
-			}, 2000);
 		} catch (error: any) {
 			console.error('Delete account error:', error);
 			toast.error('Failed to delete account: ' + error.message);
@@ -260,7 +265,7 @@
 	}
 </script>
 
-<SEO 
+<SEO
 	title="Settings - Rugplay"
 	description="Manage your Rugplay account settings, profile information, audio preferences, and privacy options."
 	noindex={true}
@@ -427,8 +432,8 @@
 						<div class="space-y-1">
 							<h4 class="text-destructive text-sm font-medium">Delete Account</h4>
 							<p class="text-muted-foreground text-xs">
-								Permanently delete your account. This will anonymize your data while preserving
-								transaction records for compliance.
+								Schedule your account for permanent deletion. This will anonymize your data while
+								preserving transaction records for compliance.
 							</p>
 						</div>
 						<Button
@@ -452,8 +457,8 @@
 		<Dialog.Header>
 			<Dialog.Title class="text-destructive">Delete Account</Dialog.Title>
 			<Dialog.Description>
-				This action cannot be undone. Your account will be permanently deleted and your data will be
-				anonymized.
+				This action cannot be undone. Your account will be scheduled for permanent deletion, after a
+				grace period of <span class="font-semibold">14 days</span>. Your data will be anonymized.
 			</Dialog.Description>
 		</Dialog.Header>
 		<div class="space-y-4">

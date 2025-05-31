@@ -191,7 +191,11 @@ export async function GET({ params, url }) {
             timeframe
         });
     } catch (e) {
-        console.error('Error fetching coin data:', e);
-        throw error(500, 'Failed to fetch coin data');
+        if (e && typeof e === 'object' && 'status' in e) {
+            throw e;
+        }
+
+        console.error('Unexpected error in coin API:', e);
+        throw error(500, 'Internal server error');
     }
 }

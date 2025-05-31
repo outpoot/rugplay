@@ -8,6 +8,8 @@ export interface CoinData {
 	change24h: number;
 	createdAt: string;
 	creatorName: string | null;
+	pumpFeeRate?: number;
+	burnRate?: number;
 }
 
 export interface MarketFilters {

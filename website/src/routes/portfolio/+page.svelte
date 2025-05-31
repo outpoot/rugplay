@@ -285,11 +285,13 @@
 						</Card.Title>
 						<Card.Description>Your latest trading activity</Card.Description>
 					</div>
-					{#if hasTransactions}
+					/* {#if hasTransactions}
 						<Button variant="outline" size="sm" onclick={() => goto('/transactions')}>
 							View All
 						</Button>
-					{/if}
+					{/if} */
+                                       // Temp fix for #5 untill all done
+                                       // /transactions don't even exist LOL!
 				</div>
 			</Card.Header>
 			<Card.Content>

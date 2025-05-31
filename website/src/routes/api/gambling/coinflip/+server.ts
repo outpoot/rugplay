@@ -47,16 +47,19 @@ export const POST: RequestHandler = async ({ request }) => {
 
             const currentBalance = Number(userData.baseCurrencyBalance);
 
-            if (amount > currentBalance) {
-                throw new Error(`Insufficient funds. You need *${amount.toFixed(2)} but only have *${currentBalance.toFixed(2)}`);
+            const roundedAmount = Math.round(amount * 100000000) / 100000000;
+            const roundedBalance = Math.round(currentBalance * 100000000) / 100000000;
+
+            if (roundedAmount > roundedBalance) {
+                throw new Error(`Insufficient funds. You need *${roundedAmount.toFixed(2)} but only have *${roundedBalance.toFixed(2)}`);
             }
 
             const gameResult: 'heads' | 'tails' = randomBytes(1)[0] < 128 ? 'heads' : 'tails';
             const won = gameResult === side;
 
             const multiplier = 2;
-            const payout = won ? amount * multiplier : 0;
-            const newBalance = currentBalance - amount + payout;
+            const payout = won ? roundedAmount * multiplier : 0;
+            const newBalance = roundedBalance - roundedAmount + payout;
 
             await tx
                 .update(user)
@@ -71,7 +74,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 result: gameResult,
                 newBalance,
                 payout,
-                amountWagered: amount
+                amountWagered: roundedAmount
             };
         });
 

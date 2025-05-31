@@ -434,8 +434,8 @@
 							<div class="flex items-center gap-3">
 								<CoinIcon icon={coin.icon} symbol={coin.symbol} size={8} />
 								<div>
-									<h3 class="text-lg font-semibold leading-tight">{coin.name}</h3>
-									<p class="text-muted-foreground text-sm">*{coin.symbol}</p>
+									<h3 class="text-lg font-semibold leading-tight truncate">{coin.name}</h3>
+									<p class="text-muted-foreground text-sm truncate">*{coin.symbol}</p>
 								</div>
 							</div>
 							<div class="text-right">

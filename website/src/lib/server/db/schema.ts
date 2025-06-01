@@ -83,8 +83,6 @@ export const coin = pgTable("coin", {
 	change24h: decimal("change_24h", { precision: 30, scale: 4 }).default("0.0000"), // Percentage
 	poolCoinAmount: decimal("pool_coin_amount", { precision: 30, scale: 8 }).notNull().default("0.00000000"),
 	poolBaseCurrencyAmount: decimal("pool_base_currency_amount", { precision: 30, scale: 8, }).notNull().default("0.00000000"),
-	pumpFeeRate: decimal("pump_fee_rate", { precision: 10, scale: 8 }).notNull().default("0.00500000"), // 0.5%
-	burnRate: decimal("burn_rate", { precision: 10, scale: 8 }).notNull().default("0.00100000"), // 0.1%
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 	isListed: boolean("is_listed").default(true).notNull(),
@@ -111,8 +109,6 @@ export const transaction = pgTable("transaction", {
 	quantity: decimal("quantity", { precision: 30, scale: 8 }).notNull(),
 	pricePerCoin: decimal("price_per_coin", { precision: 20, scale: 8 }).notNull(),
 	totalBaseCurrencyAmount: decimal("total_base_currency_amount", { precision: 30, scale: 8 }).notNull(),
-	pumpFeeApplied: decimal("pump_fee_applied", { precision: 30, scale: 8 }).default("0.00000000"),
-	tokensBurned: decimal("tokens_burned", { precision: 30, scale: 8 }).default("0.00000000"),
 	timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
 	recipientUserId: integer('recipient_user_id').references(() => user.id, { onDelete: 'set null' }),
 	senderUserId: integer('sender_user_id').references(() => user.id, { onDelete: 'set null' }),

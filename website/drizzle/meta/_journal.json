@@ -22,13 +22,6 @@
       "when": 1748700252762,
       "tag": "0002_lush_guardian",
       "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1748710560443,
-      "tag": "0003_adorable_leper_queen",
-      "breakpoints": true
     }
   ]
 }

@@ -34,7 +34,6 @@
 			: userHolding
 	);
 	let estimatedResult = $derived(calculateEstimate(numericAmount, type, currentPrice));
-	let estimatedAutoPump = $derived(calculateAutoPumpEffects(numericAmount, type, coin));
 	let hasValidAmount = $derived(numericAmount > 0);
 	let userBalance = $derived($PORTFOLIO_DATA ? $PORTFOLIO_DATA.baseCurrencyBalance : 0);
 	let hasEnoughFunds = $derived(
@@ -62,25 +61,6 @@
 			const newPoolCoin = poolCoin + amount;
 			const newPoolBase = k / newPoolCoin;
 			return { result: poolBase - newPoolBase };
-		}
-	}
-
-	function calculateAutoPumpEffects(amount: number, tradeType: 'BUY' | 'SELL', coinData: any) {
-		if (!amount) return { fee: 0, burn: 0 };
-
-		const pumpFeeRate = Number(coinData.pumpFeeRate || 0.005);
-		const burnRate = Number(coinData.burnRate || 0.001);
-
-		if (tradeType === 'BUY') {
-			const fee = amount * pumpFeeRate;
-			const estimatedTokens = calculateEstimate(amount, tradeType, currentPrice).result;
-			const burn = estimatedTokens * burnRate;
-			return { fee, burn };
-		} else {
-			const estimatedValue = calculateEstimate(amount, tradeType, currentPrice).result;
-			const fee = estimatedValue * pumpFeeRate;
-			const burn = amount * burnRate;
-			return { fee, burn };
 		}
 	}
 
@@ -203,20 +183,6 @@
 								: `~$${estimatedResult.result.toFixed(6)}`}
 						</span>
 					</div>
-					{#if estimatedAutoPump.fee > 0 || estimatedAutoPump.burn > 0}
-						<div class="border-muted mt-2 border-t pt-2">
-							<div class="text-muted-foreground text-xs">
-								<div class="mb-1 flex items-center justify-between">
-									<span>🔥 Auto-pump fee (0.5%):</span>
-									<span>+${estimatedAutoPump.fee.toFixed(6)} to pool</span>
-								</div>
-								<div class="flex items-center justify-between">
-									<span>🔥 Token burn (0.1%):</span>
-									<span>-{estimatedAutoPump.burn.toFixed(6)} {coin.symbol}</span>
-								</div>
-							</div>
-						</div>
-					{/if}
 					<p class="text-muted-foreground mt-1 text-xs">
 						AMM estimation - includes slippage from pool impact
 					</p>

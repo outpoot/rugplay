@@ -226,7 +226,7 @@
 				<h1 class="text-2xl font-semibold">{question.question}</h1>
 				{#if question.status === 'ACTIVE'}
 					<p class="text-muted-foreground mt-1 text-sm">
-						Ends in {formatTimeUntil(question.resolutionDate)}
+						{formatTimeUntil(question.resolutionDate).startsWith('Ended') ? 'Resolving' : `Ends in ${formatTimeUntil(question.resolutionDate)}`}
 					</p>
 				{/if}
 
@@ -315,32 +315,32 @@
 						<Card.Content class="space-y-6">
 							<!-- YES/NO Buttons -->
 							<div class="grid grid-cols-2 gap-4">
-								<Button
-									class={betSide
-										? 'bg-success/80 hover:bg-success/90 w-full'
-										: 'bg-muted hover:bg-muted/90 w-full'}
-									size="lg"
-									onclick={() => (betSide = true)}
-									disabled={question.aiResolution !== null}
-								>
-									<div class="flex items-baseline gap-2">
-										<span class="text-xl font-bold">YES</span>
-										<span class="text-sm">{question.yesPercentage.toFixed(1)}¢</span>
-									</div>
-								</Button>
-								<Button
-									class={!betSide
-										? 'bg-destructive hover:bg-destructive/90 w-full'
-										: 'bg-muted hover:bg-muted/90 w-full'}
-									size="lg"
-									onclick={() => (betSide = false)}
-									disabled={question.aiResolution !== null}
-								>
-									<div class="flex items-baseline gap-2">
-										<span class="text-xl font-bold">NO</span>
-										<span class="text-sm">{question.noPercentage.toFixed(1)}¢</span>
-									</div>
-								</Button>
+							<Button
+								class={betSide
+								? 'bg-success/80 hover:bg-success/90 w-full'
+								: 'bg-muted hover:bg-muted/90 w-full'}
+								size="lg"
+								onclick={() => (betSide = true)}
+								disabled={question.aiResolution !== null}
+							>
+								<div class="flex items-baseline gap-2 w-full min-w-0">
+								<span class="text-xl font-bold truncate">YES</span>
+								<span class="text-sm truncate">{question.yesPercentage.toFixed(1)}¢</span>
+								</div>
+							</Button>
+							<Button
+								class={!betSide
+								? 'bg-destructive hover:bg-destructive/90 w-full'
+								: 'bg-muted hover:bg-muted/90 w-full'}
+								size="lg"
+								onclick={() => (betSide = false)}
+								disabled={question.aiResolution !== null}
+							>
+								<div class="flex items-baseline gap-2 w-full min-w-0">
+								<span class="text-xl font-bold truncate">NO</span>
+								<span class="text-sm truncate">{question.noPercentage.toFixed(1)}¢</span>
+								</div>
+							</Button>
 							</div>
 
 							<!-- Amount Input -->
@@ -356,10 +356,10 @@
 							</div>
 
 							<!-- Quick Amount Buttons -->
-							<div class="flex gap-2">
+							<div class="flex flex-wrapper gap-2">
 								<Button
 									variant="outline"
-									class="flex-1"
+									class="flex-1 truncate"
 									onclick={() => (customBetAmount = '1')}
 									disabled={question.aiResolution !== null}
 								>
@@ -367,7 +367,7 @@
 								</Button>
 								<Button
 									variant="outline"
-									class="flex-1"
+									class="flex-1 truncate"
 									onclick={() => (customBetAmount = '20')}
 									disabled={question.aiResolution !== null}
 								>
@@ -375,7 +375,7 @@
 								</Button>
 								<Button
 									variant="outline"
-									class="flex-1"
+									class="flex-1 truncate"
 									onclick={() => (customBetAmount = '100')}
 									disabled={question.aiResolution !== null}
 								>
@@ -383,7 +383,7 @@
 								</Button>
 								<Button
 									variant="outline"
-									class="flex-1"
+									class="flex-1 truncate"
 									onclick={() => (customBetAmount = userBalance.toString())}
 									disabled={question.aiResolution !== null}
 								>

@@ -274,7 +274,7 @@
 									<div class="flex items-center gap-1">
 										<Clock class="h-3 w-3" />
 										{#if question.status === 'ACTIVE'}
-											{formatTimeUntil(question.resolutionDate)} remaining
+											{formatTimeUntil(question.resolutionDate).startsWith('Ended') ? 'Resolving' : `${formatTimeUntil(question.resolutionDate)} remaining`}
 										{:else}
 											Resolved {formatDateWithYear(question.resolvedAt || '')}
 										{/if}

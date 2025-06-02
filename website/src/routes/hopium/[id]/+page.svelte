@@ -359,7 +359,7 @@
 							<div class="flex flex-wrapper gap-2">
 								<Button
 									variant="outline"
-									class="flex-1"
+									class="flex-1 truncate"
 									onclick={() => (customBetAmount = '1')}
 									disabled={question.aiResolution !== null}
 								>
@@ -367,7 +367,7 @@
 								</Button>
 								<Button
 									variant="outline"
-									class="flex-1"
+									class="flex-1 truncate"
 									onclick={() => (customBetAmount = '20')}
 									disabled={question.aiResolution !== null}
 								>
@@ -375,7 +375,7 @@
 								</Button>
 								<Button
 									variant="outline"
-									class="flex-1"
+									class="flex-1 truncate"
 									onclick={() => (customBetAmount = '100')}
 									disabled={question.aiResolution !== null}
 								>
@@ -383,7 +383,7 @@
 								</Button>
 								<Button
 									variant="outline"
-									class="flex-1"
+									class="flex-1 truncate"
 									onclick={() => (customBetAmount = userBalance.toString())}
 									disabled={question.aiResolution !== null}
 								>

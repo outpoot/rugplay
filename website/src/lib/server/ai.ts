@@ -190,11 +190,11 @@ async function getMarketOverview() {
     }
 }
 
-// Extract coin symbols from question text
 function extractCoinSymbols(text: string): string[] {
-    const coinPattern = /\*([A-Z]{2,10})\b/g;
-    const matches = [...text.matchAll(coinPattern)];
-    return matches.map(match => match[1]);
+  const coinPattern = /\*([A-Z]{2,10})(?![A-Z])/g;
+  const matches = [...text.matchAll(coinPattern)];
+
+  return [...new Set(matches.map(m => m[1]))];
 }
 
 export async function validateQuestion(question: string, description?: string): Promise<QuestionValidationResult> {
@@ -207,18 +207,29 @@ export async function validateQuestion(question: string, description?: string): 
     }
 
     const marketOverview = await getMarketOverview();
-    const coinSymbols = extractCoinSymbols(question + (description || ''));
+    const coinSymbols = extractCoinSymbols((question + (description || '')).toUpperCase());
 
     let coinContext = '';
     if (coinSymbols.length > 0) {
         const coinData = await Promise.all(
             coinSymbols.map(symbol => getCoinData(symbol))
         );
-        const validCoins = coinData.filter(Boolean);
-        if (validCoins.length > 0) {
-            coinContext = `\n\nReferenced coins in question:\n${validCoins.map(coin =>
-                coin ? `*${coin.symbol} (${coin.name}): $${coin.currentPrice.toFixed(6)}, Market Cap: $${coin.marketCap.toFixed(2)}, Listed: ${coin.isListed}` : 'none'
-            ).join('\n')}`;
+
+        const existingCoins = coinData.filter(Boolean);
+        const nonExistentCoins = coinSymbols.filter((symbol, index) => !coinData[index]);
+
+        if (existingCoins.length > 0 || nonExistentCoins.length > 0) {
+            coinContext = '\n\nReferenced coins in question:';
+
+            if (nonExistentCoins.length > 0) {
+                coinContext += `\nNON-EXISTENT: ${nonExistentCoins.map(symbol => `*${symbol}`).join(', ')} - Do not exist on platform`;
+            }
+
+            if (existingCoins.length > 0) {
+                coinContext += `\nEXISTING: ${existingCoins.map(coin =>
+                    coin ? `*${coin.symbol} (${coin.name}): $${coin.currentPrice.toFixed(6)}, Market Cap: $${coin.marketCap.toFixed(2)}, Listed: ${coin.isListed}` : 'none'
+                ).join('\n')}`;
+            }
         }
     }
 
@@ -249,6 +260,7 @@ Determine the optimal resolution date based on the question type:
 
 Also determine:
 - Whether this question requires web search (external events, real-world data, non-Rugplay information)
+- If the question is related to 
 - Provide a specific resolution date with time (suggest times between 12:00-20:00 UTC for good global coverage) The current date and time is ${new Date().toISOString()}.
 
 Note: All coins use *SYMBOL format (e.g., *BTC, *DOGE). All trading is simulated with *BUSS currency.
@@ -287,7 +299,7 @@ Provide your response in the specified JSON format with a precise ISO 8601 datet
         return {
             isValid: false,
             requiresWebSearch: false,
-            reason: error instanceof Error && error.message.includes('rate limit') 
+            reason: error instanceof Error && error.message.includes('rate limit')
                 ? 'AI service temporarily unavailable due to rate limits'
                 : 'Failed to validate question due to AI service error'
         };
@@ -309,7 +321,6 @@ export async function resolveQuestion(
 
     const model = requiresWebSearch ? MODELS.WEB_SEARCH : MODELS.STANDARD;
 
-    // Get comprehensive Rugplay context
     const rugplayData = customRugplayData || await getRugplayData(question);
 
     const prompt = `
@@ -324,8 +335,8 @@ Instructions:
 1. Provide a definitive YES or NO answer based on current factual information
 2. Give your confidence level (0-100) in this resolution
 3. Provide clear reasoning for your decision with specific data references
-4. If the question cannot be resolved due to insufficient information, set confidence to 0
-5. For coin-specific questions, reference actual market data from Rugplay
+4. For coin-specific questions that mention non-existent coins, answer NO (the coin doesn't exist, so it can't reach any price)
+5. For coin-specific questions about existing coins, reference actual market data from Rugplay
 6. For external events, use web search if enabled
 
 Context about Rugplay:
@@ -334,6 +345,11 @@ Context about Rugplay:
 - Features AMM liquidity pools, rug pull mechanics, and real market dynamics
 - Users can create meme coins and trade with simulated currency
 - Platform tracks real market metrics like price, volume, market cap
+- Non-existent coins cannot reach any price targets
+
+Examples of how to handle non-existent coins:
+- Question: "Will *NONEXISTENT reach $1?" → Answer: NO (95% confidence) - "The coin *NONEXISTENT does not exist on the Rugplay platform"
+- Question: "Will *REALCOIN go from $0.001 to $1 in 1 hour?" → Answer: YES (100% confidence) - "According to the Rugplay data, it has."
 
 Provide your response in the specified JSON format.
 `;
@@ -377,22 +393,31 @@ export async function getRugplayData(question?: string): Promise<string> {
     try {
         const marketOverview = await getMarketOverview();
 
-        // Extract coin symbols from question if provided
         let coinSpecificData = '';
         if (question) {
-            const coinSymbols = extractCoinSymbols(question || '');
+            const coinSymbols = extractCoinSymbols(question.toUpperCase());
+            console.log('Extracted coin symbols:', coinSymbols);
+
             if (coinSymbols.length > 0) {
                 const coinData = await Promise.all(
                     coinSymbols.map(symbol => getCoinData(symbol))
                 );
-                const validCoins = coinData.filter(Boolean);
 
-                if (validCoins.length > 0) {
-                    coinSpecificData = `\n\nSpecific Coin Data Referenced:\n${validCoins.map(coin => {
+                const existingCoins = coinData.filter(Boolean);
+                const nonExistentCoins = coinSymbols.filter((symbol, index) => !coinData[index]);
+
+                coinSpecificData = '\n\nCoin Analysis for Question:';
+
+                if (nonExistentCoins.length > 0) {
+                    coinSpecificData += `\nNON-EXISTENT COINS: ${nonExistentCoins.map(symbol => `*${symbol}`).join(', ')} - These coins do not exist on the Rugplay platform`;
+                }
+
+                if (existingCoins.length > 0) {
+                    coinSpecificData += `\nEXISTING COINS DATA:\n${existingCoins.map(coin => {
                         if (!coin) return '';
                         return `
 *${coin.symbol} (${coin.name}):
-- Price: $${coin.currentPrice.toFixed(8)}
+- Current Price: $${coin.currentPrice.toFixed(8)}
 - Market Cap: $${coin.marketCap.toFixed(2)}
 - 24h Change: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%
 - 24h Volume: $${coin.volume24h.toFixed(2)}
@@ -403,8 +428,7 @@ export async function getRugplayData(question?: string): Promise<string> {
 - Recent trades: ${coin.recentTrades.length} in last 10 transactions
 ${coin.recentTrades.slice(0, 3).map(trade =>
                             `  ${trade.type}: ${trade.quantity.toFixed(2)} ${coin.symbol} @ $${trade.pricePerCoin.toFixed(6)} by @${trade.username}`
-                        ).join('\n')}
-                    `;
+                        ).join('\n')}`;
                     }).join('\n')}`;
                 }
             }
@@ -436,12 +460,6 @@ Platform Details:
         `;
     } catch (error) {
         console.error('Error generating Rugplay data:', error);
-        return `
-Current Timestamp: ${new Date().toISOString()}
-Platform: Rugplay - Cryptocurrency Trading Simulation
-Status: Error retrieving market data
-Base Currency: *BUSS (simulated dollars)
-Note: All trading is simulated with fake money
-        `;
+        return `Couldn't retrieve data, please try again later.`;
     }
 }

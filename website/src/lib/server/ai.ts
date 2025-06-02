@@ -253,10 +253,11 @@ ${marketOverview?.topCoins.slice(0, 5).map(c =>
 ${VALIDATION_CRITERIA}
 
 Determine the optimal resolution date based on the question type:
-- Price predictions: 1-7 days depending on specificity ("today" = end of today, "this week" = end of week, etc.)
+- Price predictions: 1-7 days depending on specificity ("today" = end of today, "this week" = end of week, "1 hour" = in a literal 1 hour, etc.)
 - Real-world events: Based on event timeline (elections, earnings, etc.)
 - Platform milestones: 1-30 days based on achievement difficulty
 - General predictions: 1-7 days for short-term, up to 30 days for longer-term
+- If the question explicitly states the date, use that as the resolution date
 
 Also determine:
 - Whether this question requires web search (external events, real-world data, non-Rugplay information)

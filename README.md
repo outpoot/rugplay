@@ -20,13 +20,46 @@ Rugplay is a realistic cryptocurrency trading simulator that lets you experience
 
 ## Setup
 
+### Quick Start with Demo Mode
+
+For developers who want to preview the application without setting up Google OAuth:
+
 1. Copy the environment file:
 
     ```bash
     cp website/.env.example website/.env
     ```
 
-2. Edit `website/.env` with your actual values.
+2. Enable demo mode in `website/.env`:
+
+    ```bash
+    DEMO_MODE=true
+    PUBLIC_DEMO_MODE=true
+    ```
+
+3. Start with Docker (recommended):
+
+    ```bash
+    ./build.sh
+    ```
+
+4. The app will be available at http://localhost:3002
+5. Click "Sign In" and use the "Continue as Demo User" button
+
+### Production Setup
+
+For production deployment with full Google OAuth:
+
+1. Copy the environment file:
+
+    ```bash
+    cp website/.env.example website/.env
+    ```
+
+2. Edit `website/.env` with your actual values, especially:
+   - Set `DEMO_MODE=false` and `PUBLIC_DEMO_MODE=false`
+   - Add your Google OAuth credentials
+   - Configure database and other services
 
 3. Start with Docker (recommended):
 

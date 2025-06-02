@@ -260,7 +260,7 @@ Determine the optimal resolution date based on the question type:
 
 Also determine:
 - Whether this question requires web search (external events, real-world data, non-Rugplay information)
-- If the question is related to 
+- If the question is related to the Rugplay market, and contains what appears to be a coin name, ensure it's properly formatted (e.g. *BTC, *DOGE). Invalid question example: "will BTC reach $100,000 in 1 hour?" (invalid coin format, should be *BTC). 
 - Provide a specific resolution date with time (suggest times between 12:00-20:00 UTC for good global coverage) The current date and time is ${new Date().toISOString()}.
 
 Note: All coins use *SYMBOL format (e.g., *BTC, *DOGE). All trading is simulated with *BUSS currency.

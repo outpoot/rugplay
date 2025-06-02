@@ -8,10 +8,6 @@ import { MAX_FILE_SIZE } from '$lib/data/constants';
 import { isNameAppropriate } from '$lib/server/moderation';
 
 async function validateInputs(name: string, bio: string, username: string, avatarFile: File | null) {
-    if (name && name.trim().length < 1) {
-        throw error(400, 'Name cannot be empty');
-    }
-
     if (name && !(await isNameAppropriate(name.trim()))) {
         throw error(400, 'Name contains inappropriate content');
     }
@@ -54,10 +50,13 @@ export async function POST({ request }) {
     }
 
     const formData = await request.formData();
-    const name = (formData.get('name') as string)?.trim();
+
+    let name = (formData.get('name') as string)?.trim();
     const bio = formData.get('bio') as string;
     const username = (formData.get('username') as string)?.toLowerCase().trim();
     const avatarFile = formData.get('avatar') as File | null;
+
+    name = name?.trim().replace(/\s+/g, ' ');
 
     await validateInputs(name, bio, username, avatarFile);
 

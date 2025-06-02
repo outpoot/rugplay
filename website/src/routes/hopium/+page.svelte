@@ -108,7 +108,7 @@
 			return;
 		}
 		if (userBalance <= 100_000) {
-			toast.error('You need at least $100,000 in your portfolio to create a question.');
+			toast.error('You need at least $100,000 in your portfolio (cash) to create a question.');
 			return;
 		}
 		showCreateDialog = true;

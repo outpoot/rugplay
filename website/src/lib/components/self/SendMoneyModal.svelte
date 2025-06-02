@@ -35,6 +35,12 @@
 		coinHoldings.find((holding) => holding.symbol === selectedCoinSymbol)
 	);
 
+	let estimatedValue = $derived(
+		transferType === 'COIN' && selectedCoinHolding && numericAmount > 0
+			? numericAmount * selectedCoinHolding.currentPrice
+			: 0
+	);
+
 	let maxAmount = $derived(
 		transferType === 'CASH' ? userBalance : selectedCoinHolding ? selectedCoinHolding.quantity : 0
 	);
@@ -47,10 +53,20 @@
 				: false
 	);
 
+	let isWithinCashLimit = $derived(
+		transferType === 'CASH' ? numericAmount >= 10 : true
+	);
+
+	let isWithinCoinValueLimit = $derived(
+		transferType === 'COIN' ? estimatedValue >= 10 : true
+	);
+
 	let canSend = $derived(
 		hasValidAmount &&
 			hasValidRecipient &&
 			hasEnoughFunds &&
+			isWithinCashLimit &&
+			isWithinCoinValueLimit &&
 			!loading &&
 			(transferType === 'CASH' || selectedCoinSymbol.length > 0)
 	);
@@ -65,7 +81,11 @@
 	}
 
 	function setMaxAmount() {
-		amount = maxAmount.toString();
+		if (transferType === 'CASH') {
+			amount = Math.max(maxAmount, 10).toString();
+		} else {
+			amount = maxAmount.toString();
+		}
 	}
 
 	function handleTypeChange(value: string) {
@@ -149,12 +169,6 @@
 						? `*${holding.symbol} (${holding.quantity.toFixed(6)} available)`
 						: selectedCoinSymbol;
 				})()
-	);
-
-	let estimatedValue = $derived(
-		transferType === 'COIN' && selectedCoinHolding && numericAmount > 0
-			? numericAmount * selectedCoinHolding.currentPrice
-			: 0
 	);
 
 	function handleCoinChange(value: string) {
@@ -267,15 +281,32 @@
 						</p>
 					{/if}
 				</div>
+				{#if transferType === 'CASH'}
+					<p class="text-muted-foreground text-xs">
+						Minimum: $10.00 per transfer
+					</p>
+				{:else if transferType === 'COIN'}
+					<p class="text-muted-foreground text-xs">
+						Minimum estimated value: $10.00 per transfer
+					</p>
+				{/if}
 			</div>
 
 			{#if !hasEnoughFunds && hasValidAmount}
 				<Badge variant="destructive" class="text-xs">
 					Insufficient {transferType === 'CASH' ? 'funds' : 'coins'}
 				</Badge>
+			{:else if !isWithinCashLimit && hasValidAmount}
+				<Badge variant="destructive" class="text-xs">
+					Cash transfers require a minimum of $10.00
+				</Badge>
+			{:else if !isWithinCoinValueLimit && hasValidAmount}
+				<Badge variant="destructive" class="text-xs">
+					Coin transfers require a minimum estimated value of $10.00
+				</Badge>
 			{/if}
 
-			{#if hasValidAmount && hasEnoughFunds && hasValidRecipient}
+			{#if hasValidAmount && hasEnoughFunds && hasValidRecipient && isWithinCashLimit && isWithinCoinValueLimit}
 				<div class="bg-muted/50 rounded-lg p-3">
 					<div class="flex items-center justify-between">
 						<span class="text-sm font-medium">You're sending:</span>

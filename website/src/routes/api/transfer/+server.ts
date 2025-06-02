@@ -30,6 +30,10 @@ export const POST: RequestHandler = async ({ request }) => {
             throw error(400, 'Transfer amount too large');
         }
 
+        if (type === 'CASH' && amount < 10) {
+            throw error(400, 'Cash transfers require a minimum of $10.00');
+        }
+
         if (type === 'COIN' && !coinSymbol) {
             throw error(400, 'Coin symbol required for coin transfers');
         }
@@ -140,6 +144,13 @@ export const POST: RequestHandler = async ({ request }) => {
                     throw error(404, 'Coin not found');
                 }
 
+                const coinPrice = Number(coinData.currentPrice) || 0;
+                const estimatedValue = amount * coinPrice;
+
+                if (estimatedValue < 10) {
+                    throw error(400, `Coin transfers require a minimum estimated value of $10.00. ${amount.toFixed(6)} ${coinData.symbol} is worth approximately $${estimatedValue.toFixed(2)}`);
+                }
+
                 const [senderHolding] = await tx
                     .select({
                         quantity: userPortfolio.quantity
@@ -167,7 +178,6 @@ export const POST: RequestHandler = async ({ request }) => {
                     .for('update')
                     .limit(1);
 
-                const coinPrice = Number(coinData.currentPrice) || 0;
                 const totalValue = amount * coinPrice;
 
                 const newSenderQuantity = Number(senderHolding.quantity) - amount;

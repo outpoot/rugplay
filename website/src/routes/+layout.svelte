@@ -12,6 +12,7 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { page } from '$app/state';
 	import { websocketController } from '$lib/stores/websocket';
+	import { PUBLIC_DEMO_MODE } from '$env/static/public';
 
 	let { data, children } = $props<{
 		data: { userSession?: any };
@@ -23,6 +24,9 @@
 	$effect(() => {
 		USER_DATA.set(data?.userSession ?? null);
 	});
+
+	// Check if demo mode is enabled
+	const isDemoMode = PUBLIC_DEMO_MODE === 'true';
 
 	onMount(() => {
 		websocketController.connect();
@@ -58,11 +62,17 @@
 		console.log(
 			'%c Welcome to Rugplay! DO NOT FUCKING PASTE ANYTHING IN THE CONSOLE UNLESS YOU KNOW WHAT YOU ARE DOING.',
 			'color: #4962ee; font-family: monospace; font-size: 12px; font-weight: bold; text-shadow: 2px 2px rgba(0,0,0,0.2);'
-		);
-		console.log(
+		);		console.log(
 			'%c A product by Outpoot.com',
 			'color: #4962ee; font-family: monospace; font-size: 12px; font-weight: bold; text-shadow: 2px 2px rgba(0,0,0,0.2);'
 		);
+
+		if (isDemoMode) {
+			console.log(
+				'%c 🎭 DEMO MODE ACTIVE - Google OAuth not required. Use "Continue as Demo User" to sign in.',
+				'color: #f59e0b; font-family: monospace; font-size: 12px; font-weight: bold; background: #fef3c7; padding: 4px;'
+			);
+		}
 
 		const url = new URL(window.location.href);
 		if (url.searchParams.has('signIn')) {
@@ -117,6 +127,14 @@
 	<AppSidebar />
 
 	<Sidebar.Inset class="sidebar-container">
+		{#if isDemoMode}
+			<div class="bg-yellow-100 border-b border-yellow-200 px-4 py-2 text-center">
+				<p class="text-yellow-800 text-sm">
+					🎭 <strong>Demo Mode</strong> - You're using a demo version without Google OAuth setup
+				</p>
+			</div>
+		{/if}
+
 		<header
 			class="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear"
 		>

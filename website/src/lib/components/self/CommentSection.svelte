@@ -161,7 +161,7 @@
 			Comments ({comments.length})
 		</Card.Title>
 	</Card.Header>
-	<Card.Content class="space-y-4">
+	<Card.Content class="space-y-4 overflow-hidden">
 		<!-- Comment Form -->
 		{#if $USER_DATA}
 			<div class="space-y-3">

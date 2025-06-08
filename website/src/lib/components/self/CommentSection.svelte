@@ -21,8 +21,10 @@
 	let isSubmitting = $state(false);
 	let isLoading = $state(true);
 	let shouldSignIn = $state(false);
+	let expandedComments = $state(new Set<number>());
 
 	const MAX_COMMENTS = 50;
+	const MAX_LINES_PREVIEW = 3;
 
 	$effect(() => {
 		websocketController.setCoin(coinSymbol);
@@ -147,6 +149,25 @@
 		toggleLike(commentId);
 	}
 
+	function toggleCommentExpansion(commentId: number) {
+		if (expandedComments.has(commentId)) {
+			expandedComments.delete(commentId);
+		} else {
+			expandedComments.add(commentId);
+		}
+		expandedComments = new Set(expandedComments);
+	}
+
+	function shouldTruncateComment(content: string): boolean {
+		const lines = content.split('\n');
+		return lines.length > MAX_LINES_PREVIEW;
+	}
+
+	function getTruncatedContent(content: string): string {
+		const lines = content.split('\n');
+		return lines.slice(0, MAX_LINES_PREVIEW).join('\n');
+	}
+
 	$effect(() => {
 		loadComments();
 	});
@@ -216,6 +237,11 @@
 		{:else}
 			<div class="space-y-4">
 				{#each comments as comment (comment.id)}
+					{@const isExpanded = expandedComments.has(comment.id)}
+					{@const shouldTruncate = shouldTruncateComment(comment.content)}
+					{@const displayContent =
+						shouldTruncate && !isExpanded ? getTruncatedContent(comment.content) : comment.content}
+
 					<div class="border-border border-b pb-4 last:border-b-0">
 						<div class="flex items-start gap-3">
 							<button onclick={() => goto(`/user/${comment.userUsername}`)} class="cursor-pointer">
@@ -249,12 +275,23 @@
 										{formatTimeAgo(comment.createdAt)}
 									</span>
 								</div>
-								<p
-									class="whitespace-pre-wrap break-words text-sm leading-relaxed"
-									style="word-break: break-word; overflow-wrap: break-word;"
-								>
-									{comment.content}
-								</p>
+								<div class="space-y-1">
+									<p
+										class="whitespace-pre-wrap break-words text-sm leading-relaxed"
+										style="word-break: break-word; overflow-wrap: break-word;"
+									>
+										{displayContent}
+									</p>
+
+									{#if shouldTruncate}
+										<button
+											onclick={() => toggleCommentExpansion(comment.id)}
+											class="text-primary hover:text-primary/80 cursor-pointer text-xs font-medium transition-colors hover:underline"
+										>
+											{isExpanded ? 'Read less' : 'Read more...'}
+										</button>
+									{/if}
+								</div>
 							</div>
 							<div class="flex items-center">
 								<Button

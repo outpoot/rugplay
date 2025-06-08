@@ -248,7 +248,6 @@
 			label: 'Sender',
 			class: 'w-[12%] min-w-[70px] md:w-[10%]',
 			render: (value: any, row: any) => {
-				// Handle transactions API format
 				if (row.isTransfer) {
 					return {
 						component: 'text',
@@ -256,12 +255,11 @@
 						class: row.sender && row.sender !== 'Unknown' ? 'font-medium' : 'text-muted-foreground'
 					};
 				}
-				// Handle user profile API format (no sender/recipient data available)
 				if (row.type === 'TRANSFER_IN' || row.type === 'TRANSFER_OUT') {
 					return {
 						component: 'text',
-						text: 'Unknown',
-						class: 'text-muted-foreground'
+						text: row.senderUsername || 'Unknown',
+						class: row.senderUsername ? 'font-medium' : 'text-muted-foreground'
 					};
 				}
 				return {
@@ -287,8 +285,8 @@
 				if (row.type === 'TRANSFER_IN' || row.type === 'TRANSFER_OUT') {
 					return {
 						component: 'text',
-						text: 'Unknown',
-						class: 'text-muted-foreground'
+						text: row.recipientUsername || 'Unknown',
+						class: row.recipientUsername ? 'font-medium' : 'text-muted-foreground'
 					};
 				}
 				return {

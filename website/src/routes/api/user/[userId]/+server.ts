@@ -84,6 +84,10 @@ export async function GET({ params }) {
                 pricePerCoin: transaction.pricePerCoin,
                 totalBaseCurrencyAmount: transaction.totalBaseCurrencyAmount,
                 timestamp: transaction.timestamp,
+                senderUsername: sql<string>`(SELECT username FROM ${user} WHERE id = ${transaction.senderUserId})`,
+                recipientUsername: sql<string>`(SELECT username FROM ${user} WHERE id = ${transaction.recipientUserId})`,
+                senderUserId: transaction.senderUserId,
+                recipientUserId: transaction.recipientUserId,
             })
             .from(transaction)
             .innerJoin(coin, eq(transaction.coinId, coin.id))

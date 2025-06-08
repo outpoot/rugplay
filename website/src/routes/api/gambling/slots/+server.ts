@@ -24,7 +24,7 @@ export const POST: RequestHandler = async ({ request }) => {
     try {
         const { amount } = await request.json();
 
-        if (!amount || amount <= 0 || !Number.isFinite(amount)) {
+        if (!amount || amount < 0 || !Number.isFinite(amount)) {
             return json({ error: 'Invalid bet amount' }, { status: 400 });
         }
 

@@ -233,13 +233,6 @@
 <div class="container mx-auto max-w-7xl p-6">
 	{#if loading}
 		<PortfolioSkeleton />
-	{:else if error}
-		<div class="flex h-96 items-center justify-center">
-			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">{error}</div>
-				<Button onclick={retryFetch}>Try Again</Button>
-			</div>
-		</div>
 	{:else if !$USER_DATA}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
@@ -247,6 +240,13 @@
 					You need to be logged in to view your portfolio
 				</div>
 				<Button onclick={() => goto('/login')}>Log In</Button>
+			</div>
+		</div>
+	{:else if error}
+		<div class="flex h-96 items-center justify-center">
+			<div class="text-center">
+				<div class="text-muted-foreground mb-4 text-xl">{error}</div>
+				<Button onclick={retryFetch}>Try Again</Button>
 			</div>
 		</div>
 	{:else}

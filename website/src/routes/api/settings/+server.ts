@@ -12,15 +12,16 @@ async function validateInputs(name: string, bio: string, username: string, avata
         throw error(400, 'Display name is required');
     }
 
-    if (name.trim().length < 2) {
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) {
         throw error(400, 'Display name must be at least 2 characters');
     }
 
-    if (name.trim().length > 50) {
+    if (trimmedName.length > 50) {
         throw error(400, 'Display name must be 50 characters or less');
     }
 
-    if (name && !(await isNameAppropriate(name.trim()))) {
+    if (!(await isNameAppropriate(trimmedName))) {
         throw error(400, 'Name contains inappropriate content');
     }
 
@@ -36,6 +37,11 @@ async function validateInputs(name: string, bio: string, username: string, avata
         const alphanumericRegex = /^[a-z0-9_]+$/;
         if (!alphanumericRegex.test(username)) {
             throw error(400, 'Username must contain only lowercase letters, numbers, and underscores');
+        }
+
+        const purelyNumericRegex = /^\d+$/;
+        if (purelyNumericRegex.test(username)) {
+            throw error(400, 'Username cannot be purely numeric');
         }
     }
 

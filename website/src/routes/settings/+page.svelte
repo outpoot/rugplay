@@ -125,7 +125,7 @@
 
 		try {
 			const fd = new FormData();
-			fd.append('name', name);
+			fd.append('name', name.trim());
 			fd.append('bio', bio);
 			fd.append('username', username);
 			if (avatarFile?.[0]) fd.append('avatar', avatarFile[0]);

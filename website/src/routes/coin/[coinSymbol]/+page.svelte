@@ -26,7 +26,6 @@
 	import { getPublicUrl, getTimeframeInSeconds } from '$lib/utils.js';
 	import { websocketController, type PriceUpdate, isConnectedStore } from '$lib/stores/websocket';
 	import SEO from '$lib/components/self/SEO.svelte';
-	import { page } from '$app/state';
 
 	const { data } = $props();
 	let coinSymbol = $derived(data.coinSymbol);
@@ -39,6 +38,8 @@
 	let sellModalOpen = $state(false);
 	let selectedTimeframe = $state('1m');
 	let lastPriceUpdateTime = 0;
+
+	let previousCoinSymbol = $state<string | null>(null);
 
 	const timeframeOptions = [
 		{ value: '1m', label: '1 minute' },
@@ -54,40 +55,34 @@
 		await loadUserHolding();
 
 		websocketController.setCoin(coinSymbol.toUpperCase());
-
 		websocketController.subscribeToPriceUpdates(coinSymbol.toUpperCase(), handlePriceUpdate);
+
+		previousCoinSymbol = coinSymbol;
 	});
 
 	$effect(() => {
 		return () => {
-			websocketController.unsubscribeFromPriceUpdates(coinSymbol.toUpperCase());
+			if (previousCoinSymbol) {
+				websocketController.unsubscribeFromPriceUpdates(previousCoinSymbol.toUpperCase());
+			}
 		};
 	});
 
-	// Handle route changes to update coin data
 	$effect(() => {
-		const currentCoinSymbol = page.params.coinSymbol;
-		if (currentCoinSymbol && currentCoinSymbol !== coinSymbol) {
+		if (coinSymbol && previousCoinSymbol && coinSymbol !== previousCoinSymbol) {
 			loading = true;
 			coin = null;
 			chartData = [];
 			volumeData = [];
 			userHolding = 0;
 
-			// Unsubscribe from the old coin's updates
-			websocketController.unsubscribeFromPriceUpdates(coinSymbol.toUpperCase());
+			websocketController.unsubscribeFromPriceUpdates(previousCoinSymbol.toUpperCase());
 
-			// Update the data prop which will trigger coinSymbol to update via $derived
-			data.coinSymbol = currentCoinSymbol;
-
-			// Load new coin data and set up new subscriptions
 			loadCoinData().then(() => {
 				loadUserHolding();
-				websocketController.setCoin(currentCoinSymbol.toUpperCase());
-				websocketController.subscribeToPriceUpdates(
-					currentCoinSymbol.toUpperCase(),
-					handlePriceUpdate
-				);
+				websocketController.setCoin(coinSymbol.toUpperCase());
+				websocketController.subscribeToPriceUpdates(coinSymbol.toUpperCase(), handlePriceUpdate);
+				previousCoinSymbol = coinSymbol;
 			});
 		}
 	});

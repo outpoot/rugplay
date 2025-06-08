@@ -7,15 +7,13 @@ import { isNameAppropriate } from '$lib/server/moderation';
 export async function GET({ url }) {
     let username = url.searchParams.get('username')?.toLowerCase().trim();
     if (!username) {
-        return json({ available: false });
+        return json({ available: false, reason: 'Username is required.' });
     }
-
-    username = username.trim().replace(/\s+/g, ' ');
 
     if (username.length < 3 || username.length > 30) {
         return json({
             available: false,
-            reason: 'Username must be between 3 and 30 characters'
+            reason: 'Username must be 3-30 characters.'
         });
     }
 
@@ -23,17 +21,29 @@ export async function GET({ url }) {
     if (!alphanumericRegex.test(username)) {
         return json({
             available: false,
-            reason: 'Username must contain only lowercase letters, numbers, and underscores'
+            reason: 'Username can only contain lowercase letters, numbers, and underscores.'
+        });
+    }
+
+    const purelyNumericRegex = /^\d+$/;
+    if (purelyNumericRegex.test(username)) {
+        return json({
+            available: false,
+            reason: 'Username cannot be purely numeric.'
         });
     }
 
     if (!(await isNameAppropriate(username))) {
-        return json({ available: false, reason: 'Inappropriate content' });
+        return json({ available: false, reason: 'Username contains inappropriate content.' });
     }
 
     const exists = await db.query.user.findFirst({
         where: eq(user.username, username)
     });
 
-    return json({ available: !exists });
+    if (exists) {
+        return json({ available: false, reason: 'Username is already taken.' });
+    }
+
+    return json({ available: true });
 }

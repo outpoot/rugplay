@@ -27,6 +27,8 @@
 	let previewUrl: string | null = $state(null);
 	let currentAvatarUrl = $derived(previewUrl || getPublicUrl($USER_DATA?.image ?? null));
 
+	let nameError = $state('');
+
 	let isDirty = $derived(
 		name !== ($USER_DATA?.name || '') ||
 			bio !== ($USER_DATA?.bio ?? '') ||
@@ -100,6 +102,22 @@
 	$effect(() => {
 		if (username !== initialUsername) checkUsername(username);
 	});
+
+	$effect(() => {
+		validateName();
+	});
+
+	function validateName() {
+		if (!name.trim()) {
+			nameError = 'Display name is required.';
+		} else if (name.trim().length < 2) {
+			nameError = 'Display name must be at least 2 characters.';
+		} else if (name.trim().length > 50) {
+			nameError = 'Display name must be 50 characters or less.';
+		} else {
+			nameError = '';
+		}
+	}
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -317,7 +335,15 @@
 				<form onsubmit={handleSubmit} class="space-y-4">
 					<div class="space-y-2">
 						<Label for="name">Display Name</Label>
-						<Input id="name" bind:value={name} required />
+						<Input
+							id="name"
+							bind:value={name}
+							required
+							class={nameError ? 'border-destructive' : ''}
+						/>
+						{#if nameError}
+							<p class="text-destructive text-sm">{nameError}</p>
+						{/if}
 					</div>
 
 					<div class="space-y-2">
@@ -355,7 +381,7 @@
 						<Textarea id="bio" bind:value={bio} rows={4} placeholder="Tell us about yourself" />
 					</div>
 
-					<Button type="submit" disabled={loading || !isDirty}>
+					<Button type="submit" disabled={loading || !isDirty || !!nameError}>
 						{loading ? 'Saving…' : 'Save Changes'}
 					</Button>
 				</form>

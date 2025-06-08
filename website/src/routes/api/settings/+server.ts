@@ -8,6 +8,18 @@ import { MAX_FILE_SIZE } from '$lib/data/constants';
 import { isNameAppropriate } from '$lib/server/moderation';
 
 async function validateInputs(name: string, bio: string, username: string, avatarFile: File | null) {
+    if (!name || !name.trim()) {
+        throw error(400, 'Display name is required');
+    }
+
+    if (name.trim().length < 2) {
+        throw error(400, 'Display name must be at least 2 characters');
+    }
+
+    if (name.trim().length > 50) {
+        throw error(400, 'Display name must be 50 characters or less');
+    }
+
     if (name && !(await isNameAppropriate(name.trim()))) {
         throw error(400, 'Name contains inappropriate content');
     }

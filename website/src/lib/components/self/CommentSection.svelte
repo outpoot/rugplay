@@ -228,10 +228,10 @@
 								<div class="flex items-center gap-2">
 									<HoverCard.Root>
 										<HoverCard.Trigger
-											class="cursor-pointer font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 truncate max-w-[120px] sm:max-w-none text-sm sm:text-base"
+											class="min-w-0 max-w-[120px] flex-shrink cursor-pointer text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 sm:max-w-[180px] sm:text-base"
 											onclick={() => goto(`/user/${comment.userUsername}`)}
 										>
-											{comment.userName}
+											<span class="block truncate">{comment.userName}</span>
 										</HoverCard.Trigger>
 										<HoverCard.Content class="w-80" side="top" sideOffset={3}>
 											<UserProfilePreview userId={comment.userId} />
@@ -239,13 +239,13 @@
 									</HoverCard.Root>
 									<button
 										onclick={() => goto(`/user/${comment.userUsername}`)}
-										class="cursor-pointer flex-shrink-0 max-w-[80px] sm:max-w-none"
+										class="max-w-[80px] flex-shrink-0 cursor-pointer sm:max-w-none"
 									>
-										<Badge variant="outline" class="text-xs w-full justify-start">
+										<Badge variant="outline" class="w-full justify-start text-xs">
 											<span class="truncate">@{comment.userUsername}</span>
 										</Badge>
 									</button>
-									<span class="text-muted-foreground whitespace-nowrap text-xs flex-shrink-0">
+									<span class="text-muted-foreground flex-shrink-0 whitespace-nowrap text-xs">
 										{formatTimeAgo(comment.createdAt)}
 									</span>
 								</div>

@@ -74,7 +74,7 @@
 	];
 </script>
 
-<SEO 
+<SEO
 	title="Rugplay"
 	description="Experience realistic cryptocurrency trading simulation with AI-powered markets, rug pull mechanics, and virtual currencies. Learn crypto trading without financial risk in this educational trading game."
 	keywords="crypto simulation game, trading practice game, rug pull simulation, virtual cryptocurrency game"
@@ -84,7 +84,7 @@
 
 <div class="container mx-auto p-6">
 	<header class="mb-8">
-		<h1 class="mb-2 text-3xl font-bold">
+		<h1 class="mb-2 truncate text-3xl font-bold">
 			{$USER_DATA ? getTimeBasedGreeting($USER_DATA?.name) : 'Welcome to Rugplay!'}
 		</h1>
 		<p class="text-muted-foreground">
@@ -113,7 +113,8 @@
 				<p class="text-muted-foreground text-sm">Be the first to create a coin!</p>
 			</div>
 		</div>
-	{:else}		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+	{:else}
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 			{#each coins.slice(0, 6) as coin (coin.symbol)}
 				<a href={`/coin/${coin.symbol}`} class="block">
 					<Card.Root class="hover:bg-card/50 h-full transition-all hover:shadow-md">

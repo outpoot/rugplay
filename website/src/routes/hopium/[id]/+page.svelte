@@ -226,7 +226,9 @@
 				<h1 class="text-2xl font-semibold">{question.question}</h1>
 				{#if question.status === 'ACTIVE'}
 					<p class="text-muted-foreground mt-1 text-sm">
-						{formatTimeUntil(question.resolutionDate).startsWith('Ended') ? 'Resolving' : `Ends in ${formatTimeUntil(question.resolutionDate)}`}
+						{formatTimeUntil(question.resolutionDate).startsWith('Ended')
+							? 'Resolving'
+							: `Ends in ${formatTimeUntil(question.resolutionDate)}`}
 					</p>
 				{/if}
 
@@ -249,7 +251,7 @@
 
 			<HoverCard.Root>
 				<HoverCard.Trigger
-					class="flex cursor-pointer items-center gap-1 rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8"
+					class="flex max-w-[180px] cursor-pointer items-center gap-1 rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 sm:max-w-[220px]"
 					onclick={() => goto(`/user/${question?.creator.username}`)}
 				>
 					<Avatar.Root class="h-4 w-4">
@@ -259,7 +261,7 @@
 						/>
 						<Avatar.Fallback>{question.creator.username.charAt(0)}</Avatar.Fallback>
 					</Avatar.Root>
-					<span class="font-medium">{question.creator.name} (@{question.creator.username})</span>
+					<span>{question.creator.name} (@{question.creator.username})</span>
 				</HoverCard.Trigger>
 				<HoverCard.Content class="w-80" side="bottom" sideOffset={3}>
 					<UserProfilePreview userId={question.creator.id} />
@@ -315,32 +317,32 @@
 						<Card.Content class="space-y-6">
 							<!-- YES/NO Buttons -->
 							<div class="grid grid-cols-2 gap-4">
-							<Button
-								class={betSide
-								? 'bg-success/80 hover:bg-success/90 w-full'
-								: 'bg-muted hover:bg-muted/90 w-full'}
-								size="lg"
-								onclick={() => (betSide = true)}
-								disabled={question.aiResolution !== null}
-							>
-								<div class="flex items-baseline gap-2 w-full min-w-0">
-								<span class="text-xl font-bold truncate">YES</span>
-								<span class="text-sm truncate">{question.yesPercentage.toFixed(1)}¢</span>
-								</div>
-							</Button>
-							<Button
-								class={!betSide
-								? 'bg-destructive hover:bg-destructive/90 w-full'
-								: 'bg-muted hover:bg-muted/90 w-full'}
-								size="lg"
-								onclick={() => (betSide = false)}
-								disabled={question.aiResolution !== null}
-							>
-								<div class="flex items-baseline gap-2 w-full min-w-0">
-								<span class="text-xl font-bold truncate">NO</span>
-								<span class="text-sm truncate">{question.noPercentage.toFixed(1)}¢</span>
-								</div>
-							</Button>
+								<Button
+									class={betSide
+										? 'bg-success/80 hover:bg-success/90 w-full'
+										: 'bg-muted hover:bg-muted/90 w-full'}
+									size="lg"
+									onclick={() => (betSide = true)}
+									disabled={question.aiResolution !== null}
+								>
+									<div class="flex w-full min-w-0 items-baseline gap-2">
+										<span class="truncate text-xl font-bold">YES</span>
+										<span class="truncate text-sm">{question.yesPercentage.toFixed(1)}¢</span>
+									</div>
+								</Button>
+								<Button
+									class={!betSide
+										? 'bg-destructive hover:bg-destructive/90 w-full'
+										: 'bg-muted hover:bg-muted/90 w-full'}
+									size="lg"
+									onclick={() => (betSide = false)}
+									disabled={question.aiResolution !== null}
+								>
+									<div class="flex w-full min-w-0 items-baseline gap-2">
+										<span class="truncate text-xl font-bold">NO</span>
+										<span class="truncate text-sm">{question.noPercentage.toFixed(1)}¢</span>
+									</div>
+								</Button>
 							</div>
 
 							<!-- Amount Input -->
@@ -356,7 +358,7 @@
 							</div>
 
 							<!-- Quick Amount Buttons -->
-							<div class="flex flex-wrapper gap-2">
+							<div class="flex-wrapper flex gap-2">
 								<Button
 									variant="outline"
 									class="flex-1 truncate"

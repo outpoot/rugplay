@@ -449,14 +449,16 @@
 
 					<HoverCard.Root>
 						<HoverCard.Trigger
-							class="flex cursor-pointer items-center gap-1 rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8"
+							class="flex min-w-0 max-w-[200px] cursor-pointer items-center gap-1 rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 sm:max-w-[250px]"
 							onclick={() => goto(`/user/${coin.creatorUsername}`)}
 						>
-							<Avatar.Root class="h-4 w-4">
+							<Avatar.Root class="h-4 w-4 flex-shrink-0">
 								<Avatar.Image src={getPublicUrl(coin.creatorImage)} alt={coin.creatorName} />
 								<Avatar.Fallback>{coin.creatorName.charAt(0)}</Avatar.Fallback>
 							</Avatar.Root>
-							<span class="font-medium">{coin.creatorName} (@{coin.creatorUsername})</span>
+							<span class="block truncate font-medium"
+								>{coin.creatorName} (@{coin.creatorUsername})</span
+							>
 						</HoverCard.Trigger>
 						<HoverCard.Content class="w-80" side="bottom" sideOffset={3}>
 							<UserProfilePreview userId={coin.creatorId} />

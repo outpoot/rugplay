@@ -85,8 +85,10 @@
 				<Avatar.Fallback class="text-sm">{profile.name?.charAt(0) || '?'}</Avatar.Fallback>
 			</Avatar.Root>
 			<div class="min-w-0 flex-1 space-y-1">
-				<div class="flex items-center gap-2">
-					<h4 class="text-sm font-semibold">{profile.name}</h4>
+				<div class="flex min-w-0 items-center gap-2">
+					<h4 class="max-w-[150px] truncate text-sm font-semibold sm:max-w-[200px]">
+						{profile.name}
+					</h4>
 					<ProfileBadges user={profile} showId={true} size="sm" />
 				</div>
 				<p class="text-muted-foreground text-sm">@{profile.username}</p>

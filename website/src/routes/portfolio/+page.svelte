@@ -84,18 +84,21 @@
 			key: 'quantity',
 			label: 'Quantity',
 			class: 'w-[20%] min-w-[80px] md:w-[12%] font-mono',
+			sortable: true,
 			render: (value: any) => formatQuantity(value)
 		},
 		{
 			key: 'currentPrice',
 			label: 'Price',
 			class: 'w-[15%] min-w-[70px] md:w-[12%] font-mono',
+			sortable: true,
 			render: (value: any) => `$${formatPrice(value)}`
 		},
 		{
 			key: 'change24h',
 			label: '24h Change',
 			class: 'w-[20%] min-w-[80px] md:w-[12%]',
+			sortable: true,
 			render: (value: any) => ({
 				component: 'badge',
 				variant: value >= 0 ? 'success' : 'destructive',
@@ -106,6 +109,8 @@
 			key: 'value',
 			label: 'Value',
 			class: 'w-[15%] min-w-[70px] md:w-[12%] font-mono font-medium',
+			sortable: true,
+			defaultSort: true,
 			render: (value: any) => formatValue(value)
 		},
 		{
@@ -231,6 +236,19 @@
 <SendMoneyModal bind:open={sendMoneyModalOpen} onSuccess={handleTransferSuccess} />
 
 <div class="container mx-auto max-w-7xl p-6">
+	<div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+		<div>
+			<h1 class="text-3xl font-bold">Portfolio</h1>
+			<p class="text-muted-foreground">Manage your investments and transactions</p>
+		</div>
+		<div class="flex gap-2">
+			<Button onclick={() => (sendMoneyModalOpen = true)}>
+				<Send class="h-4 w-4" />
+				Send Money
+			</Button>
+		</div>
+	</div>
+
 	{#if loading}
 		<PortfolioSkeleton />
 	{:else if !$USER_DATA}
@@ -252,20 +270,6 @@
 	{:else}
 		<!-- Portfolio Overview -->
 		<div class="mb-8">
-			<div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-				<div>
-					<h1 class="text-3xl font-bold">Portfolio</h1>
-					<p class="text-muted-foreground">Manage your investments and transactions</p>
-				</div>
-				<div class="flex gap-2">
-					<Button onclick={() => (sendMoneyModalOpen = true)}>
-						<Send class="h-4 w-4" />
-						Send Money
-					</Button>
-					<!-- ...existing buttons... -->
-				</div>
-			</div>
-
 			<!-- Portfolio Summary Cards -->
 			<div class="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
 				<!-- Total Portfolio Value -->

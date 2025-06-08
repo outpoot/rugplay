@@ -6,12 +6,14 @@
 	import CoinIcon from './CoinIcon.svelte';
 	import UserProfilePreview from './UserProfilePreview.svelte';
 	import { getPublicUrl } from '$lib/utils';
-	import { ArrowUp, ArrowDown } from 'lucide-svelte';
+	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
+
 	interface Column {
 		key: string;
 		label: string;
 		class?: string;
 		sortable?: boolean;
+		defaultSort?: boolean | 'asc' | 'desc';
 		render?: (value: any, row: any, index: number) => any;
 	}
 
@@ -34,6 +36,49 @@
 		emptyDescription?: string;
 		enableUserPreview?: boolean;
 	} = $props();
+
+	const defaultSortColumn = columns.find((col) => col.defaultSort);
+	let sortColumn = $state<string | null>(defaultSortColumn?.key || null);
+	let sortDirection = $state<'asc' | 'desc'>(
+		defaultSortColumn?.defaultSort === 'asc' ? 'asc' : 'desc'
+	);
+
+	let sortedData = $derived.by(() => {
+		if (!sortColumn) return data;
+
+		return [...data].sort((a, b) => {
+			let aValue = a[sortColumn!];
+			let bValue = b[sortColumn!];
+
+			// Handle numeric values
+			if (typeof aValue === 'string' && !isNaN(Number(aValue))) {
+				aValue = Number(aValue);
+			}
+			if (typeof bValue === 'string' && !isNaN(Number(bValue))) {
+				bValue = Number(bValue);
+			}
+
+			// Handle null/undefined values
+			if (aValue == null && bValue == null) return 0;
+			if (aValue == null) return sortDirection === 'asc' ? -1 : 1;
+			if (bValue == null) return sortDirection === 'asc' ? 1 : -1;
+
+			// Compare values
+			if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+			if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+			return 0;
+		});
+	});
+
+	function handleSort(columnKey: string) {
+		if (sortColumn === columnKey) {
+			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+		} else {
+			sortColumn = columnKey;
+			sortDirection = 'desc';
+		}
+	}
+
 	function renderCell(column: any, row: any, value: any, index: number) {
 		if (column.render) {
 			const rendered = column.render(value, row, index);
@@ -101,11 +146,32 @@
 		<Table.Header>
 			<Table.Row>
 				{#each columns as column (column.key)}
-					<Table.Head class={column.class || 'min-w-[80px]'}>{column.label}</Table.Head>
+					<Table.Head class={column.class || 'min-w-[80px]'}>
+						{#if column.sortable}
+							<button
+								onclick={() => handleSort(column.key)}
+								class="hover:text-foreground flex items-center gap-1 transition-colors"
+							>
+								{column.label}
+								{#if sortColumn === column.key}
+									{#if sortDirection === 'asc'}
+										<ArrowUp class="text-primary h-4 w-4" />
+									{:else}
+										<ArrowDown class="text-primary h-4 w-4" />
+									{/if}
+								{:else}
+									<ArrowUpDown class="h-4 w-4 opacity-50" />
+								{/if}
+							</button>
+						{:else}
+							{column.label}
+						{/if}
+					</Table.Head>
 				{/each}
 			</Table.Row>
-		</Table.Header><Table.Body>
-			{#each data as row, index (row.symbol || row.id || index)}
+		</Table.Header>
+		<Table.Body>
+			{#each sortedData as row, index (row.symbol || row.id || index)}
 				<Table.Row
 					class={onRowClick ? 'hover:bg-muted/50 cursor-pointer transition-colors' : ''}
 					onclick={onRowClick ? () => onRowClick(row) : undefined}
@@ -132,7 +198,7 @@
 									<div
 										class={`${cellData.color} flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium`}
 									>
-										<svelte:component this={cellData.icon} class="h-3.5 w-3.5" />
+										<cellData.icon class="h-3.5 w-3.5" />
 									</div>
 									<span class="text-sm font-medium">#{cellData.number}</span>
 								</div>

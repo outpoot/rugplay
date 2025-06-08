@@ -37,7 +37,7 @@ export async function GET({ url }) {
             .limit(limit);
 
         const formattedTrades = trades.map(trade => ({
-            type: trade.type as 'BUY' | 'SELL',
+            type: trade.type as 'BUY' | 'SELL' | 'TRANSFER_IN' | 'TRANSFER_OUT',
             username: trade.username,
             userImage: trade.userImage,
             amount: Number(trade.amount),

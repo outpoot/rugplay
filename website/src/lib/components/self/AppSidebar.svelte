@@ -28,9 +28,7 @@
 		TrendingUpDown,
 		Scale,
 		ShieldCheck,
-
 		Hammer
-
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -249,7 +247,15 @@
 								class="hover:bg-muted/50 flex w-full cursor-pointer items-center gap-2 rounded px-1 py-1 text-left text-xs transition-colors"
 							>
 								<div class="flex items-center gap-1">
-									{#if trade.type === 'BUY'}
+									{#if trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT'}
+										<Activity class="h-3 w-3 text-blue-500" />
+										<Badge
+											variant="outline"
+											class="h-4 border-blue-500 px-1 py-0 text-[10px] text-blue-500"
+										>
+											{trade.type === 'TRANSFER_IN' ? 'REC' : 'SENT'}
+										</Badge>
+									{:else if trade.type === 'BUY'}
 										<TrendingUp class="h-3 w-3 text-green-500" />
 										<Badge
 											variant="outline"
@@ -272,8 +278,17 @@
 										<span class="text-foreground font-medium">
 											{formatValue(trade.totalValue)}
 										</span>
-										<span class="text-muted-foreground">*{trade.coinSymbol}</span>
-										<span class="text-muted-foreground">by</span>
+										{#if trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT'}
+											{#if trade.amount > 0}
+												<span class="text-muted-foreground">*{trade.coinSymbol}</span>
+											{/if}
+											<span class="text-muted-foreground">
+												{trade.type === 'TRANSFER_IN' ? 'to' : 'from'}
+											</span>
+										{:else}
+											<span class="text-muted-foreground">*{trade.coinSymbol}</span>
+											<span class="text-muted-foreground">by</span>
+										{/if}
 										<span class="text-muted-foreground">@{trade.username}</span>
 									</div>
 								</div>

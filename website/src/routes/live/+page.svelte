@@ -76,24 +76,55 @@
 							<div class="flex items-center gap-3 sm:gap-4">
 								<div class="min-w-0 flex-1">
 									<div class="flex flex-wrap items-center gap-1 sm:gap-2">
-										<button
-											onclick={() => handleCoinClick(trade.coinSymbol)}
-											class="flex cursor-pointer items-center gap-1.5 transition-opacity hover:underline hover:opacity-80"
-										>
-											<CoinIcon
-												icon={trade.coinIcon}
-												symbol={trade.coinSymbol}
-												name={trade.coinName || trade.coinSymbol}
-												size={5}
-												class="sm:size-6"
-											/>
-											<span class="font-mono text-sm font-medium sm:text-base">
-												{formatQuantity(trade.amount)} *{trade.coinSymbol}
+										{#if trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT'}
+											{#if trade.amount > 0}
+												<button
+													onclick={() => handleCoinClick(trade.coinSymbol)}
+													class="flex cursor-pointer items-center gap-1.5 transition-opacity hover:underline hover:opacity-80"
+												>
+													<CoinIcon
+														icon={trade.coinIcon}
+														symbol={trade.coinSymbol}
+														name={trade.coinName || trade.coinSymbol}
+														size={5}
+														class="sm:size-6"
+													/>
+													<span class="font-mono text-sm font-medium sm:text-base">
+														{formatQuantity(trade.amount)} *{trade.coinSymbol}
+													</span>
+												</button>
+												<span class="text-muted-foreground text-xs sm:text-sm">
+													{trade.type === 'TRANSFER_IN' ? 'received by' : 'sent by'}
+												</span>
+											{:else}
+												<span class="font-mono text-sm font-medium sm:text-base">
+													{formatValue(trade.totalValue)}
+												</span>
+												<span class="text-muted-foreground text-xs sm:text-sm">
+													{trade.type === 'TRANSFER_IN' ? 'received by' : 'sent by'}
+												</span>
+											{/if}
+										{:else}
+											<button
+												onclick={() => handleCoinClick(trade.coinSymbol)}
+												class="flex cursor-pointer items-center gap-1.5 transition-opacity hover:underline hover:opacity-80"
+											>
+												<CoinIcon
+													icon={trade.coinIcon}
+													symbol={trade.coinSymbol}
+													name={trade.coinName || trade.coinSymbol}
+													size={5}
+													class="sm:size-6"
+												/>
+												<span class="font-mono text-sm font-medium sm:text-base">
+													{formatQuantity(trade.amount)} *{trade.coinSymbol}
+												</span>
+											</button>
+											<span class="text-muted-foreground text-xs sm:text-sm">
+												{trade.type === 'BUY' ? 'bought by' : 'sold by'}
 											</span>
-										</button>
-										<span class="text-muted-foreground text-xs sm:text-sm">
-											{trade.type === 'BUY' ? 'bought by' : 'sold by'}
-										</span>
+										{/if}
+
 										<HoverCard.Root>
 											<HoverCard.Trigger
 												class="cursor-pointer font-medium underline-offset-4 hover:underline"
@@ -124,15 +155,24 @@
 
 							<div class="flex items-center justify-between gap-2">
 								<div class="flex items-center gap-2 font-mono text-xs sm:text-sm">
-									{#if trade.type === 'BUY'}
+									{#if trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT'}
+										<Activity class="h-3.5 w-3.5 text-blue-500 sm:h-4 sm:w-4" />
+										<span class="text-blue-500">
+											{trade.type === 'TRANSFER_IN' ? 'RECEIVED' : 'SENT'}
+										</span>
+										<span class="text-muted-foreground">|</span>
+										<span>{formatValue(trade.totalValue)}</span>
+									{:else if trade.type === 'BUY'}
 										<TrendingUp class="h-3.5 w-3.5 text-green-500 sm:h-4 sm:w-4" />
 										<span class="text-green-500">BUY</span>
+										<span class="text-muted-foreground">|</span>
+										<span>{formatValue(trade.totalValue)}</span>
 									{:else}
 										<TrendingDown class="h-3.5 w-3.5 text-red-500 sm:h-4 sm:w-4" />
 										<span class="text-red-500">SELL</span>
+										<span class="text-muted-foreground">|</span>
+										<span>{formatValue(trade.totalValue)}</span>
 									{/if}
-									<span class="text-muted-foreground">|</span>
-									<span>{formatValue(trade.totalValue)}</span>
 								</div>
 
 								<div

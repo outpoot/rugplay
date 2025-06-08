@@ -3,7 +3,7 @@ import { browser } from '$app/environment';
 import { PUBLIC_WEBSOCKET_URL } from '$env/static/public';
 
 export interface LiveTrade {
-    type: 'BUY' | 'SELL';
+    type: 'BUY' | 'SELL' | 'TRANSFER_IN' | 'TRANSFER_OUT';
     username: string;
     amount: number;
     coinSymbol: string;

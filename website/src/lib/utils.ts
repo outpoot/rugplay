@@ -334,3 +334,8 @@ export function showSchoolPrideCannons(confetti: any) {
 }
 
 export const formatMarketCap = formatValue;
+
+export function timeToLocal(originalTime: number): number {
+    const d = new Date(originalTime * 1000);
+    return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()) / 1000);
+}

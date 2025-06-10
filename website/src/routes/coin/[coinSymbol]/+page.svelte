@@ -23,7 +23,7 @@
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { fetchPortfolioData } from '$lib/stores/portfolio-data';
-	import { getPublicUrl, getTimeframeInSeconds } from '$lib/utils.js';
+	import { getPublicUrl, getTimeframeInSeconds, timeToLocal } from '$lib/utils.js';
 	import { websocketController, type PriceUpdate, isConnectedStore } from '$lib/stores/websocket';
 	import SEO from '$lib/components/self/SEO.svelte';
 
@@ -159,12 +159,13 @@
 		const currentTime = Math.floor(Date.now() / 1000);
 
 		const currentCandleTime = Math.floor(currentTime / timeframeSeconds) * timeframeSeconds;
+		const localCandleTime = timeToLocal(currentCandleTime);
 
 		const lastCandle = chartData[chartData.length - 1];
 
-		if (lastCandle && lastCandle.time === currentCandleTime) {
+		if (lastCandle && lastCandle.time === localCandleTime) {
 			const updatedCandle = {
-				time: currentCandleTime,
+				time: localCandleTime,
 				open: lastCandle.open,
 				high: Math.max(lastCandle.high, newPrice),
 				low: Math.min(lastCandle.low, newPrice),
@@ -173,9 +174,9 @@
 
 			candlestickSeries.update(updatedCandle);
 			chartData[chartData.length - 1] = updatedCandle;
-		} else if (currentCandleTime > (lastCandle?.time || 0)) {
+		} else if (localCandleTime > (lastCandle?.time || 0)) {
 			const newCandle = {
-				time: currentCandleTime,
+				time: localCandleTime,
 				open: newPrice,
 				high: newPrice,
 				low: newPrice,

@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { predictionQuestion, user, predictionBet } from '$lib/server/db/schema';
 import { eq, desc, sum, and, asc } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
+import { timeToLocal } from '$lib/utils';
 
 export const GET: RequestHandler = async ({ params, request }) => {
     const questionId = parseInt(params.id!);
@@ -84,7 +85,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
         if (probabilityHistory.length > 0) {
             const firstBetTime = Math.floor(new Date(probabilityHistory[0].createdAt).getTime() / 1000);
             probabilityData.push({
-                time: firstBetTime - 3600, // 1 hour before first bet
+                time: timeToLocal(firstBetTime - 3600),
                 value: 50
             });
         }
@@ -100,7 +101,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
             const yesPercentage = total > 0 ? (runningYesTotal / total) * 100 : 50;
 
             probabilityData.push({
-                time: Math.floor(new Date(bet.createdAt).getTime() / 1000),
+                time: timeToLocal(Math.floor(new Date(bet.createdAt).getTime() / 1000)),
                 value: Number(yesPercentage.toFixed(1))
             });
         }
@@ -108,7 +109,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
         // Add current point if no recent bets
         if (probabilityData.length > 0) {
             const lastPoint = probabilityData[probabilityData.length - 1];
-            const currentTime = Math.floor(Date.now() / 1000);
+            const currentTime = timeToLocal(Math.floor(Date.now() / 1000));
 
             // Only add current point if last bet was more than 1 hour ago
             if (currentTime - lastPoint.time > 3600) {

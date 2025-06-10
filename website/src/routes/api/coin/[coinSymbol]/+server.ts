@@ -2,6 +2,7 @@ import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { coin, user, priceHistory, transaction } from '$lib/server/db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { timeToLocal } from '$lib/utils';
 
 function aggregatePriceHistory(priceData: any[], intervalMinutes: number = 60) {
     if (priceData.length === 0) return [];
@@ -19,7 +20,7 @@ function aggregatePriceHistory(priceData: any[], intervalMinutes: number = 60) {
 
         if (!candlesticks.has(intervalStart)) {
             candlesticks.set(intervalStart, {
-                time: Math.floor(intervalStart / 1000),
+                time: timeToLocal(Math.floor(intervalStart / 1000)),
                 open: point.price,
                 high: point.price,
                 low: point.price,
@@ -87,7 +88,7 @@ function aggregateVolumeData(transactionData: any[], intervalMinutes: number = 6
 
         if (!volumeMap.has(intervalStart)) {
             volumeMap.set(intervalStart, {
-                time: Math.floor(intervalStart / 1000),
+                time: timeToLocal(Math.floor(intervalStart / 1000)),
                 volume: 0
             });
         }

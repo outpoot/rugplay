@@ -16,6 +16,7 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
+		"@internationalized/date": "^3.8.1",
 		"@lucide/svelte": "^0.482.0",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/kit": "^2.0.0",
@@ -23,7 +24,7 @@
 		"@types/canvas-confetti": "^1.9.0",
 		"@types/node": "^22.15.21",
 		"autoprefixer": "^10.4.20",
-		"bits-ui": "^2.1.0",
+		"bits-ui": "^2.5.0",
 		"clsx": "^2.1.1",
 		"drizzle-kit": "^0.22.0",
 		"prettier": "^3.3.2",

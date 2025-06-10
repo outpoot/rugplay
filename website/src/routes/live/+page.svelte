@@ -4,13 +4,14 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import { Activity, TrendingUp, TrendingDown, Clock } from 'lucide-svelte';
-	import { allTradesStore, isLoadingTrades } from '$lib/stores/websocket';
+	import { allTradesStore, isLoadingTrades, loadInitialTrades } from '$lib/stores/websocket';
 	import { goto } from '$app/navigation';
 	import { formatQuantity, formatRelativeTime, formatValue, getPublicUrl } from '$lib/utils';
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import LiveTradeSkeleton from '$lib/components/self/skeletons/LiveTradeSkeleton.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
+	import { onMount } from 'svelte';
 
 	function handleUserClick(username: string) {
 		goto(`/user/${username}`);
@@ -19,6 +20,10 @@
 	function handleCoinClick(coinSymbol: string) {
 		goto(`/coin/${coinSymbol.toLowerCase()}`);
 	}
+
+	onMount(() => {
+		loadInitialTrades("expanded");
+	})
 </script>
 
 <SEO 

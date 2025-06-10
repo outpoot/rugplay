@@ -52,7 +52,7 @@ const commentSubscriptions = new Map<string, (message: any) => void>();
 // Price update callbacks
 const priceUpdateSubscriptions = new Map<string, (priceUpdate: PriceUpdate) => void>();
 
-async function loadInitialTrades(): Promise<void> {
+export async function loadInitialTrades(mode: 'preview' | 'expanded' = 'preview'): Promise<void> {
     if (!browser) return;
 
     if (!hasLoadedInitialTrades) {
@@ -60,21 +60,27 @@ async function loadInitialTrades(): Promise<void> {
     }
 
     try {
-        const [largeTradesResponse, allTradesResponse] = await Promise.all([
-            fetch('/api/trades/recent?limit=5&minValue=1000'),
-            fetch('/api/trades/recent?limit=100')
-        ]);
+        const params = new URLSearchParams();
 
-        if (largeTradesResponse.ok) {
-            const { trades } = await largeTradesResponse.json();
-            liveTradesStore.set(trades);
+        if (mode === 'preview') {
+            params.set('limit', '5');
+            params.set('minValue', '1000');
+        } else {
+            params.set('limit', '100');
         }
 
-        if (allTradesResponse.ok) {
-            const { trades } = await allTradesResponse.json();
-            allTradesStore.set(trades);
+        const response = await fetch(`/api/trades/recent?${params.toString()}`);
+
+        if (response.ok) {
+            const { trades } = await response.json();
+
+            if (mode === 'preview') {
+                liveTradesStore.set(trades);
+            } else {
+                allTradesStore.set(trades);
+            }
         }
-        
+
         hasLoadedInitialTrades = true;
     } catch (error) {
         console.error('Failed to load initial trades:', error);

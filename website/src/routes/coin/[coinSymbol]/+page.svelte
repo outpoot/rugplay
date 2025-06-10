@@ -9,6 +9,7 @@
 	import CommentSection from '$lib/components/self/CommentSection.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import CoinSkeleton from '$lib/components/self/skeletons/CoinSkeleton.svelte';
+	import TopHolders from '$lib/components/self/TopHolders.svelte';
 	import { TrendingUp, TrendingDown, DollarSign, Coins, ChartColumn } from 'lucide-svelte';
 	import {
 		createChart,
@@ -469,7 +470,7 @@
 			<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 				<!-- Chart (2/3 width) -->
 				<div class="lg:col-span-2">
-					<Card.Root>
+					<Card.Root class="flex h-full flex-col">
 						<Card.Header class="pb-4">
 							<div class="flex items-center justify-between">
 								<Card.Title class="flex items-center gap-2">
@@ -499,23 +500,23 @@
 								</div>
 							</div>
 						</Card.Header>
-						<Card.Content class="pt-0">
+						<Card.Content class="flex-1 pt-0">
 							{#if chartData.length === 0}
-								<div class="flex h-[500px] items-center justify-center">
+								<div class="flex h-full min-h-[500px] items-center justify-center">
 									<p class="text-muted-foreground">No trading data available yet</p>
 								</div>
 							{:else}
-								<div class="h-[500px] w-full" bind:this={chartContainer}></div>
+								<div class="h-full min-h-[500px] w-full" bind:this={chartContainer}></div>
 							{/if}
 						</Card.Content>
 					</Card.Root>
 				</div>
 
-				<!-- Right side - Trading Actions + Liquidity Pool (1/3 width) -->
+				<!-- Right side - Trading Actions + Liquidity Pool + Top Holders (1/3 width) -->
 				<div class="space-y-6 lg:col-span-1">
 					<!-- Trading Actions -->
 					<Card.Root>
-						<Card.Header class="pb-4">
+						<Card.Header>
 							<Card.Title>Trade {coin.symbol}</Card.Title>
 							{#if userHolding > 0}
 								<p class="text-muted-foreground text-sm">
@@ -524,7 +525,7 @@
 								</p>
 							{/if}
 						</Card.Header>
-						<Card.Content class="pt-0">
+						<Card.Content>
 							{#if $USER_DATA}
 								<div class="space-y-3">
 									<Button
@@ -558,10 +559,7 @@
 					</Card.Root>
 					<!-- Liquidity Pool -->
 					<Card.Root>
-						<Card.Header class="pb-4">
-							<Card.Title class="flex items-center gap-2">Liquidity Pool</Card.Title>
-						</Card.Header>
-						<Card.Content class="pt-0">
+						<Card.Content>
 							<div class="space-y-4">
 								<div>
 									<h4 class="mb-3 font-medium">Pool Composition</h4>
@@ -598,6 +596,8 @@
 							</div>
 						</Card.Content>
 					</Card.Root>
+					<!-- Top Holders -->
+					<TopHolders coinSymbol={coin.symbol} />
 				</div>
 			</div>
 
@@ -611,7 +611,7 @@
 							Market Cap
 						</Card.Title>
 					</Card.Header>
-					<Card.Content class="pt-0">
+					<Card.Content>
 						<p class="text-xl font-bold">
 							{formatMarketCap(coin.marketCap)}
 						</p>
@@ -626,7 +626,7 @@
 							24h Volume
 						</Card.Title>
 					</Card.Header>
-					<Card.Content class="pt-0">
+					<Card.Content>
 						<p class="text-xl font-bold">
 							{formatMarketCap(coin.volume24h)}
 						</p>
@@ -641,7 +641,7 @@
 							Circulating Supply
 						</Card.Title>
 					</Card.Header>
-					<Card.Content class="pt-0">
+					<Card.Content>
 						<p class="text-xl font-bold">
 							{formatSupply(coin.circulatingSupply)}<span
 								class="text-muted-foreground ml-1 text-xs"
@@ -657,7 +657,7 @@
 					<Card.Header>
 						<Card.Title class="text-sm font-medium">24h Change</Card.Title>
 					</Card.Header>
-					<Card.Content class="pt-0">
+					<Card.Content>
 						<div class="flex items-center gap-2">
 							{#if coin.change24h >= 0}
 								<TrendingUp class="h-4 w-4 text-green-500" />

@@ -174,24 +174,21 @@ export function formatTimeRemaining(timeMs: number): string {
     return `${minutes}m`;
 }
 
-export function formatTimeUntil(dateString: string): string {
-    const now = new Date();
-    const target = new Date(dateString);
-    const diffMs = target.getTime() - now.getTime();
+export function formatTimeUntil(date: Date | string | number): string {
+    const now = Date.now();
+    const target = typeof date === 'number'
+        ? date * (date < 1e12 ? 1000 : 1)
+        : new Date(date).getTime();
+    let diff = Math.max(0, target - now);
 
-    if (diffMs <= 0) return 'Ended';
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
 
-    const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-    const hours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-    const minutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000));
-
-    if (days > 0) {
-        return `${days}d ${hours}h`;
-    } else if (hours > 0) {
-        return `${hours}h ${minutes}m`;
-    } else {
-        return `${minutes}m`;
-    }
+    if (diff < 60000) return 'less than 1m';
+    if (minutes < 60) return `${minutes}m`;
+    if (hours < 24) return `${hours}h`;
+    return `${days}d`;
 }
 
 export function getExpirationDate(option: string): string | null {

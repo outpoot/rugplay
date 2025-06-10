@@ -193,7 +193,7 @@
 	let activeSoundTimeouts = $state<NodeJS.Timeout[]>([]);
 
 	let canBet = $derived(
-		betAmount > 0 && betAmount <= balance && betAmount <= MAX_BET_AMOUNT && !isFlipping
+		betAmount >= 0 && betAmount <= balance && betAmount <= MAX_BET_AMOUNT && !isFlipping
 	);
 
 	function selectSide(side: string) {

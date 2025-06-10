@@ -27,6 +27,7 @@
 	import { getPublicUrl, getTimeframeInSeconds, timeToLocal } from '$lib/utils.js';
 	import { websocketController, type PriceUpdate, isConnectedStore } from '$lib/stores/websocket';
 	import SEO from '$lib/components/self/SEO.svelte';
+	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 
 	const { data } = $props();
 	let coinSymbol = $derived(data.coinSymbol);
@@ -39,6 +40,7 @@
 	let sellModalOpen = $state(false);
 	let selectedTimeframe = $state('1m');
 	let lastPriceUpdateTime = 0;
+	let shouldSignIn = $state(false);
 
 	let previousCoinSymbol = $state<string | null>(null);
 
@@ -370,6 +372,8 @@
 	imageAlt={coin ? `${coin.name} (${coin.symbol}) logo` : `${coinSymbol} cryptocurrency logo`}
 />
 
+<SignInConfirmDialog bind:open={shouldSignIn} />
+
 {#if coin}
 	<TradeModal bind:open={buyModalOpen} type="BUY" {coin} onSuccess={handleTradeSuccess} />
 	<TradeModal
@@ -552,7 +556,7 @@
 							{:else}
 								<div class="py-4 text-center">
 									<p class="text-muted-foreground mb-3 text-sm">Sign in to start trading</p>
-									<Button onclick={() => goto('/')}>Sign In</Button>
+									<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 								</div>
 							{/if}
 						</Card.Content>

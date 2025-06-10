@@ -55,12 +55,7 @@
 			<div class="text-center">
 				<div class="text-muted-foreground mb-4 text-xl">Sign in to start gambling</div>
 				<p class="text-muted-foreground mb-4 text-sm">You need an account to place bets</p>
-				<button
-					class="text-primary underline hover:cursor-pointer"
-					onclick={() => (shouldSignIn = true)}
-				>
-					Sign in to continue
-				</button>
+				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 			</div>
 		</div>
 	{:else}

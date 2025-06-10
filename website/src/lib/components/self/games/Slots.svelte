@@ -71,7 +71,7 @@
 	);
 
 	let canBet = $derived(
-		betAmount > 0 && betAmount <= balance && betAmount <= MAX_BET_AMOUNT && !isSpinning
+		betAmount >= 0 && betAmount <= balance && betAmount <= MAX_BET_AMOUNT && !isSpinning
 	);
 
 	function setBetAmount(amount: number) {

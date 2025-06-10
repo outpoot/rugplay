@@ -28,7 +28,8 @@
 		TrendingUpDown,
 		Scale,
 		ShieldCheck,
-		Hammer
+		Hammer,
+		BookOpen
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -38,6 +39,7 @@
 	import SignInConfirmDialog from './SignInConfirmDialog.svelte';
 	import DailyRewards from './DailyRewards.svelte';
 	import PromoCodeDialog from './PromoCodeDialog.svelte';
+	import UserManualModal from './UserManualModal.svelte';
 	import { signOut } from '$lib/auth-client';
 	import { formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
@@ -60,6 +62,7 @@
 	const { setOpenMobile, isMobile } = useSidebar();
 	let shouldSignIn = $state(false);
 	let showPromoCode = $state(false);
+	let showUserManual = $state(false);
 
 	$effect(() => {
 		if ($USER_DATA) {
@@ -133,10 +136,16 @@
 		goto('/legal/privacy');
 		setOpenMobile(false);
 	}
+
+	function handleUserManualClick() {
+		showUserManual = true;
+		setOpenMobile(false);
+	}
 </script>
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
 <PromoCodeDialog bind:open={showPromoCode} />
+<UserManualModal bind:open={showUserManual} />
 <Sidebar.Root collapsible="offcanvas">
 	<Sidebar.Header>
 		<div class="flex items-center gap-2 px-2 py-2">
@@ -403,6 +412,10 @@
 								<DropdownMenu.Item onclick={handleSettingsClick}>
 									<Settings />
 									Settings
+								</DropdownMenu.Item>
+								<DropdownMenu.Item onclick={handleUserManualClick}>
+									<BookOpen />
+									User Manual
 								</DropdownMenu.Item>
 								<DropdownMenu.Item
 									onclick={() => {

@@ -10,29 +10,28 @@
 	import { TrendingUp, DollarSign, Wallet, Receipt, Send } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
+	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
 	import SendMoneyModal from '$lib/components/self/SendMoneyModal.svelte';
 
 	// TODO: add type definitions
-	let portfolioData = $state<any>(null);
 	let transactions = $state<any[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let sendMoneyModalOpen = $state(false);
 
 	onMount(async () => {
-		await Promise.all([fetchPortfolioData(), fetchRecentTransactions()]);
+		await Promise.all([loadPortfolioData(), fetchRecentTransactions()]);
 		loading = false;
 	});
 
-	async function fetchPortfolioData() {
+	async function loadPortfolioData() {
 		try {
-			const response = await fetch('/api/portfolio/total');
-			if (response.ok) {
-				portfolioData = await response.json();
-				error = null;
-			} else {
+			const data = await fetchPortfolioData();
+			if (!data) {
 				error = 'Failed to load portfolio data';
 				toast.error('Failed to load portfolio data');
+			} else {
+				error = null;
 			}
 		} catch (e) {
 			console.error('Failed to fetch portfolio data:', e);
@@ -59,10 +58,11 @@
 	async function retryFetch() {
 		loading = true;
 		error = null;
-		await Promise.all([fetchPortfolioData(), fetchRecentTransactions()]);
+		await Promise.all([loadPortfolioData(), fetchRecentTransactions()]);
 		loading = false;
 	}
 
+	let portfolioData = $derived($PORTFOLIO_DATA);
 	let totalPortfolioValue = $derived(portfolioData ? portfolioData.totalValue : 0);
 	let hasHoldings = $derived(portfolioData && portfolioData.coinHoldings.length > 0);
 	let hasTransactions = $derived(transactions.length > 0);
@@ -71,7 +71,7 @@
 		{
 			key: 'coin',
 			label: 'Coin',
-			class: 'w-[30%] min-w-[120px] md:w-[12%]',
+			class: 'w-[25%] min-w-[120px] md:w-[12%]',
 			render: (value: any, row: any) => ({
 				component: 'coin',
 				icon: row.icon,
@@ -83,21 +83,32 @@
 		{
 			key: 'quantity',
 			label: 'Quantity',
-			class: 'w-[20%] min-w-[80px] md:w-[12%] font-mono',
+			class: 'w-[15%] min-w-[80px] md:w-[10%] font-mono',
 			sortable: true,
 			render: (value: any) => formatQuantity(value)
 		},
 		{
 			key: 'currentPrice',
 			label: 'Price',
-			class: 'w-[15%] min-w-[70px] md:w-[12%] font-mono',
+			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono',
 			sortable: true,
 			render: (value: any) => `$${formatPrice(value)}`
 		},
 		{
+			key: 'percentageChange',
+			label: 'P&L %',
+			class: 'w-[15%] min-w-[80px] md:w-[12%]',
+			sortable: true,
+			render: (value: any) => ({
+				component: 'badge',
+				variant: value >= 0 ? 'success' : 'destructive',
+				text: `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+			})
+		},
+		{
 			key: 'change24h',
 			label: '24h Change',
-			class: 'w-[20%] min-w-[80px] md:w-[12%]',
+			class: 'w-[15%] min-w-[80px] md:w-[12%]',
 			sortable: true,
 			render: (value: any) => ({
 				component: 'badge',
@@ -108,7 +119,7 @@
 		{
 			key: 'value',
 			label: 'Value',
-			class: 'w-[15%] min-w-[70px] md:w-[12%] font-mono font-medium',
+			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono font-medium',
 			sortable: true,
 			defaultSort: true,
 			render: (value: any) => formatValue(value)
@@ -222,7 +233,7 @@
 	]);
 
 	async function handleTransferSuccess() {
-		await Promise.all([fetchPortfolioData(), fetchRecentTransactions()]);
+		await Promise.all([loadPortfolioData(), fetchRecentTransactions()]);
 	}
 </script>
 
@@ -295,11 +306,11 @@
 					</Card.Header>
 					<Card.Content>
 						<p class="text-3xl font-bold">
-							{formatValue(portfolioData.baseCurrencyBalance)}
+							{formatValue(portfolioData?.baseCurrencyBalance || 0)}
 						</p>
 						<p class="text-muted-foreground text-xs">
 							{totalPortfolioValue > 0
-								? `${((portfolioData.baseCurrencyBalance / totalPortfolioValue) * 100).toFixed(1)}% of portfolio`
+								? `${(((portfolioData?.baseCurrencyBalance || 0) / totalPortfolioValue) * 100).toFixed(1)}% of portfolio`
 								: '100% of portfolio'}
 						</p>
 					</Card.Content>
@@ -314,9 +325,9 @@
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>
-						<p class="text-3xl font-bold">{formatValue(portfolioData.totalCoinValue)}</p>
+						<p class="text-3xl font-bold">{formatValue(portfolioData?.totalCoinValue || 0)}</p>
 						<p class="text-muted-foreground text-xs">
-							{portfolioData.coinHoldings.length} positions
+							{portfolioData?.coinHoldings.length || 0} positions
 						</p>
 					</Card.Content>
 				</Card.Root>

@@ -2,7 +2,7 @@
 	import Coinflip from '$lib/components/self/games/Coinflip.svelte';
 	import Slots from '$lib/components/self/games/Slots.svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
+	import { PORTFOLIO_SUMMARY, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
@@ -17,8 +17,8 @@
 	function handleBalanceUpdate(newBalance: number) {
 		balance = newBalance;
 
-		if ($PORTFOLIO_DATA) {
-			PORTFOLIO_DATA.update((data) =>
+		if ($PORTFOLIO_SUMMARY) {
+			PORTFOLIO_SUMMARY.update((data) =>
 				data
 					? {
 							...data,
@@ -31,8 +31,8 @@
 	}
 
 	$effect(() => {
-		if ($USER_DATA && $PORTFOLIO_DATA) {
-			balance = $PORTFOLIO_DATA.baseCurrencyBalance;
+		if ($USER_DATA && $PORTFOLIO_SUMMARY) {
+			balance = $PORTFOLIO_SUMMARY.baseCurrencyBalance;
 		}
 	});
 </script>

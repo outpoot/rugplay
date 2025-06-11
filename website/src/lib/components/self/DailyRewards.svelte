@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Gift, Clock, Loader2, CheckIcon } from 'lucide-svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { fetchPortfolioData } from '$lib/stores/portfolio-data';
+	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { formatTimeRemaining } from '$lib/utils';
@@ -81,7 +81,7 @@
 				});
 
 				if ($USER_DATA) {
-					await fetchPortfolioData();
+					await fetchPortfolioSummary();
 				}
 
 				await fetchRewardStatus();

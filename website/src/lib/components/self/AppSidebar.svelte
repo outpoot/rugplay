@@ -34,7 +34,7 @@
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
+	import { PORTFOLIO_SUMMARY, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
 	import SignInConfirmDialog from './SignInConfirmDialog.svelte';
 	import DailyRewards from './DailyRewards.svelte';
@@ -44,6 +44,7 @@
 	import { formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import { liveTradesStore, isLoadingTrades } from '$lib/stores/websocket';
+	import { onMount } from 'svelte';
 
 	const data = {
 		navMain: [
@@ -64,11 +65,11 @@
 	let showPromoCode = $state(false);
 	let showUserManual = $state(false);
 
-	$effect(() => {
+	onMount(() => {
 		if ($USER_DATA) {
-			fetchPortfolioData();
+			fetchPortfolioSummary();
 		} else {
-			PORTFOLIO_DATA.set(null);
+			PORTFOLIO_SUMMARY.set(null);
 		}
 	});
 
@@ -208,7 +209,7 @@
 			<Sidebar.Group>
 				<Sidebar.GroupContent>
 					<div class="px-2 py-1">
-						{#if !$PORTFOLIO_DATA}
+						{#if !$PORTFOLIO_SUMMARY}
 							<div class="space-y-2">
 								<Skeleton class="h-8 w-full rounded" />
 							</div>
@@ -318,7 +319,7 @@
 				<Sidebar.GroupLabel>Portfolio</Sidebar.GroupLabel>
 				<Sidebar.GroupContent>
 					<div class="space-y-2 px-2 py-1">
-						{#if !$PORTFOLIO_DATA}
+						{#if !$PORTFOLIO_SUMMARY}
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-2">
 									<Skeleton class="h-4 w-4 rounded" />
@@ -343,19 +344,19 @@
 									<span class="text-sm font-medium">Total Value</span>
 								</div>
 								<Badge variant="secondary" class="font-mono">
-									${formatCurrency($PORTFOLIO_DATA.totalValue)}
+									${formatCurrency($PORTFOLIO_SUMMARY.totalValue)}
 								</Badge>
 							</div>
 							<div class="text-muted-foreground space-y-1 text-xs">
 								<div class="flex justify-between">
 									<span>Cash:</span>
 									<span class="font-mono"
-										>${formatCurrency($PORTFOLIO_DATA.baseCurrencyBalance)}</span
+										>${formatCurrency($PORTFOLIO_SUMMARY.baseCurrencyBalance)}</span
 									>
 								</div>
 								<div class="flex justify-between">
 									<span>Coins:</span>
-									<span class="font-mono">${formatCurrency($PORTFOLIO_DATA.totalCoinValue)}</span>
+									<span class="font-mono">${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}</span>
 								</div>
 							</div>
 						{/if}

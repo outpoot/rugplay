@@ -23,7 +23,7 @@
 	import { toast } from 'svelte-sonner';
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { fetchPortfolioData } from '$lib/stores/portfolio-data';
+	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { getPublicUrl, getTimeframeInSeconds, timeToLocal } from '$lib/utils.js';
 	import { websocketController, type PriceUpdate, isConnectedStore } from '$lib/stores/websocket';
 	import SEO from '$lib/components/self/SEO.svelte';
@@ -124,7 +124,7 @@
 		}
 	}
 	async function handleTradeSuccess() {
-		await Promise.all([loadCoinData(), loadUserHolding(), fetchPortfolioData()]);
+		await Promise.all([loadCoinData(), loadUserHolding(), fetchPortfolioSummary()]);
 	}
 	function handlePriceUpdate(priceUpdate: PriceUpdate) {
 		if (coin && priceUpdate.coinSymbol === coinSymbol.toUpperCase()) {

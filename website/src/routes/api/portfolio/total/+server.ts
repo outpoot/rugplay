@@ -1,8 +1,8 @@
 import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { user, userPortfolio, coin } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { user, userPortfolio, coin, transaction } from '$lib/server/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 
 export async function GET({ request }) {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -24,7 +24,8 @@ export async function GET({ request }) {
             currentPrice: coin.currentPrice,
             symbol: coin.symbol,
             icon: coin.icon,
-            change24h: coin.change24h
+            change24h: coin.change24h,
+            coinId: coin.id
         })
             .from(userPortfolio)
             .innerJoin(coin, eq(userPortfolio.coinId, coin.id))
@@ -37,11 +38,35 @@ export async function GET({ request }) {
 
     let totalCoinValue = 0;
 
-    const coinHoldings = holdings.map(holding => {
+    const coinHoldings = await Promise.all(holdings.map(async (holding) => {
         const quantity = Number(holding.quantity);
         const price = Number(holding.currentPrice);
         const value = quantity * price;
         totalCoinValue += value;
+
+        // Calculate average purchase price from buy transactions
+        const avgPriceResult = await db.select({
+            avgPrice: sql<number>`
+                CASE 
+                    WHEN SUM(${transaction.quantity}) > 0 
+                    THEN SUM(${transaction.totalBaseCurrencyAmount}) / SUM(${transaction.quantity})
+                    ELSE 0 
+                END
+            `
+        })
+        .from(transaction)
+        .where(
+            and(
+                eq(transaction.userId, userId),
+                eq(transaction.coinId, holding.coinId),
+                eq(transaction.type, 'BUY')
+            )
+        );
+
+        const avgPurchasePrice = Number(avgPriceResult[0]?.avgPrice || 0);
+        const percentageChange = avgPurchasePrice > 0 
+            ? ((price - avgPurchasePrice) / avgPurchasePrice) * 100 
+            : 0;
 
         return {
             symbol: holding.symbol,
@@ -49,9 +74,11 @@ export async function GET({ request }) {
             quantity,
             currentPrice: price,
             value,
-            change24h: Number(holding.change24h)
+            change24h: Number(holding.change24h),
+            avgPurchasePrice,
+            percentageChange
         };
-    });
+    }));
 
     const baseCurrencyBalance = Number(userData[0].baseCurrencyBalance);
 

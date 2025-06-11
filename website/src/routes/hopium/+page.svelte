@@ -23,7 +23,7 @@
 		XIcon
 	} from 'lucide-svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
+	import { PORTFOLIO_SUMMARY, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import { formatDateWithYear, formatTimeUntil, formatValue, getPublicUrl } from '$lib/utils';
@@ -39,12 +39,12 @@
 	let newQuestion = $state('');
 	let creatingQuestion = $state(false);
 
-	let userBalance = $derived($PORTFOLIO_DATA ? $PORTFOLIO_DATA.baseCurrencyBalance : 0);
+	let userBalance = $derived($PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance : 0);
 
 	onMount(() => {
 		fetchQuestions();
 		if ($USER_DATA) {
-			fetchPortfolioData();
+			fetchPortfolioSummary();
 		}
 	});
 
@@ -91,7 +91,7 @@
 				showCreateDialog = false;
 				newQuestion = '';
 				fetchQuestions();
-				fetchPortfolioData();
+				fetchPortfolioSummary();
 			} else {
 				toast.error(result.error || 'Failed to create question', { duration: 20000 });
 			}

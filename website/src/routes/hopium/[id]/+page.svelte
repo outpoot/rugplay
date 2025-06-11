@@ -20,7 +20,7 @@
 		XIcon
 	} from 'lucide-svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
+	import { PORTFOLIO_SUMMARY, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import { formatDateWithYear, getPublicUrl, formatTimeUntil } from '$lib/utils';
@@ -37,7 +37,7 @@
 	let placingBet = $state(false);
 	let customBetAmount = $state('');
 
-	let userBalance = $derived($PORTFOLIO_DATA ? $PORTFOLIO_DATA.baseCurrencyBalance : 0);
+	let userBalance = $derived($PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance : 0);
 	let questionId = $derived(parseInt(page.params.id));
 
 	// Chart related
@@ -48,7 +48,7 @@
 	onMount(() => {
 		fetchQuestion();
 		if ($USER_DATA) {
-			fetchPortfolioData();
+			fetchPortfolioSummary();
 		}
 	});
 
@@ -97,7 +97,7 @@
 				);
 				customBetAmount = '';
 				fetchQuestion();
-				fetchPortfolioData();
+				fetchPortfolioSummary();
 			} else {
 				toast.error(result.error || 'Failed to place bet');
 			}

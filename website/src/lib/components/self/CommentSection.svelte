@@ -13,6 +13,7 @@
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import { websocketController } from '$lib/stores/websocket';
+	import { onMount } from 'svelte';
 
 	const { coinSymbol } = $props<{ coinSymbol: string }>();
 	import type { Comment } from '$lib/types/comment';
@@ -171,6 +172,12 @@
 	$effect(() => {
 		loadComments();
 	});
+
+	let isMac = false;
+
+	onMount(() => {
+		isMac = /Mac|iPhone|iPod|iPad/.test(navigator.platform);
+	});
 </script>
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
@@ -198,7 +205,7 @@
 					<kbd
 						class="bg-muted pointer-events-none absolute bottom-2 right-2 hidden h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-70 sm:flex"
 					>
-						<span class="text-xs">⌘</span>Enter
+						<span class="text-xs">{isMac ? '⌘' : 'Ctrl'}</span>Enter
 					</kbd>
 				</div>
 				<div class="flex justify-between">

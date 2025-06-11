@@ -17,8 +17,12 @@
 		goto(`/user/${username}`);
 	}
 
-	function handleCoinClick(coinSymbol: string) {
-		goto(`/coin/${coinSymbol.toLowerCase()}`);
+	function handleCoinClick(coinSymbol: string, trade: any) {
+		if (trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT') {
+			goto(`/user/${trade.username}`);
+		} else {
+			goto(`/coin/${coinSymbol.toLowerCase()}`);
+		}
 	}
 
 	onMount(() => {
@@ -84,7 +88,7 @@
 										{#if trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT'}
 											{#if trade.amount > 0}
 												<button
-													onclick={() => handleCoinClick(trade.coinSymbol)}
+													onclick={() => handleCoinClick(trade.coinSymbol, trade)}
 													class="flex cursor-pointer items-center gap-1.5 transition-opacity hover:underline hover:opacity-80"
 												>
 													<CoinIcon
@@ -111,7 +115,7 @@
 											{/if}
 										{:else}
 											<button
-												onclick={() => handleCoinClick(trade.coinSymbol)}
+												onclick={() => handleCoinClick(trade.coinSymbol, trade)}
 												class="flex cursor-pointer items-center gap-1.5 transition-opacity hover:underline hover:opacity-80"
 											>
 												<CoinIcon

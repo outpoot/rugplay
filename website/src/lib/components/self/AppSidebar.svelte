@@ -93,10 +93,14 @@
 		setOpenMobile(false);
 	}
 
-	async function handleTradeClick(coinSymbol: string) {
-		const targetPath = `/coin/${coinSymbol.toLowerCase()}`;
-
-		await goto(targetPath, { invalidateAll: true });
+	async function handleTradeClick(coinSymbol: string, trade: any) {
+		if (trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT') {
+			const targetPath = `/user/${trade.username}`;
+			await goto(targetPath, { invalidateAll: true });
+		} else {
+			const targetPath = `/coin/${coinSymbol.toLowerCase()}`;
+			await goto(targetPath, { invalidateAll: true });
+		}
 		setOpenMobile(false);
 	}
 
@@ -252,7 +256,7 @@
 					{:else}
 						{#each $liveTradesStore.slice(0, 5) as trade, index (`${trade.timestamp}-${trade.username}-${trade.coinSymbol}-${index}`)}
 							<button
-								onclick={() => handleTradeClick(trade.coinSymbol)}
+								onclick={() => handleTradeClick(trade.coinSymbol, trade)}
 								class="hover:bg-muted/50 flex w-full cursor-pointer items-center gap-2 rounded px-1 py-1 text-left text-xs transition-colors"
 							>
 								<div class="flex items-center gap-1">

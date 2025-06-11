@@ -244,6 +244,16 @@ function connect(): void {
         isConnectedStore.set(true);
         clearReconnectTimer();
         subscribeToChannels();
+        
+        USER_DATA.subscribe(user => {
+            if (user?.id && isSocketConnected()) {
+                console.log('Setting user subscription for user:', user.id);
+                socket!.send(JSON.stringify({
+                    type: 'set_user',
+                    userId: String(user.id)
+                }));
+            }
+        })();
     };
 
     socket.onmessage = handleWebSocketMessage;

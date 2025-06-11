@@ -24,17 +24,33 @@
 	import { USER_DATA } from '$lib/stores/user-data';
 
 	let { data } = $props();
-	const username = data.username;
+	let username = $derived(data.username);
 
 	let profileData = $state<UserProfileData | null>(null);
 	let recentTransactions = $state<any[]>([]);
 	let loading = $state(true);
 
+	let previousUsername = $state<string | null>(null);
+
 	let isOwnProfile = $derived(
 		$USER_DATA && profileData?.profile && $USER_DATA.username === profileData.profile.username
 	);
+
 	onMount(async () => {
 		await fetchProfileData();
+		previousUsername = username;
+	});
+
+	$effect(() => {
+		if (username && previousUsername && username !== previousUsername) {
+			loading = true;
+			profileData = null;
+			recentTransactions = [];
+
+			fetchProfileData().then(() => {
+				previousUsername = username;
+			});
+		}
 	});
 
 	$effect(() => {
@@ -42,12 +58,12 @@
 			fetchTransactions();
 		}
 	});
+
 	async function fetchProfileData() {
 		try {
 			const response = await fetch(`/api/user/${username}`);
 			if (response.ok) {
 				profileData = await response.json();
-
 				recentTransactions = profileData?.recentTransactions || [];
 			} else {
 				toast.error('Failed to load profile data');
@@ -170,6 +186,7 @@
 			render: (value: any) => formatDate(value)
 		}
 	];
+
 	const transactionsColumns = [
 		{
 			key: 'type',

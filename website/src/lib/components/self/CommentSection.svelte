@@ -219,7 +219,7 @@
 		{:else}
 			<div class="text-center">
 				<p class="text-muted-foreground mb-3 text-sm">Sign in to join the discussion</p>
-				<Button onclick={() => goto('/')} size="sm">Sign In</Button>
+				<Button onclick={() => (shouldSignIn = true)} size="sm">Sign In</Button>
 			</div>
 		{/if}
 

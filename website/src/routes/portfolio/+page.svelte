@@ -12,12 +12,14 @@
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
 	import SendMoneyModal from '$lib/components/self/SendMoneyModal.svelte';
+	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 
 	// TODO: add type definitions
 	let transactions = $state<any[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let sendMoneyModalOpen = $state(false);
+	let shouldSignIn = $state(false);
 
 	onMount(async () => {
 		await Promise.all([loadPortfolioData(), fetchRecentTransactions()]);
@@ -245,6 +247,7 @@
 />
 
 <SendMoneyModal bind:open={sendMoneyModalOpen} onSuccess={handleTransferSuccess} />
+<SignInConfirmDialog bind:open={shouldSignIn} />
 
 <div class="container mx-auto max-w-7xl p-6">
 	<div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -252,12 +255,14 @@
 			<h1 class="text-3xl font-bold">Portfolio</h1>
 			<p class="text-muted-foreground">Manage your investments and transactions</p>
 		</div>
-		<div class="flex gap-2">
-			<Button onclick={() => (sendMoneyModalOpen = true)}>
-				<Send class="h-4 w-4" />
-				Send Money
-			</Button>
-		</div>
+		{#if $USER_DATA}
+			<div class="flex gap-2">
+				<Button onclick={() => (sendMoneyModalOpen = true)}>
+					<Send class="h-4 w-4" />
+					Send Money
+				</Button>
+			</div>
+		{/if}
 	</div>
 
 	{#if loading}
@@ -268,7 +273,7 @@
 				<div class="text-muted-foreground mb-4 text-xl">
 					You need to be logged in to view your portfolio
 				</div>
-				<Button onclick={() => goto('/login')}>Log In</Button>
+				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 			</div>
 		</div>
 	{:else if error}

@@ -16,7 +16,9 @@
 	import { USER_DATA } from '$lib/stores/user-data';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import SEO from '$lib/components/self/SEO.svelte';
+	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 
+	let shouldSignIn = $state(false);
 	let name = $state($USER_DATA?.name || '');
 	let bio = $state($USER_DATA?.bio ?? '');
 	let username = $state($USER_DATA?.username || '');
@@ -36,7 +38,7 @@
 			avatarFile !== undefined
 	);
 
-	let fileInput: HTMLInputElement;
+	let fileInput: HTMLInputElement | undefined = $state(undefined);
 
 	let loading = $state(false);
 	let usernameAvailable: boolean | null = $state(null);
@@ -66,7 +68,7 @@
 	});
 
 	function handleAvatarClick() {
-		fileInput.click();
+		fileInput?.click();
 	}
 	function handleAvatarChange(e: Event) {
 		const f = (e.target as HTMLInputElement).files?.[0];
@@ -293,6 +295,16 @@
 <div class="container mx-auto max-w-2xl p-6">
 	<h1 class="mb-6 text-2xl font-bold">Settings</h1>
 
+	{#if !$USER_DATA}
+	<div class="flex h-96 items-center justify-center">
+		<div class="text-center">
+			<div class="text-muted-foreground mb-4 text-xl">
+				You need to be logged in to view your settings
+			</div>
+			<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+		</div>
+	</div>
+{:else}
 	<div class="space-y-6">
 		<Card.Root>
 			<Card.Header>
@@ -476,6 +488,7 @@
 			</Card.Content>
 		</Card.Root>
 	</div>
+	{/if}
 </div>
 
 <Dialog.Root bind:open={deleteDialogOpen}>

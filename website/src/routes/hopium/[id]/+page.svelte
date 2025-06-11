@@ -415,7 +415,7 @@
 								size="lg"
 								disabled={!customBetAmount ||
 									Number(customBetAmount) <= 0 ||
-									Number(customBetAmount) >= userBalance ||
+									Number(customBetAmount) > userBalance ||
 									placingBet ||
 									question.aiResolution !== null}
 								onclick={placeBet}

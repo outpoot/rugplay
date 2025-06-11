@@ -2,6 +2,8 @@ import { db } from '$lib/server/db';
 import { predictionQuestion, predictionBet, user, accountDeletionRequest, session, account, promoCodeRedemption, userPortfolio, commentLike, comment, transaction, coin } from '$lib/server/db/schema';
 import { eq, and, lte, isNull } from 'drizzle-orm';
 import { resolveQuestion, getRugplayData } from '$lib/server/ai';
+import { createNotification } from '$lib/server/notification';
+import { formatValue } from '$lib/utils';
 
 export async function resolveExpiredQuestions() {
     const now = new Date();
@@ -68,6 +70,13 @@ export async function resolveExpiredQuestions() {
                         ? Number(question.totalYesAmount)
                         : Number(question.totalNoAmount);
 
+                    const notificationsToCreate: Array<{
+                        userId: number;
+                        amount: number;
+                        winnings: number;
+                        won: boolean;
+                    }> = [];
+
                     for (const bet of bets) {
                         const won = bet.side === resolution.resolution;
 
@@ -101,6 +110,32 @@ export async function resolveExpiredQuestions() {
                                     .where(eq(user.id, bet.userId));
                             }
                         }
+
+                        if (bet.userId !== null) {
+                            notificationsToCreate.push({
+                                userId: bet.userId,
+                                amount: Number(bet.amount),
+                                winnings,
+                                won
+                            });
+                        }
+                    }
+
+                    // Create notifications for all users who had bets
+                    for (const notifData of notificationsToCreate) {
+                        const { userId, amount, winnings, won } = notifData;
+
+                        const title = won ? 'Prediction won! 🎉' : 'Prediction lost ;(';
+                        const message = won
+                            ? `You won ${formatValue(winnings)} on "${question.question}"`
+                            : `You lost ${formatValue(amount)} on "${question.question}"`;
+
+                        await createNotification(
+                            userId.toString(),
+                            'HOPIUM',
+                            title,
+                            message,
+                        );
                     }
                 });
 

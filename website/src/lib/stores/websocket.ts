@@ -1,6 +1,10 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { PUBLIC_WEBSOCKET_URL } from '$env/static/public';
+import { NOTIFICATIONS, UNREAD_COUNT } from './notifications';
+import { USER_DATA } from './user-data';
+import { toast } from 'svelte-sonner';
+import { goto } from '$app/navigation';
 
 export interface LiveTrade {
     type: 'BUY' | 'SELL' | 'TRANSFER_IN' | 'TRANSFER_OUT';
@@ -187,6 +191,32 @@ function handleWebSocketMessage(event: MessageEvent): void {
                 handleCommentMessage(message);
                 break;
 
+            case 'notification':
+                const notification = {
+                    id: Date.now(),
+                    type: message.notificationType,
+                    title: message.title,
+                    message: message.message,
+                    isRead: false,
+                    createdAt: message.timestamp,
+                    data: message.amount ? { amount: message.amount } : null
+                };
+
+                NOTIFICATIONS.update(notifications => [notification, ...notifications]);
+                UNREAD_COUNT.update(count => count + 1);
+
+                toast.success(message.title, {
+                    description: message.message,
+                    action: {
+                        label: 'View',
+                        onClick: () => {
+                            goto('/notifications');
+                        }
+                    },
+                    duration: 5000
+                });
+                break;
+
             default:
                 console.log('Unhandled message type:', message.type, message);
         }
@@ -267,13 +297,56 @@ function unsubscribeFromPriceUpdates(coinSymbol: string): void {
     priceUpdateSubscriptions.delete(coinSymbol);
 }
 
-export const websocketController = {
-    connect,
-    disconnect,
-    setCoin,
-    subscribeToComments,
-    unsubscribeFromComments,
-    subscribeToPriceUpdates,
-    unsubscribeFromPriceUpdates,
-    loadInitialTrades
-};
+class WebSocketController {
+    connect() {
+        connect();
+    }
+
+    disconnect() {
+        disconnect();
+    }
+
+    setCoin(coinSymbol: string) {
+        setCoin(coinSymbol);
+    }
+
+    subscribeToComments(coinSymbol: string, callback: (message: any) => void) {
+        subscribeToComments(coinSymbol, callback);
+    }
+
+    unsubscribeFromComments(coinSymbol: string) {
+        unsubscribeFromComments(coinSymbol);
+    }
+
+    subscribeToPriceUpdates(coinSymbol: string, callback: (priceUpdate: PriceUpdate) => void) {
+        subscribeToPriceUpdates(coinSymbol, callback);
+    }
+
+    unsubscribeFromPriceUpdates(coinSymbol: string) {
+        unsubscribeFromPriceUpdates(coinSymbol);
+    }
+
+    loadInitialTrades(mode: 'preview' | 'expanded' = 'preview') {
+        loadInitialTrades(mode);
+    }
+
+    setUser(userId: string) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                type: 'set_user',
+                userId
+            }));
+        }
+    }
+}
+
+// Auto-connect user when USER_DATA changes
+if (typeof window !== 'undefined') {
+    USER_DATA.subscribe(user => {
+        if (user?.id) {
+            websocketController.setUser(user.id.toString());
+        }
+    });
+}
+
+export const websocketController = new WebSocketController();

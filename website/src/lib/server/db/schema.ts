@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 
 export const transactionTypeEnum = pgEnum('transaction_type', ['BUY', 'SELL', 'TRANSFER_IN', 'TRANSFER_OUT']);
 export const predictionMarketEnum = pgEnum('prediction_market_status', ['ACTIVE', 'RESOLVED', 'CANCELLED']);
+export const notificationTypeEnum = pgEnum('notification_type', ['HOPIUM', 'SYSTEM', 'TRANSFER', 'RUG_PULL']);
 
 export const user = pgTable("user", {
 	id: serial("id").primaryKey(),
@@ -225,5 +226,22 @@ export const accountDeletionRequest = pgTable("account_deletion_request", {
 		oneOpenRequest: index("account_deletion_request_open_idx")
 			.on(table.userId)
 			.where(sql`is_processed = false`),
+	};
+});
+
+export const notifications = pgTable("notification", {
+	id: serial("id").primaryKey(),
+	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	type: notificationTypeEnum("type").notNull(),
+	title: varchar("title", { length: 200 }).notNull(),
+	message: text("message").notNull(),
+	isRead: boolean("is_read").notNull().default(false),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => {
+	return {
+		userIdIdx: index("notification_user_id_idx").on(table.userId),
+		typeIdx: index("notification_type_idx").on(table.type),
+		isReadIdx: index("notification_is_read_idx").on(table.isRead),
+		createdAtIdx: index("notification_created_at_idx").on(table.createdAt),
 	};
 });

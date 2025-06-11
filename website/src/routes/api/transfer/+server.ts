@@ -3,6 +3,8 @@ import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, userPortfolio, coin, transaction } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { createNotification } from '$lib/server/notification';
+import { formatValue } from '$lib/utils';
 import type { RequestHandler } from './$types';
 
 interface TransferRequest {
@@ -19,7 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
     if (!session?.user) {
         throw error(401, 'Not authenticated');
-    }    try {
+    } try {
         const { recipientUsername, type, amount, coinSymbol }: TransferRequest = await request.json();
 
         if (!recipientUsername || !type || !amount || typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
@@ -122,6 +124,15 @@ export const POST: RequestHandler = async ({ request }) => {
                     senderUserId: senderId,
                     recipientUserId: recipientData.id
                 });
+
+                (async () => {
+                    await createNotification(
+                        recipientData.id.toString(),
+                        'TRANSFER',
+                        'Money received!',
+                        `You received ${formatValue(amount)} from @${senderData.username}`,
+                    );
+                })();
 
                 return json({
                     success: true,
@@ -246,6 +257,15 @@ export const POST: RequestHandler = async ({ request }) => {
                     senderUserId: senderId,
                     recipientUserId: recipientData.id
                 });
+
+                (async () => {
+                    await createNotification(
+                        recipientData.id.toString(),
+                        'TRANSFER',
+                        'Coins received!',
+                        `You received ${amount.toFixed(6)} *${coinData.symbol} from @${senderData.username}`,
+                    );
+                })();
 
                 return json({
                     success: true,

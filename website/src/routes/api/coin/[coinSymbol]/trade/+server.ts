@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { coin, userPortfolio, user, transaction, priceHistory } from '$lib/server/db/schema';
 import { eq, and, gte } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
+import { createNotification } from '$lib/server/notification';
 
 async function calculate24hMetrics(coinId: number, currentPrice: number) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -328,6 +329,36 @@ export async function POST({ params, request }) {
                     updatedAt: new Date()
                 })
                 .where(eq(coin.id, coinData.id));
+
+            const isRugPull = priceImpact < -20 && totalCost > 1000;
+
+            // Send rug pull notifications to affected users
+            if (isRugPull) {
+                (async () => {
+                    const affectedUsers = await db
+                        .select({
+                            userId: userPortfolio.userId,
+                            quantity: userPortfolio.quantity
+                        })
+                        .from(userPortfolio)
+                        .where(eq(userPortfolio.coinId, coinData.id));
+
+                    for (const holder of affectedUsers) {
+                        if (holder.userId === userId) continue;
+                        
+                        const holdingValue = Number(holder.quantity) * newPrice;
+                        if (holdingValue > 10) {
+                            const lossAmount = Number(holder.quantity) * (currentPrice - newPrice);
+                            await createNotification(
+                                holder.userId.toString(),
+                                'RUG_PULL',
+                                'Coin rugpulled!',
+                                `A coin you owned, ${coinData.name} (*${normalizedSymbol}), crashed ${Math.abs(priceImpact).toFixed(1)}%!`,
+                            );
+                        }
+                    }
+                })();
+            }
 
             const priceUpdateData = {
                 currentPrice: newPrice,

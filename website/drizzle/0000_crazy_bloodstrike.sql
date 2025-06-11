@@ -1,11 +1,17 @@
 DO $$ BEGIN
+ CREATE TYPE "public"."notification_type" AS ENUM('HOPIUM', 'SYSTEM', 'TRANSFER', 'RUG_PULL');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  CREATE TYPE "public"."prediction_market_status" AS ENUM('ACTIVE', 'RESOLVED', 'CANCELLED');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- CREATE TYPE "public"."transaction_type" AS ENUM('BUY', 'SELL');
+ CREATE TYPE "public"."transaction_type" AS ENUM('BUY', 'SELL', 'TRANSFER_IN', 'TRANSFER_OUT');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -47,7 +53,7 @@ CREATE TABLE IF NOT EXISTS "coin" (
 	"current_price" numeric(20, 8) NOT NULL,
 	"market_cap" numeric(30, 2) NOT NULL,
 	"volume_24h" numeric(30, 2) DEFAULT '0.00',
-	"change_24h" numeric(10, 4) DEFAULT '0.0000',
+	"change_24h" numeric(30, 4) DEFAULT '0.0000',
 	"pool_coin_amount" numeric(30, 8) DEFAULT '0.00000000' NOT NULL,
 	"pool_base_currency_amount" numeric(30, 8) DEFAULT '0.00000000' NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -72,6 +78,16 @@ CREATE TABLE IF NOT EXISTS "comment_like" (
 	"comment_id" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "comment_like_user_id_comment_id_pk" PRIMARY KEY("user_id","comment_id")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "notification" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" integer NOT NULL,
+	"type" "notification_type" NOT NULL,
+	"title" varchar(200) NOT NULL,
+	"message" text NOT NULL,
+	"is_read" boolean DEFAULT false NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "prediction_bet" (
@@ -149,7 +165,9 @@ CREATE TABLE IF NOT EXISTS "transaction" (
 	"quantity" numeric(30, 8) NOT NULL,
 	"price_per_coin" numeric(20, 8) NOT NULL,
 	"total_base_currency_amount" numeric(30, 8) NOT NULL,
-	"timestamp" timestamp with time zone DEFAULT now() NOT NULL
+	"timestamp" timestamp with time zone DEFAULT now() NOT NULL,
+	"recipient_user_id" integer,
+	"sender_user_id" integer
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user" (
@@ -235,6 +253,12 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "notification" ADD CONSTRAINT "notification_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "prediction_bet" ADD CONSTRAINT "prediction_bet_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -295,6 +319,18 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "transaction" ADD CONSTRAINT "transaction_recipient_user_id_user_id_fk" FOREIGN KEY ("recipient_user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "transaction" ADD CONSTRAINT "transaction_sender_user_id_user_id_fk" FOREIGN KEY ("sender_user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "user_portfolio" ADD CONSTRAINT "user_portfolio_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -311,6 +347,10 @@ CREATE INDEX IF NOT EXISTS "account_deletion_request_scheduled_deletion_idx" ON 
 CREATE INDEX IF NOT EXISTS "account_deletion_request_open_idx" ON "account_deletion_request" USING btree ("user_id") WHERE is_processed = false;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "comment_user_id_idx" ON "comment" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "comment_coin_id_idx" ON "comment" USING btree ("coin_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "notification_user_id_idx" ON "notification" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "notification_type_idx" ON "notification" USING btree ("type");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "notification_is_read_idx" ON "notification" USING btree ("is_read");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "notification_created_at_idx" ON "notification" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "prediction_bet_user_id_idx" ON "prediction_bet" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "prediction_bet_question_id_idx" ON "prediction_bet" USING btree ("question_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "prediction_bet_user_question_idx" ON "prediction_bet" USING btree ("user_id","question_id");--> statement-breakpoint

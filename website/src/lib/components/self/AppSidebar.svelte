@@ -30,7 +30,8 @@
 		ShieldCheck,
 		Hammer,
 		BookOpen,
-		Info
+		Info,
+		Bell
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -46,6 +47,7 @@
 	import { goto } from '$app/navigation';
 	import { liveTradesStore, isLoadingTrades } from '$lib/stores/websocket';
 	import { onMount } from 'svelte';
+	import { UNREAD_COUNT, fetchNotifications } from '$lib/stores/notifications';
 
 	const data = {
 		navMain: [
@@ -57,6 +59,7 @@
 			{ title: 'Portfolio', url: '/portfolio', icon: BriefcaseBusiness },
 			{ title: 'Treemap', url: '/treemap', icon: ChartColumn },
 			{ title: 'Create coin', url: '/coin/create', icon: Coins },
+			{ title: 'Notifications', url: '/notifications', icon: Bell },
 			{ title: 'About', url: '/about', icon: Info }
 		]
 	};
@@ -70,6 +73,7 @@
 	onMount(() => {
 		if ($USER_DATA) {
 			fetchPortfolioSummary();
+			fetchNotifications();
 		} else {
 			PORTFOLIO_SUMMARY.set(null);
 		}
@@ -177,10 +181,15 @@
 									<a
 										href={item.url || '/'}
 										onclick={() => handleNavClick(item.title)}
-										class={`${props.class}`}
+										class={`${props.class} ${item.title === 'Notifications' && !$USER_DATA ? 'pointer-events-none opacity-50' : ''}`}
 									>
 										<item.icon />
 										<span>{item.title}</span>
+										{#if item.title === 'Notifications' && $UNREAD_COUNT > 0 && $USER_DATA}
+											<Sidebar.MenuBadge class="bg-primary text-primary-foreground">
+												{$UNREAD_COUNT > 99 ? '99+' : $UNREAD_COUNT}
+											</Sidebar.MenuBadge>
+										{/if}
 									</a>
 								{/snippet}
 							</Sidebar.MenuButton>
@@ -358,7 +367,8 @@
 								</div>
 								<div class="flex justify-between">
 									<span>Coins:</span>
-									<span class="font-mono">${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}</span>
+									<span class="font-mono">${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}</span
+									>
 								</div>
 							</div>
 						{/if}

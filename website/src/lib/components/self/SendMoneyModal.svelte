@@ -53,13 +53,9 @@
 				: false
 	);
 
-	let isWithinCashLimit = $derived(
-		transferType === 'CASH' ? numericAmount >= 10 : true
-	);
+	let isWithinCashLimit = $derived(transferType === 'CASH' ? numericAmount >= 10 : true);
 
-	let isWithinCoinValueLimit = $derived(
-		transferType === 'COIN' ? estimatedValue >= 10 : true
-	);
+	let isWithinCoinValueLimit = $derived(transferType === 'COIN' ? estimatedValue >= 10 : true);
 
 	let canSend = $derived(
 		hasValidAmount &&
@@ -125,6 +121,10 @@
 			const result = await response.json();
 
 			if (!response.ok) {
+				if (result.message) {
+					throw new Error(result.message);
+				}
+
 				throw new Error(result.error || 'Transfer failed');
 			}
 
@@ -282,13 +282,9 @@
 					{/if}
 				</div>
 				{#if transferType === 'CASH'}
-					<p class="text-muted-foreground text-xs">
-						Minimum: $10.00 per transfer
-					</p>
+					<p class="text-muted-foreground text-xs">Minimum: $10.00 per transfer</p>
 				{:else if transferType === 'COIN'}
-					<p class="text-muted-foreground text-xs">
-						Minimum estimated value: $10.00 per transfer
-					</p>
+					<p class="text-muted-foreground text-xs">Minimum estimated value: $10.00 per transfer</p>
 				{/if}
 			</div>
 

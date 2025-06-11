@@ -7,7 +7,7 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert';
 	import { Separator } from '$lib/components/ui/separator';
 	import { Info, Loader2, Coins, ImagePlus } from 'lucide-svelte';
-	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
+	import { PORTFOLIO_SUMMARY, fetchPortfolioData } from '$lib/stores/portfolio-data';
 	import { onMount } from 'svelte';
 	import { CREATION_FEE, INITIAL_LIQUIDITY, TOTAL_COST } from '$lib/data/constants';
 	import { toast } from 'svelte-sonner';
@@ -46,7 +46,7 @@
 	);
 
 	let hasEnoughFunds = $derived(
-		$PORTFOLIO_DATA ? $PORTFOLIO_DATA.baseCurrencyBalance >= TOTAL_COST : false
+		$PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance >= TOTAL_COST : false
 	);
 
 	let canSubmit = $derived(isFormValid && hasEnoughFunds && !isSubmitting);
@@ -126,7 +126,7 @@
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
 <div class="container mx-auto max-w-5xl px-4 py-6">
-	{#if !$PORTFOLIO_DATA}
+	{#if !$PORTFOLIO_SUMMARY}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
 				<div class="text-muted-foreground mb-4 text-xl">Sign in to create your own coin</div>
@@ -264,7 +264,7 @@
 			<!-- Right Column - Preview and Info -->
 			<div class="space-y-4">
 				<!-- Cost Summary Card -->
-				{#if $PORTFOLIO_DATA}
+				{#if $PORTFOLIO_SUMMARY}
 					<Card>
 						<CardHeader class="pb-2">
 							<div class="flex items-center justify-between">
@@ -272,7 +272,7 @@
 								<div class="text-sm">
 									<span class="text-muted-foreground">Balance: </span>
 									<span class={hasEnoughFunds ? 'text-green-600' : 'text-destructive'}>
-										${$PORTFOLIO_DATA.baseCurrencyBalance.toLocaleString()}
+										${$PORTFOLIO_SUMMARY.baseCurrencyBalance.toLocaleString()}
 									</span>
 								</div>
 							</div>

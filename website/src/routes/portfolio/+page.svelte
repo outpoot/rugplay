@@ -366,7 +366,7 @@
 					<Card.Content>
 						<DataTable
 							columns={holdingsColumns}
-							data={portfolioData.coinHoldings}
+							data={portfolioData?.coinHoldings || []}
 							onRowClick={(holding) => goto(`/coin/${holding.symbol}`)}
 						/>
 					</Card.Content>

@@ -29,7 +29,8 @@
 		Scale,
 		ShieldCheck,
 		Hammer,
-		BookOpen
+		BookOpen,
+		Info
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -55,7 +56,8 @@
 			{ title: 'Leaderboard', url: '/leaderboard', icon: Trophy },
 			{ title: 'Portfolio', url: '/portfolio', icon: BriefcaseBusiness },
 			{ title: 'Treemap', url: '/treemap', icon: ChartColumn },
-			{ title: 'Create coin', url: '/coin/create', icon: Coins }
+			{ title: 'Create coin', url: '/coin/create', icon: Coins },
+			{ title: 'About', url: '/about', icon: Info }
 		]
 	};
 	type MenuButtonProps = HTMLAttributes<HTMLAnchorElement | HTMLButtonElement>;

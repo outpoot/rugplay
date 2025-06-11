@@ -92,7 +92,10 @@
 			'/hopium': 'Hopium',
 			'/gambling': 'Gambling',
 			'/live': 'Live Trades',
-			'/treemap': 'Treemap'
+			'/treemap': 'Treemap',
+			'/about': 'About',
+			'/legal/privacy': 'Privacy Policy',
+			'/legal/terms': 'Terms of Service',
 		};
 
 		// Handle dynamic routes

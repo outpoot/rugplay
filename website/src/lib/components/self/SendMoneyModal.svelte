@@ -125,6 +125,9 @@
 			const result = await response.json();
 
 			if (!response.ok) {
+				if (result.message) {
+					throw new Error(result.message);
+				}
 				throw new Error(result.error || 'Transfer failed');
 			}
 

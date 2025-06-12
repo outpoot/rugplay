@@ -52,10 +52,7 @@ export const POST: RequestHandler = async ({ request }) => {
             for (let i = 0; i < 25; i++) {
                 if (!positions.has(i)) safePositions.push(i);
             }
-            console.log(positions)
-            console.log('Safe positions:', safePositions);
             
-
             // transaction token for authentication
             const randomBytes = new Uint8Array(8); 
             crypto.getRandomValues(randomBytes);

@@ -44,7 +44,20 @@ export async function GET({ request }) {
         const value = quantity * price;
         totalCoinValue += value;
 
-        // Calculate average purchase price from buy transactions
+        // Calculate total cost basis from buy transactions
+        const costBasisResult = await db.select({
+            totalCostBasis: sql<number>`COALESCE(SUM(${transaction.totalBaseCurrencyAmount}), 0)`
+        })
+            .from(transaction)
+            .where(
+                and(
+                    eq(transaction.userId, userId),
+                    eq(transaction.coinId, holding.coinId),
+                    eq(transaction.type, 'BUY')
+                )
+            );
+
+        // Calculate average purchase price for reference
         const avgPriceResult = await db.select({
             avgPrice: sql<number>`
                 CASE 
@@ -54,18 +67,20 @@ export async function GET({ request }) {
                 END
             `
         })
-        .from(transaction)
-        .where(
-            and(
-                eq(transaction.userId, userId),
-                eq(transaction.coinId, holding.coinId),
-                eq(transaction.type, 'BUY')
-            )
-        );
+            .from(transaction)
+            .where(
+                and(
+                    eq(transaction.userId, userId),
+                    eq(transaction.coinId, holding.coinId),
+                    eq(transaction.type, 'BUY')
+                )
+            );
 
+        const totalCostBasis = Number(costBasisResult[0]?.totalCostBasis || 0);
         const avgPurchasePrice = Number(avgPriceResult[0]?.avgPrice || 0);
-        const percentageChange = avgPurchasePrice > 0 
-            ? ((price - avgPurchasePrice) / avgPurchasePrice) * 100 
+
+        const percentageChange = totalCostBasis > 0
+            ? ((value - totalCostBasis) / totalCostBasis) * 100
             : 0;
 
         return {
@@ -76,7 +91,8 @@ export async function GET({ request }) {
             value,
             change24h: Number(holding.change24h),
             avgPurchasePrice,
-            percentageChange
+            percentageChange,
+            costBasis: totalCostBasis
         };
     }));
 

@@ -174,7 +174,7 @@
 		<div class="text-center">
 			<h1 class="mb-2 flex items-center justify-center gap-2 text-3xl font-bold">
 				<Sparkles class="h-8 w-8 text-purple-500" />
-				Hopium<span class="text-xs">[BETA]</span>
+				Hopium
 			</h1>
 			<p class="text-muted-foreground mb-6">
 				AI-powered prediction markets. Create questions and bet on outcomes.
@@ -235,6 +235,11 @@
 													<XIcon class="h-3 w-3" />
 													NO
 												{/if}
+											</Badge>
+										{:else if question.status === 'CANCELLED'}
+											<Badge variant="outline" class="flex flex-shrink-0 items-center gap-1 text-muted-foreground border-muted-foreground">
+												<XIcon class="h-3 w-3" />
+												SKIP
 											</Badge>
 										{/if}
 

@@ -190,6 +190,7 @@ export const predictionQuestion = pgTable("prediction_question", {
 		creatorIdIdx: index("prediction_question_creator_id_idx").on(table.creatorId),
 		statusIdx: index("prediction_question_status_idx").on(table.status),
 		resolutionDateIdx: index("prediction_question_resolution_date_idx").on(table.resolutionDate),
+		statusResolutionIdx: index("prediction_question_status_resolution_idx").on(table.status, table.resolutionDate),
 	};
 });
 

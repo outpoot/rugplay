@@ -242,6 +242,11 @@
 							RESOLVED: NO
 						{/if}
 					</Badge>
+				{:else if question.status === 'CANCELLED'}
+					<Badge variant="outline" class="text-muted-foreground border-muted-foreground">
+						<XIcon class="h-4 w-4" />
+						SKIP
+					</Badge>
 				{/if}
 			</div>
 		</div>

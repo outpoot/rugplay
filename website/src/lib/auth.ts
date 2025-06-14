@@ -42,8 +42,7 @@ export const auth = betterAuth({
                             s3ImageKey = await uploadProfilePicture(
                                 profile.sub,
                                 new Uint8Array(arrayBuffer),
-                                blob.type,
-                                blob.size
+                                blob.type || 'image/jpeg'
                             );
                         }
                     } catch (error) {

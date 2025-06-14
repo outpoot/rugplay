@@ -16,6 +16,8 @@ export type User = {
 
     volumeMaster: number;
     volumeMuted: boolean;
+
+    prestigeLevel: number;
 } | null;
 
 export const USER_DATA = writable<User>(undefined);

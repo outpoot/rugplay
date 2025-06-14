@@ -31,7 +31,8 @@ export const user = pgTable("user", {
 		precision: 20,
 		scale: 8,
 	}).notNull().default("0.00000000"),
-	loginStreak: integer("login_streak").notNull().default(0)
+	loginStreak: integer("login_streak").notNull().default(0),
+	prestigeLevel: integer("prestige_level").default(0),
 });
 
 export const session = pgTable("session", {

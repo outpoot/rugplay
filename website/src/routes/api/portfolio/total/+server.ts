@@ -44,40 +44,49 @@ export async function GET({ request }) {
         const value = quantity * price;
         totalCoinValue += value;
 
-        // Calculate total cost basis from buy transactions
-        const costBasisResult = await db.select({
-            totalCostBasis: sql<number>`COALESCE(SUM(${transaction.totalBaseCurrencyAmount}), 0)`
+        const allTransactions = await db.select({
+            type: transaction.type,
+            quantity: transaction.quantity,
+            totalBaseCurrencyAmount: transaction.totalBaseCurrencyAmount,
+            timestamp: transaction.timestamp
         })
             .from(transaction)
             .where(
                 and(
                     eq(transaction.userId, userId),
-                    eq(transaction.coinId, holding.coinId),
-                    eq(transaction.type, 'BUY')
+                    eq(transaction.coinId, holding.coinId)
                 )
-            );
+            )
+            .orderBy(transaction.timestamp);
 
-        // Calculate average purchase price for reference
-        const avgPriceResult = await db.select({
-            avgPrice: sql<number>`
-                CASE 
-                    WHEN SUM(${transaction.quantity}) > 0 
-                    THEN SUM(${transaction.totalBaseCurrencyAmount}) / SUM(${transaction.quantity})
-                    ELSE 0 
-                END
-            `
-        })
-            .from(transaction)
-            .where(
-                and(
-                    eq(transaction.userId, userId),
-                    eq(transaction.coinId, holding.coinId),
-                    eq(transaction.type, 'BUY')
-                )
-            );
+        // calculate cost basis
+        let remainingQuantity = quantity;
+        let totalCostBasis = 0;
+        let runningQuantity = 0;
 
-        const totalCostBasis = Number(costBasisResult[0]?.totalCostBasis || 0);
-        const avgPurchasePrice = Number(avgPriceResult[0]?.avgPrice || 0);
+        for (const tx of allTransactions) {
+            const txQuantity = Number(tx.quantity);
+            const txAmount = Number(tx.totalBaseCurrencyAmount);
+
+            if (tx.type === 'BUY') {
+                runningQuantity += txQuantity;
+
+                // if we still need to account for held coins
+                if (remainingQuantity > 0) {
+                    const quantityToAttribute = Math.min(txQuantity, remainingQuantity);
+                    const avgPrice = txAmount / txQuantity;
+                    totalCostBasis += quantityToAttribute * avgPrice;
+                    remainingQuantity -= quantityToAttribute;
+                }
+            } else if (tx.type === 'SELL') {
+                runningQuantity -= txQuantity;
+            }
+
+            // if we accounted for all held coins, break
+            if (remainingQuantity <= 0) break;
+        }
+
+        const avgPurchasePrice = quantity > 0 ? totalCostBasis / quantity : 0;
 
         const percentageChange = totalCostBasis > 0
             ? ((value - totalCostBasis) / totalCostBasis) * 100

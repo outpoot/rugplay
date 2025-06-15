@@ -43,6 +43,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 throw new Error(`Insufficient funds. You need *${roundedAmount.toFixed(2)} but only have *${roundedBalance.toFixed(2)}`);
             }
 
+
             // Generate mine positions
             const positions = new Set<number>();
             while (positions.size < mineCount) {
@@ -52,11 +53,8 @@ export const POST: RequestHandler = async ({ request }) => {
             for (let i = 0; i < 25; i++) {
                 if (!positions.has(i)) safePositions.push(i);
             }
-            console.log(positions)
-            console.log('Safe positions:', safePositions);
             
-
-            // transaction token for authentication
+            // transaction token for authentication stuff
             const randomBytes = new Uint8Array(8); 
             crypto.getRandomValues(randomBytes);
             const sessionToken = Array.from(randomBytes)
@@ -64,6 +62,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 .join('');
 
             const now = Date.now();
+            const newBalance = roundedBalance - roundedAmount;
 
             // Create session
             activeGames.set(sessionToken, {
@@ -79,16 +78,20 @@ export const POST: RequestHandler = async ({ request }) => {
                 userId
             });
 
-            // Hold bet amount on server to prevent the user from like sending it to another account and farming money without a risk
+            // Update user balance
             await tx
                 .update(user)
                 .set({
-                    baseCurrencyBalance: (roundedBalance - roundedAmount).toFixed(8),
+                    baseCurrencyBalance: newBalance.toFixed(8),
                     updatedAt: new Date()
                 })
                 .where(eq(user.id, userId));
 
-            return { sessionToken };
+
+            return { 
+                sessionToken,
+                newBalance
+            };
         });
 
         return json(result);

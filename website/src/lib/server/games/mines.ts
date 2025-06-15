@@ -19,17 +19,13 @@ interface MinesSession {
 
 export const activeGames = new Map<string, MinesSession>();
 
-// Clean up old games every minute.
+// Clean up old games every minute. (5 Minute system)
 setInterval(async () => {
     const now = Date.now();
     for (const [token, game] of activeGames.entries()) {
-        // Delete games older than 5 minutes that are still there for some reason.
         if (now - game.lastActivity > 5 * 60 * 1000) {
-            // If no tiles were revealed, refund the bet
             if (game.revealedTiles.length === 0) {
-                try {
-                    console.log(`Processing refund for inactive Mines game ${token} (User: ${game.userId}, Bet: ${game.betAmount})`);
-                    
+                try {                    
                     const [userData] = await db
                         .select({ baseCurrencyBalance: user.baseCurrencyBalance })
                         .from(user)
@@ -48,29 +44,74 @@ setInterval(async () => {
                         })
                         .where(eq(user.id, game.userId));
 
-                    console.log(`Successfully refunded ${game.betAmount} to user ${game.userId}. New balance: ${newBalance}`);
                 } catch (error) {
                     console.error(`Failed to refund inactive game ${token}:`, error);
                 }
-            } else {
-                console.log(`Cleaning up inactive game ${token} (User: ${game.userId}) - No refund needed as tiles were revealed`);
             }
             activeGames.delete(token);
         }
     }
 }, 60000);
 
+setInterval(async () => {
+    const now = Date.now();
+    for (const [token, game] of activeGames.entries()) {
+        if (game.status === 'active' && game.revealedTiles.length > 0 && now - game.lastActivity > 20000) {
+            try {
+                const [userData] = await db
+                    .select({ baseCurrencyBalance: user.baseCurrencyBalance })
+                    .from(user)
+                    .where(eq(user.id, game.userId))
+                    .for('update')
+                    .limit(1);
+
+                const currentBalance = Number(userData.baseCurrencyBalance);
+                const payout = game.betAmount * game.currentMultiplier;
+                const roundedPayout = Math.round(payout * 100000000) / 100000000;
+                const newBalance = Math.round((currentBalance + roundedPayout) * 100000000) / 100000000;
+
+                await db
+                    .update(user)
+                    .set({
+                        baseCurrencyBalance: newBalance.toFixed(8),
+                        updatedAt: new Date()
+                    })
+                    .where(eq(user.id, game.userId));
+
+                activeGames.delete(token);
+            } catch (error) {
+                console.error(`Failed to auto cashout game ${token}:`, error);
+            }
+        }
+    }
+}, 15000);
+
 // Rig the game...
-const getMaxPayout = (bet: number, picks: number): number => {
-    const absoluteCap = 5_000_000; // never pay above this. Yeah, its rigged. Live with that :)
-    const baseCap = 1.4; // 1.4x min multiplier, increase to, well, increase payouts
-    const growthRate = 0.45; // cap curve sensitivity
-
-    // Cap increases with number of successful reveals
-    const effectiveMultiplierCap = baseCap + Math.pow(picks, growthRate);
-    const payoutCap = bet * effectiveMultiplierCap;
-
-    return Math.min(payoutCap, absoluteCap);
+const getMaxPayout = (bet: number, picks: number, mines: number): number => {
+    const MAX_PAYOUT = 2_000_000; // Maximum payout cap of 2 million to not make linker too rich
+    const HIGH_BET_THRESHOLD = 50_000; 
+    
+    const mineFactor = 1 + (mines / 25); 
+    const baseMultiplier = (1.4 + Math.pow(picks, 0.45)) * mineFactor;
+    
+    // For high bets, we stop linker from getting richer  ¯\_(ツ)_/¯
+    if (bet > HIGH_BET_THRESHOLD) {
+        const betRatio = Math.pow(Math.min(1, (bet - HIGH_BET_THRESHOLD) / (MAX_PAYOUT - HIGH_BET_THRESHOLD)), 1);
+        
+        // Direct cap on multiplier for high bets
+        const maxAllowedMultiplier = 1.05 + (picks * 0.1);
+        const highBetMultiplier = Math.min(baseMultiplier, maxAllowedMultiplier) * (1 - (bet / MAX_PAYOUT) * 0.9);
+        const betSizeFactor = Math.max(0.1, 1 - (bet / MAX_PAYOUT) * 0.9); 
+        const minMultiplier = (1.1 + (picks * 0.15 * betSizeFactor)) * mineFactor;
+        
+        const reducedMultiplier = highBetMultiplier - ((highBetMultiplier - minMultiplier) * betRatio);
+        const payout = Math.min(bet * reducedMultiplier, MAX_PAYOUT);
+        
+        return payout;
+    }
+    
+    const payout = Math.min(bet * baseMultiplier, MAX_PAYOUT);
+    return payout;
 };
 
 
@@ -78,6 +119,7 @@ export function calculateMultiplier(picks: number, mines: number, betAmount: num
     const TOTAL_TILES = 25;
     const HOUSE_EDGE = 0.05;
 
+    // Calculate probability of winning based on picks and mines
     let probability = 1;
     for (let i = 0; i < picks; i++) {
         probability *= (TOTAL_TILES - mines - i) / (TOTAL_TILES - i);
@@ -85,14 +127,15 @@ export function calculateMultiplier(picks: number, mines: number, betAmount: num
 
     if (probability <= 0) return 1.0;
 
+    // Calculate fair multiplier based on probability and house edge
     const fairMultiplier = (1 / probability) * (1 - HOUSE_EDGE);
+    
     const rawPayout = fairMultiplier * betAmount;
-
-    const maxPayout = getMaxPayout(betAmount, picks);
+    const maxPayout = getMaxPayout(betAmount, picks, mines);
     const cappedPayout = Math.min(rawPayout, maxPayout);
     const effectiveMultiplier = cappedPayout / betAmount;
 
-    return Math.max(1.0, effectiveMultiplier);
+    return Math.max(1.0, Number(effectiveMultiplier.toFixed(2)));
 }
 
 

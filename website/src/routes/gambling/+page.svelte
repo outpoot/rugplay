@@ -9,6 +9,7 @@
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import SEO from '$lib/components/self/SEO.svelte';
+	import Dice from '$lib/components/self/games/Dice.svelte'
 
 	let shouldSignIn = $state(false);
 	let balance = $state(0);
@@ -78,6 +79,12 @@
 			>
 				Mines
 			</Button>
+			<Button
+			variant={activeGame === 'dice' ? 'default' : 'outline'}
+			onclick={() => (activeGame = 'dice')}
+		>
+			Dice
+		</Button>
 		</div>
 
 		<!-- Game Content -->
@@ -87,6 +94,8 @@
 			<Slots bind:balance onBalanceUpdate={handleBalanceUpdate} />
 		{:else if activeGame === 'mines'}
 			<Mines bind:balance onBalanceUpdate={handleBalanceUpdate} />
+		{:else if activeGame === 'dice'}
+			<Dice bind:balance onBalanceUpdate={handleBalanceUpdate} />
 		{/if}
 	{/if}
 </div>

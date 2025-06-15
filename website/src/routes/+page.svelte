@@ -95,11 +95,7 @@
 					class="text-primary underline hover:cursor-pointer"
 					onclick={() => (shouldSignIn = !shouldSignIn)}>sign in</button
 				>
-				or{' '}
-				<button
-					class="text-primary underline hover:cursor-pointer"
-					onclick={() => (shouldSignIn = !shouldSignIn)}>create an account</button
-				> to play.
+				to play.
 			{/if}
 		</p>
 	</header>

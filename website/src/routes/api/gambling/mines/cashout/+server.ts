@@ -47,6 +47,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 newBalance = Math.round((currentBalance + roundedPayout) * 100000000) / 100000000;
             }
 
+
             await tx
                 .update(user)
                 .set({
@@ -55,13 +56,15 @@ export const POST: RequestHandler = async ({ request }) => {
                 })
                 .where(eq(user.id, userId));
 
+
             activeGames.delete(sessionToken);
 
             return {
                 newBalance,
                 payout,
                 amountWagered: game.betAmount,
-                isAbort: game.revealedTiles.length === 0
+                isAbort: game.revealedTiles.length === 0,
+                minePositions: game.minePositions
             };
         });
 

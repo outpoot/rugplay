@@ -131,6 +131,7 @@
 			}
 			if (autoCashoutTimer >= AUTO_CASHOUT_TIME) {
 				isAutoCashout = true;
+				clearInterval(autoCashoutInterval);
 				cashOut();
 			}
 		}, 100);
@@ -227,6 +228,12 @@
 			hasRevealedTile = false;
 			isAutoCashout = false;
 			resetAutoCashoutTimer();
+
+			// Prevents the Tiles getting revealed when you Abort your bet.
+			if (!result.isAbort) {
+				revealedTiles = [...Array(TOTAL_TILES).keys()];
+				minePositions = result.minePositions;
+			}
 		} catch (error) {
 			console.error('Cashout error:', error);
 			toast.error('Failed to cash out', {
@@ -276,8 +283,21 @@
 		}
 	}
 
-	onMount(() => {
+	// Dynmaically fetch the correct balance.
+	onMount(async () => {
 		volumeSettings.load();
+		
+		try {
+			const response = await fetch('/api/portfolio/summary');
+			if (!response.ok) {
+				throw new Error('Failed to fetch portfolio summary');
+			}
+			const data = await response.json();
+			balance = data.baseCurrencyBalance;
+			onBalanceUpdate?.(data.baseCurrencyBalance);
+		} catch (error) {
+			console.error('Failed to fetch balance:', error);
+		}
 	});
 
 	onDestroy(() => {
@@ -359,7 +379,7 @@
 						<button
 							class="mine-tile"
 							class:revealed={revealedTiles.includes(index)}
-							class:mine={revealedTiles.includes(index) && minePositions.includes(index) && index === lastClickedTile}
+							class:mine={revealedTiles.includes(index) && minePositions.includes(index) && !clickedSafeTiles.includes(index)}
 							class:safe={revealedTiles.includes(index) && !minePositions.includes(index) && clickedSafeTiles.includes(index)}
 							class:light={document.documentElement.classList.contains('light')}
 							onclick={() => handleTileClick(index)}
@@ -388,26 +408,33 @@
 			<!-- Right Side: Controls Things -->
 			<div class="space-y-4">
 				<!-- Mine Count Selector -->
-				<div>
-					<label for="mine-count" class="block text-sm font-medium mb-2">Number of Mines</label>
-					<div id="mine-count">
-						<Select
-							type="single"
-							value={mineCount.toString()}
-							onValueChange={(value: string) => (mineCount = parseInt(value))}
-							disabled={isPlaying}
-						>
-							<SelectTrigger>
-								<span>{mineCount} Mines</span>
-							</SelectTrigger>
-							<SelectContent>
-								{#each Array(22) as _, i}
-									<SelectItem value={(i + MIN_MINES).toString()}>{i + MIN_MINES} Mines</SelectItem>
-								{/each}
-							</SelectContent>
-						</Select>
-					</div>
-				</div>
+                <div>
+                    <label for="mine-count" class="block text-sm font-medium mb-2">Number of Mines</label>
+                    <div id="mine-count" class="flex items-center gap-2">
+                        <div class="flex gap-1 items-center">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                class="w-8 h-8 px-2 flex items-center justify-center"
+                                onclick={() => mineCount = Math.max(MIN_MINES, mineCount - 1)}
+                                disabled={isPlaying || mineCount <= MIN_MINES}
+                            >
+                             -
+                            </Button>
+                            <div class="text-center font-medium">{mineCount}</div>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                class="w-8 h-8 px-2 flex items-center justify-center"
+                                onclick={() => mineCount = Math.min(24, mineCount + 1)}
+                                disabled={isPlaying || mineCount >= 24}
+                            >
+                                +
+                            </Button>
+                            <p>Mines</p>
+                        </div>
+                    </div>
+                </div>
 
 				<!-- Bet Amount -->
 				<div>

@@ -2,6 +2,7 @@ import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } fro
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PRIVATE_B2_KEY_ID, PRIVATE_B2_APP_KEY } from '$env/static/private';
 import { PUBLIC_B2_BUCKET, PUBLIC_B2_ENDPOINT, PUBLIC_B2_REGION } from '$env/static/public';
+import { processImage } from './image.js';
 
 const s3Client = new S3Client({
     endpoint: PUBLIC_B2_ENDPOINT,
@@ -47,7 +48,6 @@ export async function uploadProfilePicture(
     identifier: string, // Can be user ID or a unique ID from social provider
     body: Uint8Array,
     contentType: string,
-    contentLength?: number
 ): Promise<string> {
     if (!contentType || !contentType.startsWith('image/')) {
         throw new Error('Invalid file type. Only images are allowed.');
@@ -58,17 +58,16 @@ export async function uploadProfilePicture(
         throw new Error('Unsupported image format. Only JPEG, PNG, GIF, and WebP are allowed.');
     }
 
-    let fileExtension = contentType.split('/')[1];
-    if (fileExtension === 'jpeg') fileExtension = 'jpg';
-
-    const key = `avatars/${identifier}.${fileExtension}`;
+    const processedImage = await processImage(Buffer.from(body));
+    
+    const key = `avatars/${identifier}.webp`;
 
     const command = new PutObjectCommand({
         Bucket: PUBLIC_B2_BUCKET,
         Key: key,
-        Body: body,
-        ContentType: contentType,
-        ...(contentLength && { ContentLength: contentLength }),
+        Body: processedImage.buffer,
+        ContentType: processedImage.contentType,
+        ContentLength: processedImage.size,
     });
 
     await s3Client.send(command);
@@ -79,7 +78,6 @@ export async function uploadCoinIcon(
     coinSymbol: string,
     body: Uint8Array,
     contentType: string,
-    contentLength?: number
 ): Promise<string> {
     if (!contentType || !contentType.startsWith('image/')) {
         throw new Error('Invalid file type. Only images are allowed.');
@@ -90,17 +88,16 @@ export async function uploadCoinIcon(
         throw new Error('Unsupported image format. Only JPEG, PNG, GIF, and WebP are allowed.');
     }
 
-    let fileExtension = contentType.split('/')[1];
-    if (fileExtension === 'jpeg') fileExtension = 'jpg';
+    const processedImage = await processImage(Buffer.from(body));
 
-    const key = `coins/${coinSymbol.toLowerCase()}.${fileExtension}`;
+    const key = `coins/${coinSymbol.toLowerCase()}.webp`;
 
     const command = new PutObjectCommand({
         Bucket: PUBLIC_B2_BUCKET,
         Key: key,
-        Body: body,
-        ContentType: contentType,
-        ...(contentLength && { ContentLength: contentLength }),
+        Body: processedImage.buffer,
+        ContentType: processedImage.contentType,
+        ContentLength: processedImage.size,
     });
 
     await s3Client.send(command);

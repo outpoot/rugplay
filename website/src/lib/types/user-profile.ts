@@ -9,6 +9,8 @@ export interface UserProfile {
 	isAdmin: boolean;
 	totalPortfolioValue: number;
 	loginStreak: number;
+
+	prestigeLevel: number | null;
 }
 
 export interface UserStats {

@@ -336,3 +336,49 @@ export function timeToLocal(originalTime: number): number {
     const d = new Date(originalTime * 1000);
     return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()) / 1000);
 }
+
+export const PRESTIGE_COSTS = {
+	1: 100_000,
+	2: 250_000,
+	3: 1_000_000,
+	4: 5_000_000,
+	5: 25_000_000
+} as const;
+
+export const PRESTIGE_NAMES = {
+	1: 'Prestige I',
+	2: 'Prestige II',
+	3: 'Prestige III',
+	4: 'Prestige IV',
+	5: 'Prestige V'
+} as const;
+
+export const PRESTIGE_COLORS = {
+	1: 'text-blue-500',
+	2: 'text-purple-500',
+	3: 'text-yellow-500',
+	4: 'text-orange-500',
+	5: 'text-red-500'
+} as const;
+
+export function getPrestigeName(level: number): string | null {
+    if (level <= 0) return null;
+    const clampedLevel = Math.min(level, 5) as keyof typeof PRESTIGE_NAMES;
+    return PRESTIGE_NAMES[clampedLevel];
+}
+
+export function getPrestigeCost(level: number): number | null {
+    if (level <= 0) return null;
+    const clampedLevel = Math.min(level, 5) as keyof typeof PRESTIGE_COSTS;
+    return PRESTIGE_COSTS[clampedLevel];
+}
+
+export function getPrestigeColor(level: number): string {
+    if (level <= 0) return 'text-gray-500';
+    const clampedLevel = Math.min(level, 5) as keyof typeof PRESTIGE_COLORS;
+    return PRESTIGE_COLORS[clampedLevel];
+}
+
+export function getMaxPrestigeLevel(): number {
+    return 5;
+}

@@ -49,8 +49,7 @@ async function handleIconUpload(iconFile: File | null, symbol: string): Promise<
     return await uploadCoinIcon(
         symbol,
         new Uint8Array(arrayBuffer),
-        iconFile.type,
-        iconFile.size
+        iconFile.type
     );
 }
 

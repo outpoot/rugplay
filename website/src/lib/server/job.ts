@@ -38,7 +38,91 @@ export async function resolveExpiredQuestions() {
                 );
 
                 if (resolution.confidence < 50) {
-                    console.log(`Skipping question ${question.id} due to low confidence: ${resolution.confidence}`);
+                    console.log(`Cancelling question ${question.id} due to low confidence: ${resolution.confidence}`);
+
+                    await db.transaction(async (tx) => {
+                        // Mark question as cancelled
+                        await tx
+                            .update(predictionQuestion)
+                            .set({
+                                status: 'CANCELLED',
+                                resolvedAt: now,
+                            })
+                            .where(eq(predictionQuestion.id, question.id));
+
+                        // Get all bets for this question
+                        const bets = await tx
+                            .select({
+                                id: predictionBet.id,
+                                userId: predictionBet.userId,
+                                side: predictionBet.side,
+                                amount: predictionBet.amount,
+                            })
+                            .from(predictionBet)
+                            .where(and(
+                                eq(predictionBet.questionId, question.id),
+                                isNull(predictionBet.settledAt)
+                            ));
+
+                        const notificationsToCreate: Array<{
+                            userId: number;
+                            amount: number;
+                        }> = [];
+
+                        // Refund all bets
+                        for (const bet of bets) {
+                            const refundAmount = Number(bet.amount);
+
+                            // Mark bet as settled with full refund
+                            await tx
+                                .update(predictionBet)
+                                .set({
+                                    actualWinnings: refundAmount.toFixed(8),
+                                    settledAt: now,
+                                })
+                                .where(eq(predictionBet.id, bet.id));
+
+                            // Refund the user
+                            if (bet.userId !== null) {
+                                const [userData] = await tx
+                                    .select({ baseCurrencyBalance: user.baseCurrencyBalance })
+                                    .from(user)
+                                    .where(eq(user.id, bet.userId))
+                                    .limit(1);
+
+                                if (userData) {
+                                    const newBalance = Number(userData.baseCurrencyBalance) + refundAmount;
+                                    await tx
+                                        .update(user)
+                                        .set({
+                                            baseCurrencyBalance: newBalance.toFixed(8),
+                                            updatedAt: now,
+                                        })
+                                        .where(eq(user.id, bet.userId));
+                                }
+
+                                notificationsToCreate.push({
+                                    userId: bet.userId,
+                                    amount: refundAmount
+                                });
+                            }
+                        }
+
+                        // Create refund notifications for all users who had bets
+                        for (const notifData of notificationsToCreate) {
+                            const { userId, amount } = notifData;
+
+                            const title = 'Prediction skipped 🥀';
+                            const message = `You received a full refund of ${formatValue(amount)} for "${question.question}". We recommend betting on more reliable predictions!`;
+
+                            await createNotification(
+                                userId.toString(),
+                                'HOPIUM',
+                                title,
+                                message,
+                            );
+                        }
+                    });
                     continue;
                 }
 
@@ -139,7 +223,6 @@ export async function resolveExpiredQuestions() {
                     }
                 });
 
-                console.log(`Successfully resolved question ${question.id}: ${resolution.resolution ? 'YES' : 'NO'} (confidence: ${resolution.confidence}%)`);
             } catch (error) {
                 console.error(`Failed to resolve question ${question.id}:`, error);
             }

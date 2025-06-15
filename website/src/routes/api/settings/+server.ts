@@ -91,8 +91,7 @@ export async function POST({ request }) {
             const key = await uploadProfilePicture(
                 session.user.id,
                 new Uint8Array(arrayBuffer),
-                avatarFile.type,
-                avatarFile.size
+                avatarFile.type
             );
             updates.image = key;
         } catch (e) {

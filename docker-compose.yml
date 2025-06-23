@@ -1,54 +1,70 @@
-version: '3.8'
-
 services:
-  app:
+  # Multiple app instances
+  app-1:
     build:
       context: .
       target: production-main
       dockerfile: Dockerfile
     ports:
-      - "3002:3000"
+      - "3003:3000"  # Expose to host for nginx
     env_file:
       - website/.env
+    environment:
+      - INSTANCE_NAME=app-1
     depends_on:
       - websocket
-      - redis
-      - postgres
     restart: unless-stopped
+    networks:
+      - shared_backend
 
+  app-2:
+    build:
+      context: .
+      target: production-main
+      dockerfile: Dockerfile
+    ports:
+      - "3004:3000"  # Different port for second instance
+    env_file:
+      - website/.env
+    environment:
+      - INSTANCE_NAME=app-2
+    depends_on:
+      - websocket
+    restart: unless-stopped
+    networks:
+      - shared_backend
+
+  app-3:
+    build:
+      context: .
+      target: production-main
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3000"  # Different port for third instance
+    env_file:
+      - website/.env
+    environment:
+      - INSTANCE_NAME=app-3
+    depends_on:
+      - websocket
+    restart: unless-stopped
+    networks:
+      - shared_backend
+
+  # WebSocket service (single instance is usually sufficient)
   websocket:
     build:
       context: .
       target: production-websocket
       dockerfile: Dockerfile
     ports:
-      - "8081:8080"
+      - "8082:8080"
     env_file:
       - website/.env
-    depends_on:
-      - redis
     restart: unless-stopped
+    networks:
+      - shared_backend
 
-  redis:
-    image: redis:8-alpine
-    volumes:
-      - rugplay_redisdata:/data
-    command: "redis-server --save 60 1"
-    restart: unless-stopped
-
-  postgres:
-    image: pgvector/pgvector:pg16
-    container_name: rugplay-postgres
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-rugplay}
-    ports:
-      - "5432:5432"
-    volumes:
-      - rugplay_pgdata:/var/lib/postgresql/data
-    restart: unless-stopped
-
-volumes:
-  rugplay_pgdata:
-  rugplay_redisdata:
+networks:
+  shared_backend:
+    external: true

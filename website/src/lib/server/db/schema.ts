@@ -33,6 +33,14 @@ export const user = pgTable("user", {
 	}).notNull().default("0.00000000"),
 	loginStreak: integer("login_streak").notNull().default(0),
 	prestigeLevel: integer("prestige_level").default(0),
+}, (table) => {
+	return {
+		usernameIdx: index("user_username_idx").on(table.username),
+		isBannedIdx: index("user_is_banned_idx").on(table.isBanned),
+		isAdminIdx: index("user_is_admin_idx").on(table.isAdmin),
+		createdAtIdx: index("user_created_at_idx").on(table.createdAt),
+		updatedAtIdx: index("user_updated_at_idx").on(table.updatedAt),
+	};
 });
 
 export const session = pgTable("session", {
@@ -88,6 +96,17 @@ export const coin = pgTable("coin", {
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 	isListed: boolean("is_listed").default(true).notNull(),
+}, (table) => {
+	return {
+		symbolIdx: index("coin_symbol_idx").on(table.symbol),
+		creatorIdIdx: index("coin_creator_id_idx").on(table.creatorId),
+		isListedIdx: index("coin_is_listed_idx").on(table.isListed),
+		marketCapIdx: index("coin_market_cap_idx").on(table.marketCap),
+		currentPriceIdx: index("coin_current_price_idx").on(table.currentPrice),
+		change24hIdx: index("coin_change24h_idx").on(table.change24h),
+		volume24hIdx: index("coin_volume24h_idx").on(table.volume24h),
+		createdAtIdx: index("coin_created_at_idx").on(table.createdAt),
+	};
 });
 
 export const userPortfolio = pgTable("user_portfolio", {
@@ -114,6 +133,15 @@ export const transaction = pgTable("transaction", {
 	timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
 	recipientUserId: integer('recipient_user_id').references(() => user.id, { onDelete: 'set null' }),
 	senderUserId: integer('sender_user_id').references(() => user.id, { onDelete: 'set null' }),
+}, (table) => {
+	return {
+		userIdIdx: index("transaction_user_id_idx").on(table.userId),
+		coinIdIdx: index("transaction_coin_id_idx").on(table.coinId),
+		typeIdx: index("transaction_type_idx").on(table.type),
+		timestampIdx: index("transaction_timestamp_idx").on(table.timestamp),
+		userCoinIdx: index("transaction_user_coin_idx").on(table.userId, table.coinId),
+		coinTypeIdx: index("transaction_coin_type_idx").on(table.coinId, table.type),
+	};
 });
 
 export const priceHistory = pgTable("price_history", {

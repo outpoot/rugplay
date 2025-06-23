@@ -1,0 +1,19 @@
+CREATE INDEX IF NOT EXISTS "coin_symbol_idx" ON "coin" USING btree ("symbol");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_creator_id_idx" ON "coin" USING btree ("creator_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_is_listed_idx" ON "coin" USING btree ("is_listed");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_market_cap_idx" ON "coin" USING btree ("market_cap");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_current_price_idx" ON "coin" USING btree ("current_price");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_change24h_idx" ON "coin" USING btree ("change_24h");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_volume24h_idx" ON "coin" USING btree ("volume_24h");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_created_at_idx" ON "coin" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_user_id_idx" ON "transaction" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_coin_id_idx" ON "transaction" USING btree ("coin_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_type_idx" ON "transaction" USING btree ("type");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_timestamp_idx" ON "transaction" USING btree ("timestamp");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_user_coin_idx" ON "transaction" USING btree ("user_id","coin_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_coin_type_idx" ON "transaction" USING btree ("coin_id","type");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_username_idx" ON "user" USING btree ("username");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_is_banned_idx" ON "user" USING btree ("is_banned");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_is_admin_idx" ON "user" USING btree ("is_admin");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_created_at_idx" ON "user" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_updated_at_idx" ON "user" USING btree ("updated_at");

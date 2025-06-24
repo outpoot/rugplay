@@ -213,31 +213,32 @@
 				</Badge>
 			{/if}
 
-			<div>
-				<Turnstile
-					siteKey={PUBLIC_TURNSTILE_SITE_KEY}
-					theme="auto"
-					size="normal"
-					bind:reset={turnstileReset}
-					on:callback={(e: CustomEvent<{ token: string }>) => {
-						turnstileToken = e.detail.token;
-						turnstileError = '';
-					}}
-					on:error={(e: CustomEvent<{ code: string }>) => {
-						turnstileToken = '';
-						turnstileError = e.detail.code || 'Captcha error';
-					}}
-					on:expired={() => {
-						turnstileToken = '';
-						turnstileError = 'Captcha expired';
-					}}
-					execution="render"
-					appearance="always"
-				/>
-				{#if turnstileError}
-					<p class="text-destructive mt-1 text-xs">{turnstileError}</p>
-				{/if}
-			</div>
+			{#if showCaptcha}
+				<div>
+					<Turnstile
+						siteKey={PUBLIC_TURNSTILE_SITE_KEY}
+						theme="auto"
+						size="normal"
+						bind:reset={turnstileReset}
+						on:callback={(e: CustomEvent<{ token: string }>) => {
+							turnstileToken = e.detail.token;
+							turnstileError = '';
+						}}
+						on:error={(e: CustomEvent<{ code: string }>) => {
+							turnstileToken = '';
+							turnstileError = e.detail.code || 'Captcha error';
+						}}
+						on:expired={() => {
+							turnstileToken = '';
+							turnstileError = 'Captcha expired';
+						}}
+						execution="render"
+						appearance="always"
+					/>
+					{#if turnstileError}
+						<p class="text-destructive mt-1 text-xs">{turnstileError}</p>
+					{/if}
+				</div>
 			{/if}
 		</div>
 

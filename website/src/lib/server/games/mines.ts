@@ -93,18 +93,16 @@ setInterval(async () => {
     }
 }, 15000);
 
-// Rig the game...
 const getMaxPayout = (bet: number, picks: number, mines: number): number => {
-    const MAX_PAYOUT = 2_000_000; // Maximum payout cap of 2 million to not make linker too rich
+    const MAX_PAYOUT = 2_000_000;
     const HIGH_BET_THRESHOLD = 50_000; 
     
     const mineFactor = 1 + (mines / 25); 
     const baseMultiplier = (1.4 + Math.pow(picks, 0.45)) * mineFactor;
-    
-    // For high bets, we stop linker from getting richer  ¯\_(ツ)_/¯
+
     if (bet > HIGH_BET_THRESHOLD) {
         const betRatio = Math.pow(Math.min(1, (bet - HIGH_BET_THRESHOLD) / (MAX_PAYOUT - HIGH_BET_THRESHOLD)), 1);
-        
+
         // Direct cap on multiplier for high bets
         const maxAllowedMultiplier = 1.05 + (picks * 0.1);
         const highBetMultiplier = Math.min(baseMultiplier, maxAllowedMultiplier) * (1 - (bet / MAX_PAYOUT) * 0.9);
@@ -120,7 +118,6 @@ const getMaxPayout = (bet: number, picks: number, mines: number): number => {
     const payout = Math.min(bet * baseMultiplier, MAX_PAYOUT);
     return payout;
 };
-
 
 export function calculateMultiplier(picks: number, mines: number, betAmount: number): number {
     const TOTAL_TILES = 25;

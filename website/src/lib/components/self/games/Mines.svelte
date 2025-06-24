@@ -332,6 +332,9 @@
 							{calculateProbability(isPlaying ? 1 : 1, mineCount)}%
 						</span>
 					</p>
+					<span class="text-muted-foreground text-xs">
+						Note: Maximum payout per game is capped at $2,000,000.
+					</span>
 				</div>
 				<div>
 					<label for="bet-amount" class="mb-2 block text-sm font-medium">Bet Amount</label>

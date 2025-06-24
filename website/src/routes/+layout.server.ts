@@ -12,5 +12,6 @@ export const load: LayoutServerLoad = async (event) => {
     return {
         userSession: event.locals.userSession,
         url: event.url.pathname,
+        turnstileVerified: event.locals.turnstileVerified ?? false
     };
 };

@@ -8,6 +8,9 @@
 	import { Send, DollarSign, Coins, Loader2 } from 'lucide-svelte';
 	import { PORTFOLIO_DATA } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
+	import { Turnstile } from 'svelte-turnstile';
+	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
+	import { page } from '$app/stores';
 
 	let {
 		open = $bindable(false),
@@ -24,6 +27,9 @@
 	let amount = $state('');
 	let selectedCoinSymbol = $state('');
 	let loading = $state(false);
+	let turnstileToken = $state('');
+	let turnstileError = $state('');
+	let turnstileReset = $state<(() => void) | undefined>(undefined);
 
 	let numericAmount = $derived(parseFloat(amount) || 0);
 	let hasValidAmount = $derived(numericAmount > 0);
@@ -57,6 +63,9 @@
 
 	let isWithinCoinValueLimit = $derived(transferType === 'COIN' ? estimatedValue >= 10 : true);
 
+	const turnstileVerified = $derived(!!$page.data?.turnstileVerified);
+	let optimisticTurnstileVerified = $state(false);
+
 	let canSend = $derived(
 		hasValidAmount &&
 			hasValidRecipient &&
@@ -64,7 +73,8 @@
 			isWithinCashLimit &&
 			isWithinCoinValueLimit &&
 			!loading &&
-			(transferType === 'CASH' || selectedCoinSymbol.length > 0)
+			(transferType === 'CASH' || selectedCoinSymbol.length > 0) &&
+			(turnstileVerified || optimisticTurnstileVerified || !!turnstileToken)
 	);
 
 	function handleClose() {
@@ -114,7 +124,8 @@
 					recipientUsername: recipientUsername.trim(),
 					type: transferType,
 					amount: numericAmount,
-					coinSymbol: transferType === 'COIN' ? selectedCoinSymbol : undefined
+					coinSymbol: transferType === 'COIN' ? selectedCoinSymbol : undefined,
+					turnstileToken
 				})
 			});
 
@@ -141,6 +152,9 @@
 
 			onSuccess?.();
 			handleClose();
+
+			turnstileToken = '';
+			optimisticTurnstileVerified = true;
 		} catch (e) {
 			toast.error('Transfer failed', {
 				description: (e as Error).message
@@ -324,6 +338,34 @@
 						<span class="font-bold">@{recipientUsername}</span>
 					</div>
 				</div>
+			{/if}
+
+			{#if !(turnstileVerified || optimisticTurnstileVerified)}
+			<div>
+				<Turnstile
+					siteKey={PUBLIC_TURNSTILE_SITE_KEY}
+					theme="auto"
+					size="normal"
+					bind:reset={turnstileReset}
+					on:callback={(e: CustomEvent<{ token: string }>) => {
+						turnstileToken = e.detail.token;
+						turnstileError = '';
+					}}
+					on:error={(e: CustomEvent<{ code: string }>) => {
+						turnstileToken = '';
+						turnstileError = e.detail.code || 'Captcha error';
+					}}
+					on:expired={() => {
+						turnstileToken = '';
+						turnstileError = 'Captcha expired';
+					}}
+					execution="render"
+					appearance="always"
+				/>
+				{#if turnstileError}
+					<p class="text-destructive mt-1 text-xs">{turnstileError}</p>
+				{/if}
+			</div>
 			{/if}
 		</div>
 

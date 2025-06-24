@@ -8,6 +8,7 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { minesCleanupInactiveGames, minesAutoCashout } from '$lib/server/games/mines';
+import { isTurnstileVerifiedRedis } from '$lib/server/redis';
 
 async function initializeScheduler() {
     if (building) return;
@@ -113,7 +114,7 @@ export const handle: Handle = async ({ event, resolve }) => {
         const userId = session.user.id;
         const cacheKey = `user:${userId}`;
         const now = Date.now();
-        
+
         const cached = sessionCache.get(cacheKey);
         if (cached && (now - cached.timestamp) < cached.ttl) {
             userData = cached.userData;
@@ -178,6 +179,12 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     event.locals.userSession = userData;
+
+    if (session?.user?.id) {
+        event.locals.turnstileVerified = await isTurnstileVerifiedRedis(session.user.id);
+    } else {
+        event.locals.turnstileVerified = false;
+    }
 
     if (event.url.pathname.startsWith('/api/')) {
         const response = await svelteKitHandler({ event, resolve, auth });

@@ -7,6 +7,9 @@
 	import { TrendingUp, TrendingDown, Loader2 } from 'lucide-svelte';
 	import { PORTFOLIO_SUMMARY } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
+	import { Turnstile } from 'svelte-turnstile';
+	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
+	import { page } from '$app/stores';
 
 	let {
 		open = $bindable(false),
@@ -24,6 +27,8 @@
 
 	let amount = $state('');
 	let loading = $state(false);
+	let turnstileToken = $state('');
+	let turnstileError = $state('');
 
 	let numericAmount = $derived(parseFloat(amount) || 0);
 	let currentPrice = $derived(coin.currentPrice || 0);
@@ -39,7 +44,14 @@
 	let hasEnoughFunds = $derived(
 		type === 'BUY' ? numericAmount <= userBalance : numericAmount <= userHolding
 	);
-	let canTrade = $derived(hasValidAmount && hasEnoughFunds && !loading);
+	const turnstileVerified = $derived(!!$page.data?.turnstileVerified);
+	let optimisticTurnstileVerified = $state(false);
+
+	let showCaptcha = $derived(!(turnstileVerified || optimisticTurnstileVerified));
+
+	let canTrade = $derived(
+		hasValidAmount && hasEnoughFunds && !loading && (!showCaptcha || !!turnstileToken)
+	);
 
 	function calculateEstimate(amount: number, tradeType: 'BUY' | 'SELL', price: number) {
 		if (!amount || !price || !coin) return { result: 0 };
@@ -70,6 +82,8 @@
 		loading = false;
 	}
 
+	let turnstileReset = $state<(() => void) | undefined>(undefined);
+
 	async function handleTrade() {
 		if (!canTrade) return;
 
@@ -82,7 +96,8 @@
 				},
 				body: JSON.stringify({
 					type,
-					amount: numericAmount
+					amount: numericAmount,
+					turnstileToken
 				})
 			});
 
@@ -101,6 +116,9 @@
 
 			onSuccess?.();
 			handleClose();
+
+			turnstileToken = '';
+			optimisticTurnstileVerified = true;
 		} catch (e) {
 			toast.error('Trade failed', {
 				description: (e as Error).message
@@ -193,6 +211,33 @@
 				<Badge variant="destructive" class="text-xs">
 					{type === 'BUY' ? 'Insufficient funds' : 'Insufficient coins'}
 				</Badge>
+			{/if}
+
+			<div>
+				<Turnstile
+					siteKey={PUBLIC_TURNSTILE_SITE_KEY}
+					theme="auto"
+					size="normal"
+					bind:reset={turnstileReset}
+					on:callback={(e: CustomEvent<{ token: string }>) => {
+						turnstileToken = e.detail.token;
+						turnstileError = '';
+					}}
+					on:error={(e: CustomEvent<{ code: string }>) => {
+						turnstileToken = '';
+						turnstileError = e.detail.code || 'Captcha error';
+					}}
+					on:expired={() => {
+						turnstileToken = '';
+						turnstileError = 'Captcha expired';
+					}}
+					execution="render"
+					appearance="always"
+				/>
+				{#if turnstileError}
+					<p class="text-destructive mt-1 text-xs">{turnstileError}</p>
+				{/if}
+			</div>
 			{/if}
 		</div>
 

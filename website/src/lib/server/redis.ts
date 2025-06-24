@@ -15,3 +15,14 @@ if (!building) {
 }
 
 export { client as redis };
+
+const TURNSTILE_PREFIX = 'turnstile:verified:';
+const TURNSTILE_TTL = 5 * 60; // 5 minutes
+
+export async function setTurnstileVerifiedRedis(userId: string) {
+    await client.set(`${TURNSTILE_PREFIX}${userId}`, '1', { EX: TURNSTILE_TTL });
+}
+
+export async function isTurnstileVerifiedRedis(userId: string): Promise<boolean> {
+    return !!(await client.get(`${TURNSTILE_PREFIX}${userId}`));
+}

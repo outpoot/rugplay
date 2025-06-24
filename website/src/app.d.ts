@@ -4,11 +4,13 @@ declare global {
     namespace App {
         interface Locals {
             userSession: User;
+            turnstileVerified?: boolean;
         }
         interface PageData {
             userSession: User;
+            turnstileVerified?: boolean;
         }
     }
 }
 
-export {};
+export { };

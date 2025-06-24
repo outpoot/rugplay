@@ -44,10 +44,6 @@
 		6: { x: 0, y: 180, z: 0 }
 	};
 
-	function getRandInt(from: number, to: number): number {
-		return Math.round(Math.random() * (to - from)) + from;
-	}
-
 	function getExtraSpin(spinFactor = 4) {
 		const extraSpinsX = spinFactor * 360;
 		const extraSpinsY = spinFactor * 360;
@@ -108,9 +104,9 @@
 	let betAmountDisplay = $state('10');
 	let selectedNumber = $state(1);
 	let isRolling = $state(false);
-	let diceRotation = $state({ x: 0, y: 0 });
 	let lastResult = $state<DiceResult | null>(null);
 	let activeSoundTimeouts = $state<NodeJS.Timeout[]>([]);
+	let diceElement: HTMLElement | null = null;
 
 	let canBet = $derived(
 		betAmount > 0 && betAmount <= balance && betAmount <= MAX_BET_AMOUNT && !isRolling
@@ -154,8 +150,8 @@
 		activeSoundTimeouts.forEach(clearTimeout);
 		activeSoundTimeouts = [];
 
-		const spinFactor = 20; // Increase / Decrease to make the Spin faster or slower
-		const animationDuration = 1500; // Duration of the Animation, keep it like thatif you haven't added your own sound in website\static\sound\dice.mp3
+		const spinFactor = 20;
+		const animationDuration = 1500;
 
 		try {
 			const response = await fetch('/api/gambling/dice', {
@@ -177,7 +173,6 @@
 			const resultData: DiceResult = await response.json();
 
 			playSound('dice');
-			const diceElement = document.querySelector('.dice') as HTMLElement;
 			if (diceElement) {
 				diceElement.style.transition = 'none';
 				diceElement.style.transform = getDiceTransform(selectedNumber, false);
@@ -212,19 +207,6 @@
 		}
 	}
 
-	function getDotsForFace(face: number): number { // Could be made bigger, has no Point though Ig.
-		switch (face) {
-			case 1: return 1;
-			case 2: return 2;
-			case 3: return 3;
-			case 4: return 4;
-			case 5: return 5;
-			case 6: return 6;
-			default: return 0;
-		}
-	}
-
-    // Dynmaically fetch the correct balance.
 	onMount(async () => {
 		volumeSettings.load();
 
@@ -255,11 +237,11 @@
 
 				<div class="flex-1 flex items-center justify-center">
 					<div class="dice-container">
-						<div class="dice">
+						<div class="dice" bind:this={diceElement}>
 							{#each Array(6) as _, i}
 								<div class="face" style="transform: {getFaceTransform(i + 1)}">
 									<div class="dot-container">
-										{#each Array(getDotsForFace(i + 1)) as _}
+										{#each Array(i + 1) as _}
 											<div class="dot"></div>
 										{/each}
 									</div>
@@ -379,12 +361,12 @@
 		height: 100px;
 		background: #fff;
 		border: 2px solid #363131;
-		box-sizing: border-box;
 		border-radius: 8px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		backface-visibility: hidden;
+		box-sizing: border-box;
 	}
 
 	.face:nth-child(1) { transform: translateZ(50px); }
@@ -401,8 +383,8 @@
 		grid-template-columns: repeat(3, 1fr);
 		grid-template-rows: repeat(3, 1fr);
 		padding: 15%;
-		box-sizing: border-box;
 		gap: 10%;
+		box-sizing: border-box;
 	}
 
 	.dot {
@@ -412,68 +394,26 @@
 		height: 100%;
 	}
 
-	.face:nth-child(1) .dot-container {
-		grid-template-areas: 
-			". . ."
-			". dot ."
-			". . .";
-	}
-	.face:nth-child(1) .dot {
-		grid-area: dot;
-	}
-
-	.face:nth-child(2) .dot-container {
-		grid-template-areas: 
-			"dot1 . ."
-			". . ."
-			". . dot2";
-	}
-	.face:nth-child(2) .dot:nth-child(1) { grid-area: dot1; }
-	.face:nth-child(2) .dot:nth-child(2) { grid-area: dot2; }
-
-	.face:nth-child(3) .dot-container {
-		grid-template-areas: 
-			"dot1 . ."
-			". dot2 ."
-			". . dot3";
-	}
-	.face:nth-child(3) .dot:nth-child(1) { grid-area: dot1; }
-	.face:nth-child(3) .dot:nth-child(2) { grid-area: dot2; }
-	.face:nth-child(3) .dot:nth-child(3) { grid-area: dot3; }
-
-	.face:nth-child(4) .dot-container {
-		grid-template-areas: 
-			"dot1 . dot2"
-			". . ."
-			"dot3 . dot4";
-	}
-	.face:nth-child(4) .dot:nth-child(1) { grid-area: dot1; }
-	.face:nth-child(4) .dot:nth-child(2) { grid-area: dot2; }
-	.face:nth-child(4) .dot:nth-child(3) { grid-area: dot3; }
-	.face:nth-child(4) .dot:nth-child(4) { grid-area: dot4; }
-
-	.face:nth-child(5) .dot-container {
-		grid-template-areas: 
-			"dot1 . dot2"
-			". dot3 ."
-			"dot4 . dot5";
-	}
-	.face:nth-child(5) .dot:nth-child(1) { grid-area: dot1; }
-	.face:nth-child(5) .dot:nth-child(2) { grid-area: dot2; }
-	.face:nth-child(5) .dot:nth-child(3) { grid-area: dot3; }
-	.face:nth-child(5) .dot:nth-child(4) { grid-area: dot4; }
-	.face:nth-child(5) .dot:nth-child(5) { grid-area: dot5; }
-
-	.face:nth-child(6) .dot-container {
-		grid-template-areas: 
-			"dot1 . dot2"
-			"dot3 . dot4"
-			"dot5 . dot6";
-	}
-	.face:nth-child(6) .dot:nth-child(1) { grid-area: dot1; }
-	.face:nth-child(6) .dot:nth-child(2) { grid-area: dot2; }
-	.face:nth-child(6) .dot:nth-child(3) { grid-area: dot3; }
-	.face:nth-child(6) .dot:nth-child(4) { grid-area: dot4; }
-	.face:nth-child(6) .dot:nth-child(5) { grid-area: dot5; }
-	.face:nth-child(6) .dot:nth-child(6) { grid-area: dot6; }
+	/* Dot positions for each face */
+	.face:nth-child(1) .dot { grid-area: 2 / 2; }
+	.face:nth-child(2) .dot:nth-child(1) { grid-area: 1 / 1; }
+	.face:nth-child(2) .dot:nth-child(2) { grid-area: 3 / 3; }
+	.face:nth-child(3) .dot:nth-child(1) { grid-area: 1 / 1; }
+	.face:nth-child(3) .dot:nth-child(2) { grid-area: 2 / 2; }
+	.face:nth-child(3) .dot:nth-child(3) { grid-area: 3 / 3; }
+	.face:nth-child(4) .dot:nth-child(1) { grid-area: 1 / 1; }
+	.face:nth-child(4) .dot:nth-child(2) { grid-area: 1 / 3; }
+	.face:nth-child(4) .dot:nth-child(3) { grid-area: 3 / 1; }
+	.face:nth-child(4) .dot:nth-child(4) { grid-area: 3 / 3; }
+	.face:nth-child(5) .dot:nth-child(1) { grid-area: 1 / 1; }
+	.face:nth-child(5) .dot:nth-child(2) { grid-area: 1 / 3; }
+	.face:nth-child(5) .dot:nth-child(3) { grid-area: 2 / 2; }
+	.face:nth-child(5) .dot:nth-child(4) { grid-area: 3 / 1; }
+	.face:nth-child(5) .dot:nth-child(5) { grid-area: 3 / 3; }
+	.face:nth-child(6) .dot:nth-child(1) { grid-area: 1 / 1; }
+	.face:nth-child(6) .dot:nth-child(2) { grid-area: 1 / 3; }
+	.face:nth-child(6) .dot:nth-child(3) { grid-area: 2 / 1; }
+	.face:nth-child(6) .dot:nth-child(4) { grid-area: 2 / 3; }
+	.face:nth-child(6) .dot:nth-child(5) { grid-area: 3 / 1; }
+	.face:nth-child(6) .dot:nth-child(6) { grid-area: 3 / 3; }
 </style>

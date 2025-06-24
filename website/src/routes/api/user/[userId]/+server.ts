@@ -25,6 +25,7 @@ export async function GET({ params }) {
                 baseCurrencyBalance: true,
                 isAdmin: true,
                 loginStreak: true,
+                prestigeLevel: true,
             }
         });
 

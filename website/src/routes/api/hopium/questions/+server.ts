@@ -2,7 +2,7 @@ import { auth } from '$lib/auth';
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { predictionQuestion, user, predictionBet } from '$lib/server/db/schema';
-import { eq, desc, and, sum, count } from 'drizzle-orm';
+import { eq, desc, and, sum, count, or } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url, request }) => {
@@ -24,9 +24,22 @@ export const GET: RequestHandler = async ({ url, request }) => {
     const userId = session?.user ? Number(session.user.id) : null;
 
     try {
+        let statusFilter;
+
+        if (status === 'ACTIVE') {
+            statusFilter = eq(predictionQuestion.status, 'ACTIVE');
+        } else if (status === 'RESOLVED') {
+            statusFilter = or(
+                eq(predictionQuestion.status, 'RESOLVED'),
+                eq(predictionQuestion.status, 'CANCELLED')
+            );
+        } else {
+            statusFilter = undefined;
+        }
+
         const conditions = [];
-        if (status !== 'ALL') {
-            conditions.push(eq(predictionQuestion.status, status as any));
+        if (statusFilter) {
+            conditions.push(statusFilter);
         }
 
         const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;

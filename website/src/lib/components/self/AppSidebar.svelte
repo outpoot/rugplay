@@ -31,7 +31,8 @@
 		Hammer,
 		BookOpen,
 		Info,
-		Bell
+		Bell,
+		Crown
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -85,7 +86,7 @@
 
 	function handleModeToggle() {
 		setMode(mode.current === 'light' ? 'dark' : 'light');
-		setOpenMobile(false);
+		// Remove setOpenMobile(false) to keep menu open
 	}
 
 	function formatCurrency(value: number): string {
@@ -152,6 +153,11 @@
 		showUserManual = true;
 		setOpenMobile(false);
 	}
+
+	function handlePrestigeClick() {
+		goto('/prestige');
+		setOpenMobile(false);
+	}
 </script>
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
@@ -195,22 +201,6 @@
 							</Sidebar.MenuButton>
 						</Sidebar.MenuItem>
 					{/each}
-
-					<Sidebar.MenuItem>
-						<Sidebar.MenuButton>
-							{#snippet child({ props }: { props: MenuButtonProps })}
-								<button onclick={handleModeToggle} {...props}>
-									{#if mode.current === 'light'}
-										<Moon class="h-5 w-5" />
-										<span>Dark Mode</span>
-									{:else}
-										<Sun class="h-5 w-5" />
-										<span>Light Mode</span>
-									{/if}
-								</button>
-							{/snippet}
-						</Sidebar.MenuButton>
-					</Sidebar.MenuItem>
 				</Sidebar.Menu>
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
@@ -421,6 +411,8 @@
 								</div>
 							</DropdownMenu.Label>
 							<DropdownMenu.Separator />
+							
+							<!-- Profile & Settings Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAccountClick}>
 									<User />
@@ -430,10 +422,16 @@
 									<Settings />
 									Settings
 								</DropdownMenu.Item>
-								<DropdownMenu.Item onclick={handleUserManualClick}>
-									<BookOpen />
-									User Manual
+								<DropdownMenu.Item onclick={handlePrestigeClick}>
+									<Crown />
+									Prestige
 								</DropdownMenu.Item>
+							</DropdownMenu.Group>
+							
+							<DropdownMenu.Separator />
+							
+							<!-- Features Group -->
+							<DropdownMenu.Group>
 								<DropdownMenu.Item
 									onclick={() => {
 										showPromoCode = true;
@@ -443,10 +441,24 @@
 									<Gift />
 									Promo code
 								</DropdownMenu.Item>
+								<DropdownMenu.Item onclick={handleUserManualClick}>
+									<BookOpen />
+									User Manual
+								</DropdownMenu.Item>
+								<DropdownMenu.Item onclick={handleModeToggle}>
+									{#if mode.current === 'light'}
+										<Moon />
+										Dark Mode
+									{:else}
+										<Sun />
+										Light Mode
+									{/if}
+								</DropdownMenu.Item>
 							</DropdownMenu.Group>
 
 							{#if $USER_DATA?.isAdmin}
 								<DropdownMenu.Separator />
+								<!-- Admin Group -->
 								<DropdownMenu.Group>
 									<DropdownMenu.Item
 										onclick={handleAdminClick}
@@ -471,8 +483,11 @@
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>
 							{/if}
+							
+							<DropdownMenu.Separator />
+							
+							<!-- Legal Group -->
 							<DropdownMenu.Group>
-								<DropdownMenu.Separator />
 								<DropdownMenu.Item onclick={handleTermsClick}>
 									<Scale />
 									Terms of Service
@@ -482,7 +497,10 @@
 									Privacy Policy
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
+							
 							<DropdownMenu.Separator />
+							
+							<!-- Sign Out -->
 							<DropdownMenu.Item
 								onclick={() => {
 									signOut().then(() => {

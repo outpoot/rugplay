@@ -132,6 +132,7 @@
 			}
 			if (autoCashoutTimer >= AUTO_CASHOUT_TIME) {
 				isAutoCashout = true;
+				clearInterval(autoCashoutInterval);
 				cashOut();
 			}
 		}, 100);
@@ -279,8 +280,21 @@
 		}
 	}
 
-	onMount(() => {
+	// Dynmaically fetch the correct balance.
+	onMount(async () => {
 		volumeSettings.load();
+		
+		try {
+			const response = await fetch('/api/portfolio/summary');
+			if (!response.ok) {
+				throw new Error('Failed to fetch portfolio summary');
+			}
+			const data = await response.json();
+			balance = data.baseCurrencyBalance;
+			onBalanceUpdate?.(data.baseCurrencyBalance);
+		} catch (error) {
+			console.error('Failed to fetch balance:', error);
+		}
 	});
 
 	onDestroy(() => {
@@ -313,7 +327,7 @@
 						<button
 							class="mine-tile"
 							class:revealed={revealedTiles.includes(index)}
-							class:mine={revealedTiles.includes(index) && minePositions.includes(index) && index === lastClickedTile}
+							class:mine={revealedTiles.includes(index) && minePositions.includes(index) && !clickedSafeTiles.includes(index)}
 							class:safe={revealedTiles.includes(index) && !minePositions.includes(index) && clickedSafeTiles.includes(index)}
 							class:light={document.documentElement.classList.contains('light')}
 							onclick={() => handleTileClick(index)}

@@ -27,35 +27,46 @@ export const POST: RequestHandler = async ({ request }) => {
             return json({ error: 'Tile already revealed' }, { status: 400 });
         }
 
-        // Update last activity time
         game.lastActivity = Date.now();
 
-        // Check if hit mine
 
         if (game.minePositions.includes(tileIndex)) {
             game.status = 'lost';
             const minePositions = game.minePositions;
         
-            // Fetch user balance to return after loss
             const userId = Number(session.user.id);
             const [userData] = await db
                 .select({ baseCurrencyBalance: user.baseCurrencyBalance })
                 .from(user)
                 .where(eq(user.id, userId))
+                .for('update')
                 .limit(1);
+
+            const currentBalance = Number(userData.baseCurrencyBalance);
+
+
+            await db
+                .update(user)
+                .set({
+                    baseCurrencyBalance: currentBalance.toFixed(8),
+                    updatedAt: new Date()
+                })
+                .where(eq(user.id, userId));
         
             activeGames.delete(sessionToken);
         
+
             return json({
                 hitMine: true,
                 minePositions,
-                newBalance: Number(userData.baseCurrencyBalance), 
-                status: 'lost'
+                newBalance: currentBalance,
+                status: 'lost',
+                amountWagered: game.betAmount
             });
         }
 
 
-        // Safe tile
+        // Safe tile (Yipeee)
         game.revealedTiles.push(tileIndex);
         game.currentMultiplier = calculateMultiplier(
             game.revealedTiles.length,
@@ -63,9 +74,38 @@ export const POST: RequestHandler = async ({ request }) => {
             game.betAmount
         );
         
-        // Check if all safe tiles are revealed. Crazy when you get this :)
         if (game.revealedTiles.length === 25 - game.mineCount) {
             game.status = 'won';
+            const userId = Number(session.user.id);
+            const [userData] = await db
+                .select({ baseCurrencyBalance: user.baseCurrencyBalance })
+                .from(user)
+                .where(eq(user.id, userId))
+                .for('update')
+                .limit(1);
+
+            const currentBalance = Number(userData.baseCurrencyBalance);
+            const payout = game.betAmount * game.currentMultiplier;
+            const roundedPayout = Math.round(payout * 100000000) / 100000000;
+            const newBalance = Math.round((currentBalance + roundedPayout) * 100000000) / 100000000;
+
+            await db
+                .update(user)
+                .set({
+                    baseCurrencyBalance: newBalance.toFixed(8),
+                    updatedAt: new Date()
+                })
+                .where(eq(user.id, userId));
+
+            activeGames.delete(sessionToken);
+
+            return json({
+                hitMine: false,
+                currentMultiplier: game.currentMultiplier,
+                status: 'won',
+                newBalance,
+                payout
+            });
         }
 
         return json({

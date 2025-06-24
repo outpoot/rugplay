@@ -211,8 +211,21 @@
 		}
 	});
 
-	onMount(() => {
+	// Dynmaically fetch the correct balance.
+	onMount(async () => {
 		volumeSettings.load();
+		
+		try {
+			const response = await fetch('/api/portfolio/summary');
+			if (!response.ok) {
+				throw new Error('Failed to fetch portfolio summary');
+			}
+			const data = await response.json();
+			balance = data.baseCurrencyBalance;
+			onBalanceUpdate?.(data.baseCurrencyBalance);
+		} catch (error) {
+			console.error('Failed to fetch balance:', error);
+		}
 	});
 </script>
 

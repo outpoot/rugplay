@@ -5,8 +5,6 @@ import { coin, userPortfolio, user, transaction, priceHistory } from '$lib/serve
 import { eq, and, gte } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { createNotification } from '$lib/server/notification';
-import { verifyTurnstile } from '$lib/server/turnstile';
-import { setTurnstileVerifiedRedis, isTurnstileVerifiedRedis } from '$lib/server/redis';
 
 async function calculate24hMetrics(coinId: number, currentPrice: number) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -55,16 +53,7 @@ export async function POST({ params, request }) {
     }
 
     const { coinSymbol } = params;
-    const { type, amount, turnstileToken } = await request.json();
-
-    const alreadyVerified = await isTurnstileVerifiedRedis(session.user.id);
-
-    if (!alreadyVerified) {
-        if (!turnstileToken || !(await verifyTurnstile(turnstileToken, request))) {
-            throw error(400, 'Captcha verification failed');
-        }
-        await setTurnstileVerifiedRedis(session.user.id);
-    }
+    const { type, amount } = await request.json();
 
     if (!['BUY', 'SELL'].includes(type)) {
         throw error(400, 'Invalid transaction type');

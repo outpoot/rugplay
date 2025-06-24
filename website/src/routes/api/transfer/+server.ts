@@ -5,8 +5,6 @@ import { user, userPortfolio, coin, transaction } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
 import { formatValue } from '$lib/utils';
-import { verifyTurnstile } from '$lib/server/turnstile';
-import { setTurnstileVerifiedRedis, isTurnstileVerifiedRedis } from '$lib/server/redis';
 import type { RequestHandler } from './$types';
 
 interface TransferRequest {
@@ -24,16 +22,7 @@ export const POST: RequestHandler = async ({ request }) => {
     if (!session?.user) {
         throw error(401, 'Not authenticated');
     } try {
-        const { recipientUsername, type, amount, coinSymbol, turnstileToken }: TransferRequest & { turnstileToken?: string } = await request.json();
-
-        const alreadyVerified = await isTurnstileVerifiedRedis(session.user.id);
-
-        if (!alreadyVerified) {
-            if (!turnstileToken || !(await verifyTurnstile(turnstileToken, request))) {
-                throw error(400, 'Captcha verification failed');
-            }
-            await setTurnstileVerifiedRedis(session.user.id);
-        }
+        const { recipientUsername, type, amount, coinSymbol }: TransferRequest = await request.json();
 
         if (!recipientUsername || !type || !amount || typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
             throw error(400, 'Invalid transfer parameters');

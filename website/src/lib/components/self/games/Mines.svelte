@@ -29,6 +29,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { ModeWatcher } from 'mode-watcher';
 	import { Info } from 'lucide-svelte';
+	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 
 	interface MinesResult {
 		won: boolean;
@@ -283,15 +284,13 @@
 	// Dynmaically fetch the correct balance.
 	onMount(async () => {
 		volumeSettings.load();
-		
+
 		try {
-			const response = await fetch('/api/portfolio/summary');
-			if (!response.ok) {
-				throw new Error('Failed to fetch portfolio summary');
+			const data = await fetchPortfolioSummary();
+			if (data) {
+				balance = data.baseCurrencyBalance;
+				onBalanceUpdate?.(data.baseCurrencyBalance);
 			}
-			const data = await response.json();
-			balance = data.baseCurrencyBalance;
-			onBalanceUpdate?.(data.baseCurrencyBalance);
 		} catch (error) {
 			console.error('Failed to fetch balance:', error);
 		}

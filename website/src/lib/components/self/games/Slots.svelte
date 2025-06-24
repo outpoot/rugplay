@@ -13,6 +13,7 @@
 	import { formatValue, playSound, showConfetti, showSchoolPrideCannons } from '$lib/utils';
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount } from 'svelte';
+	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 
 	interface SlotsResult {
 		won: boolean;
@@ -214,15 +215,13 @@
 	// Dynmaically fetch the correct balance.
 	onMount(async () => {
 		volumeSettings.load();
-		
+
 		try {
-			const response = await fetch('/api/portfolio/summary');
-			if (!response.ok) {
-				throw new Error('Failed to fetch portfolio summary');
+			const data = await fetchPortfolioSummary();
+			if (data) {
+				balance = data.baseCurrencyBalance;
+				onBalanceUpdate?.(data.baseCurrencyBalance);
 			}
-			const data = await response.json();
-			balance = data.baseCurrencyBalance;
-			onBalanceUpdate?.(data.baseCurrencyBalance);
 		} catch (error) {
 			console.error('Failed to fetch balance:', error);
 		}

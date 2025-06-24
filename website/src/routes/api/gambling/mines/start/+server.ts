@@ -3,7 +3,8 @@ import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { activeGames } from '$lib/server/games/mines';
+import { redis } from '$lib/server/redis';
+import { getSessionKey } from '$lib/server/games/mines';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -43,17 +44,12 @@ export const POST: RequestHandler = async ({ request }) => {
                 throw new Error(`Insufficient funds. You need *${roundedAmount.toFixed(2)} but only have *${roundedBalance.toFixed(2)}`);
             }
 
-
             // Generate mine positions
             const positions = new Set<number>();
             while (positions.size < mineCount) {
                 positions.add(Math.floor(Math.random() * 25));
             }
-            const safePositions = [];
-            for (let i = 0; i < 25; i++) {
-                if (!positions.has(i)) safePositions.push(i);
-            }
-            
+
             // transaction token for authentication stuff
             const randomBytes = new Uint8Array(8); 
             crypto.getRandomValues(randomBytes);
@@ -64,19 +60,21 @@ export const POST: RequestHandler = async ({ request }) => {
             const now = Date.now();
             const newBalance = roundedBalance - roundedAmount;
 
-            // Create session
-            activeGames.set(sessionToken, {
-                sessionToken,
-                betAmount: roundedAmount,
-                mineCount,
-                minePositions: Array.from(positions),
-                revealedTiles: [],
-                startTime: now,
-                lastActivity: now,
-                currentMultiplier: 1,
-                status: 'active',
-                userId
-            });
+            await redis.set(
+                getSessionKey(sessionToken),
+                JSON.stringify({
+                    sessionToken,
+                    betAmount: roundedAmount,
+                    mineCount,
+                    minePositions: Array.from(positions),
+                    revealedTiles: [],
+                    startTime: now,
+                    lastActivity: now,
+                    currentMultiplier: 1,
+                    status: 'active',
+                    userId
+                })
+            );
 
             // Update user balance
             await tx
@@ -86,7 +84,6 @@ export const POST: RequestHandler = async ({ request }) => {
                     updatedAt: new Date()
                 })
                 .where(eq(user.id, userId));
-
 
             return { 
                 sessionToken,
@@ -100,4 +97,4 @@ export const POST: RequestHandler = async ({ request }) => {
         const errorMessage = e instanceof Error ? e.message : 'Internal server error';
         return json({ error: errorMessage }, { status: 400 });
     }
-}; 
+};

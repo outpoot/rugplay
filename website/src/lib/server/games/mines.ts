@@ -1,7 +1,7 @@
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-
+import { redis } from '$lib/server/redis';
 
 interface MinesSession {
     sessionToken: string;
@@ -16,16 +16,20 @@ interface MinesSession {
     userId: number;
 }
 
-
-export const activeGames = new Map<string, MinesSession>();
+const MINES_SESSION_PREFIX = 'mines:session:';
+export const getSessionKey = (token: string) => `${MINES_SESSION_PREFIX}${token}`;
 
 // Clean up old games every minute. (5 Minute system)
 setInterval(async () => {
     const now = Date.now();
-    for (const [token, game] of activeGames.entries()) {
+    const keys = await redis.keys(`${MINES_SESSION_PREFIX}*`);
+    for (const key of keys) {
+        const sessionRaw = await redis.get(key);
+        if (!sessionRaw) continue;
+        const game = JSON.parse(sessionRaw) as MinesSession;
         if (now - game.lastActivity > 5 * 60 * 1000) {
             if (game.revealedTiles.length === 0) {
-                try {                    
+                try {
                     const [userData] = await db
                         .select({ baseCurrencyBalance: user.baseCurrencyBalance })
                         .from(user)
@@ -43,19 +47,22 @@ setInterval(async () => {
                             updatedAt: new Date()
                         })
                         .where(eq(user.id, game.userId));
-
                 } catch (error) {
-                    console.error(`Failed to refund inactive game ${token}:`, error);
+                    console.error(`Failed to refund inactive game ${game.sessionToken}:`, error);
                 }
             }
-            activeGames.delete(token);
+            await redis.del(getSessionKey(game.sessionToken));
         }
     }
 }, 60000);
 
 setInterval(async () => {
     const now = Date.now();
-    for (const [token, game] of activeGames.entries()) {
+    const keys = await redis.keys(`${MINES_SESSION_PREFIX}*`);
+    for (const key of keys) {
+        const sessionRaw = await redis.get(key);
+        if (!sessionRaw) continue;
+        const game = JSON.parse(sessionRaw) as MinesSession;
         if (game.status === 'active' && game.revealedTiles.length > 0 && now - game.lastActivity > 20000) {
             try {
                 const [userData] = await db
@@ -78,9 +85,9 @@ setInterval(async () => {
                     })
                     .where(eq(user.id, game.userId));
 
-                activeGames.delete(token);
+                await redis.del(getSessionKey(game.sessionToken));
             } catch (error) {
-                console.error(`Failed to auto cashout game ${token}:`, error);
+                console.error(`Failed to auto cashout game ${game.sessionToken}:`, error);
             }
         }
     }

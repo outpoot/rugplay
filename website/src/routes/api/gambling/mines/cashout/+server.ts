@@ -3,7 +3,8 @@ import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { activeGames } from '$lib/server/games/mines';
+import { redis } from '$lib/server/redis';
+import { getSessionKey } from '$lib/server/games/mines';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -17,7 +18,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
     try {
         const { sessionToken } = await request.json();
-        const game = activeGames.get(sessionToken);
+        const sessionRaw = await redis.get(getSessionKey(sessionToken));
+        const game = sessionRaw ? JSON.parse(sessionRaw) : null;
         const userId = Number(session.user.id);
 
         if (!game) {
@@ -36,17 +38,15 @@ export const POST: RequestHandler = async ({ request }) => {
             let payout: number;
             let newBalance: number;
 
-            // If no tiles revealed, treat as abort and return full bet. This could be changed later to keep the initial bet on the Server
+            // If no tiles revealed, treat as abort and return full bet.
             if (game.revealedTiles.length === 0) {
                 payout = game.betAmount;
                 newBalance = Math.round((currentBalance + payout) * 100000000) / 100000000;
             } else {
-                // Calculate payout 
                 payout = game.betAmount * game.currentMultiplier;
                 const roundedPayout = Math.round(payout * 100000000) / 100000000;
                 newBalance = Math.round((currentBalance + roundedPayout) * 100000000) / 100000000;
             }
-
 
             await tx
                 .update(user)
@@ -56,8 +56,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 })
                 .where(eq(user.id, userId));
 
-
-            activeGames.delete(sessionToken);
+            await redis.del(getSessionKey(sessionToken));
 
             return {
                 newBalance,
@@ -74,4 +73,4 @@ export const POST: RequestHandler = async ({ request }) => {
         const errorMessage = e instanceof Error ? e.message : 'Internal server error';
         return json({ error: errorMessage }, { status: 400 });
     }
-}; 
+};

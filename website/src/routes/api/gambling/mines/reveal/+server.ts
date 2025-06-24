@@ -1,10 +1,12 @@
 import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
-import { activeGames, calculateMultiplier } from '$lib/server/games/mines';
+import { calculateMultiplier } from '$lib/server/games/mines';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { redis, } from '$lib/server/redis';
+import { getSessionKey } from '$lib/server/games/mines';
 
 export const POST: RequestHandler = async ({ request }) => {
     const session = await auth.api.getSession({
@@ -17,7 +19,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
     try {
         const { sessionToken, tileIndex } = await request.json();
-        const game = activeGames.get(sessionToken);
+        const sessionRaw = await redis.get(getSessionKey(sessionToken));
+        const game = sessionRaw ? JSON.parse(sessionRaw) : null;
 
         if (!game) {
             return json({ error: 'Invalid session' }, { status: 400 });
@@ -28,7 +31,6 @@ export const POST: RequestHandler = async ({ request }) => {
         }
 
         game.lastActivity = Date.now();
-
 
         if (game.minePositions.includes(tileIndex)) {
             game.status = 'lost';
@@ -44,7 +46,6 @@ export const POST: RequestHandler = async ({ request }) => {
 
             const currentBalance = Number(userData.baseCurrencyBalance);
 
-
             await db
                 .update(user)
                 .set({
@@ -53,9 +54,8 @@ export const POST: RequestHandler = async ({ request }) => {
                 })
                 .where(eq(user.id, userId));
         
-            activeGames.delete(sessionToken);
+            await redis.del(getSessionKey(sessionToken));
         
-
             return json({
                 hitMine: true,
                 minePositions,
@@ -65,15 +65,14 @@ export const POST: RequestHandler = async ({ request }) => {
             });
         }
 
-
-        // Safe tile (Yipeee)
+        // Safe tile
         game.revealedTiles.push(tileIndex);
         game.currentMultiplier = calculateMultiplier(
             game.revealedTiles.length,
             game.mineCount,
             game.betAmount
         );
-        
+
         if (game.revealedTiles.length === 25 - game.mineCount) {
             game.status = 'won';
             const userId = Number(session.user.id);
@@ -97,7 +96,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 })
                 .where(eq(user.id, userId));
 
-            activeGames.delete(sessionToken);
+            await redis.del(getSessionKey(sessionToken));
 
             return json({
                 hitMine: false,
@@ -107,6 +106,8 @@ export const POST: RequestHandler = async ({ request }) => {
                 payout
             });
         }
+
+        await redis.set(getSessionKey(sessionToken), JSON.stringify(game));
 
         return json({
             hitMine: false,
@@ -118,4 +119,4 @@ export const POST: RequestHandler = async ({ request }) => {
         const errorMessage = e instanceof Error ? e.message : 'Internal server error';
         return json({ error: errorMessage }, { status: 400 });
     }
-}; 
+};

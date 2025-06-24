@@ -20,7 +20,7 @@ export const POST: RequestHandler = async ({ request }) => {
         const { betAmount, mineCount } = await request.json();
         const userId = Number(session.user.id);
 
-        if (!betAmount || !mineCount || mineCount < 3 || mineCount > 24) {
+        if (!betAmount || betAmount <= 0 || !mineCount || mineCount < 3 || mineCount > 24) {
             return json({ error: 'Invalid bet amount or mine count' }, { status: 400 });
         }
 

@@ -19,6 +19,11 @@ export const POST: RequestHandler = async ({ request }) => {
 
     try {
         const { sessionToken, tileIndex } = await request.json();
+
+        if (!Number.isInteger(tileIndex) || tileIndex < 0 || tileIndex > 24) {
+            return json({ error: 'Invalid tileIndex' }, { status: 400 });
+        }
+
         const sessionRaw = await redis.get(getSessionKey(sessionToken));
         const game = sessionRaw ? JSON.parse(sessionRaw) : null;
 

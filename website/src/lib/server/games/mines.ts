@@ -19,10 +19,16 @@ interface MinesSession {
 const MINES_SESSION_PREFIX = 'mines:session:';
 export const getSessionKey = (token: string) => `${MINES_SESSION_PREFIX}${token}`;
 
-// Clean up old games every minute. (5 Minute system)
-setInterval(async () => {
+// --- Mines cleanup logic for scheduler ---
+export async function minesCleanupInactiveGames() {
     const now = Date.now();
-    const keys = await redis.keys(`${MINES_SESSION_PREFIX}*`);
+    const keys: string[] = [];
+    let cursor = '0';
+    do {
+        const scanResult = await redis.scan(cursor, { MATCH: `${MINES_SESSION_PREFIX}*` });
+        cursor = scanResult.cursor;
+        keys.push(...scanResult.keys);
+    } while (cursor !== '0');
     for (const key of keys) {
         const sessionRaw = await redis.get(key);
         if (!sessionRaw) continue;
@@ -54,11 +60,17 @@ setInterval(async () => {
             await redis.del(getSessionKey(game.sessionToken));
         }
     }
-}, 60000);
+}
 
-setInterval(async () => {
+export async function minesAutoCashout() {
     const now = Date.now();
-    const keys = await redis.keys(`${MINES_SESSION_PREFIX}*`);
+    const keys: string[] = [];
+    let cursor = '0';
+    do {
+        const scanResult = await redis.scan(cursor, { MATCH: `${MINES_SESSION_PREFIX}*` });
+        cursor = scanResult.cursor;
+        keys.push(...scanResult.keys);
+    } while (cursor !== '0');
     for (const key of keys) {
         const sessionRaw = await redis.get(key);
         if (!sessionRaw) continue;
@@ -97,13 +109,13 @@ setInterval(async () => {
             }
         }
     }
-}, 15000);
+}
 
 const getMaxPayout = (bet: number, picks: number, mines: number): number => {
     const MAX_PAYOUT = 2_000_000;
-    const HIGH_BET_THRESHOLD = 50_000; 
-    
-    const mineFactor = 1 + (mines / 25); 
+    const HIGH_BET_THRESHOLD = 50_000;
+
+    const mineFactor = 1 + (mines / 25);
     const baseMultiplier = (1.4 + Math.pow(picks, 0.45)) * mineFactor;
 
     if (bet > HIGH_BET_THRESHOLD) {
@@ -112,15 +124,15 @@ const getMaxPayout = (bet: number, picks: number, mines: number): number => {
         // Direct cap on multiplier for high bets
         const maxAllowedMultiplier = 1.05 + (picks * 0.1);
         const highBetMultiplier = Math.min(baseMultiplier, maxAllowedMultiplier) * (1 - (bet / MAX_PAYOUT) * 0.9);
-        const betSizeFactor = Math.max(0.1, 1 - (bet / MAX_PAYOUT) * 0.9); 
+        const betSizeFactor = Math.max(0.1, 1 - (bet / MAX_PAYOUT) * 0.9);
         const minMultiplier = (1.1 + (picks * 0.15 * betSizeFactor)) * mineFactor;
-        
+
         const reducedMultiplier = highBetMultiplier - ((highBetMultiplier - minMultiplier) * betRatio);
         const payout = Math.min(bet * reducedMultiplier, MAX_PAYOUT);
-        
+
         return payout;
     }
-    
+
     const payout = Math.min(bet * baseMultiplier, MAX_PAYOUT);
     return payout;
 };
@@ -139,7 +151,7 @@ export function calculateMultiplier(picks: number, mines: number, betAmount: num
 
     // Calculate fair multiplier based on probability and house edge
     const fairMultiplier = (1 / probability) * (1 - HOUSE_EDGE);
-    
+
     const rawPayout = fairMultiplier * betAmount;
     const maxPayout = getMaxPayout(betAmount, picks, mines);
     const cappedPayout = Math.min(rawPayout, maxPayout);

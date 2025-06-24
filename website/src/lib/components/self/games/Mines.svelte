@@ -28,6 +28,7 @@
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount, onDestroy } from 'svelte';
 	import { ModeWatcher } from 'mode-watcher';
+	import { Info } from 'lucide-svelte';
 
 	interface MinesResult {
 		won: boolean;
@@ -162,7 +163,7 @@
 			
 			if (result.hitMine) {
 				playSound('lose');
-				revealedTiles = [...Array(TOTAL_TILES).keys()];
+				revealedTiles = [...revealedTiles, index];
 				minePositions = result.minePositions;
 				isPlaying = false;
 				resetAutoCashoutTimer();
@@ -227,6 +228,7 @@
 			hasRevealedTile = false;
 			isAutoCashout = false;
 			resetAutoCashoutTimer();
+			minePositions = [];
 		} catch (error) {
 			console.error('Cashout error:', error);
 			toast.error('Failed to cash out', {
@@ -268,6 +270,7 @@
 			clickedSafeTiles = [];
 			currentMultiplier = 1;
 			sessionToken = result.sessionToken;
+			minePositions = [];
 		} catch (error) {
 			console.error('Start game error:', error);
 			toast.error('Failed to start game', {
@@ -290,56 +293,7 @@
 		<CardTitle>Mines</CardTitle>
 		<CardDescription>
 			Navigate through the minefield and cash out before hitting a mine!
-			<Dialog>
-				<DialogTrigger class="text-xs text-destructive hover:underline ml-1">
-					Info
-				</DialogTrigger>
-				<DialogContent class="max-w-2xl">
-					<DialogHeader>
-						<DialogTitle>Mines Game Information</DialogTitle>
-					</DialogHeader>
-					<div class="space-y-6">
-						<div class="space-y-2">
-							<h3 class="font-semibold text-lg">Winning Probabilities</h3>
-							<p class="text-sm text-muted-foreground">
-								The probability of winning increases with each safe tile you reveal. Here's how it works:
-							</p>
-							<div class="bg-muted p-4 rounded-lg space-y-3">
-								<div class="text-sm">
-									<p class="font-medium mb-2">For each tile you reveal:</p>
-									<ul class="list-disc pl-6 space-y-1">
-										<li>More mines = Higher risk = Higher potential payout</li>
-										<li>Fewer mines = Lower risk = Lower potential payout</li>
-										<li>Each safe tile increases your multiplier</li>
-									</ul>
-								</div>
-								<div class="text-sm">
-									<p class="font-medium mb-2">Example:</p>
-									<p>With 3 mines on the board:</p>
-									<ul class="list-disc pl-6 space-y-1">
-										<li>First tile: 88% chance of being safe</li>
-										<li>Second tile: 87% chance of being safe</li>
-										<li>Third tile: 86% chance of being safe</li>
-									</ul>
-								</div>
-							</div>
-						</div>
-
-						<div class="space-y-2">
-							<h3 class="font-semibold text-lg">Game Rules & Information</h3>
-							<div class="space-y-2 text-sm">
-								<p class="text-muted-foreground">
-									If you leave the page while playing:
-								</p>
-								<ul class="list-disc pl-6 space-y-1">
-									<li>If you haven't revealed any tiles, your game session will be ended after 5 minutes of inactivity</li>
-									<li>If you have revealed tiles, the auto cashout will process your gains within 15 seconds</li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</DialogContent>
-			</Dialog>
+			<!-- Info popup and button removed -->
 		</CardDescription>
 	</CardHeader>
 	<CardContent>
@@ -390,23 +344,55 @@
 				<!-- Mine Count Selector -->
 				<div>
 					<label for="mine-count" class="block text-sm font-medium mb-2">Number of Mines</label>
-					<div id="mine-count">
-						<Select
-							type="single"
-							value={mineCount.toString()}
-							onValueChange={(value: string) => (mineCount = parseInt(value))}
+					<div class="flex items-center gap-2">
+						<Button
+							variant="secondary"
+							size="sm"
+							onclick={() => mineCount = Math.max(mineCount - 1, MIN_MINES)}
+							disabled={isPlaying || mineCount <= MIN_MINES}
+							aria-label="Decrease mines"
+						>-</Button>
+						<Input
+							id="mine-count"
+							type="number"
+							min={MIN_MINES}
+							max={24}
+							value={mineCount}
+							oninput={e => {
+								const target = e.target as HTMLInputElement | null;
+								const val = Math.max(
+									MIN_MINES,
+									Math.min(24, parseInt(target?.value ?? '') || MIN_MINES)
+								);
+								mineCount = val;
+							}}
 							disabled={isPlaying}
-						>
-							<SelectTrigger>
-								<span>{mineCount} Mines</span>
-							</SelectTrigger>
-							<SelectContent>
-								{#each Array(22) as _, i}
-									<SelectItem value={(i + MIN_MINES).toString()}>{i + MIN_MINES} Mines</SelectItem>
-								{/each}
-							</SelectContent>
-						</Select>
+							class="w-12 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+						/>
+						<Button
+							variant="secondary"
+							size="sm"
+							onclick={() => mineCount = Math.min(mineCount + 1, 24)}
+							disabled={isPlaying || mineCount >= 24}
+							aria-label="Increase mines"
+						>+</Button>
 					</div>
+					<p class="text-muted-foreground mt-1 text-xs">
+						You will get
+						<span class="font-semibold text-success">
+							{(calculateRawMultiplier(
+								isPlaying ? revealedTiles.length + 1 : 1,
+								mineCount
+							)).toFixed(2)}x
+						</span>
+						per tile, probability of winning:
+						<span class="font-semibold text-success">
+							{calculateProbability(
+								isPlaying ? 1 : 1,
+								mineCount
+							)}%
+						</span>
+					</p>
 				</div>
 
 				<!-- Bet Amount -->
@@ -451,8 +437,7 @@
 							size="sm"
 							variant="outline"
 							onclick={() => setBetAmount(Math.floor(Math.min(balance, MAX_BET_AMOUNT)))}
-							disabled={isPlaying}>Max</Button
-						>
+							disabled={isPlaying}>Max</Button>
 					</div>
 				</div>
 

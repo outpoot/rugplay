@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	
+
 	import {
 		Card,
 		CardContent,
@@ -9,41 +9,19 @@
 		CardHeader,
 		CardTitle
 	} from '$lib/components/ui/card';
-	import {
-		Select,
-		SelectContent,
-		SelectItem,
-		SelectTrigger
-	} from '$lib/components/ui/select';
-	import {
-		Dialog,
-		DialogContent,
-		DialogHeader,
-		DialogTitle,
-		DialogTrigger
-	} from '$lib/components/ui/dialog';
 	import confetti from 'canvas-confetti';
 	import { toast } from 'svelte-sonner';
 	import { formatValue, playSound, showConfetti, showSchoolPrideCannons } from '$lib/utils';
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount, onDestroy } from 'svelte';
 	import { ModeWatcher } from 'mode-watcher';
-	import { Info } from 'lucide-svelte';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
-
-	interface MinesResult {
-		won: boolean;
-		newBalance: number;
-		payout: number;
-		amountWagered: number;
-		sessionToken: string;
-	}
 
 	const GRID_SIZE = 5;
 	const TOTAL_TILES = GRID_SIZE * GRID_SIZE;
 	const MAX_BET_AMOUNT = 1000000;
 	const MIN_MINES = 3;
-	const AUTO_CASHOUT_TIME = 15; // 15 seconds total (10s game + 5s buffer)
+	const AUTO_CASHOUT_TIME = 15;
 
 	let {
 		balance = $bindable(),
@@ -60,7 +38,6 @@
 	let revealedTiles = $state<number[]>([]);
 	let minePositions = $state<number[]>([]);
 	let currentMultiplier = $state(1);
-	let lastResult = $state<MinesResult | null>(null);
 	let autoCashoutTimer = $state(0);
 	let autoCashoutProgress = $state(0);
 	let sessionToken = $state<string | null>(null);
@@ -87,27 +64,23 @@
 		for (let i = 0; i < picks; i++) {
 			probability *= (TOTAL_TILES - mines - i) / (TOTAL_TILES - i);
 		}
-
-		if (probability === 0) return 1.0;
-		return Math.max(1.0, 1 / probability);
+		return probability === 0 ? 1.0 : Math.max(1.0, 1 / probability);
 	}
 
 	function setBetAmount(amount: number) {
-		const clampedAmount = Math.min(amount, Math.min(balance, MAX_BET_AMOUNT));
-		if (clampedAmount >= 0) {
-			betAmount = clampedAmount;
-			betAmountDisplay = clampedAmount.toLocaleString();
+		const clamped = Math.min(amount, Math.min(balance, MAX_BET_AMOUNT));
+		if (clamped >= 0) {
+			betAmount = clamped;
+			betAmountDisplay = clamped.toLocaleString();
 		}
 	}
 
 	function handleBetAmountInput(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const value = target.value.replace(/,/g, '');
-		const numValue = parseFloat(value) || 0;
-		const clampedValue = Math.min(numValue, Math.min(balance, MAX_BET_AMOUNT));
-
-		betAmount = clampedValue;
-		betAmountDisplay = target.value;
+		const value = (event.target as HTMLInputElement).value.replace(/,/g, '');
+		const num = parseFloat(value) || 0;
+		const clamped = Math.min(num, Math.min(balance, MAX_BET_AMOUNT));
+		betAmount = clamped;
+		betAmountDisplay = value;
 	}
 
 	function handleBetAmountBlur() {
@@ -115,16 +88,13 @@
 	}
 
 	function resetAutoCashoutTimer() {
-		if (autoCashoutInterval) {
-			clearInterval(autoCashoutInterval);
-		}
+		if (autoCashoutInterval) clearInterval(autoCashoutInterval);
 		autoCashoutTimer = 0;
 		autoCashoutProgress = 0;
 	}
 
 	function startAutoCashoutTimer() {
 		if (!hasRevealedTile) return;
-		
 		resetAutoCashoutTimer();
 		autoCashoutInterval = setInterval(() => {
 			if (autoCashoutTimer < AUTO_CASHOUT_TIME) {
@@ -141,46 +111,33 @@
 
 	async function handleTileClick(index: number) {
 		if (!isPlaying || revealedTiles.includes(index) || !sessionToken) return;
-
 		lastClickedTile = index;
-
 		try {
 			const response = await fetch('/api/gambling/mines/reveal', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					sessionToken,
-					tileIndex: index
-				})
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ sessionToken, tileIndex: index })
 			});
-
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.error || 'Failed to reveal tile');
 			}
-
 			const result = await response.json();
-			
 			if (result.hitMine) {
 				playSound('lose');
 				revealedTiles = [...revealedTiles, index];
 				minePositions = result.minePositions;
 				isPlaying = false;
 				resetAutoCashoutTimer();
-
 				balance = result.newBalance;
 				onBalanceUpdate?.(result.newBalance);
-			}
- 			else {
+			} else {
 				playSound('flip');
 				revealedTiles = [...revealedTiles, index];
 				clickedSafeTiles = [...clickedSafeTiles, index];
 				currentMultiplier = result.currentMultiplier;
 				hasRevealedTile = true;
 				startAutoCashoutTimer();
-				
 				if (result.status === 'won') {
 					showSchoolPrideCannons(confetti);
 					showConfetti(confetti);
@@ -197,18 +154,12 @@
 
 	async function cashOut() {
 		if (!isPlaying || !sessionToken) return;
-
 		try {
 			const response = await fetch('/api/gambling/mines/cashout', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					sessionToken
-				})
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ sessionToken })
 			});
-
 			if (!response.ok) {
 				const errorData = await response.json();
 				if (!isAutoCashout || errorData.error !== 'Invalid session') {
@@ -216,15 +167,10 @@
 				}
 				return;
 			}
-
 			const result = await response.json();
 			balance = result.newBalance;
 			onBalanceUpdate?.(balance);
-
-			if (result.payout > betAmount) {
-				showConfetti(confetti);
-			}
-
+			if (result.payout > betAmount) showConfetti(confetti);
 			playSound(result.isAbort ? 'flip' : 'win');
 			isPlaying = false;
 			hasRevealedTile = false;
@@ -241,33 +187,23 @@
 
 	async function startGame() {
 		if (!canBet) return;
-
 		balance -= betAmount;
 		onBalanceUpdate?.(balance);
-
 		try {
 			const response = await fetch('/api/gambling/mines/start', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					betAmount,
-					mineCount
-				})
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ betAmount, mineCount })
 			});
-
 			if (!response.ok) {
 				const errorData = await response.json();
 				balance += betAmount;
 				onBalanceUpdate?.(balance);
 				throw new Error(errorData.error || 'Failed to start game');
 			}
-
 			const result = await response.json();
 			isPlaying = true;
 			hasRevealedTile = false;
-			lastResult = null;
 			revealedTiles = [];
 			clickedSafeTiles = [];
 			currentMultiplier = 1;
@@ -281,10 +217,8 @@
 		}
 	}
 
-	// Dynmaically fetch the correct balance.
 	onMount(async () => {
 		volumeSettings.load();
-
 		try {
 			const data = await fetchPortfolioSummary();
 			if (data) {
@@ -296,9 +230,7 @@
 		}
 	});
 
-	onDestroy(() => {
-		resetAutoCashoutTimer();
-	});
+	onDestroy(resetAutoCashoutTimer);
 </script>
 
 <Card>
@@ -306,7 +238,6 @@
 		<CardTitle>Mines</CardTitle>
 		<CardDescription>
 			Navigate through the minefield and cash out before hitting a mine!
-			<!-- Info popup and button removed -->
 		</CardDescription>
 	</CardHeader>
 	<CardContent>
@@ -325,20 +256,21 @@
 						<ModeWatcher />
 						<button
 							class="mine-tile"
-							class:revealed={revealedTiles.includes(index)}
-							class:mine={revealedTiles.includes(index) && minePositions.includes(index) && !clickedSafeTiles.includes(index)}
-							class:safe={revealedTiles.includes(index) && !minePositions.includes(index) && clickedSafeTiles.includes(index)}
-							class:light={document.documentElement.classList.contains('light')}
 							onclick={() => handleTileClick(index)}
 							disabled={!isPlaying}
+							class:revealed={revealedTiles.includes(index)}
+							class:mine={revealedTiles.includes(index) &&
+								minePositions.includes(index) &&
+								!clickedSafeTiles.includes(index)}
+							class:safe={revealedTiles.includes(index) &&
+								!minePositions.includes(index) &&
+								clickedSafeTiles.includes(index)}
+							class:light={document.documentElement.classList.contains('light')}
+							aria-label="Tile"
 						>
 							{#if revealedTiles.includes(index)}
 								{#if minePositions.includes(index)}
-									<img
-										src="/facedev/avif/bussin.avif"
-										alt="Mine"
-										class="h-8 w-8 object-contain"
-									/>
+									<img src="/facedev/avif/bussin.avif" alt="Mine" class="h-8 w-8 object-contain" />
 								{:else}
 									<img
 										src="/facedev/avif/twoblade.avif"
@@ -351,27 +283,25 @@
 					{/each}
 				</div>
 			</div>
-
-			<!-- Right Side: Controls Things -->
+			<!-- Right Side: Controls -->
 			<div class="space-y-4">
-				<!-- Mine Count Selector -->
 				<div>
-					<label for="mine-count" class="block text-sm font-medium mb-2">Number of Mines</label>
+					<label for="mine-count" class="mb-2 block text-sm font-medium">Number of Mines</label>
 					<div class="flex items-center gap-2">
 						<Button
 							variant="secondary"
 							size="sm"
-							onclick={() => mineCount = Math.max(mineCount - 1, MIN_MINES)}
+							onclick={() => (mineCount = Math.max(mineCount - 1, MIN_MINES))}
 							disabled={isPlaying || mineCount <= MIN_MINES}
-							aria-label="Decrease mines"
-						>-</Button>
+							aria-label="Decrease mines">-</Button
+						>
 						<Input
 							id="mine-count"
 							type="number"
 							min={MIN_MINES}
 							max={24}
 							value={mineCount}
-							oninput={e => {
+							oninput={(e) => {
 								const target = e.target as HTMLInputElement | null;
 								const val = Math.max(
 									MIN_MINES,
@@ -385,30 +315,24 @@
 						<Button
 							variant="secondary"
 							size="sm"
-							onclick={() => mineCount = Math.min(mineCount + 1, 24)}
+							onclick={() => (mineCount = Math.min(mineCount + 1, 24))}
 							disabled={isPlaying || mineCount >= 24}
-							aria-label="Increase mines"
-						>+</Button>
+							aria-label="Increase mines">+</Button
+						>
 					</div>
 					<p class="text-muted-foreground mt-1 text-xs">
 						You will get
-						<span class="font-semibold text-success">
-							{(calculateRawMultiplier(
-								isPlaying ? revealedTiles.length + 1 : 1,
-								mineCount
-							)).toFixed(2)}x
+						<span class="text-success font-semibold">
+							{calculateRawMultiplier(isPlaying ? revealedTiles.length + 1 : 1, mineCount).toFixed(
+								2
+							)}x
 						</span>
 						per tile, probability of winning:
-						<span class="font-semibold text-success">
-							{calculateProbability(
-								isPlaying ? 1 : 1,
-								mineCount
-							)}%
+						<span class="text-success font-semibold">
+							{calculateProbability(isPlaying ? 1 : 1, mineCount)}%
 						</span>
 					</p>
 				</div>
-
-				<!-- Bet Amount -->
 				<div>
 					<label for="bet-amount" class="mb-2 block text-sm font-medium">Bet Amount</label>
 					<Input
@@ -424,8 +348,6 @@
 						Max bet: {MAX_BET_AMOUNT.toLocaleString()}
 					</p>
 				</div>
-
-				<!-- Percentage Quick Actions -->
 				<div>
 					<div class="grid grid-cols-4 gap-2">
 						<Button
@@ -450,32 +372,30 @@
 							size="sm"
 							variant="outline"
 							onclick={() => setBetAmount(Math.floor(Math.min(balance, MAX_BET_AMOUNT)))}
-							disabled={isPlaying}>Max</Button>
+							disabled={isPlaying}>Max</Button
+						>
 					</div>
 				</div>
-
-				<!-- Action Buttons -->
 				<div class="flex flex-col gap-2">
 					{#if !isPlaying}
 						<Button class="h-12 flex-1 text-lg" onclick={startGame} disabled={!canBet}>
 							Start Game
 						</Button>
 					{:else}
-						<!-- Auto Cashout Timer -->
 						{#if hasRevealedTile}
 							<div class="space-y-1">
-								<div class="h-px w-full bg-border"></div>
-								<div class="text-center text-xs text-muted-foreground">
+								<div class="bg-border h-px w-full"></div>
+								<div class="text-muted-foreground text-center text-xs">
 									Auto Cashout in {Math.ceil(AUTO_CASHOUT_TIME - autoCashoutTimer)}s
 								</div>
-								<div class="h-1 w-full bg-muted rounded-full overflow-hidden">
+								<div class="bg-muted h-1 w-full overflow-hidden rounded-full">
 									<div
-										class="h-full bg-primary transition-all duration-100"
+										class="bg-primary h-full transition-all duration-100"
 										class:urgent={autoCashoutTimer >= 7}
 										style="width: {autoCashoutProgress}%"
 									></div>
 								</div>
-								<div class="h-px w-full bg-border"></div>
+								<div class="bg-border h-px w-full"></div>
 							</div>
 						{/if}
 						<Button class="h-12 flex-1 text-lg" onclick={cashOut} disabled={!isPlaying}>
@@ -493,7 +413,9 @@
 								<div class="flex justify-between">
 									<span>Next Tile:</span>
 									<span>
-										+{formatValue(betAmount * (calculateRawMultiplier(revealedTiles.length + 1, mineCount) - 1))}
+										+{formatValue(
+											betAmount * (calculateRawMultiplier(revealedTiles.length + 1, mineCount) - 1)
+										)}
 									</span>
 								</div>
 								<div class="flex justify-between">

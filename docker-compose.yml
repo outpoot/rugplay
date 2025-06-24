@@ -1,57 +1,23 @@
+version: '3.8'
+
 services:
-  # Multiple app instances
-  app-1:
+  app:
     build:
       context: .
       target: production-main
       dockerfile: Dockerfile
     ports:
-      - "3003:3000"  # Expose to host for nginx
+      - "5900-5907:3000"
     env_file:
       - website/.env
-    environment:
-      - INSTANCE_NAME=app-1
     depends_on:
       - websocket
     restart: unless-stopped
     networks:
       - shared_backend
+    deploy:
+      replicas: 8
 
-  app-2:
-    build:
-      context: .
-      target: production-main
-      dockerfile: Dockerfile
-    ports:
-      - "3004:3000"  # Different port for second instance
-    env_file:
-      - website/.env
-    environment:
-      - INSTANCE_NAME=app-2
-    depends_on:
-      - websocket
-    restart: unless-stopped
-    networks:
-      - shared_backend
-
-  app-3:
-    build:
-      context: .
-      target: production-main
-      dockerfile: Dockerfile
-    ports:
-      - "3005:3000"  # Different port for third instance
-    env_file:
-      - website/.env
-    environment:
-      - INSTANCE_NAME=app-3
-    depends_on:
-      - websocket
-    restart: unless-stopped
-    networks:
-      - shared_backend
-
-  # WebSocket service (single instance is usually sufficient)
   websocket:
     build:
       context: .

@@ -164,6 +164,7 @@
 	import { formatValue, playSound, showConfetti } from '$lib/utils';
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount } from 'svelte';
+	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 
 	interface CoinflipResult {
 		won: boolean;
@@ -314,8 +315,18 @@
 		}
 	}
 
-	onMount(() => {
+	onMount(async () => {
 		volumeSettings.load();
+
+		try {
+			const data = await fetchPortfolioSummary();
+			if (data) {
+				balance = data.baseCurrencyBalance;
+				onBalanceUpdate?.(data.baseCurrencyBalance);
+			}
+		} catch (error) {
+			console.error('Failed to fetch balance:', error);
+		}
 	});
 </script>
 

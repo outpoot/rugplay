@@ -63,7 +63,13 @@ setInterval(async () => {
         const sessionRaw = await redis.get(key);
         if (!sessionRaw) continue;
         const game = JSON.parse(sessionRaw) as MinesSession;
-        if (game.status === 'active' && game.revealedTiles.length > 0 && now - game.lastActivity > 20000) {
+
+        if (
+            game.status === 'active' &&
+            game.revealedTiles.length > 0 &&
+            now - game.lastActivity > 20000 &&
+            !game.revealedTiles.some(idx => game.minePositions.includes(idx))
+        ) {
             try {
                 const [userData] = await db
                     .select({ baseCurrencyBalance: user.baseCurrencyBalance })

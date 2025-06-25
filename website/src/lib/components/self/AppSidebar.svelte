@@ -32,7 +32,8 @@
 		BookOpen,
 		Info,
 		Bell,
-		Crown
+		Crown,
+		Key
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -156,6 +157,11 @@
 
 	function handlePrestigeClick() {
 		goto('/prestige');
+		setOpenMobile(false);
+	}
+
+	function handleAPIClick(){
+		goto('/api');
 		setOpenMobile(false);
 	}
 </script>
@@ -411,7 +417,7 @@
 								</div>
 							</DropdownMenu.Label>
 							<DropdownMenu.Separator />
-							
+
 							<!-- Profile & Settings Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAccountClick}>
@@ -427,11 +433,17 @@
 									Prestige
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
-							
+
 							<DropdownMenu.Separator />
-							
+
 							<!-- Features Group -->
 							<DropdownMenu.Group>
+								<DropdownMenu.Item
+									onclick={handleAPIClick}
+								>
+									<Key />
+									API
+								</DropdownMenu.Item>
 								<DropdownMenu.Item
 									onclick={() => {
 										showPromoCode = true;
@@ -483,9 +495,9 @@
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>
 							{/if}
-							
+
 							<DropdownMenu.Separator />
-							
+
 							<!-- Legal Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleTermsClick}>
@@ -497,9 +509,9 @@
 									Privacy Policy
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
-							
+
 							<DropdownMenu.Separator />
-							
+
 							<!-- Sign Out -->
 							<DropdownMenu.Item
 								onclick={() => {

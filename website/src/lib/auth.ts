@@ -6,6 +6,7 @@ import { db } from "./server/db";
 import * as schema from "./server/db/schema";
 import { generateUsername } from "./utils/random";
 import { uploadProfilePicture } from "./server/s3";
+import { apiKey } from "better-auth/plugins";
 
 if (!env.GOOGLE_CLIENT_ID) throw new Error('GOOGLE_CLIENT_ID is not set');
 if (!env.GOOGLE_CLIENT_SECRET) throw new Error('GOOGLE_CLIENT_SECRET is not set');
@@ -19,6 +20,21 @@ export const auth = betterAuth({
         env.BETTER_AUTH_URL, "http://rugplay.com", "http://localhost:5173",
     ],
 
+    plugins: [
+        apiKey({
+            defaultPrefix: 'rgpl_',
+            rateLimit: {
+                enabled: true,
+                timeWindow: 1000 * 60 * 60 * 24, // 1 day
+                maxRequests: 2000 // 2000 requests per day
+            },
+            permissions: {
+                defaultPermissions: {
+                    api: ['read']
+                }
+            }
+        }),
+    ],
     database: drizzleAdapter(db, {
         provider: "pg",
         schema: schema,

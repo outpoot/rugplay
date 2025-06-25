@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1749654046953,
-      "tag": "0000_crazy_bloodstrike",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1749907594739,
-      "tag": "0001_cuddly_dormammu",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1749916220202,
-      "tag": "0002_small_micromacro",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1750707307426,
-      "tag": "0003_complete_runaways",
+      "when": 1750863600119,
+      "tag": "0000_chief_korath",
       "breakpoints": true
     }
   ]

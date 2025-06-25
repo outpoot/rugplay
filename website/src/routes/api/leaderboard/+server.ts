@@ -70,16 +70,18 @@ export async function GET() {
             for (const [coinId] of userData.coinHoldings.entries()) {
                 uniqueCoinIds.add(coinId);
             }
-        }        // Batch fetch all coin prices
-        const coinPrices = new Map();
+        }        // Batch fetch all coin data
+        const coinPoolCoinAmount = new Map();
+        const coinPoolBaseCurrencyAmount = new Map();
         if (uniqueCoinIds.size > 0) {
             const coinPricesData = await db
-                .select({ id: coin.id, currentPrice: coin.currentPrice })
+                .select({ id: coin.id, poolCoinAmount: coin.poolCoinAmount, poolBaseCurrencyAmount: coin.poolBaseCurrencyAmount })
                 .from(coin)
                 .where(inArray(coin.id, Array.from(uniqueCoinIds) as number[]));
 
             for (const coinData of coinPricesData) {
-                coinPrices.set(coinData.id, Number(coinData.currentPrice || 0));
+                coinPoolCoinAmount.set(coinData.id, Number(coinData.poolCoinAmount || 0));
+                coinPoolBaseCurrencyAmount.set(coinData.id, Number(coinData.poolBaseCurrencyAmount || 0));
             }
         }
 
@@ -89,8 +91,15 @@ export async function GET() {
 
             for (const [coinId, quantity] of userData.coinHoldings.entries()) {
                 if (quantity > 0) {
-                    const price = coinPrices.get(coinId) || 0;
-                    currentHoldingsValue += quantity * price;
+                    const poolCoinAmount = coinPoolCoinAmount.get(coinId);
+                    const poolBaseCurrencyAmount = coinPoolBaseCurrencyAmount.get(coinId);
+                    // AMM SELL
+                    const k = poolCoinAmount * poolBaseCurrencyAmount;
+                    const newPoolCoin = poolCoinAmount + quantity;
+                    const newPoolBaseCurrency = k / newPoolCoin;
+                    const baseCurrencyReceived = poolBaseCurrencyAmount - newPoolBaseCurrency;
+
+                    currentHoldingsValue += baseCurrencyReceived;
                 }
             }
 

@@ -26,11 +26,11 @@ export const auth = betterAuth({
             rateLimit: {
                 enabled: true,
                 timeWindow: 1000 * 60 * 60 * 24, // 1 day
-                maxRequests: 2000 // 2000 requests per day
+                maxRequests: 200000 // 200000 requests per day
             },
             permissions: {
                 defaultPermissions: {
-                    api: ['read']
+                    api: ['read', 'write']
                 }
             }
         }),

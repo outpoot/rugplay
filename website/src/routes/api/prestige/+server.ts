@@ -34,6 +34,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             throw error(400, 'Maximum prestige level reached');
         }
 
+        const currentCashBalance = Number(userData.baseCurrencyBalance);
+        if (currentCashBalance < prestigeCost) {
+            throw error(400, `Insufficient cash funds for prestige. Need ${formatValue(prestigeCost)} cash, have ${formatValue(currentCashBalance)} cash. Coin holdings cannot be used for prestige costs.`);
+        }
+
         const holdings = await tx
             .select({
                 coinId: userPortfolio.coinId,
@@ -70,11 +75,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             await tx
                 .delete(userPortfolio)
                 .where(eq(userPortfolio.userId, userId));
-        }
-
-        const currentBalance = Number(userData.baseCurrencyBalance) + totalSaleValue;
-        if (currentBalance < prestigeCost) {
-            throw error(400, `Insufficient funds. Need ${formatValue(prestigeCost)}, have ${formatValue(currentBalance)}`);
         }
 
         await tx

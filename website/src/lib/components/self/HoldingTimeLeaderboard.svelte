@@ -34,7 +34,7 @@
 
 			while (hasMorePages) {
 				const response = await fetch(
-					`https://api.vaaq.dev/rugplay/v1/search/?coinSymbol=${coinSymbol}&page=${page}&limit=${limit}`
+					`/api/leaderboard/time-held/${coinSymbol}?page=${page}&limit=${limit}`
 				);
 				if (!response.ok) {
 					throw new Error('API request failed');

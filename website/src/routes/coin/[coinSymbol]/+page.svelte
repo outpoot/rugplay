@@ -10,6 +10,7 @@
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import CoinSkeleton from '$lib/components/self/skeletons/CoinSkeleton.svelte';
 	import TopHolders from '$lib/components/self/TopHolders.svelte';
+	import HoldingTimeLeaderboard from '$lib/components/self/HoldingTimeLeaderboard.svelte';
 	import { TrendingUp, TrendingDown, DollarSign, Coins, ChartColumn } from 'lucide-svelte';
 	import {
 		createChart,
@@ -130,7 +131,6 @@
 	}
 	function handlePriceUpdate(priceUpdate: PriceUpdate) {
 		if (coin && priceUpdate.coinSymbol === coinSymbol.toUpperCase()) {
-			// throttle updates to prevent excessive UI updates, 1s interval
 			const now = Date.now();
 			if (now - lastPriceUpdateTime < 1000) {
 				return;
@@ -345,7 +345,6 @@
 
 	function generateVolumeData(candlestickData: any[], volumeData: any[]) {
 		return candlestickData.map((candle, index) => {
-			// Find corresponding volume data for this time period
 			const volumePoint = volumeData.find((v) => v.time === candle.time);
 			const volume = volumePoint ? volumePoint.volume : 0;
 
@@ -395,7 +394,6 @@
 			</div>
 		</div>
 	{:else}
-		<!-- Header Section -->
 		<header class="mb-8">
 			<div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div class="flex items-center gap-3 sm:gap-4">
@@ -443,7 +441,6 @@
 				</div>
 			</div>
 
-			<!-- Creator Info -->
 			{#if coin.creatorName}
 				<div class="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
 					<span>Created by</span>
@@ -470,9 +467,7 @@
 		</header>
 
 		<div class="grid gap-6">
-			<!-- Price Chart with Trading Actions -->
 			<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-				<!-- Chart (2/3 width) -->
 				<div class="lg:col-span-2">
 					<Card.Root class="flex h-full flex-col">
 						<Card.Header class="pb-4">
@@ -516,9 +511,7 @@
 					</Card.Root>
 				</div>
 
-				<!-- Right side - Trading Actions + Liquidity Pool + Top Holders (1/3 width) -->
 				<div class="space-y-6 lg:col-span-1">
-					<!-- Trading Actions -->
 					<Card.Root>
 						<Card.Header>
 							<Card.Title>Trade {coin.symbol}</Card.Title>
@@ -561,7 +554,6 @@
 							{/if}
 						</Card.Content>
 					</Card.Root>
-					<!-- Liquidity Pool -->
 					<Card.Root>
 						<Card.Content>
 							<div class="space-y-4">
@@ -600,14 +592,12 @@
 							</div>
 						</Card.Content>
 					</Card.Root>
-					<!-- Top Holders -->
 					<TopHolders coinSymbol={coin.symbol} />
+					<HoldingTimeLeaderboard coinSymbol={coin.symbol} />
 				</div>
 			</div>
 
-			<!-- Statistics Grid -->
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-				<!-- Market Cap -->
 				<Card.Root class="gap-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
@@ -622,7 +612,6 @@
 					</Card.Content>
 				</Card.Root>
 
-				<!-- 24h Volume -->
 				<Card.Root class="gap-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
@@ -637,7 +626,6 @@
 					</Card.Content>
 				</Card.Root>
 
-				<!-- Circulating Supply -->
 				<Card.Root class="gap-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
@@ -656,7 +644,6 @@
 					</Card.Content>
 				</Card.Root>
 
-				<!-- 24h Change -->
 				<Card.Root class="gap-1">
 					<Card.Header>
 						<Card.Title class="text-sm font-medium">24h Change</Card.Title>
@@ -675,8 +662,6 @@
 					</Card.Content>
 				</Card.Root>
 			</div>
-
-			<!-- Comments Section -->
 			<CommentSection {coinSymbol} />
 		</div>
 	{/if}

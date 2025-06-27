@@ -17,7 +17,8 @@ export const auth = betterAuth({
     appName: "Rugplay",
 
     trustedOrigins: [
-        env.BETTER_AUTH_URL, "http://rugplay.com", "http://localhost:5173",
+        "http://localhost:5173", 
+        "http://rugplay.com"
     ],
 
     plugins: [

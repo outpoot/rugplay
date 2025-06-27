@@ -8,9 +8,7 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type WithoutChild<T> = T extends { child?: any } ? Omit<T, "child"> : T;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type WithoutChildren<T> = T extends { children?: any } ? Omit<T, "children"> : T;
 export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
@@ -230,7 +228,6 @@ export function getTimeframeInSeconds(timeframe: string): number {
     }
 }
 
-//
 let availableSounds = [1, 2, 3, 4, 5, 6, 7];
 
 export function playRandomFireworkSound() {
@@ -395,7 +392,6 @@ export function calculateMinesMultiplier(picks: number, mines: number, betAmount
 
     const fairMultiplier = (1 / probability) * (1 - HOUSE_EDGE);
 
-    // Backend payout cap logic
     const MAX_PAYOUT = 2_000_000;
     const HIGH_BET_THRESHOLD = 50_000;
     const mineFactor = 1 + (mines / 25);
@@ -416,4 +412,25 @@ export function calculateMinesMultiplier(picks: number, mines: number, betAmount
     const cappedPayout = Math.min(rawPayout, maxPayout);
     const effectiveMultiplier = cappedPayout / betAmount;
     return Math.max(1.0, Number(effectiveMultiplier.toFixed(2)));
+}
+
+export function formatDuration(ms: number): string {
+    if (ms < 0) ms = 0;
+    let seconds = Math.floor(ms / 1000);
+    let minutes = Math.floor(seconds / 60);
+    let hours = Math.floor(minutes / 60);
+    let days = Math.floor(hours / 24);
+
+    hours = hours % 24;
+    minutes = minutes % 60;
+    seconds = seconds % 60;
+
+    let parts = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (parts.length < 3 && seconds > 0) parts.push(`${seconds}s`);
+    if (parts.length === 0) return "Just now";
+
+    return parts.join(' ');
 }

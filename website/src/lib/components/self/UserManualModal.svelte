@@ -181,7 +181,6 @@
 <Dialog.Root bind:open>
 	<Dialog.Content class="flex max-h-[90vh] w-full max-w-[calc(100%-2rem)] flex-col sm:max-w-2xl">
 		<div class="min-h-0 flex-1 space-y-6 overflow-y-auto">
-			<!-- Main content -->
 			<div class="space-y-4">
 				<div class="flex items-center gap-3">
 					<div class="bg-muted rounded-lg p-3">
@@ -201,7 +200,6 @@
 				{/if}
 			</div>
 
-			<!-- Page dots -->
 			<div class="flex items-center justify-center gap-2">
 				{#each tips as _, index}
 					<button
@@ -209,12 +207,12 @@
 						class="h-2 w-2 rounded-full transition-colors {index === currentPage
 							? 'bg-primary'
 							: 'bg-muted-foreground/30 hover:bg-muted-foreground/50'}"
-					/>
+						aria-label="Go to tip {index + 1}"
+					></button>
 				{/each}
 			</div>
 		</div>
 
-		<!-- Navigation -->
 		<div class="flex items-center justify-between border-t pt-4">
 			<Button
 				variant="outline"

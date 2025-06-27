@@ -16,5 +16,5 @@ export async function GET(event) {
         route: { id: "/api/hopium/questions/[id]" }
     };
 
-    return await getHopiumQuestion(hopiumEvent as any);
+    return await getHopiumQuestion(hopiumEvent);
 }

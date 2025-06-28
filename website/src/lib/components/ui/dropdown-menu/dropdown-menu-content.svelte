@@ -23,5 +23,7 @@
 			className
 		)}
 		{...restProps}
-	/>
+	>
+		{@render restProps.children?.()}
+	</DropdownMenuPrimitive.Content>
 </DropdownMenuPrimitive.Portal>

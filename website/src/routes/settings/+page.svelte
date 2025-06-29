@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import { getPublicUrl, debounce } from '$lib/utils';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -16,7 +17,6 @@
 	import { USER_DATA } from '$lib/stores/user-data';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import SEO from '$lib/components/self/SEO.svelte';
-	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 
 	let shouldSignIn = $state(false);
 	let name = $state($USER_DATA?.name || '');
@@ -421,14 +421,26 @@
 							>
 						</div>
 					</div>
-					<Slider
-						type="single"
-						value={masterVolume}
-						onValueChange={handleMasterVolumeChange}
-						max={100}
-						step={1}
-						disabled={isMuted}
-					/>
+					{#if browser}
+						<Slider
+							type="single"
+							value={masterVolume}
+							onValueChange={handleMasterVolumeChange}
+							max={100}
+							step={1}
+							disabled={isMuted}
+						/>
+					{:else}
+						<!-- Fallback slider for SSR -->
+						<div class="relative flex w-full touch-none select-none items-center">
+							<div class="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
+								<div
+									class="absolute h-full bg-primary transition-all"
+									style="width: {masterVolume}%"
+								></div>
+							</div>
+						</div>
+					{/if}
 					<p class="text-muted-foreground text-xs">
 						Controls all game sounds including effects and background audio
 					</p>

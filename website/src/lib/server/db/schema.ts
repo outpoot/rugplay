@@ -265,6 +265,7 @@ export const notifications = pgTable("notification", {
 	type: notificationTypeEnum("type").notNull(),
 	title: varchar("title", { length: 200 }).notNull(),
 	message: text("message").notNull(),
+	link: text("link"),
 	isRead: boolean("is_read").notNull().default(false),
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => {

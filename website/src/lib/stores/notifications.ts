@@ -5,6 +5,7 @@ export interface Notification {
     type: string;
     title: string;
     message: string;
+    link?: string;
     data: any;
     isRead: boolean;
     createdAt: string;

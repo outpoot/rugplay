@@ -203,7 +203,7 @@
 					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Top Coins</h3>
-							<p class="text-muted-foreground text-sm">GET /api/v1/top</p>
+							<p class="text-muted-foreground text-sm">GET api.rugplay.com/api/v1/top</p>
 						</div>
 						{#if topCoinsOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -217,7 +217,7 @@
 						</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
-							<Codeblock text="GET https://rugplay.com/api/v1/top" displayOnly={true} />
+							<Codeblock text="GET https://api.rugplay.com/api/v1/top" displayOnly={true} />
 						</div>
 						<div class="space-y-2">
 							<h4 class="font-medium">Example Response</h4>
@@ -246,7 +246,7 @@
 					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Market Data</h3>
-							<p class="text-muted-foreground text-sm">GET /api/v1/market</p>
+							<p class="text-muted-foreground text-sm">GET api.rugplay.com/api/v1/market</p>
 						</div>
 						{#if marketDataOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -260,7 +260,7 @@
 						</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
-							<Codeblock text="GET https://rugplay.com/api/v1/market" displayOnly={true} />
+							<Codeblock text="GET https://api.rugplay.com/api/v1/market" displayOnly={true} />
 						</div>
 						<div class="space-y-2">
 							<h4 class="font-medium">Query Parameters</h4>
@@ -309,7 +309,7 @@
 					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Coin Details</h3>
-							<p class="text-muted-foreground text-sm">GET /api/v1/coin/&lbrace;symbol&rbrace;</p>
+							<p class="text-muted-foreground text-sm">GET api.rugplay.com/api/v1/coin/&lbrace;symbol&rbrace;</p>
 						</div>
 						{#if coinDetailsOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -323,7 +323,7 @@
 						</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
-							<Codeblock text="GET https://rugplay.com/api/v1/coin/&lbrace;symbol&rbrace;" displayOnly={true} />
+							<Codeblock text="GET https://api.rugplay.com/api/v1/coin/&lbrace;symbol&rbrace;" displayOnly={true} />
 						</div>
 						<div class="space-y-2">
 							<h4 class="font-medium">Parameters</h4>
@@ -387,7 +387,7 @@
 					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Coin Holders</h3>
-							<p class="text-muted-foreground text-sm">GET /api/v1/holders/&lbrace;symbol&rbrace;</p>
+							<p class="text-muted-foreground text-sm">GET api.rugplay.com/api/v1/holders/&lbrace;symbol&rbrace;</p>
 						</div>
 						{#if holdersOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -401,7 +401,7 @@
 						</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
-							<Codeblock text="GET https://rugplay.com/api/v1/holders/&lbrace;symbol&rbrace;" displayOnly={true} />
+							<Codeblock text="GET https://api.rugplay.com/api/v1/holders/&lbrace;symbol&rbrace;" displayOnly={true} />
 						</div>
 						<div class="space-y-2">
 							<h4 class="font-medium">Parameters</h4>
@@ -448,7 +448,7 @@
 					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Prediction Markets (Hopium)</h3>
-							<p class="text-muted-foreground text-sm">GET /api/v1/hopium</p>
+							<p class="text-muted-foreground text-sm">GET api.rugplay.com/api/v1/hopium</p>
 						</div>
 						{#if hopiumOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -462,7 +462,7 @@
 						</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
-							<Codeblock text="GET https://rugplay.com/api/v1/hopium" displayOnly={true} />
+							<Codeblock text="GET https://api.rugplay.com/api/v1/hopium" displayOnly={true} />
 						</div>
 						<div class="space-y-2">
 							<h4 class="font-medium">Query Parameters</h4>
@@ -518,7 +518,7 @@
 					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Prediction Market Details</h3>
-							<p class="text-muted-foreground text-sm">GET /api/v1/hopium/&lbrace;question_id&rbrace;</p>
+							<p class="text-muted-foreground text-sm">GET api.rugplay.com/api/v1/hopium/&lbrace;question_id&rbrace;</p>
 						</div>
 						{#if hopiumDetailsOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -532,7 +532,7 @@
 						</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
-							<Codeblock text="GET https://rugplay.com/api/v1/hopium/&lbrace;question_id&rbrace;" displayOnly={true} />
+							<Codeblock text="GET https://api.rugplay.com/api/v1/hopium/&lbrace;question_id&rbrace;" displayOnly={true} />
 						</div>
 						<div class="space-y-2">
 							<h4 class="font-medium">Parameters</h4>

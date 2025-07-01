@@ -12,6 +12,8 @@ services:
       - website/.env
     depends_on:
       - websocket
+      - redis
+      - postgres
     restart: unless-stopped
     networks:
       - shared_backend
@@ -31,6 +33,34 @@ services:
     networks:
       - shared_backend
 
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - shared_backend
+
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rugplay
+      POSTGRES_PASSWORD: rugplay
+      POSTGRES_DB: rugplay
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shared_backend
+    ports:
+      - "5432:5432"
+      
 networks:
   shared_backend:
     external: true
+
+volumes:
+  postgres_data:
+  redis_data:

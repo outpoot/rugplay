@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: production-main
+      dockerfile: Dockerfile
+    ports:
+      - "5900-5907:3000"
+    env_file:
+      - website/.env
+    depends_on:
+      - websocket
+    restart: unless-stopped
+    networks:
+      - shared_backend
+    deploy:
+      replicas: 8
+
+  websocket:
+    build:
+      context: .
+      target: production-websocket
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    env_file:
+      - website/.env
+    restart: unless-stopped
+    networks:
+      - shared_backend
+
+networks:
+  shared_backend:
+    external: true

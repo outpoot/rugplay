@@ -3,19 +3,19 @@ set -e
 
 cd "$(dirname "$0")"
 
-echo "🚀 Starting Rugplay [PRODUCTION] deployment..."
+echo "🚀 Starting Rugplay [DEV] deployment..."
 
 echo "📥 Pulling latest changes..."
 git pull
 
 echo "🔨 Building Docker images..."
-docker compose -f docker-compose-prod.yml build --no-cache
+docker compose -f docker-compose-dev.yml build --no-cache
 
 echo "🛑 Stopping existing containers..."
-docker compose -f docker-compose-prod.yml down --volumes --remove-orphans
+docker compose -f docker-compose-dev.yml down --volumes --remove-orphans
 
 echo "🏗️ Starting containers..."
-docker compose -f docker-compose-prod.yml up -d
+docker compose -f docker-compose-dev.yml up -d
 
 echo "⏳ Waiting for services to start..."
 sleep 10

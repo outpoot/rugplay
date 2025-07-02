@@ -7,7 +7,7 @@
 	import { Calendar, Wallet } from 'lucide-svelte';
 	import type { UserProfileData } from '$lib/types/user-profile';
 
-	let { userId }: { userId: number } = $props();
+	let { userId, showBio = true }: { userId: number, showBio?: boolean } = $props();
 
 	let userData = $state<UserProfileData | null>(null);
 	let loading = $state(true);
@@ -93,7 +93,7 @@
 				</div>
 				<p class="text-muted-foreground text-sm">@{profile.username}</p>
 
-				{#if profile.bio}
+				{#if profile.bio && showBio}
 					<p class="text-sm">{profile.bio}</p>
 				{/if}
 

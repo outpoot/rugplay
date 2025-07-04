@@ -12,6 +12,8 @@ export type User = {
     avatarUrl: string | null;
 
     baseCurrencyBalance: number;
+    bankBalance: number;
+    lastBankActivity: string | null;
     bio: string;
 
     volumeMaster: number;

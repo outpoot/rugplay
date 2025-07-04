@@ -27,64 +27,18 @@
 
 	async function fetchLeaderboardData() {
 		try {
-			let allTrades = [];
-			let page = 1;
-			let hasMorePages = true;
-			const limit = 100;
-
-			while (hasMorePages) {
-				const response = await fetch(
-					`/api/leaderboard/time-held/${coinSymbol}?page=${page}&limit=${limit}`
-				);
-				if (!response.ok) {
-					throw new Error('API request failed');
-				}
-				const data = await response.json();
-
-				if (data.status !== 'success' || !data.results) {
-					throw new Error(data.message || 'Invalid API response');
-				}
-
-				allTrades.push(...data.results);
-				hasMorePages = data.pagination.current_page < data.pagination.total_pages;
-				page++;
+			const response = await fetch(`/api/leaderboard/time-held/${coinSymbol}`);
+			if (!response.ok) {
+				throw new Error('API request failed');
 			}
-			processTrades(allTrades);
+			const data = await response.json();
+			leaderboard = data;
 		} catch (e) {
 			console.error('Failed to fetch holding time leaderboard data:', e);
 			toast.error('Failed to load time-held leaderboard');
 		} finally {
 			loading = false;
 		}
-	}
-
-	function processTrades(trades: any[]) {
-		const tradesByUser = new Map<number, any[]>();
-
-		for (const trade of trades) {
-			if (!tradesByUser.has(trade.userId)) {
-				tradesByUser.set(trade.userId, []);
-			}
-			tradesByUser.get(trade.userId)!.push(trade);
-		}
-
-		const currentHolders: Holder[] = [];
-
-		for (const [userId, userTrades] of tradesByUser.entries()) {
-			userTrades.sort((a, b) => b.timestamp - a.timestamp);
-			const latestTrade = userTrades[0];
-
-			if (latestTrade && latestTrade.type.toUpperCase() === 'BUY') {
-				currentHolders.push({
-					userId: userId,
-					username: latestTrade.username,
-					buyTimestamp: latestTrade.timestamp
-				});
-			}
-		}
-
-		currentHolders.sort((a, b) => a.buyTimestamp - b.buyTimestamp);
-		leaderboard = currentHolders;
 	}
 
 	$effect(() => {
@@ -126,7 +80,7 @@
 			key: 'timeHeld',
 			label: 'Time Held',
 			class: 'w-[40%] min-w-[120px] font-mono',
-			render: (_: any, row: Holder) => formatDuration(Date.now() - row.buyTimestamp)
+			render: (_: any, row: Holder) => formatDuration(Date.now() - new Date(row.buyTimestamp).getTime())
 		}
 	]);
 </script>
@@ -175,7 +129,7 @@
 							</HoverCard.Root>
 						</div>
 						<div class="flex flex-shrink-0 items-center gap-1.5 text-right">
-							<div class="font-mono text-sm">{formatDuration(Date.now() - holder.buyTimestamp)}</div>
+							<div class="font-mono text-sm">{formatDuration(Date.now() - new Date(holder.buyTimestamp).getTime())}</div>
 						</div>
 					</div>
 				{/each}

@@ -1,6 +1,6 @@
 {
-  "id": "08d1623b-7b2d-4777-8b7b-dbfa7884ecfe",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "e1e5c2f0-1e5b-4d4f-b6c2-1a4c9b8d8f0a",
+  "prevId": "08d1623b-7b2d-4777-8b7b-dbfa7884ecfe",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1882,6 +1882,19 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'100.00000000'"
+        },
+        "bank_balance": {
+          "name": "bank_balance",
+          "type": "numeric(20, 8)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0.00000000'"
+        },
+        "last_bank_activity": {
+          "name": "last_bank_activity",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         },
         "bio": {
           "name": "bio",

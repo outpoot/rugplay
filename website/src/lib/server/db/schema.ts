@@ -20,6 +20,11 @@ export const user = pgTable("user", {
 		precision: 20,
 		scale: 8,
 	}).notNull().default("100.00000000"), // $100
+    bankBalance: decimal("bank_balance", { 
+        precision: 20, 
+        scale: 8 
+    }).notNull().default("0.00000000"),
+    lastBankActivity: timestamp("last_bank_activity", { withTimezone: true }),
 	bio: varchar("bio", { length: 160 }).default("Hello am 48 year old man from somalia. Sorry for my bed england. I selled my wife for internet connection for play “conter stirk”"),
 	username: varchar("username", { length: 30 }).notNull().unique(),
 

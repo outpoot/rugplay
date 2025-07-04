@@ -102,6 +102,10 @@ export const handle: Handle = async ({ event, resolve }) => {
         return new Response(null, { status: 204 });
     }
 
+    // THIS IS THE CRITICAL FIX: We must populate `event.locals` BEFORE calling svelteKitHandler.
+    // The `auth` object is passed along, but the user data needs to be explicitly set on `event.locals`
+    // so that it's available to all server-side code, including API routes.
+
     // Get session from auth
     const session = await auth.api.getSession({
         headers: event.request.headers
@@ -131,7 +135,10 @@ export const handle: Handle = async ({ event, resolve }) => {
                     baseCurrencyBalance: user.baseCurrencyBalance,
                     bio: user.bio,
                     volumeMaster: user.volumeMaster,
-                    volumeMuted: user.volumeMuted
+                    volumeMuted: user.volumeMuted,
+                    bankBalance: user.bankBalance,
+                    lastBankActivity: user.lastBankActivity,
+										lastRewardClaim: user.lastRewardClaim // Added for daily spin logic
                 })
                 .from(user)
                 .where(eq(user.id, Number(userId)))
@@ -160,11 +167,13 @@ export const handle: Handle = async ({ event, resolve }) => {
                     image: userRecord.image || '',
                     isBanned: userRecord.isBanned || false,
                     banReason: userRecord.banReason,
-                    avatarUrl: userRecord.image,
                     baseCurrencyBalance: parseFloat(userRecord.baseCurrencyBalance || '0'),
                     bio: userRecord.bio || '',
                     volumeMaster: parseFloat(userRecord.volumeMaster || '0.7'),
-                    volumeMuted: userRecord.volumeMuted || false
+                    volumeMuted: userRecord.volumeMuted || false,
+                    bankBalance: parseFloat(userRecord.bankBalance || '0'),
+                    lastBankActivity: userRecord.lastBankActivity ? userRecord.lastBankActivity.toISOString() : null,
+										lastRewardClaim: userRecord.lastRewardClaim ? userRecord.lastRewardClaim.toISOString() : null,
                 };
 
                 const cacheTTL = userRecord.isAdmin ? CACHE_TTL * 2 : CACHE_TTL;
@@ -177,15 +186,13 @@ export const handle: Handle = async ({ event, resolve }) => {
         }
     }
 
+    // Set the user data on `event.locals.user` which is the standard convention
+    event.locals.user = userData;
+		// Also keep userSession for backward compatibility with your page props
     event.locals.userSession = userData;
 
-    if (event.url.pathname.startsWith('/api/') && !event.url.pathname.startsWith('/api/proxy/')) {
-        const response = await svelteKitHandler({ event, resolve, auth });
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-
-        return response;
-    }
-
+    // Now, call the svelteKitHandler, which will pass the populated `event` object
+    // (including `locals.user`) to all subsequent server code.
     return svelteKitHandler({ event, resolve, auth });
 };
 

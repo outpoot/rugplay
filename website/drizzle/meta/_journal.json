@@ -8,6 +8,13 @@
       "when": 1750863600119,
       "tag": "0000_chief_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1750863600120,
+      "tag": "0001_sour_silver_surfer",
+      "breakpoints": true
     }
   ]
 }

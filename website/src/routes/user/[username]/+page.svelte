@@ -17,7 +17,8 @@
 		TrendingDown,
 		Coins,
 		Receipt,
-		Activity
+		Activity,
+		PiggyBank
 	} from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
@@ -27,54 +28,77 @@
 
 	let profileData = $state(data.profileData);
 	let recentTransactions = $state(data.recentTransactions);
-	let loading = $state(false);
-
-	let previousUsername = $state<string | null>(null);
+	let loading = $state(true);
+	let liveBankBalance = $state<number | null>(null);
 
 	let isOwnProfile = $derived(
 		$USER_DATA && profileData?.profile && $USER_DATA.username === profileData.profile.username
 	);
 
-	onMount(async () => {
-		previousUsername = username;
-		
-		if (isOwnProfile) {
-			await fetchTransactions();
-		}
+	onMount(() => {
+		fetchData();
 	});
 
 	$effect(() => {
-		if (username && previousUsername && username !== previousUsername) {
-			loading = true;
-			profileData = null;
-			recentTransactions = [];
-
-			fetchProfileData().then(() => {
-				previousUsername = username;
-			});
+		if (data.username) {
+			fetchData();
 		}
 	});
 
-	$effect(() => {
-		if (isOwnProfile && profileData) {
-			fetchTransactions();
+	async function fetchData() {
+		loading = true;
+		try {
+			await fetchProfileData();
+			if (isOwnProfile) {
+				await fetchTransactions();
+			}
+		} catch (error) {
+			console.error('Error fetching page data:', error);
+		} finally {
+			loading = false;
 		}
-	});
+	}
 
 	async function fetchProfileData() {
 		try {
 			const response = await fetch(`/api/user/${username}`);
 			if (response.ok) {
-				profileData = await response.json();
-				recentTransactions = profileData?.recentTransactions || [];
+				const fetchedProfileData = await response.json();
+				profileData = fetchedProfileData;
+				recentTransactions = fetchedProfileData?.recentTransactions || [];
+
+				const ownProfileCheck =
+					$USER_DATA &&
+					fetchedProfileData?.profile &&
+					$USER_DATA.username === fetchedProfileData.profile.username;
+
+				if (ownProfileCheck) {
+					// For the user's own profile, get the definitive bank balance.
+					await fetchBankStatusForCurrentUser();
+				}
 			} else {
 				toast.error('Failed to load profile data');
 			}
 		} catch (e) {
 			console.error('Failed to fetch profile data:', e);
 			toast.error('Failed to load profile data');
-		} finally {
-			loading = false;
+		}
+	}
+
+	async function fetchBankStatusForCurrentUser() {
+		try {
+			const response = await fetch('/api/bank/status');
+			if (response.ok) {
+				const data = await response.json();
+				liveBankBalance = Number(data.bankBalance);
+			} else {
+				console.error('Bank status API call failed, will use profile data as fallback.');
+				// Fallback to profile data if the specific API call fails
+				liveBankBalance = null;
+			}
+		} catch (e) {
+			console.error('Could not fetch live bank status:', e);
+			liveBankBalance = null;
 		}
 	}
 
@@ -104,48 +128,23 @@
 		profileData?.createdCoins?.length ? profileData.createdCoins.length > 0 : false
 	);
 
-	let totalTradingVolume = $derived(
-		profileData?.stats
-			? Number(profileData.stats.totalBuyVolume) + Number(profileData.stats.totalSellVolume)
-			: 0
+	// Derived stats
+	const baseCurrencyBalance = $derived(Number(profileData?.stats?.baseCurrencyBalance || 0));
+	const holdingsValue = $derived(Number(profileData?.stats?.holdingsValue || 0));
+	const bankBalance = $derived(
+		isOwnProfile && liveBankBalance !== null
+			? liveBankBalance
+			: Number(profileData?.stats?.bankBalance || 0)
 	);
+	const totalPortfolioValue = $derived(baseCurrencyBalance + holdingsValue + bankBalance);
 
-	let buyPercentage = $derived(
-		profileData?.stats && totalTradingVolume > 0
-			? (Number(profileData.stats.totalBuyVolume) / totalTradingVolume) * 100
-			: 0
-	);
-	let sellPercentage = $derived(
-		profileData?.stats && totalTradingVolume > 0
-			? (Number(profileData.stats.totalSellVolume) / totalTradingVolume) * 100
-			: 0
-	);
+	const totalBuyVolume = $derived(Number(profileData?.stats?.totalBuyVolume || 0));
+	const totalSellVolume = $derived(Number(profileData?.stats?.totalSellVolume || 0));
+	const totalTradingVolumeAllTime = $derived(totalBuyVolume + totalSellVolume);
 
-	let totalPortfolioValue = $derived(
-		profileData?.stats?.totalPortfolioValue ? Number(profileData.stats.totalPortfolioValue) : 0
-	);
-	let baseCurrencyBalance = $derived(
-		profileData?.stats?.baseCurrencyBalance ? Number(profileData.stats.baseCurrencyBalance) : 0
-	);
-	let holdingsValue = $derived(
-		profileData?.stats?.holdingsValue ? Number(profileData.stats.holdingsValue) : 0
-	);
-	let totalBuyVolume = $derived(
-		profileData?.stats?.totalBuyVolume ? Number(profileData.stats.totalBuyVolume) : 0
-	);
-	let totalSellVolume = $derived(
-		profileData?.stats?.totalSellVolume ? Number(profileData.stats.totalSellVolume) : 0
-	);
-	let buyVolume24h = $derived(
-		profileData?.stats?.buyVolume24h ? Number(profileData.stats.buyVolume24h) : 0
-	);
-	let sellVolume24h = $derived(
-		profileData?.stats?.sellVolume24h ? Number(profileData.stats.sellVolume24h) : 0
-	);
-
-	let totalTradingVolumeAllTime = $derived(totalBuyVolume + totalSellVolume);
-
-	let totalTradingVolume24h = $derived(buyVolume24h + sellVolume24h);
+	const buyVolume24h = $derived(Number(profileData?.stats?.buyVolume24h || 0));
+	const sellVolume24h = $derived(Number(profileData?.stats?.sellVolume24h || 0));
+	const totalTradingVolume24h = $derived(buyVolume24h + sellVolume24h);
 
 	const createdCoinsColumns = [
 		{
@@ -319,15 +318,8 @@
 			key: 'quantity',
 			label: 'Quantity',
 			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono text-sm',
-			render: (value: any, row: any) => {
-				if (
-					(row.isTransfer && value === 0) ||
-					((row.type === 'TRANSFER_IN' || row.type === 'TRANSFER_OUT') && value === 0)
-				) {
-					return '-';
-				}
-				return formatQuantity(parseFloat(value));
-			}
+			render: (value: any, row: any) =>
+				row.isTransfer && value === 0 ? '-' : formatQuantity(parseFloat(value))
 		},
 		{
 			key: 'totalBaseCurrencyAmount',
@@ -457,22 +449,17 @@
 				</Card.Content>
 			</Card.Root>
 
-			<!-- Buy/Sell Ratio -->
+			<!-- Bank Balance -->
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-muted-foreground text-sm font-medium">Buy/Sell Ratio</div>
-						<div class="flex gap-1">
-							<div class="bg-success h-2 w-2 rounded-full"></div>
-							<div class="h-2 w-2 rounded-full bg-red-500"></div>
-						</div>
+						<div class="text-muted-foreground text-sm font-medium">Bank Balance</div>
+						<PiggyBank class="text-muted-foreground h-4 w-4" />
 					</div>
-					<div class="mt-1 flex items-center gap-2">
-						<span class="text-success text-xl font-bold">{buyPercentage.toFixed(1)}%</span>
-						<span class="text-muted-foreground text-xs">buy</span>
-						<span class="text-xl font-bold text-red-600">{sellPercentage.toFixed(1)}%</span>
-						<span class="text-muted-foreground text-xs">sell</span>
+					<div class="mt-1 text-2xl font-bold">
+						{formatValue(bankBalance)}
 					</div>
+					<p class="text-muted-foreground text-xs">Savings</p>
 				</Card.Content>
 			</Card.Root>
 		</div>

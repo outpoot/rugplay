@@ -31,14 +31,14 @@
 
 	const { data } = $props();
 	let coinSymbol = $derived(data.coinSymbol);
-	let coin = $state<any>(null);
-	let loading = $state(true);
-	let chartData = $state<any[]>([]);
-	let volumeData = $state<any[]>([]);
+	let coin = $state(data.coin);
+	let loading = $state(false);
+	let chartData = $state(data.chartData);
+	let volumeData = $state(data.volumeData);
 	let userHolding = $state(0);
 	let buyModalOpen = $state(false);
 	let sellModalOpen = $state(false);
-	let selectedTimeframe = $state('1m');
+	let selectedTimeframe = $state(data.timeframe || '1m');
 	let lastPriceUpdateTime = 0;
 	let shouldSignIn = $state(false);
 
@@ -54,7 +54,6 @@
 	];
 
 	onMount(async () => {
-		await loadCoinData();
 		await loadUserHolding();
 
 		websocketController.setCoin(coinSymbol.toUpperCase());
@@ -92,6 +91,7 @@
 
 	async function loadCoinData() {
 		try {
+			loading = true;
 			const response = await fetch(`/api/coin/${coinSymbol}?timeframe=${selectedTimeframe}`);
 
 			if (!response.ok) {
@@ -274,7 +274,7 @@
 				1
 			);
 
-			const processedChartData = chartData.map((candle) => {
+			const processedChartData = chartData.map((candle: { open: any; close: any; high: number; low: number; }) => {
 				if (candle.open === candle.close) {
 					const basePrice = candle.open;
 					const variation = basePrice * 0.001;
@@ -361,15 +361,16 @@
 <SEO
 	title={coin
 		? `${coin.name} (*${coin.symbol}) - Rugplay`
-		: `Loading ${coinSymbol.toUpperCase()} - Rugplay Game`}
+		: `Loading ${coinSymbol.toUpperCase()} - Rugplay`}
 	description={coin
 		? `Trade ${coin.name} (*${coin.symbol}) in the Rugplay simulation game. Current price: $${formatPrice(coin.currentPrice)}, Market cap: ${formatMarketCap(coin.marketCap)}, 24h change: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%.`
 		: `Virtual cryptocurrency trading page for ${coinSymbol.toUpperCase()} in the Rugplay simulation game.`}
 	keywords={coin
 		? `${coin.name} cryptocurrency game, *${coin.symbol} virtual trading, ${coin.symbol} price simulation, cryptocurrency trading game, virtual coin ${coin.symbol}`
 		: `${coinSymbol} virtual cryptocurrency, crypto trading simulation, virtual coin trading`}
-	image={coin?.icon ? getPublicUrl(coin.icon) : '/rugplay.svg'}
+	image={coin?.icon ? getPublicUrl(coin.icon) : '/apple-touch-icon.png'}
 	imageAlt={coin ? `${coin.name} (${coin.symbol}) logo` : `${coinSymbol} cryptocurrency logo`}
+	twitterCard="summary"
 />
 
 <SignInConfirmDialog bind:open={shouldSignIn} />

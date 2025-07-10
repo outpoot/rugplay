@@ -1,7 +1,6 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Tabs from '$lib/components/ui/tabs';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -120,6 +119,13 @@
 			fetchQuestions();
 		}
 	});
+
+	// Custom tabs implementation
+	const tabs = [
+		{ value: 'active', label: 'Active' },
+		{ value: 'resolved', label: 'Resolved' },
+		{ value: 'all', label: 'All' }
+	];
 </script>
 
 <SEO
@@ -182,13 +188,23 @@
 		</div>
 	</header>
 
-	<Tabs.Root bind:value={activeTab} class="w-full">
+	<!-- Custom Tabs Implementation -->
+	<div class="w-full">
 		<div class="mb-6 flex items-center justify-center gap-2">
-			<Tabs.List class="grid w-full max-w-md grid-cols-3">
-				<Tabs.Trigger value="active">Active</Tabs.Trigger>
-				<Tabs.Trigger value="resolved">Resolved</Tabs.Trigger>
-				<Tabs.Trigger value="all">All</Tabs.Trigger>
-			</Tabs.List>
+			<!-- Custom Tabs List -->
+			<div class="bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]">
+				<div class="grid w-full max-w-md grid-cols-3">
+					{#each tabs as tab}
+						<button
+							onclick={() => activeTab = tab.value}
+							class="data-[state=active]:bg-background data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-sm font-medium transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm"
+							data-state={activeTab === tab.value ? 'active' : 'inactive'}
+						>
+							{tab.label}
+						</button>
+					{/each}
+				</div>
+			</div>
 			{#if $USER_DATA}
 				<Button onclick={handleCreateQuestion}>
 					<Plus class="h-4 w-4" />
@@ -197,7 +213,8 @@
 			{/if}
 		</div>
 
-		<Tabs.Content value={activeTab}>
+		<!-- Custom Tabs Content -->
+		<div class="flex-1 outline-none">
 			{#if loading}
 				<HopiumSkeleton />
 			{:else if questions.length === 0}
@@ -345,6 +362,6 @@
 					{/each}
 				</div>
 			{/if}
-		</Tabs.Content>
-	</Tabs.Root>
+		</div>
+	</div>
 </div>

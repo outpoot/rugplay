@@ -31,7 +31,7 @@ export function getTimeBasedGreeting(name: string): string {
 
 export function getPublicUrl(key: string | null): string | null {
     if (!key) return null;
-    return `${PUBLIC_B2_ENDPOINT}/${PUBLIC_B2_BUCKET}/${key}`;
+    return `/api/proxy/s3/${key}`;
 }
 
 export function debounce(func: (...args: any[]) => void, wait: number) {

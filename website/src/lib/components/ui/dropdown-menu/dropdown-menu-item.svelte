@@ -24,4 +24,6 @@
 		className
 	)}
 	{...restProps}
-/>
+>
+	{@render restProps.children?.()}
+</DropdownMenuPrimitive.Item>

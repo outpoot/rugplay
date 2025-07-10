@@ -20,15 +20,14 @@
 		Activity
 	} from 'lucide-svelte';
 	import { goto } from '$app/navigation';
-	import type { UserProfileData } from '$lib/types/user-profile';
 	import { USER_DATA } from '$lib/stores/user-data';
 
 	let { data } = $props();
 	let username = $derived(data.username);
 
-	let profileData = $state<UserProfileData | null>(null);
-	let recentTransactions = $state<any[]>([]);
-	let loading = $state(true);
+	let profileData = $state(data.profileData);
+	let recentTransactions = $state(data.recentTransactions);
+	let loading = $state(false);
 
 	let previousUsername = $state<string | null>(null);
 
@@ -37,8 +36,11 @@
 	);
 
 	onMount(async () => {
-		await fetchProfileData();
 		previousUsername = username;
+		
+		if (isOwnProfile) {
+			await fetchTransactions();
+		}
 	});
 
 	$effect(() => {
@@ -350,11 +352,12 @@
 		? `${profileData.profile.bio} - View ${profileData.profile.name}'s simulated trading activity and virtual portfolio in the Rugplay cryptocurrency simulation game.`
 		: `View @${username}'s profile and simulated trading activity in Rugplay - cryptocurrency trading simulation game platform.`}
 	type="profile"
-	image={profileData?.profile?.image ? getPublicUrl(profileData.profile.image) : '/rugplay.svg'}
+	image={profileData?.profile?.image ? getPublicUrl(profileData.profile.image) : '/apple-touch-icon.png'}
 	imageAlt={profileData?.profile?.name
 		? `${profileData.profile.name}'s profile picture`
 		: `@${username}'s profile`}
 	keywords="crypto trader profile game, virtual trading portfolio, cryptocurrency simulation game, user portfolio simulator"
+	twitterCard="summary"
 />
 
 <div class="container mx-auto max-w-6xl p-6">

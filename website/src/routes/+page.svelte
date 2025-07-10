@@ -76,7 +76,7 @@
 
 <SEO
 	title="Rugplay"
-	description="Experience realistic cryptocurrency trading simulation with AI-powered markets, rug pull mechanics, and virtual currencies. Learn crypto trading without financial risk in this educational trading game."
+	description="A realistic crypto trading simulator that lets you experience the risks and mechanics of decentralized exchanges without real financial consequences. Create coins, trade with liquidity pools, and learn about 'rug pulls' in a... relatively safe environment :)"
 	keywords="crypto simulation game, trading practice game, rug pull simulation, virtual cryptocurrency game"
 />
 

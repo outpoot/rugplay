@@ -6,12 +6,12 @@
 		ref = $bindable(null),
 		class: className,
 		...restProps
-	}: WithoutChildren<WithElementRef<HTMLAttributes<HTMLDivElement>>> = $props();
+	}: WithoutChildren<WithElementRef<HTMLAttributes<HTMLSpanElement>>> = $props();
 </script>
 
-<div
+<span
 	bind:this={ref}
 	data-slot="skeleton"
 	class={cn("bg-accent animate-pulse rounded-md", className)}
 	{...restProps}
-></div>
+></span>

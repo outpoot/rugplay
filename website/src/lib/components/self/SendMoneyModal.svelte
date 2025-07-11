@@ -23,7 +23,7 @@
 	let transferType = $state('CASH');
 	let amount = $state('');
 	let selectedCoinSymbol = $state('');
-	let loading = $state(false);
+	let loading = $state(false); // This is the 'loading' state for handleSend in SendMoneyModal
 
 	let numericAmount = $derived(parseFloat(amount) || 0);
 	let hasValidAmount = $derived(numericAmount > 0);
@@ -46,7 +46,7 @@
 	);
 
 	let hasEnoughFunds = $derived(
-		transferType === 'CASH'
+		transferType === 'CASH' // Corrected: use transferType, not generic 'type'
 			? numericAmount <= userBalance
 			: selectedCoinHolding
 				? numericAmount <= selectedCoinHolding.quantity
@@ -78,7 +78,7 @@
 
 	function setMaxAmount() {
 		if (transferType === 'CASH') {
-			amount = Math.max(maxAmount, 10).toString();
+			amount = Math.max(maxAmount, 10).toString(); // Ensure minimum of 10 if max is less
 		} else {
 			amount = maxAmount.toString();
 		}
@@ -89,9 +89,9 @@
 		if (value === 'CASH') {
 			selectedCoinSymbol = '';
 		} else if (coinHoldings.length > 0) {
-			selectedCoinSymbol = coinHoldings[0].symbol;
+			selectedCoinSymbol = coinHoldings[0].symbol; // Auto-select first coin if available
 		}
-		amount = '';
+		amount = ''; // Clear amount on type change
 	}
 
 	$effect(() => {
@@ -133,14 +133,14 @@
 					description: `Sent $${result.amount.toFixed(2)} to @${result.recipient}`
 				});
 			} else {
-				const estimatedValueForToast = estimatedValue;
+				const estimatedValueForToast = estimatedValue; // Use estimated value at time of send
 				toast.success('Coins sent successfully!', {
 					description: `Sent ${result.amount.toFixed(6)} ${result.coinSymbol} (≈$${estimatedValueForToast.toFixed(2)}) to @${result.recipient}`
 				});
 			}
 
-			onSuccess?.();
-			handleClose();
+			onSuccess?.(); // Call provided success callback
+			handleClose(); // Close modal and reset state
 		} catch (e) {
 			toast.error('Transfer failed', {
 				description: (e as Error).message

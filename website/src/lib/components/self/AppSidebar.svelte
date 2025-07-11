@@ -33,7 +33,8 @@
 		Info,
 		Bell,
 		Crown,
-		Key
+		Key,
+		Disc
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -41,7 +42,7 @@
 	import { PORTFOLIO_SUMMARY, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
 	import SignInConfirmDialog from './SignInConfirmDialog.svelte';
-	import DailyRewards from './DailyRewards.svelte';
+	import DailySpinDialog from './DailySpinDialog.svelte'; // Import the new dialog component
 	import PromoCodeDialog from './PromoCodeDialog.svelte';
 	import UserManualModal from './UserManualModal.svelte';
 	import { signOut } from '$lib/auth-client';
@@ -56,8 +57,9 @@
 			{ title: 'Home', url: '/', icon: Home },
 			{ title: 'Market', url: '/market', icon: Store },
 			{ title: 'Hopium', url: '/hopium', icon: TrendingUpDown },
-			{ title: 'Gambling', url: '/gambling', icon: PiggyBank },
+			{ title: 'Gambling', url: '/gambling', icon: Disc },
 			{ title: 'Leaderboard', url: '/leaderboard', icon: Trophy },
+			{ title: 'Bank', url: '/bank', icon: PiggyBank },
 			{ title: 'Portfolio', url: '/portfolio', icon: BriefcaseBusiness },
 			{ title: 'Treemap', url: '/treemap', icon: ChartColumn },
 			{ title: 'Create coin', url: '/coin/create', icon: Coins },
@@ -71,6 +73,7 @@
 	let shouldSignIn = $state(false);
 	let showPromoCode = $state(false);
 	let showUserManual = $state(false);
+	let showDailySpinDialog = $state(false); // State to control the Daily Spin dialog
 
 	onMount(() => {
 		if ($USER_DATA) {
@@ -164,11 +167,18 @@
 		goto('/api');
 		setOpenMobile(false);
 	}
+
+	function handleDailySpinClick() {
+		showDailySpinDialog = true;
+		setOpenMobile(false);
+	}
 </script>
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
 <PromoCodeDialog bind:open={showPromoCode} />
 <UserManualModal bind:open={showUserManual} />
+<DailySpinDialog bind:open={showDailySpinDialog} /> <!-- The new dialog -->
+
 <Sidebar.Root collapsible="offcanvas">
 	<Sidebar.Header>
 		<div class="flex items-center gap-2 px-2 py-2">
@@ -211,18 +221,22 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 
-		<!-- Daily Rewards -->
+		<!-- Daily Spin Trigger (moved from inline component) -->
 		{#if $USER_DATA}
 			<Sidebar.Group>
 				<Sidebar.GroupContent>
 					<div class="px-2 py-1">
-						{#if !$PORTFOLIO_SUMMARY}
-							<div class="space-y-2">
-								<Skeleton class="h-8 w-full rounded" />
-							</div>
-						{:else}
-							<DailyRewards />
-						{/if}
+						<Sidebar.MenuItem>
+							<Sidebar.MenuButton onclick={handleDailySpinClick}>
+								<Gift class="h-4 w-4" />
+								<span>Daily Spin</span>
+								{#if !($USER_DATA.lastRewardClaim && (Date.now() - new Date($USER_DATA.lastRewardClaim).getTime()) < (12 * 60 * 60 * 1000))}
+								<Sidebar.MenuBadge class="bg-green-500 text-white animate-pulse">
+									NEW
+								</Sidebar.MenuBadge>
+								{/if}
+							</Sidebar.MenuButton>
+						</Sidebar.MenuItem>
 					</div>
 				</Sidebar.GroupContent>
 			</Sidebar.Group>
@@ -380,7 +394,7 @@
 				<Sidebar.MenuItem>
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger>
-							{#snippet child({ props })}
+							{#snippet child({ props }: { props: MenuButtonProps })}
 								<Sidebar.MenuButton
 									size="lg"
 									class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"

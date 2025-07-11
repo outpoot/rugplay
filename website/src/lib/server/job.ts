@@ -120,6 +120,7 @@ export async function resolveExpiredQuestions() {
                                 'HOPIUM',
                                 title,
                                 message,
+                                `/hopium/${question.id}`
                             );
                         }
                     });
@@ -219,6 +220,7 @@ export async function resolveExpiredQuestions() {
                             'HOPIUM',
                             title,
                             message,
+                            `/hopium/${question.id}`
                         );
                     }
                 });

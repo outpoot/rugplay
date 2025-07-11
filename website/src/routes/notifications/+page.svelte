@@ -16,6 +16,7 @@
 	import { formatTimeAgo, formatValue } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
+	import NotificationItem from './NotificationItem.svelte';
 
 	let loading = $state(true);
 	let newNotificationIds = $state<number[]>([]);
@@ -132,13 +133,7 @@
 						{#each $NOTIFICATIONS as notification, index (notification.id)}
 							{@const IconComponent = getNotificationIcon(notification.type)}
 							{@const isNewNotification = newNotificationIds.includes(notification.id)}
-							<button
-								class={getNotificationColorClasses(
-									notification.type,
-									isNewNotification,
-									notification.isRead
-								)}
-							>
+							<NotificationItem {notification} isNew={isNewNotification}>
 								<div
 									class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full {getNotificationIconColorClasses(
 										notification.type
@@ -146,7 +141,6 @@
 								>
 									<IconComponent class="h-4 w-4" />
 								</div>
-
 								<div class="min-w-0 flex-1">
 									<div class="mb-1 flex items-center gap-2">
 										<h3 class="truncate text-sm font-medium">{notification.title}</h3>
@@ -188,7 +182,7 @@
 										{formatTimeAgo(notification.createdAt)}
 									</p>
 								</div>
-							</button>
+							</NotificationItem>
 
 							{#if index < $NOTIFICATIONS.length - 1}
 								<Separator />

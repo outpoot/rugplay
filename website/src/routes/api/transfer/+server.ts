@@ -131,6 +131,7 @@ export const POST: RequestHandler = async ({ request }) => {
                         'TRANSFER',
                         'Money received!',
                         `You received ${formatValue(amount)} from @${senderData.username}`,
+                        `/user/${senderData.id}`
                     );
                 })();
 
@@ -264,6 +265,7 @@ export const POST: RequestHandler = async ({ request }) => {
                         'TRANSFER',
                         'Coins received!',
                         `You received ${amount.toFixed(6)} *${coinData.symbol} from @${senderData.username}`,
+                        `/coin/${normalizedSymbol}`
                     );
                 })();
 

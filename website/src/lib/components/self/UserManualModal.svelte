@@ -205,11 +205,12 @@
 			<div class="flex items-center justify-center gap-2">
 				{#each tips as _, index}
 					<button
+						aria-label={`Go to page ${index + 1}`}
 						onclick={() => goToPage(index)}
 						class="h-2 w-2 rounded-full transition-colors {index === currentPage
 							? 'bg-primary'
 							: 'bg-muted-foreground/30 hover:bg-muted-foreground/50'}"
-					/>
+					></button>
 				{/each}
 			</div>
 		</div>

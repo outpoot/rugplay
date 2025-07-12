@@ -1,10 +1,6 @@
 #!/bin/bash
-set -e
-
-cd "$(dirname "$0")"
 
 echo "🚀 Starting Rugplay deployment..."
-
 echo "📥 Pulling latest changes..."
 git pull
 

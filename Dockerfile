@@ -17,7 +17,9 @@ RUN apt-get update -qq && \
 FROM base-node AS build-main
 # Copy package files
 COPY website/package.json website/package-lock.json* ./
+RUN rm -rf node_modules
 RUN npm install --include=dev
+RUN npm rebuild
 COPY website/. ./
 RUN npm run build
 

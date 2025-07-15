@@ -1,23 +1,27 @@
 // src/lib/auth.ts (or your auth config file)
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { env } from '$env/dynamic/private';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 import { db } from "./server/db";
 import * as schema from "./server/db/schema";
 import { generateUsername } from "./utils/random";
 import { uploadProfilePicture } from "./server/s3";
 import { apiKey } from "better-auth/plugins";
 
-if (!env.GOOGLE_CLIENT_ID) throw new Error('GOOGLE_CLIENT_ID is not set');
-if (!env.GOOGLE_CLIENT_SECRET) throw new Error('GOOGLE_CLIENT_SECRET is not set');
+if (!privateEnv.GOOGLE_CLIENT_ID) throw new Error('GOOGLE_CLIENT_ID is not set');
+if (!privateEnv.GOOGLE_CLIENT_SECRET) throw new Error('GOOGLE_CLIENT_SECRET is not set');
+if (!publicEnv.PUBLIC_BETTER_AUTH_URL) throw new Error('PUBLIC_BETTER_AUTH_URL is not set');
 
 export const auth = betterAuth({
-    baseURL: env.PUBLIC_BETTER_AUTH_URL,
-    secret: env.PRIVATE_BETTER_AUTH_SECRET,
+    baseURL: publicEnv.PUBLIC_BETTER_AUTH_URL,
+    secret: privateEnv.PRIVATE_BETTER_AUTH_SECRET,
     appName: "Rugplay",
 
     trustedOrigins: [
-        env.BETTER_AUTH_URL, "http://rugplay.com", "http://localhost:5173",
+        publicEnv.PUBLIC_BETTER_AUTH_URL,
+        "http://rugplay.com",
+        "http://localhost:5173",
     ],
 
     plugins: [
@@ -41,8 +45,8 @@ export const auth = betterAuth({
     }),
     socialProviders: {
         google: {
-            clientId: env.GOOGLE_CLIENT_ID,
-            clientSecret: env.GOOGLE_CLIENT_SECRET,
+            clientId: privateEnv.GOOGLE_CLIENT_ID,
+            clientSecret: privateEnv.GOOGLE_CLIENT_SECRET,
             mapProfileToUser: async (profile) => {
                 const newUsername = generateUsername();
                 let s3ImageKey: string | null = null;
@@ -78,7 +82,7 @@ export const auth = betterAuth({
     user: {
         additionalFields: {
             username: { type: "string", required: true, input: false },
-            isAdmin: { type: "boolean", required: false, input: false },
+            isAdmin: { type: "boolean", required: true, input: false },
             isBanned: { type: "boolean", required: false, input: false },
             banReason: { type: "string", required: false, input: false },
             baseCurrencyBalance: { type: "string", required: false, input: false },

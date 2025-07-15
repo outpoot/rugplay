@@ -197,6 +197,7 @@ function handleWebSocketMessage(event: MessageEvent): void {
                     type: message.notificationType,
                     title: message.title,
                     message: message.message,
+                    link: message.link,
                     isRead: false,
                     createdAt: message.timestamp,
                     data: message.amount ? { amount: message.amount } : null

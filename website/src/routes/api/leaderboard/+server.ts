@@ -1,9 +1,9 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, transaction, userPortfolio, coin } from '$lib/server/db/schema';
-import { eq, desc, gte, and, sql, inArray } from 'drizzle-orm';
+import { eq, desc, gte, and, sql, inArray, ilike, count } from 'drizzle-orm';
 
-export async function GET() {
+async function getLeaderboardData() {
     try {
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -191,4 +191,54 @@ export async function GET() {
             paperMillionaires: []
         });
     }
+}
+
+async function getSearchedUsers(query: string, limit = 9, offset = 0) {
+    try {
+        const results = await db.select({
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            image: user.image,
+            bio: user.bio,
+            baseCurrencyBalance: user.baseCurrencyBalance,
+            coinValue: sql<number>`COALESCE(SUM(CAST(${userPortfolio.quantity} AS NUMERIC) * CAST(${coin.currentPrice} AS NUMERIC)), 0)`,
+            totalPortfolioValue: sql<number>`CAST(${user.baseCurrencyBalance} AS NUMERIC) + COALESCE(SUM(CAST(${userPortfolio.quantity} AS NUMERIC) * CAST(${coin.currentPrice} AS NUMERIC)), 0)`,
+            createdAt: user.createdAt
+        }).from(user)
+            .leftJoin(userPortfolio, eq(userPortfolio.userId, user.id))
+            .leftJoin(coin, eq(coin.id, userPortfolio.coinId))
+            .groupBy(user.id, user.name, user.username, user.image, user.bio, user.baseCurrencyBalance)
+            .where(ilike(user.username, `%${query}%`))
+            .orderBy(desc(user.username))
+            .limit(limit)
+            .offset(offset);
+
+        const total = await db.select({ count: count() }).from(user).where(ilike(user.username, `%${query}%`)).limit(1);
+
+        return {
+            results,
+            total: total[0].count
+        }
+    } catch (error) {
+        return {
+            results: [],
+            total: 0
+        }
+    }
+}
+
+export async function GET({ url }) {
+    const query = url.searchParams.get('search');
+
+    if(query?.trim() !== '' && query !== null) {
+        const limit = parseInt(url.searchParams.get('limit') || '9');
+        const offset = parseInt(url.searchParams.get('offset') || '0');
+
+        let users = await getSearchedUsers(query, limit, offset);
+
+        return json(users);
+    }
+
+    return await getLeaderboardData();
 }

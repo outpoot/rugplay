@@ -94,6 +94,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             type: 'SYSTEM',
             title: `${prestigeName} Achieved!`,
             message: `Congratulations! You have successfully reached ${prestigeName}. Your portfolio has been reset, daily reward cooldown has been cleared, and you can now start fresh with your new prestige badge and enhanced daily rewards.`,
+            link: `/user/${userId}`
         });
 
         return json({

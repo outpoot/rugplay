@@ -63,6 +63,8 @@ export function formatPrice(price: number): string {
 export function formatValue(value: number | string): string {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     if (typeof numValue !== 'number' || isNaN(numValue)) return '$0.00';
+
+    if (numValue >= 1e12) return `$${(numValue / 1e12).toFixed(2)}T`;
     if (numValue >= 1e9) return `$${(numValue / 1e9).toFixed(2)}B`;
     if (numValue >= 1e6) return `$${(numValue / 1e6).toFixed(2)}M`;
     if (numValue >= 1e3) return `$${(numValue / 1e3).toFixed(2)}K`;

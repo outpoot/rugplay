@@ -9,6 +9,8 @@ import { redis, } from '$lib/server/redis';
 import { getSessionKey } from '$lib/server/games/mines';
 
 export const POST: RequestHandler = async ({ request }) => {
+    throw error(503, 'Service temporarily unavailable');
+
     const session = await auth.api.getSession({
         headers: request.headers
     });
@@ -40,7 +42,7 @@ export const POST: RequestHandler = async ({ request }) => {
         if (game.minePositions.includes(tileIndex)) {
             game.status = 'lost';
             const minePositions = game.minePositions;
-        
+
             const userId = Number(session.user.id);
             const [userData] = await db
                 .select({ baseCurrencyBalance: user.baseCurrencyBalance })
@@ -58,9 +60,9 @@ export const POST: RequestHandler = async ({ request }) => {
                     updatedAt: new Date()
                 })
                 .where(eq(user.id, userId));
-        
+
             await redis.del(getSessionKey(sessionToken));
-        
+
             return json({
                 hitMine: true,
                 minePositions,

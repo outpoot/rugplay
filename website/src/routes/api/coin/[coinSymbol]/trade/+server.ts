@@ -354,6 +354,7 @@ export async function POST({ params, request }) {
                                 'RUG_PULL',
                                 'Coin rugpulled!',
                                 `A coin you owned, ${coinData.name} (*${normalizedSymbol}), crashed ${Math.abs(priceImpact).toFixed(1)}%!`,
+                                `/coin/${normalizedSymbol}`
                             );
                         }
                     }

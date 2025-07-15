@@ -8,6 +8,8 @@ import { getSessionKey } from '$lib/server/games/mines';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
+    throw error(503, 'Service temporarily unavailable');
+
     const session = await auth.api.getSession({
         headers: request.headers
     });
@@ -51,7 +53,7 @@ export const POST: RequestHandler = async ({ request }) => {
             }
 
             // transaction token for authentication stuff
-            const randomBytes = new Uint8Array(8); 
+            const randomBytes = new Uint8Array(8);
             crypto.getRandomValues(randomBytes);
             const sessionToken = Array.from(randomBytes)
                 .map(b => b.toString(16).padStart(2, '0'))
@@ -85,7 +87,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 })
                 .where(eq(user.id, userId));
 
-            return { 
+            return {
                 sessionToken,
                 newBalance
             };

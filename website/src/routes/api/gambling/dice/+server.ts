@@ -3,7 +3,7 @@ import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { randomBytes } from 'crypto';
+import { randomInt } from 'crypto';
 import type { RequestHandler } from './$types';
 
 interface DiceRequest {
@@ -54,7 +54,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 throw new Error(`Insufficient funds. You need *${roundedAmount.toFixed(2)} but only have *${roundedBalance.toFixed(2)}`);
             }
 
-            const gameResult = Math.floor(randomBytes(1)[0] / 42.67) + 1; // This gives us a number between 1-6
+            const gameResult = randomInt(1, 6);
             const won = gameResult === selectedNumber;
 
             const multiplier = 3;

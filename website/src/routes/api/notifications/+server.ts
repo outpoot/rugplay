@@ -25,6 +25,7 @@ export const GET: RequestHandler = async ({ url, request }) => {
             type: notifications.type,
             title: notifications.title,
             message: notifications.message,
+            link: notifications.link,
             isRead: notifications.isRead,
             createdAt: notifications.createdAt,
         })

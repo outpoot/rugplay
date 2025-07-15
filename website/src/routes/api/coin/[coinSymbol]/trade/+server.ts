@@ -348,9 +348,8 @@ export async function POST({ params, request }) {
                     for (const holder of affectedUsers) {
                         if (holder.userId === userId) continue;
                         
-                        const holdingValue = Number(holder.quantity) * newPrice;
+                        const holdingValue = AMMSell(newPoolCoin, newPoolBaseCurrency, Number(holder.quantity))
                         if (holdingValue > 10) {
-                            const lossAmount = Number(holder.quantity) * (currentPrice - newPrice);
                             await createNotification(
                                 holder.userId.toString(),
                                 'RUG_PULL',

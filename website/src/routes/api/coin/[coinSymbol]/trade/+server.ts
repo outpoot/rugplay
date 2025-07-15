@@ -5,44 +5,7 @@ import { coin, userPortfolio, user, transaction, priceHistory } from '$lib/serve
 import { eq, and, gte } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { createNotification } from '$lib/server/notification';
-import { AMMBuy, AMMSell } from '$lib/server/amm.js';
-
-async function calculate24hMetrics(coinId: number, currentPrice: number) {
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    // Get price from 24h ago
-    const [priceData] = await db
-        .select({ price: priceHistory.price })
-        .from(priceHistory)
-        .where(and(
-            eq(priceHistory.coinId, coinId),
-            gte(priceHistory.timestamp, twentyFourHoursAgo)
-        ))
-        .orderBy(priceHistory.timestamp)
-        .limit(1);
-
-    // Calculate 24h change
-    let change24h = 0;
-    if (priceData) {
-        const priceFrom24hAgo = Number(priceData.price);
-        if (priceFrom24hAgo > 0) {
-            change24h = ((currentPrice - priceFrom24hAgo) / priceFrom24hAgo) * 100;
-        }
-    }
-
-    // Calculate 24h volume
-    const volumeData = await db
-        .select({ totalBaseCurrencyAmount: transaction.totalBaseCurrencyAmount })
-        .from(transaction)
-        .where(and(
-            eq(transaction.coinId, coinId),
-            gte(transaction.timestamp, twentyFourHoursAgo)
-        ));
-
-    const volume24h = volumeData.reduce((sum, tx) => sum + Number(tx.totalBaseCurrencyAmount), 0);
-
-    return { change24h: Number(change24h.toFixed(4)), volume24h: Number(volume24h.toFixed(4)) };
-}
+import { calculate24hMetrics, executeSellTrade, AMMBuy } from '$lib/server/amm';
 
 export async function POST({ params, request }) {
     const session = await auth.api.getSession({
@@ -256,23 +219,20 @@ export async function POST({ params, request }) {
             }
 
             // Allow more aggressive selling for rug pull simulation - prevent only mathematical breakdown
-            const maxSellable = Math.floor(poolCoinAmount * 0.995);
+            const maxSellable = Math.floor(Number(coinData.poolCoinAmount) * 0.995);
             if (amount > maxSellable) {
                 throw error(400, `Cannot sell more than 99.5% of pool tokens. Max sellable: ${maxSellable} tokens`);
             }
 
-            const k = poolCoinAmount * poolBaseCurrencyAmount;
-            const newPoolCoin = poolCoinAmount + amount;
-            const newPoolBaseCurrency = k / newPoolCoin;
-            const baseCurrencyReceived = AMMSell(poolCoinAmount, poolBaseCurrencyAmount, amount);
+            const sellResult = await executeSellTrade(tx, coinData, userId, amount);
 
-            totalCost = baseCurrencyReceived;
-            newPrice = newPoolBaseCurrency / newPoolCoin;
-            priceImpact = ((newPrice - currentPrice) / currentPrice) * 100;
-
-            if (newPoolBaseCurrency < 10) {
-                throw error(400, `Trade would drain pool below minimum liquidity (*10 BUSS). Try selling fewer tokens.`);
+            if (!sellResult.success) {
+                throw error(400, 'Trade failed - insufficient liquidity or invalid parameters');
             }
+
+            totalCost = sellResult.baseCurrencyReceived ?? 0;
+            newPrice = sellResult.newPrice;
+            priceImpact = sellResult.priceImpact;
 
             if (totalCost <= 0) {
                 throw error(400, 'Trade amount results in zero base currency received');
@@ -304,71 +264,15 @@ export async function POST({ params, request }) {
                     ));
             }
 
-            await tx.insert(transaction).values({
-                userId,
-                coinId: coinData.id,
-                type: 'SELL',
-                quantity: amount.toString(),
-                pricePerCoin: (totalCost / amount).toString(),
-                totalBaseCurrencyAmount: totalCost.toString()
-            });
-
-            await tx.insert(priceHistory).values({
-                coinId: coinData.id,
-                price: newPrice.toString()
-            });
-
-            const metrics = await calculate24hMetrics(coinData.id, newPrice);
-
-            await tx.update(coin)
-                .set({
-                    currentPrice: newPrice.toString(),
-                    marketCap: (Number(coinData.circulatingSupply) * newPrice).toString(),
-                    poolCoinAmount: newPoolCoin.toString(),
-                    poolBaseCurrencyAmount: newPoolBaseCurrency.toString(),
-                    change24h: metrics.change24h.toString(),
-                    volume24h: metrics.volume24h.toString(),
-                    updatedAt: new Date()
-                })
-                .where(eq(coin.id, coinData.id));
-
-            const isRugPull = priceImpact < -20 && totalCost > 1000;
-
-            // Send rug pull notifications to affected users
-            if (isRugPull) {
-                (async () => {
-                    const affectedUsers = await db
-                        .select({
-                            userId: userPortfolio.userId,
-                            quantity: userPortfolio.quantity
-                        })
-                        .from(userPortfolio)
-                        .where(eq(userPortfolio.coinId, coinData.id));
-
-                    for (const holder of affectedUsers) {
-                        if (holder.userId === userId) continue;
-                        
-                        const holdingValue = AMMSell(newPoolCoin, newPoolBaseCurrency, Number(holder.quantity))
-                        if (holdingValue > 10) {
-                            await createNotification(
-                                holder.userId.toString(),
-                                'RUG_PULL',
-                                'Coin rugpulled!',
-                                `A coin you owned, ${coinData.name} (*${normalizedSymbol}), crashed ${Math.abs(priceImpact).toFixed(1)}%!`,
-                                `/coin/${normalizedSymbol}`
-                            );
-                        }
-                    }
-                })();
-            }
+            const metrics = sellResult.metrics || await calculate24hMetrics(coinData.id, newPrice);
 
             const priceUpdateData = {
                 currentPrice: newPrice,
                 marketCap: Number(coinData.circulatingSupply) * newPrice,
                 change24h: metrics.change24h,
                 volume24h: metrics.volume24h,
-                poolCoinAmount: newPoolCoin,
-                poolBaseCurrencyAmount: newPoolBaseCurrency
+                poolCoinAmount: sellResult.newPoolCoin,
+                poolBaseCurrencyAmount: sellResult.newPoolBaseCurrency
             };
 
             const tradeData = {

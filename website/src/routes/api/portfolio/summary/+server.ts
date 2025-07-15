@@ -1,6 +1,7 @@
 import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
+import { AMMSell } from '$lib/server/amm';
 import { user, userPortfolio, coin } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 
@@ -40,11 +41,7 @@ export async function GET({ request }) {
         const poolCoinAmount = Number(holding.poolCoinAmount);
         const poolBaseCurrencyAmount = Number(holding.poolBaseCurrencyAmount);
 
-        // AMM SELL
-        const k = poolCoinAmount * poolBaseCurrencyAmount;
-        const newPoolCoin = poolCoinAmount + quantity;
-        const newPoolBaseCurrency = k / newPoolCoin;
-        const baseCurrencyReceived = poolBaseCurrencyAmount - newPoolBaseCurrency;
+        const baseCurrencyReceived = AMMSell(poolCoinAmount, poolBaseCurrencyAmount, quantity);
 
         totalCoinValue += baseCurrencyReceived;
     }

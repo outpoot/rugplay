@@ -5,6 +5,7 @@ import { coin, userPortfolio, user, transaction, priceHistory } from '$lib/serve
 import { eq, and, gte } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { createNotification } from '$lib/server/notification';
+import { AMMBuy, AMMSell } from '$lib/server/amm.js';
 
 async function calculate24hMetrics(coinId: number, currentPrice: number) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -114,10 +115,11 @@ export async function POST({ params, request }) {
             const k = poolCoinAmount * poolBaseCurrencyAmount;
             const newPoolBaseCurrency = poolBaseCurrencyAmount + amount;
             const newPoolCoin = k / newPoolBaseCurrency;
-            const coinsBought = poolCoinAmount - newPoolCoin;
+            newPrice = newPoolBaseCurrency / newPoolCoin;
+
+            const coinsBought = AMMBuy(poolCoinAmount, poolBaseCurrencyAmount, amount);
 
             totalCost = amount;
-            newPrice = newPoolBaseCurrency / newPoolCoin;
             priceImpact = ((newPrice - currentPrice) / currentPrice) * 100;
 
             if (userBalance < totalCost) {
@@ -262,7 +264,7 @@ export async function POST({ params, request }) {
             const k = poolCoinAmount * poolBaseCurrencyAmount;
             const newPoolCoin = poolCoinAmount + amount;
             const newPoolBaseCurrency = k / newPoolCoin;
-            const baseCurrencyReceived = poolBaseCurrencyAmount - newPoolBaseCurrency;
+            const baseCurrencyReceived = AMMSell(poolCoinAmount, poolBaseCurrencyAmount, amount);
 
             totalCost = baseCurrencyReceived;
             newPrice = newPoolBaseCurrency / newPoolCoin;

@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
+import { AMMSell } from '$lib/server/amm';
 import { user, transaction, userPortfolio, coin } from '$lib/server/db/schema';
 import { eq, desc, gte, and, sql, inArray, ilike, count } from 'drizzle-orm';
 
@@ -93,11 +94,8 @@ async function getLeaderboardData() {
                 if (quantity > 0) {
                     const poolCoinAmount = coinPoolCoinAmount.get(coinId);
                     const poolBaseCurrencyAmount = coinPoolBaseCurrencyAmount.get(coinId);
-                    // AMM SELL
-                    const k = poolCoinAmount * poolBaseCurrencyAmount;
-                    const newPoolCoin = poolCoinAmount + quantity;
-                    const newPoolBaseCurrency = k / newPoolCoin;
-                    const baseCurrencyReceived = poolBaseCurrencyAmount - newPoolBaseCurrency;
+                    
+                    const baseCurrencyReceived = AMMSell(poolCoinAmount, poolBaseCurrencyAmount, quantity);
 
                     currentHoldingsValue += baseCurrencyReceived;
                 }

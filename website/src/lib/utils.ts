@@ -117,11 +117,11 @@ export function formatRelativeTime(timestamp: string | Date): string {
     const days = Math.floor(hours / 24);
 
     if (seconds < 60) return `${seconds}s`;
-    if (minutes < 60) return `${minutes}m`;
+    if (minutes < 60) return `${minutes}min`;
 
     if (hours < 24) {
         const extraMinutes = minutes % 60;
-        return extraMinutes === 0 ? `${hours}hr` : `${hours}hr ${extraMinutes}m`;
+        return extraMinutes === 0 ? `${hours}h` : `${hours}h ${extraMinutes}min`;
     }
 
     if (days < 7) return `${days}d`;
@@ -135,7 +135,7 @@ export function formatRelativeTime(timestamp: string | Date): string {
     if (adjustedMonths < 1) {
         const weeks = Math.floor(days / 7);
         const extraDays = days % 7;
-        return extraDays === 0 ? `${weeks}w` : `${weeks}w ${extraDays}d`;
+        return extraDays === 0 ? `${weeks}wk` : `${weeks}wk ${extraDays}d`;
     }
 
     if (years < 1) {
@@ -143,11 +143,11 @@ export function formatRelativeTime(timestamp: string | Date): string {
         tempDate.setMonth(tempDate.getMonth() + adjustedMonths);
         const remainingDays = Math.floor((now.getTime() - tempDate.getTime()) / (1000 * 60 * 60 * 24));
         const weeks = Math.floor(remainingDays / 7);
-        return weeks === 0 ? `${adjustedMonths}m` : `${adjustedMonths}m ${weeks}w`;
+        return weeks === 0 ? `${adjustedMonths}mo` : `${adjustedMonths}mo ${weeks}wk`;
     }
 
     const remainingMonths = adjustedMonths % 12;
-    return remainingMonths === 0 ? `${years}y` : `${years}y ${remainingMonths}m`;
+    return remainingMonths === 0 ? `${years}y` : `${years}y ${remainingMonths}mo`;
 }
 
 export function formatTimeAgo(date: string) {
@@ -159,7 +159,7 @@ export function formatTimeAgo(date: string) {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffMins < 60) return `${diffMins}min ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     return `${diffDays}d ago`;
 }
@@ -169,9 +169,9 @@ export function formatTimeRemaining(timeMs: number): string {
     const minutes = Math.floor((timeMs % (60 * 60 * 1000)) / (60 * 1000));
 
     if (hours > 0) {
-        return `${hours}h ${minutes}m`;
+        return `${hours}h ${minutes}min`;
     }
-    return `${minutes}m`;
+    return `${minutes}min`;
 }
 
 export function formatTimeUntil(date: Date | string | number): string {
@@ -185,8 +185,8 @@ export function formatTimeUntil(date: Date | string | number): string {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (diff < 60000) return 'less than 1m';
-    if (minutes < 60) return `${minutes}m`;
+    if (diff < 60000) return 'less than 1min';
+    if (minutes < 60) return `${minutes}min`;
     if (hours < 24) return `${hours}h`;
     return `${days}d`;
 }
@@ -213,11 +213,11 @@ export function getExpirationDate(option: string): string | null {
 
 export function getTimeframeInSeconds(timeframe: string): number {
     switch (timeframe) {
-        case '1m':
+        case '1min':
             return 60;
-        case '5m':
+        case '5min':
             return 300;
-        case '15m':
+        case '15min':
             return 900;
         case '1h':
             return 3600;

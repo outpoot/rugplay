@@ -43,6 +43,8 @@
 	let shouldSignIn = $state(false);
 
 	let previousCoinSymbol = $state<string | null>(null);
+	let countdown = $state<number | null>(null);
+	let countdownInterval = $state<NodeJS.Timeout | null>(null);
 
 	const timeframeOptions = [
 		{ value: '1m', label: '1 minute' },
@@ -87,6 +89,41 @@
 				previousCoinSymbol = coinSymbol;
 			});
 		}
+	});
+
+	$effect(() => {
+		if (coin?.isLocked && coin?.tradingUnlocksAt) {
+			const unlockTime = new Date(coin.tradingUnlocksAt).getTime();
+			
+			const updateCountdown = () => {
+				const now = Date.now();
+				const remaining = Math.max(0, Math.ceil((unlockTime - now) / 1000));
+				countdown = remaining;
+				
+				if (remaining === 0 && countdownInterval) {
+					clearInterval(countdownInterval);
+					countdownInterval = null;
+					if (coin) {
+						coin = { ...coin, isLocked: false };
+					}
+				}
+			};
+			
+			updateCountdown();
+			countdownInterval = setInterval(updateCountdown, 1000);
+		} else {
+			countdown = null;
+			if (countdownInterval) {
+				clearInterval(countdownInterval);
+				countdownInterval = null;
+			}
+		}
+		
+		return () => {
+			if (countdownInterval) {
+				clearInterval(countdownInterval);
+			}
+		};
 	});
 
 	async function loadCoinData() {
@@ -356,6 +393,17 @@
 			};
 		});
 	}
+
+	function formatCountdown(seconds: number): string {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins}:${secs.toString().padStart(2, '0')}`;
+	}
+
+	let isCreator = $derived(coin && $USER_DATA && coin.creatorId === Number($USER_DATA.id));
+	let isTradingLocked = $derived(coin?.isLocked && countdown !== null && countdown > 0);
+	let canTrade = $derived(!isTradingLocked || isCreator);
+
 </script>
 
 <SEO
@@ -417,6 +465,11 @@
 									class="animate-pulse border-green-500 text-xs text-green-500"
 								>
 									● LIVE
+								</Badge>
+							{/if}
+							{#if isTradingLocked}
+								<Badge variant="secondary" class="text-xs">
+									🔒 LOCKED {countdown !== null ? formatCountdown(countdown) : ''}
 								</Badge>
 							{/if}
 							{#if !coin.isListed}
@@ -529,6 +582,15 @@
 									{coin.symbol}
 								</p>
 							{/if}
+							{#if isTradingLocked}
+								<p class="text-muted-foreground text-sm">
+									{#if isCreator}
+										🔒 Creator-only period: {countdown !== null ? formatCountdown(countdown) : ''} remaining
+									{:else}
+										🔒 Trading unlocks in: {countdown !== null ? formatCountdown(countdown) : ''}
+									{/if}
+								</p>
+							{/if}
 						</Card.Header>
 						<Card.Content>
 							{#if $USER_DATA}
@@ -538,7 +600,7 @@
 										variant="default"
 										size="lg"
 										onclick={() => (buyModalOpen = true)}
-										disabled={!coin.isListed}
+										disabled={!coin.isListed || !canTrade}
 									>
 										<TrendingUp class="h-4 w-4" />
 										Buy {coin.symbol}
@@ -548,7 +610,7 @@
 										variant="outline"
 										size="lg"
 										onclick={() => (sellModalOpen = true)}
-										disabled={!coin.isListed || userHolding <= 0}
+										disabled={!coin.isListed || userHolding <= 0 || !canTrade}
 									>
 										<TrendingDown class="h-4 w-4" />
 										Sell {coin.symbol}

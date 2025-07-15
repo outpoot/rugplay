@@ -40,7 +40,20 @@ export async function POST({ params, request }) {
     }
 
     return await db.transaction(async (tx) => {
-        const [coinData] = await tx.select().from(coin).where(eq(coin.symbol, normalizedSymbol)).for('update').limit(1);
+        const [coinData] = await tx.select({
+            id: coin.id,
+            symbol: coin.symbol,
+            name: coin.name,
+            icon: coin.icon,
+            currentPrice: coin.currentPrice,
+            poolCoinAmount: coin.poolCoinAmount,
+            poolBaseCurrencyAmount: coin.poolBaseCurrencyAmount,
+            circulatingSupply: coin.circulatingSupply,
+            isListed: coin.isListed,
+            creatorId: coin.creatorId,
+            tradingUnlocksAt: coin.tradingUnlocksAt,
+            isLocked: coin.isLocked
+        }).from(coin).where(eq(coin.symbol, normalizedSymbol)).for('update').limit(1);
 
         if (!coinData) {
             throw error(404, 'Coin not found');
@@ -48,6 +61,18 @@ export async function POST({ params, request }) {
 
         if (!coinData.isListed) {
             throw error(400, 'This coin is delisted and cannot be traded');
+        }
+
+        if (coinData.isLocked && coinData.tradingUnlocksAt && userId !== coinData.creatorId) {
+            const unlockTime = new Date(coinData.tradingUnlocksAt);
+            if (new Date() < unlockTime) {
+                const remainingSeconds = Math.ceil((unlockTime.getTime() - Date.now()) / 1000);
+                throw error(400, `Trading is locked. Unlocks in ${remainingSeconds} seconds.`);
+            }
+            
+            await tx.update(coin)
+                .set({ isLocked: false })
+                .where(eq(coin.id, coinData.id));
         }
 
         const [userData] = await tx.select({

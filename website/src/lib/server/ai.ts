@@ -3,7 +3,7 @@ import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { OPENROUTER_API_KEY } from '$env/static/private';
 import { db } from './db';
-import { coin, user, transaction } from './db/schema';
+import { coin, user, transaction, priceHistory } from './db/schema';
 import { eq, desc, sql, gte } from 'drizzle-orm';
 
 if (!OPENROUTER_API_KEY) {
@@ -88,7 +88,14 @@ async function getCoinData(coinSymbol: string) {
             return null;
         }
 
-        // Get recent trading activity for this coin
+        const [priceStats] = await db
+            .select({
+                maxPrice: sql<number>`MAX(CAST(${priceHistory.price} AS NUMERIC))`,
+                minPrice: sql<number>`MIN(CAST(${priceHistory.price} AS NUMERIC))`,
+            })
+            .from(priceHistory)
+            .where(eq(priceHistory.coinId, coinData.id));
+
         const recentTrades = await db
             .select({
                 type: transaction.type,
@@ -113,6 +120,10 @@ async function getCoinData(coinSymbol: string) {
             poolCoinAmount: Number(coinData.poolCoinAmount),
             poolBaseCurrencyAmount: Number(coinData.poolBaseCurrencyAmount),
             circulatingSupply: Number(coinData.circulatingSupply),
+            pricing: {
+                peak: Number(priceStats?.maxPrice || 0),
+                lowest: Number(priceStats?.minPrice || 0),
+            },
             recentTrades: recentTrades.map(trade => ({
                 ...trade,
                 quantity: Number(trade.quantity),
@@ -419,6 +430,8 @@ export async function getRugplayData(question?: string): Promise<string> {
                         return `
 *${coin.symbol} (${coin.name}):
 - Current Price: $${coin.currentPrice.toFixed(8)}
+- Peak Price: $${coin.pricing.peak.toFixed(8)}
+- Lowest Price: $${coin.pricing.lowest.toFixed(8)}
 - Market Cap: $${coin.marketCap.toFixed(2)}
 - 24h Change: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%
 - 24h Volume: $${coin.volume24h.toFixed(2)}

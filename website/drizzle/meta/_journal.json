@@ -15,6 +15,13 @@
       "when": 1752593600974,
       "tag": "0001_heavy_leo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752597309305,
+      "tag": "0002_lonely_the_fallen",
+      "breakpoints": true
     }
   ]
 }

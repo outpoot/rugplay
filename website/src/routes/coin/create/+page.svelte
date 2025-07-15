@@ -238,9 +238,9 @@
 										<p>• Starting Price: <span class="font-medium">$0.000001 per token</span></p>
 										<p>• You receive <span class="font-medium">100%</span> of the supply</p>
 										<p>• Initial Market Cap: <span class="font-medium">$1,000</span></p>
+										<p>• Trading Lock: <span class="font-medium">1 minute creator-only period</span></p>
 										<p class="mt-2 text-sm">
-											These settings ensure a fair start for all traders. The price will increase
-											naturally as people buy tokens.
+											After creation, you'll have 1 minute of exclusive trading time before others can trade. This allows you to purchase your initial supply.
 										</p>
 									</div>
 								</AlertDescription>

@@ -224,7 +224,7 @@
 				<MessageCircleQuestion class="h-14 w-14" />
 			</div>
 			<div class="flex-1">
-				<h1 class="text-2xl font-semibold">{question.question}</h1>
+				<h1 class="text-2xl font-semibold break-all">{question.question}</h1>
 				{#if question.status === 'ACTIVE'}
 					<p class="text-muted-foreground mt-1 text-sm">
 						{formatTimeUntil(question.resolutionDate).startsWith('Ended')

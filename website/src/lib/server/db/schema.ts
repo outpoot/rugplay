@@ -96,6 +96,8 @@ export const coin = pgTable("coin", {
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 	isListed: boolean("is_listed").default(true).notNull(),
+	tradingUnlocksAt: timestamp("trading_unlocks_at"),
+	isLocked: boolean("is_locked").default(true).notNull(),
 }, (table) => {
 	return {
 		symbolIdx: index("coin_symbol_idx").on(table.symbol),

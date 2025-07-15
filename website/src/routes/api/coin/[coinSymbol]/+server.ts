@@ -134,7 +134,9 @@ export async function GET({ params, url }) {
                 creatorName: user.name,
                 creatorUsername: user.username,
                 creatorBio: user.bio,
-                creatorImage: user.image
+                creatorImage: user.image,
+                tradingUnlocksAt: coin.tradingUnlocksAt,
+                isLocked: coin.isLocked
             })
             .from(coin)
             .leftJoin(user, eq(coin.creatorId, user.id))
@@ -185,7 +187,9 @@ export async function GET({ params, url }) {
                 poolCoinAmount: Number(coinData.poolCoinAmount),
                 poolBaseCurrencyAmount: Number(coinData.poolBaseCurrencyAmount),
                 circulatingSupply: Number(coinData.circulatingSupply),
-                initialSupply: Number(coinData.initialSupply)
+                initialSupply: Number(coinData.initialSupply),
+                tradingUnlocksAt: coinData.tradingUnlocksAt,
+                isLocked: coinData.isLocked
             },
             candlestickData,
             volumeData,

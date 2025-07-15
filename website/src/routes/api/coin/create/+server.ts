@@ -114,7 +114,9 @@ export async function POST({ request }) {
             currentPrice: STARTING_PRICE.toString(),
             marketCap: (FIXED_SUPPLY * STARTING_PRICE).toString(),
             poolCoinAmount: FIXED_SUPPLY.toString(),
-            poolBaseCurrencyAmount: INITIAL_LIQUIDITY.toString()
+            poolBaseCurrencyAmount: INITIAL_LIQUIDITY.toString(),
+            tradingUnlocksAt: new Date(Date.now() + 60 * 1000), // 1 minute from now
+            isLocked: true
         }).returning();
 
         createdCoin = newCoin;

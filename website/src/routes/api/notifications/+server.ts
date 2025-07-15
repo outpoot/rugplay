@@ -55,20 +55,18 @@ export const PATCH: RequestHandler = async ({ request }) => {
     if (!session?.user) throw error(401, 'Not authenticated');
 
     const userId = Number(session.user.id);
-    const { ids, markAsRead } = await request.json();
+    const { markAsRead } = await request.json();
 
-    if (!Array.isArray(ids) || typeof markAsRead !== 'boolean') {
+    if (typeof markAsRead !== 'boolean') {
         throw error(400, 'Invalid request body');
     }
 
     try {
-        await db
-            .update(notifications)
-            .set({ isRead: markAsRead })
-            .where(and(
-                eq(notifications.userId, userId),
-                inArray(notifications.id, ids)
-            ));
+        if (markAsRead) {
+            await db.update(notifications)
+                .set({ isRead: true })
+                .where(eq(notifications.userId, userId));
+        }
 
         return json({ success: true });
     } catch (e) {

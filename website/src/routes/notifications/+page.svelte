@@ -33,9 +33,7 @@
 			const unreadIds = ($NOTIFICATIONS || []).filter((n) => !n.isRead).map((n) => n.id);
 			newNotificationIds = unreadIds;
 
-			if (unreadIds.length > 0) {
-				await markNotificationsAsRead(unreadIds);
-			}
+			await markNotificationsAsRead();
 		} catch (error) {
 			toast.error('Failed to load notifications');
 		} finally {

@@ -440,6 +440,7 @@
 							</div>
 						{/if}
 					{/if}
+					<span class="text-center">Mines is currently disabled.</p>
 				</div>
 			</div>
 		</div>

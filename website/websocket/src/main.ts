@@ -109,21 +109,23 @@ redis.on('message', (channel, msg) => {
 				...eventData
 			});
 
-			// Send to all connected clients
+			const allSockets = new Set<ServerWebSocket<WebSocketData>>();
+
 			for (const [, sockets] of coinSockets.entries()) {
 				for (const ws of sockets) {
-					if (ws.readyState === WebSocket.OPEN) {
-						ws.send(eventMessage);
-					}
+					allSockets.add(ws);
 				}
 			}
 
-			// Send to all user-specific connections as well
 			for (const [, sockets] of userSockets.entries()) {
 				for (const ws of sockets) {
-					if (ws.readyState === WebSocket.OPEN) {
-						ws.send(eventMessage);
-					}
+					allSockets.add(ws);
+				}
+			}
+
+			for (const ws of allSockets) {
+				if (ws.readyState === WebSocket.OPEN) {
+					ws.send(eventMessage);
 				}
 			}
 		}

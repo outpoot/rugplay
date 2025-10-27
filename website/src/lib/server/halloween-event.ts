@@ -16,7 +16,7 @@ export async function publishHalloweenEventUpdate(
 
 	try {
 		if (!won && amountWagered > 0) {
-			await redis.incrbyfloat(REDIS_KEY, amountWagered);
+			await redis.incrByFloat(REDIS_KEY, amountWagered);
 		}
 
 		const totalCommunityLosses = Number(await redis.get(REDIS_KEY) || 0);

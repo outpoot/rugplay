@@ -34,9 +34,9 @@ redis.on('connect', () => {
 		else console.log(`Successfully psubscribed to patterns. Active psubscriptions: ${count}`);
 	});
 
-	redis.subscribe('trades:all', 'trades:large', (err, count) => {
-		if (err) console.error("Failed to subscribe to 'trades:all' and 'trades:large'", err);
-		else console.log(`Successfully subscribed to 'trades:all', 'trades:large'. Active subscriptions: ${count}`);
+	redis.subscribe('trades:all', 'trades:large', 'halloween:event', (err, count) => {
+		if (err) console.error("Failed to subscribe to channels", err);
+		else console.log(`Successfully subscribed to channels. Active subscriptions: ${count}`);
 	});
 });
 
@@ -99,6 +99,30 @@ redis.on('message', (channel, msg) => {
 				for (const ws of sockets) {
 					if (ws.readyState === WebSocket.OPEN) {
 						ws.send(tradeMessage);
+					}
+				}
+			}
+		} else if (channel === 'halloween:event') {
+			const eventData = JSON.parse(msg);
+			const eventMessage = JSON.stringify({
+				type: 'halloween_event_update',
+				...eventData
+			});
+
+			// Send to all connected clients
+			for (const [, sockets] of coinSockets.entries()) {
+				for (const ws of sockets) {
+					if (ws.readyState === WebSocket.OPEN) {
+						ws.send(eventMessage);
+					}
+				}
+			}
+
+			// Send to all user-specific connections as well
+			for (const [, sockets] of userSockets.entries()) {
+				for (const ws of sockets) {
+					if (ws.readyState === WebSocket.OPEN) {
+						ws.send(eventMessage);
 					}
 				}
 			}

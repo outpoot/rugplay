@@ -5,6 +5,7 @@ import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { getSessionKey } from '$lib/server/games/mines';
+import { publishHalloweenEventUpdate } from '$lib/server/halloween-event';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -30,7 +31,11 @@ export const POST: RequestHandler = async ({ request }) => {
 
         const result = await db.transaction(async (tx) => {
             const [userData] = await tx
-                .select({ baseCurrencyBalance: user.baseCurrencyBalance })
+                .select({
+                    baseCurrencyBalance: user.baseCurrencyBalance,
+                    gamblingLosses: user.gamblingLosses,
+                    gamblingWins: user.gamblingWins
+                })
                 .from(user)
                 .where(eq(user.id, userId))
                 .for('update')
@@ -50,12 +55,24 @@ export const POST: RequestHandler = async ({ request }) => {
                 newBalance = Math.round((currentBalance + roundedPayout) * 100000000) / 100000000;
             }
 
+            // Calculate gambling stats
+            const netResult = payout - game.betAmount;
+            const isWin = netResult > 0;
+
+            const updateData: any = {
+                baseCurrencyBalance: newBalance.toFixed(8),
+                updatedAt: new Date()
+            };
+
+            if (isWin) {
+                updateData.gamblingWins = `${Number(userData.gamblingWins || 0) + netResult}`;
+            } else if (netResult < 0) {
+                updateData.gamblingLosses = `${Number(userData.gamblingLosses || 0) + Math.abs(netResult)}`;
+            }
+
             await tx
                 .update(user)
-                .set({
-                    baseCurrencyBalance: newBalance.toFixed(8),
-                    updatedAt: new Date()
-                })
+                .set(updateData)
                 .where(eq(user.id, userId));
 
             await redis.del(getSessionKey(sessionToken));
@@ -68,6 +85,8 @@ export const POST: RequestHandler = async ({ request }) => {
                 minePositions: game.minePositions
             };
         });
+
+        await publishHalloweenEventUpdate(userId, result.amountWagered, !result.isAbort && result.payout > result.amountWagered, 'mines');
 
         return json(result);
     } catch (e) {

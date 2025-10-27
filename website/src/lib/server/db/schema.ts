@@ -33,6 +33,15 @@ export const user = pgTable("user", {
 	}).notNull().default("0.00000000"),
 	loginStreak: integer("login_streak").notNull().default(0),
 	prestigeLevel: integer("prestige_level").default(0),
+	gamblingLosses: decimal("gambling_losses", {
+		precision: 20,
+		scale: 8,
+	}).notNull().default("0.00000000"),
+	gamblingWins: decimal("gambling_wins", {
+		precision: 20,
+		scale: 8,
+	}).notNull().default("0.00000000"),
+	halloweenBadge2025: boolean("halloween_badge_2025").default(false),
 }, (table) => {
 	return {
 		usernameIdx: index("user_username_idx").on(table.username),

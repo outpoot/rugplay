@@ -11,6 +11,7 @@ export interface UserProfile {
 	loginStreak: number;
 
 	prestigeLevel: number | null;
+	halloweenBadge2025: boolean;
 }
 
 export interface UserStats {

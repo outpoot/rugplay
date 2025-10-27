@@ -22,6 +22,13 @@
       "when": 1752597309305,
       "tag": "0002_lonely_the_fallen",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1761581605464,
+      "tag": "0003_flaky_agent_brand",
+      "breakpoints": true
     }
   ]
 }

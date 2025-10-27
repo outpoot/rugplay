@@ -47,9 +47,10 @@
 	import { signOut } from '$lib/auth-client';
 	import { formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
-	import { liveTradesStore, isLoadingTrades } from '$lib/stores/websocket';
+	import { liveTradesStore, isLoadingTrades, halloweenEventStore } from '$lib/stores/websocket';
 	import { onMount } from 'svelte';
 	import { UNREAD_COUNT, fetchNotifications } from '$lib/stores/notifications';
+	import { GAMBLING_STATS, fetchGamblingStats } from '$lib/stores/gambling-stats';
 
 	const data = {
 		navMain: [
@@ -71,13 +72,34 @@
 	let shouldSignIn = $state(false);
 	let showPromoCode = $state(false);
 	let showUserManual = $state(false);
+	let halloweenEventData = $state<any>(null);
+
+	const currentEventData = $derived(
+		$halloweenEventStore || halloweenEventData || { totalCommunityLosses: 0, goal: 200000000 }
+	);
+	const shouldShowEvent = $derived(true);
+
+	async function fetchHalloweenEventData() {
+		try {
+			const response = await fetch('/api/event/halloween-badge');
+			if (response.ok) {
+				halloweenEventData = await response.json();
+			}
+		} catch (error) {
+			console.error('Failed to fetch Halloween event data:', error);
+		}
+	}
 
 	onMount(() => {
+		fetchHalloweenEventData();
+
 		if ($USER_DATA) {
 			fetchPortfolioSummary();
 			fetchNotifications();
+			fetchGamblingStats();
 		} else {
 			PORTFOLIO_SUMMARY.set(null);
+			GAMBLING_STATS.set(null);
 		}
 	});
 
@@ -160,8 +182,13 @@
 		setOpenMobile(false);
 	}
 
-	function handleAPIClick(){
+	function handleAPIClick() {
 		goto('/api');
+		setOpenMobile(false);
+	}
+
+	function handleEventClick() {
+		goto('/event/halloween-2025');
 		setOpenMobile(false);
 	}
 </script>
@@ -210,6 +237,44 @@
 				</Sidebar.Menu>
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
+
+		<!-- Halloween Event 2025 -->
+		{#if shouldShowEvent}
+			<Sidebar.Group>
+				<Sidebar.GroupContent>
+					<button
+						onclick={handleEventClick}
+						class="hover:bg-muted/20 w-full cursor-pointer rounded px-2 py-2"
+						aria-label="View Halloween 2025 Event"
+					>
+						<div class="space-y-2">
+							<div class="flex items-center justify-between">
+								<span class="flex items-center gap-2 text-sm font-medium">
+									<img src="/pumpkin.png" alt="Halloween 2025" class="h-5 w-5" />
+									<span>Halloween 2025</span>
+								</span>
+								<span class="font-mono text-xs">
+									{formatValue(currentEventData.totalCommunityLosses)}
+								</span>
+							</div>
+							<div class="relative">
+								<div class="bg-secondary h-2 w-full overflow-hidden rounded-full">
+									<div
+										class="h-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300"
+										style="width: {Math.min(
+											(currentEventData.totalCommunityLosses /
+												(currentEventData.goal || 200000000)) *
+												100,
+											100
+										)}%"
+									></div>
+								</div>
+							</div>
+						</div>
+					</button>
+				</Sidebar.GroupContent>
+			</Sidebar.Group>
+		{/if}
 
 		<!-- Daily Rewards -->
 		{#if $USER_DATA}
@@ -438,9 +503,7 @@
 
 							<!-- Features Group -->
 							<DropdownMenu.Group>
-								<DropdownMenu.Item
-									onclick={handleAPIClick}
-								>
+								<DropdownMenu.Item onclick={handleAPIClick}>
 									<Key />
 									API
 								</DropdownMenu.Item>

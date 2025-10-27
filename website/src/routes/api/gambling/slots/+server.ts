@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
+import { publishHalloweenEventUpdate } from '$lib/server/halloween-event';
 import type { RequestHandler } from './$types';
 
 function getRandomSymbol(symbols: string[]): string {
@@ -37,7 +38,11 @@ export const POST: RequestHandler = async ({ request }) => {
 
         const result = await db.transaction(async (tx) => {
             const [userData] = await tx
-                .select({ baseCurrencyBalance: user.baseCurrencyBalance })
+                .select({
+                    baseCurrencyBalance: user.baseCurrencyBalance,
+                    gamblingLosses: user.gamblingLosses,
+                    gamblingWins: user.gamblingWins
+                })
                 .from(user)
                 .where(eq(user.id, userId))
                 .for('update')
@@ -76,12 +81,24 @@ export const POST: RequestHandler = async ({ request }) => {
             const payout = won ? roundedAmount * multiplier : 0;
             const newBalance = roundedBalance - roundedAmount + payout;
 
+            // Calculate gambling stats
+            const netResult = payout - roundedAmount;
+            const isWin = netResult > 0;
+
+            const updateData: any = {
+                baseCurrencyBalance: newBalance.toFixed(8),
+                updatedAt: new Date()
+            };
+
+            if (isWin) {
+                updateData.gamblingWins = `${Number(userData.gamblingWins || 0) + netResult}`;
+            } else {
+                updateData.gamblingLosses = `${Number(userData.gamblingLosses || 0) + Math.abs(netResult)}`;
+            }
+
             await tx
                 .update(user)
-                .set({
-                    baseCurrencyBalance: newBalance.toFixed(8),
-                    updatedAt: new Date()
-                })
+                .set(updateData)
                 .where(eq(user.id, userId));
 
             return {
@@ -93,6 +110,8 @@ export const POST: RequestHandler = async ({ request }) => {
                 winType: won ? winType : undefined
             };
         });
+
+        await publishHalloweenEventUpdate(userId, result.amountWagered, result.won, 'slots');
 
         return json(result);
     } catch (e) {

@@ -30,6 +30,22 @@ export interface PriceUpdate {
     poolBaseCurrencyAmount?: number;
 }
 
+export interface HalloweenEventUpdate {
+    totalCommunityLosses: number;
+    goal: number;
+    goalReached: boolean;
+}
+
+export interface GamblingActivity {
+    username: string;
+    userImage?: string;
+    userId: string;
+    game: string;
+    amount: number;
+    won: boolean;
+    timestamp: number;
+}
+
 // Constants
 const WEBSOCKET_URL = PUBLIC_WEBSOCKET_URL;
 const RECONNECT_DELAY = 5000;
@@ -47,6 +63,61 @@ export const allTradesStore = writable<LiveTrade[]>([]);
 export const isConnectedStore = writable<boolean>(false);
 export const isLoadingTrades = writable<boolean>(false);
 export const priceUpdatesStore = writable<Record<string, PriceUpdate>>({});
+export const halloweenEventStore = writable<HalloweenEventUpdate | null>(null);
+
+function createGamblingActivityStore() {
+    const STORAGE_KEY = 'halloween_gambling_activities';
+    const MAX_ACTIVITIES = 50;
+
+    // Load from localStorage on init
+    let initialActivities: GamblingActivity[] = [];
+    if (typeof window !== 'undefined') {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                initialActivities = JSON.parse(stored);
+            }
+        } catch (e) {
+            console.error('Failed to load gambling activities from storage:', e);
+        }
+    }
+
+    const { subscribe, update, set } = writable<GamblingActivity[]>(initialActivities);
+
+    return {
+        subscribe,
+        set,
+        addActivity: (activity: GamblingActivity) => {
+            update(activities => {
+                // Check for duplicates
+                const isDuplicate = activities.some(a =>
+                    a.userId === activity.userId &&
+                    a.game === activity.game &&
+                    a.amount === activity.amount &&
+                    Math.abs(a.timestamp - activity.timestamp) < 1000 // Within 1 second
+                );
+
+                if (isDuplicate) {
+                    return activities;
+                }
+
+                const newActivities = [activity, ...activities].slice(0, MAX_ACTIVITIES);
+
+                if (typeof window !== 'undefined') {
+                    try {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(newActivities));
+                    } catch (e) {
+                        console.error('Failed to save gambling activities to storage:', e);
+                    }
+                }
+
+                return newActivities;
+            });
+        }
+    };
+}
+
+export const gamblingActivityStore = createGamblingActivityStore();
 
 let hasLoadedInitialTrades = false;
 
@@ -168,6 +239,32 @@ function handlePriceUpdateMessage(message: any): void {
     }
 }
 
+function handleHalloweenEventMessage(message: any): void {
+    if (message.totalCommunityLosses !== undefined) {
+        const eventUpdate: HalloweenEventUpdate = {
+            totalCommunityLosses: message.totalCommunityLosses,
+            goal: message.goal,
+            goalReached: message.goalReached
+        };
+
+        halloweenEventStore.set(eventUpdate);
+    }
+
+    if (message.gamblingActivity) {
+        const gamblingActivity: GamblingActivity = {
+            username: message.gamblingActivity.username,
+            userImage: message.gamblingActivity.userImage,
+            userId: message.gamblingActivity.userId,
+            game: message.gamblingActivity.game,
+            amount: message.gamblingActivity.amount,
+            won: message.gamblingActivity.won,
+            timestamp: message.gamblingActivity.timestamp || Date.now()
+        };
+
+        gamblingActivityStore.addActivity(gamblingActivity);
+    }
+}
+
 function handleWebSocketMessage(event: MessageEvent): void {
     try {
         const message = JSON.parse(event.data);
@@ -180,6 +277,10 @@ function handleWebSocketMessage(event: MessageEvent): void {
 
             case 'price_update':
                 handlePriceUpdateMessage(message);
+                break;
+
+            case 'halloween_event_update':
+                handleHalloweenEventMessage(message);
                 break;
 
             case 'ping':

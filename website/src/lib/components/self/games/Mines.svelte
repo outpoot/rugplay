@@ -295,13 +295,13 @@
 							id="mine-count"
 							type="number"
 							min={MIN_MINES}
-							max={24}
+							max={23}
 							value={mineCount}
 							oninput={(e) => {
 								const target = e.target as HTMLInputElement | null;
 								const val = Math.max(
 									MIN_MINES,
-									Math.min(24, parseInt(target?.value ?? '') || MIN_MINES)
+									Math.min(23, parseInt(target?.value ?? '') || MIN_MINES)
 								);
 								mineCount = val;
 							}}
@@ -311,8 +311,8 @@
 						<Button
 							variant="secondary"
 							size="sm"
-							onclick={() => (mineCount = Math.min(mineCount + 1, 24))}
-							disabled={isPlaying || mineCount >= 24}
+							onclick={() => (mineCount = Math.min(mineCount + 1, 23))}
+							disabled={isPlaying || mineCount >= 23}
 							aria-label="Increase mines">+</Button
 						>
 					</div>

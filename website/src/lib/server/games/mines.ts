@@ -37,6 +37,12 @@ export async function minesCleanupInactiveGames() {
         if (now - game.lastActivity > 5 * 60 * 1000) {
             if (game.revealedTiles.length === 0) {
                 try {
+                    const deleted = await redis.del(getSessionKey(game.sessionToken));
+
+                    if (!deleted) {
+                        continue;
+                    }
+
                     const [userData] = await db
                         .select({ baseCurrencyBalance: user.baseCurrencyBalance })
                         .from(user)
@@ -57,8 +63,9 @@ export async function minesCleanupInactiveGames() {
                 } catch (error) {
                     console.error(`Failed to refund inactive game ${game.sessionToken}:`, error);
                 }
+            } else {
+                await redis.del(getSessionKey(game.sessionToken));
             }
-            await redis.del(getSessionKey(game.sessionToken));
         }
     }
 }
@@ -84,6 +91,12 @@ export async function minesAutoCashout() {
             !game.revealedTiles.some(idx => game.minePositions.includes(idx))
         ) {
             try {
+                const deleted = await redis.del(getSessionKey(game.sessionToken));
+
+                if (!deleted) {
+                    continue;
+                }
+
                 const [userData] = await db
                     .select({ baseCurrencyBalance: user.baseCurrencyBalance })
                     .from(user)
@@ -104,7 +117,6 @@ export async function minesAutoCashout() {
                     })
                     .where(eq(user.id, game.userId));
 
-                await redis.del(getSessionKey(game.sessionToken));
             } catch (error) {
                 console.error(`Failed to auto cashout game ${game.sessionToken}:`, error);
             }

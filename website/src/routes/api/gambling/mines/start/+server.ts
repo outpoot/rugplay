@@ -8,8 +8,6 @@ import { getSessionKey } from '$lib/server/games/mines';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
-    throw error(503, 'Service temporarily unavailable');
-
     const session = await auth.api.getSession({
         headers: request.headers
     });

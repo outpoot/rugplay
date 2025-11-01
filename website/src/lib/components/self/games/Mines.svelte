@@ -105,14 +105,8 @@
 	async function handleTileClick(index: number) {
 		if (!isPlaying || revealedTiles.includes(index) || !sessionToken) return;
 		lastClickedTile = index;
-		
-		// Temporarily disabled - using local simulation
-		toast.error('Mines game temporarily disabled', {
-			description: 'This feature is currently under maintenance'
-		});
-		return;
-		
-		/* try {
+
+		try {
 			const response = await fetch('/api/gambling/mines/reveal', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -149,19 +143,13 @@
 			toast.error('Failed to reveal tile', {
 				description: error instanceof Error ? error.message : 'Unknown error occurred'
 			});
-		} */
+		}
 	}
 
 	async function cashOut() {
 		if (!isPlaying || !sessionToken) return;
-		
-		// Temporarily disabled
-		toast.error('Mines game temporarily disabled', {
-			description: 'This feature is currently under maintenance'
-		});
-		return;
-		
-		/* try {
+
+		try {
 			const response = await fetch('/api/gambling/mines/cashout', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -189,19 +177,13 @@
 			toast.error('Failed to cash out', {
 				description: error instanceof Error ? error.message : 'Unknown error occurred'
 			});
-		} */
+		}
 	}
 
 	async function startGame() {
 		if (!canBet) return;
-		
-		// Temporarily disabled
-		toast.error('Mines game temporarily disabled', {
-			description: 'This feature is currently under maintenance'
-		});
-		return;
-		
-		/* balance -= betAmount;
+
+		balance -= betAmount;
 		onBalanceUpdate?.(balance);
 		try {
 			const response = await fetch('/api/gambling/mines/start', {
@@ -228,7 +210,7 @@
 			toast.error('Failed to start game', {
 				description: error instanceof Error ? error.message : 'Unknown error occurred'
 			});
-		} */
+		}
 	}
 
 	onMount(async () => {

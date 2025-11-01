@@ -9,8 +9,6 @@ import { publishGamblingActivity } from '$lib/server/gambling-activity';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
-    throw error(503, 'Service temporarily unavailable');
-
     const session = await auth.api.getSession({
         headers: request.headers
     });
@@ -21,12 +19,23 @@ export const POST: RequestHandler = async ({ request }) => {
 
     try {
         const { sessionToken } = await request.json();
+        const userId = Number(session.user.id);
+
         const sessionRaw = await redis.get(getSessionKey(sessionToken));
         const game = sessionRaw ? JSON.parse(sessionRaw) : null;
-        const userId = Number(session.user.id);
 
         if (!game) {
             return json({ error: 'Invalid session' }, { status: 400 });
+        }
+
+        if (game.userId !== userId) {
+            return json({ error: 'Unauthorized: Session belongs to another user' }, { status: 403 });
+        }
+
+        const deleted = await redis.del(getSessionKey(sessionToken));
+
+        if (!deleted) {
+            return json({ error: 'Session already processed' }, { status: 400 });
         }
 
         const result = await db.transaction(async (tx) => {
@@ -75,7 +84,6 @@ export const POST: RequestHandler = async ({ request }) => {
                 .set(updateData)
                 .where(eq(user.id, userId));
 
-            await redis.del(getSessionKey(sessionToken));
 
             return {
                 newBalance,

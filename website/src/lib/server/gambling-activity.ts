@@ -11,6 +11,7 @@ export async function publishGamblingActivity(
 	delayMs: number = 0
 ): Promise<void> {
 	if (amountWagered <= 0) return;
+	if (amountWagered < 1000) return;
 
 	// Delay publication to allow frontend animations to complete
 	const publishActivity = async () => {

@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
-import { publishHalloweenEventUpdate } from '$lib/server/halloween-event';
+import { publishGamblingActivity } from '$lib/server/gambling-activity';
 import type { RequestHandler } from './$types';
 
 interface CoinflipRequest {
@@ -95,7 +95,7 @@ export const POST: RequestHandler = async ({ request }) => {
             };
         });
 
-        await publishHalloweenEventUpdate(userId, result.amountWagered, result.won, 'coinflip');
+        await publishGamblingActivity(userId, result.amountWagered, result.won, 'coinflip', 2500);
 
         return json(result);
     } catch (e) {

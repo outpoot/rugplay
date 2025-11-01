@@ -5,7 +5,7 @@ import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { getSessionKey } from '$lib/server/games/mines';
-import { publishHalloweenEventUpdate } from '$lib/server/halloween-event';
+import { publishGamblingActivity } from '$lib/server/gambling-activity';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -86,7 +86,7 @@ export const POST: RequestHandler = async ({ request }) => {
             };
         });
 
-        await publishHalloweenEventUpdate(userId, result.amountWagered, !result.isAbort && result.payout > result.amountWagered, 'mines');
+        await publishGamblingActivity(userId, result.amountWagered, !result.isAbort && result.payout > result.amountWagered, 'mines', 1000);
 
         return json(result);
     } catch (e) {

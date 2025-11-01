@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
-import { publishHalloweenEventUpdate } from '$lib/server/halloween-event';
+import { publishGamblingActivity } from '$lib/server/gambling-activity';
 import type { RequestHandler } from './$types';
 
 function getRandomSymbol(symbols: string[]): string {
@@ -111,7 +111,7 @@ export const POST: RequestHandler = async ({ request }) => {
             };
         });
 
-        await publishHalloweenEventUpdate(userId, result.amountWagered, result.won, 'slots');
+        await publishGamblingActivity(userId, result.amountWagered, result.won, 'slots', 3500);
 
         return json(result);
     } catch (e) {

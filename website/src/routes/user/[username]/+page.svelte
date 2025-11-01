@@ -17,7 +17,11 @@
 		TrendingDown,
 		Coins,
 		Receipt,
-		Activity
+		Activity,
+		DollarSign,
+		PiggyBank,
+		TrendingUpDown,
+		Percent
 	} from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
@@ -146,6 +150,19 @@
 	let totalTradingVolumeAllTime = $derived(totalBuyVolume + totalSellVolume);
 
 	let totalTradingVolume24h = $derived(buyVolume24h + sellVolume24h);
+
+	// Gambling stats
+	let gamblingWins = $derived(
+		profileData?.profile?.gamblingWins ? Number(profileData.profile.gamblingWins) : 0
+	);
+	let gamblingLosses = $derived(
+		profileData?.profile?.gamblingLosses ? Number(profileData.profile.gamblingLosses) : 0
+	);
+	let totalGambled = $derived(gamblingWins + gamblingLosses);
+	let netProfit = $derived(gamblingWins - gamblingLosses);
+	let winRate = $derived(
+		totalGambled > 0 ? ((gamblingWins / totalGambled) * 100).toFixed(1) : '0.0'
+	);
 
 	const createdCoinsColumns = [
 		{
@@ -551,6 +568,70 @@
 					</div>
 					<div class="text-muted-foreground text-xs">
 						{profileData.stats.transactions24h || 0} trades today
+					</div>
+				</Card.Content>
+			</Card.Root>
+		</div>
+
+		<!-- Gambling Stats -->
+		<div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
+			<!-- Total Wins -->
+			<Card.Root class="py-0">
+				<Card.Content class="p-4">
+					<div class="flex items-center justify-between">
+						<div class="text-foreground text-sm font-medium">Total Wins</div>
+						<TrendingUp class="text-success h-4 w-4" />
+					</div>
+					<div class="text-success mt-1 text-2xl font-bold">
+						{formatValue(gamblingWins)}
+					</div>
+					<div class="text-muted-foreground text-xs">Total gambling winnings</div>
+				</Card.Content>
+			</Card.Root>
+
+			<!-- Total Losses -->
+			<Card.Root class="py-0">
+				<Card.Content class="p-4">
+					<div class="flex items-center justify-between">
+						<div class="text-foreground text-sm font-medium">Total Losses</div>
+						<TrendingDown class="h-4 w-4 text-red-600" />
+					</div>
+					<div class="mt-1 text-2xl font-bold text-red-600">
+						{formatValue(gamblingLosses)}
+					</div>
+					<div class="text-muted-foreground text-xs">Total gambling losses</div>
+				</Card.Content>
+			</Card.Root>
+
+			<!-- Win Rate -->
+			<Card.Root class="py-0">
+				<Card.Content class="p-4">
+					<div class="flex items-center justify-between">
+						<div class="text-muted-foreground text-sm font-medium">Win Rate</div>
+						<Percent class="text-muted-foreground h-4 w-4" />
+					</div>
+					<div class="mt-1 text-2xl font-bold">
+						{winRate}%
+					</div>
+					<div class="text-muted-foreground text-xs">Percentage of wins</div>
+				</Card.Content>
+			</Card.Root>
+
+			<!-- Net Profit -->
+			<Card.Root class="py-0">
+				<Card.Content class="p-4">
+					<div class="flex items-center justify-between">
+						<div class="text-muted-foreground text-sm font-medium">Net Profit</div>
+					</div>
+					<div class="mt-1 text-2xl font-bold" class:text-success={netProfit >= 0} class:text-red-600={netProfit < 0}>
+						{#if netProfit >= 0}
+							{formatValue(netProfit)}
+						{:else}
+							-{formatValue(Math.abs(netProfit))}
+						{/if}
+					</div>
+					<div class="text-muted-foreground text-xs">
+						{netProfit >= 0 ? 'Overall profit' : 'Overall loss'}
 					</div>
 				</Card.Content>
 			</Card.Root>

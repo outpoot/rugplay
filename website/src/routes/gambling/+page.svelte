@@ -127,7 +127,7 @@
 								</p>
 							</div>
 						{:else}
-							{#each filteredActivities as activity, index (`${activity.userId}-${activity.timestamp}-${index}`)}
+							{#each filteredActivities as activity (`${activity.userId}-${activity.game}-${activity.timestamp}`)}
 								<div
 									class="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
 								>

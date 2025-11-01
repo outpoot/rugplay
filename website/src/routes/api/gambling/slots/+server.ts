@@ -111,7 +111,7 @@ export const POST: RequestHandler = async ({ request }) => {
             };
         });
 
-        await publishGamblingActivity(userId, result.amountWagered, result.won, 'slots', 3500);
+        await publishGamblingActivity(userId, result.won ? result.payout : result.amountWagered, result.won, 'slots', 3500);
 
         return json(result);
     } catch (e) {

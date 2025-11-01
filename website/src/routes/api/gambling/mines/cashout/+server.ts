@@ -94,7 +94,8 @@ export const POST: RequestHandler = async ({ request }) => {
             };
         });
 
-        await publishGamblingActivity(userId, result.amountWagered, !result.isAbort && result.payout > result.amountWagered, 'mines', 1000);
+        const won = !result.isAbort && result.payout > result.amountWagered;
+        await publishGamblingActivity(userId, won ? result.payout : result.amountWagered, won, 'mines', 1000);
 
         return json(result);
     } catch (e) {

@@ -130,7 +130,6 @@ export const POST: RequestHandler = async ({ request }) => {
             });
         }
 
-        await redis.set(getSessionKey(sessionToken), JSON.stringify(game));
         const luaScript = `
             if redis.call("exists", KEYS[1]) == 1 then
                 redis.call("set", KEYS[1], ARGV[1])

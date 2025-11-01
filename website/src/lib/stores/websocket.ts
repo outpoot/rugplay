@@ -30,12 +30,6 @@ export interface PriceUpdate {
     poolBaseCurrencyAmount?: number;
 }
 
-export interface HalloweenEventUpdate {
-    totalCommunityLosses: number;
-    goal: number;
-    goalReached: boolean;
-}
-
 export interface GamblingActivity {
     username: string;
     userImage?: string;
@@ -63,10 +57,9 @@ export const allTradesStore = writable<LiveTrade[]>([]);
 export const isConnectedStore = writable<boolean>(false);
 export const isLoadingTrades = writable<boolean>(false);
 export const priceUpdatesStore = writable<Record<string, PriceUpdate>>({});
-export const halloweenEventStore = writable<HalloweenEventUpdate | null>(null);
 
 function createGamblingActivityStore() {
-    const STORAGE_KEY = 'halloween_gambling_activities';
+    const STORAGE_KEY = 'gambling_activities';
     const MAX_ACTIVITIES = 50;
 
     // Load from localStorage on init
@@ -239,17 +232,7 @@ function handlePriceUpdateMessage(message: any): void {
     }
 }
 
-function handleHalloweenEventMessage(message: any): void {
-    if (message.totalCommunityLosses !== undefined) {
-        const eventUpdate: HalloweenEventUpdate = {
-            totalCommunityLosses: message.totalCommunityLosses,
-            goal: message.goal,
-            goalReached: message.goalReached
-        };
-
-        halloweenEventStore.set(eventUpdate);
-    }
-
+function handleGamblingActivityMessage(message: any): void {
     if (message.gamblingActivity) {
         const gamblingActivity: GamblingActivity = {
             username: message.gamblingActivity.username,
@@ -279,8 +262,8 @@ function handleWebSocketMessage(event: MessageEvent): void {
                 handlePriceUpdateMessage(message);
                 break;
 
-            case 'halloween_event_update':
-                handleHalloweenEventMessage(message);
+            case 'gambling_activity':
+                handleGamblingActivityMessage(message);
                 break;
 
             case 'ping':

@@ -1,38 +1,65 @@
-# sv
+# Rugplay Website
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This is the main website component of Rugplay, built with SvelteKit. It handles the user interface, trading functionality, and market visualization.
 
-## Creating a project
+## Development
 
-If you're seeing this, you've probably already done this step. Congrats!
+### Prerequisites
+
+- Node.js (LTS version)
+- Redis running in the background
+- OpenRouter API key (for AI features)
+- AWS S3/B2 Storage (for file uploads)
+
+### Environment Variables
+
+Create a `.env` file based on `.env.example`:
 
 ```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
+cp .env.example .env
 ```
 
-## Developing
+Key variables to configure:
+- `PUBLIC_BETTER_AUTH_URL`: Set to `http://localhost:3002` if you want to deploy
+- `OPENROUTER_API_KEY`: Your OpenRouter API key for AI features
+- AWS credentials (optional but recommended)
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Running in Development
 
 ```bash
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+The development server will be available at http://localhost:5173
 
-To create a production version of your app:
+### Building for Production
 
 ```bash
 npm run build
+npm run preview
 ```
 
-You can preview the production build with `npm run preview`.
+## Project Structure
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- `src/routes/`: Page components and API endpoints
+- `src/lib/`: Shared components and utilities
+- `src/lib/components/`: Reusable UI components
+- `static/`: Static assets (images, fonts, etc.)
+
+## Features
+
+- User authentication and profile management
+- Real-time trading interface
+- Market visualization with Treemap
+- Leaderboards and statistics
+- Integration with websocket server for live updates
+
+## Contributing
+
+1. Make sure Redis is running
+2. Start the websocket server (see `websocket/README.md`)
+3. Run the website in development mode
+4. Make your changes
+5. Test thoroughly
+6. Submit a pull request

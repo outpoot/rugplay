@@ -31,7 +31,7 @@ export function getTimeBasedGreeting(name: string): string {
 
 export function getPublicUrl(key: string | null): string | null {
     if (!key) return null;
-    return `${PUBLIC_B2_ENDPOINT}/${PUBLIC_B2_BUCKET}/${key}`;
+    return `/api/proxy/s3/${key}`;
 }
 
 export function debounce(func: (...args: any[]) => void, wait: number) {
@@ -63,6 +63,8 @@ export function formatPrice(price: number): string {
 export function formatValue(value: number | string): string {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     if (typeof numValue !== 'number' || isNaN(numValue)) return '$0.00';
+
+    if (numValue >= 1e12) return `$${(numValue / 1e12).toFixed(2)}T`;
     if (numValue >= 1e9) return `$${(numValue / 1e9).toFixed(2)}B`;
     if (numValue >= 1e6) return `$${(numValue / 1e6).toFixed(2)}M`;
     if (numValue >= 1e3) return `$${(numValue / 1e3).toFixed(2)}K`;
@@ -121,7 +123,7 @@ export function formatRelativeTime(timestamp: string | Date): string {
 
     if (hours < 24) {
         const extraMinutes = minutes % 60;
-        return extraMinutes === 0 ? `${hours}hr` : `${hours}hr ${extraMinutes}m`;
+        return extraMinutes === 0 ? `${hours}h` : `${hours}h ${extraMinutes}m`;
     }
 
     if (days < 7) return `${days}d`;
@@ -143,11 +145,11 @@ export function formatRelativeTime(timestamp: string | Date): string {
         tempDate.setMonth(tempDate.getMonth() + adjustedMonths);
         const remainingDays = Math.floor((now.getTime() - tempDate.getTime()) / (1000 * 60 * 60 * 24));
         const weeks = Math.floor(remainingDays / 7);
-        return weeks === 0 ? `${adjustedMonths}m` : `${adjustedMonths}m ${weeks}w`;
+        return weeks === 0 ? `${adjustedMonths}mo` : `${adjustedMonths}mo ${weeks}w`;
     }
 
     const remainingMonths = adjustedMonths % 12;
-    return remainingMonths === 0 ? `${years}y` : `${years}y ${remainingMonths}m`;
+    return remainingMonths === 0 ? `${years}y` : `${years}y ${remainingMonths}mo`;
 }
 
 export function formatTimeAgo(date: string) {
@@ -381,4 +383,39 @@ export function getPrestigeColor(level: number): string {
 
 export function getMaxPrestigeLevel(): number {
     return 5;
+}
+
+export function calculateMinesMultiplier(picks: number, mines: number, betAmount: number): number {
+    const TOTAL_TILES = 25;
+    const HOUSE_EDGE = 0.05;
+
+    let probability = 1;
+    for (let i = 0; i < picks; i++) {
+        probability *= (TOTAL_TILES - mines - i) / (TOTAL_TILES - i);
+    }
+    if (probability <= 0) return 1.0;
+
+    const fairMultiplier = (1 / probability) * (1 - HOUSE_EDGE);
+
+    // Backend payout cap logic
+    const MAX_PAYOUT = 2_000_000;
+    const HIGH_BET_THRESHOLD = 50_000;
+    const mineFactor = 1 + (mines / 25);
+    const baseMultiplier = (1.4 + Math.pow(picks, 0.45)) * mineFactor;
+    let maxPayout: number;
+    if (betAmount > HIGH_BET_THRESHOLD) {
+        const betRatio = Math.pow(Math.min(1, (betAmount - HIGH_BET_THRESHOLD) / (MAX_PAYOUT - HIGH_BET_THRESHOLD)), 1);
+        const maxAllowedMultiplier = 1.05 + (picks * 0.1);
+        const highBetMultiplier = Math.min(baseMultiplier, maxAllowedMultiplier) * (1 - (betAmount / MAX_PAYOUT) * 0.9);
+        const betSizeFactor = Math.max(0.1, 1 - (betAmount / MAX_PAYOUT) * 0.9);
+        const minMultiplier = (1.1 + (picks * 0.15 * betSizeFactor)) * mineFactor;
+        const reducedMultiplier = highBetMultiplier - ((highBetMultiplier - minMultiplier) * betRatio);
+        maxPayout = Math.min(betAmount * reducedMultiplier, MAX_PAYOUT);
+    } else {
+        maxPayout = Math.min(betAmount * baseMultiplier, MAX_PAYOUT);
+    }
+    const rawPayout = fairMultiplier * betAmount;
+    const cappedPayout = Math.min(rawPayout, maxPayout);
+    const effectiveMultiplier = cappedPayout / betAmount;
+    return Math.max(1.0, Number(effectiveMultiplier.toFixed(2)));
 }

@@ -34,9 +34,9 @@ redis.on('connect', () => {
 		else console.log(`Successfully psubscribed to patterns. Active psubscriptions: ${count}`);
 	});
 
-	redis.subscribe('trades:all', 'trades:large', (err, count) => {
-		if (err) console.error("Failed to subscribe to 'trades:all' and 'trades:large'", err);
-		else console.log(`Successfully subscribed to 'trades:all', 'trades:large'. Active subscriptions: ${count}`);
+	redis.subscribe('trades:all', 'trades:large', 'gambling:activity', (err, count) => {
+		if (err) console.error("Failed to subscribe to channels", err);
+		else console.log(`Successfully subscribed to channels. Active subscriptions: ${count}`);
 	});
 });
 
@@ -100,6 +100,32 @@ redis.on('message', (channel, msg) => {
 					if (ws.readyState === WebSocket.OPEN) {
 						ws.send(tradeMessage);
 					}
+				}
+			}
+		} else if (channel === 'gambling:activity') {
+			const eventData = JSON.parse(msg);
+			const eventMessage = JSON.stringify({
+				type: 'gambling_activity',
+				...eventData
+			});
+
+			const allSockets = new Set<ServerWebSocket<WebSocketData>>();
+
+			for (const [, sockets] of coinSockets.entries()) {
+				for (const ws of sockets) {
+					allSockets.add(ws);
+				}
+			}
+
+			for (const [, sockets] of userSockets.entries()) {
+				for (const ws of sockets) {
+					allSockets.add(ws);
+				}
+			}
+
+			for (const ws of allSockets) {
+				if (ws.readyState === WebSocket.OPEN) {
+					ws.send(eventMessage);
 				}
 			}
 		}

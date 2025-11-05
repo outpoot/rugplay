@@ -1,1 +1,0 @@
-CREATE INDEX IF NOT EXISTS "prediction_question_status_resolution_idx" ON "prediction_question" USING btree ("status","resolution_date");

@@ -33,6 +33,23 @@ export const user = pgTable("user", {
 	}).notNull().default("0.00000000"),
 	loginStreak: integer("login_streak").notNull().default(0),
 	prestigeLevel: integer("prestige_level").default(0),
+	gamblingLosses: decimal("gambling_losses", {
+		precision: 20,
+		scale: 8,
+	}).notNull().default("0.00000000"),
+	gamblingWins: decimal("gambling_wins", {
+		precision: 20,
+		scale: 8,
+	}).notNull().default("0.00000000"),
+	halloweenBadge2025: boolean("halloween_badge_2025").default(false),
+}, (table) => {
+	return {
+		usernameIdx: index("user_username_idx").on(table.username),
+		isBannedIdx: index("user_is_banned_idx").on(table.isBanned),
+		isAdminIdx: index("user_is_admin_idx").on(table.isAdmin),
+		createdAtIdx: index("user_created_at_idx").on(table.createdAt),
+		updatedAtIdx: index("user_updated_at_idx").on(table.updatedAt),
+	};
 });
 
 export const session = pgTable("session", {
@@ -88,6 +105,19 @@ export const coin = pgTable("coin", {
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 	isListed: boolean("is_listed").default(true).notNull(),
+	tradingUnlocksAt: timestamp("trading_unlocks_at"),
+	isLocked: boolean("is_locked").default(true).notNull(),
+}, (table) => {
+	return {
+		symbolIdx: index("coin_symbol_idx").on(table.symbol),
+		creatorIdIdx: index("coin_creator_id_idx").on(table.creatorId),
+		isListedIdx: index("coin_is_listed_idx").on(table.isListed),
+		marketCapIdx: index("coin_market_cap_idx").on(table.marketCap),
+		currentPriceIdx: index("coin_current_price_idx").on(table.currentPrice),
+		change24hIdx: index("coin_change24h_idx").on(table.change24h),
+		volume24hIdx: index("coin_volume24h_idx").on(table.volume24h),
+		createdAtIdx: index("coin_created_at_idx").on(table.createdAt),
+	};
 });
 
 export const userPortfolio = pgTable("user_portfolio", {
@@ -114,6 +144,15 @@ export const transaction = pgTable("transaction", {
 	timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
 	recipientUserId: integer('recipient_user_id').references(() => user.id, { onDelete: 'set null' }),
 	senderUserId: integer('sender_user_id').references(() => user.id, { onDelete: 'set null' }),
+}, (table) => {
+	return {
+		userIdIdx: index("transaction_user_id_idx").on(table.userId),
+		coinIdIdx: index("transaction_coin_id_idx").on(table.coinId),
+		typeIdx: index("transaction_type_idx").on(table.type),
+		timestampIdx: index("transaction_timestamp_idx").on(table.timestamp),
+		userCoinIdx: index("transaction_user_coin_idx").on(table.userId, table.coinId),
+		coinTypeIdx: index("transaction_coin_type_idx").on(table.coinId, table.type),
+	};
 });
 
 export const priceHistory = pgTable("price_history", {
@@ -237,6 +276,7 @@ export const notifications = pgTable("notification", {
 	type: notificationTypeEnum("type").notNull(),
 	title: varchar("title", { length: 200 }).notNull(),
 	message: text("message").notNull(),
+	link: text("link"),
 	isRead: boolean("is_read").notNull().default(false),
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => {
@@ -247,3 +287,29 @@ export const notifications = pgTable("notification", {
 		createdAtIdx: index("notification_created_at_idx").on(table.createdAt),
 	};
 });
+
+export const apikey = pgTable("apikey", {
+	id: serial("id").primaryKey(),
+	name: text('name'),
+	start: text('start'),
+	prefix: text('prefix'),
+	key: text('key').notNull(),
+	userId: integer('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	refillInterval: integer('refill_interval'),
+	refillAmount: integer('refill_amount'),
+	lastRefillAt: timestamp('last_refill_at'),
+	enabled: boolean('enabled'),
+	rateLimitEnabled: boolean('rate_limit_enabled'),
+	rateLimitTimeWindow: integer('rate_limit_time_window'),
+	rateLimitMax: integer('rate_limit_max'),
+	requestCount: integer('request_count'),
+	remaining: integer('remaining'),
+	lastRequest: timestamp('last_request'),
+	expiresAt: timestamp('expires_at'),
+	createdAt: timestamp('created_at').notNull(),
+	updatedAt: timestamp('updated_at').notNull(),
+	permissions: text('permissions'),
+	metadata: text('metadata')
+}, (table) => ({
+	userIdx: index("idx_apikey_user").on(table.userId)
+}));

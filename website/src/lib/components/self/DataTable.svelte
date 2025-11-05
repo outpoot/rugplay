@@ -191,7 +191,7 @@
 							{:else if cellData.type === 'coin'}
 								<div class="flex items-center gap-2">
 									<CoinIcon icon={cellData.icon} symbol={cellData.symbol} size={cellData.size} />
-									<span class="font-medium">{cellData.name}</span>
+									<span class="font-medium max-w-44 truncate">{cellData.name}</span>
 								</div>
 							{:else if cellData.type === 'rank'}
 								<div class="flex items-center gap-2">

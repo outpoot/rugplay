@@ -36,4 +36,7 @@
 	{#if user.isAdmin}
 		<SilentBadge icon={Hammer} text="Admin" class="text-primary {badgeClass}" />
 	{/if}
+	{#if user.halloweenBadge2025}
+		<SilentBadge icon="/pumpkin.png" text="Halloween 2025" class="text-primary {badgeClass}" />
+	{/if}
 </div>

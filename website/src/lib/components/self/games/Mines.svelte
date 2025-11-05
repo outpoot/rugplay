@@ -16,6 +16,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { ModeWatcher } from 'mode-watcher';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
+	import { calculateMinesMultiplier } from '$lib/utils';
 
 	const GRID_SIZE = 5;
 	const TOTAL_TILES = GRID_SIZE * GRID_SIZE;
@@ -58,14 +59,6 @@
 			probability *= (TOTAL_TILES - mines - i) / (TOTAL_TILES - i);
 		}
 		return (probability * 100).toFixed(2);
-	}
-
-	function calculateRawMultiplier(picks: number, mines: number): number {
-		let probability = 1;
-		for (let i = 0; i < picks; i++) {
-			probability *= (TOTAL_TILES - mines - i) / (TOTAL_TILES - i);
-		}
-		return probability === 0 ? 1.0 : Math.max(1.0, 1 / probability);
 	}
 
 	function setBetAmount(amount: number) {
@@ -119,6 +112,7 @@
 	async function handleTileClick(index: number) {
 		if (!isPlaying || revealedTiles.includes(index) || !sessionToken) return;
 		lastClickedTile = index;
+
 		try {
 			const response = await fetch('/api/gambling/mines/reveal', {
 				method: 'POST',
@@ -161,6 +155,7 @@
 
 	async function cashOut() {
 		if (!isPlaying || !sessionToken) return;
+
 		try {
 			const response = await fetch('/api/gambling/mines/cashout', {
 				method: 'POST',
@@ -194,6 +189,7 @@
 
 	async function startGame() {
 		if (!canBet) return;
+
 		balance -= betAmount;
 		onBalanceUpdate?.(balance);
 		try {
@@ -330,9 +326,7 @@
 					<p class="text-muted-foreground mt-1 text-xs">
 						You will get
 						<span class="text-success font-semibold">
-							{calculateRawMultiplier(isPlaying ? revealedTiles.length + 1 : 1, mineCount).toFixed(
-								2
-							)}x
+							{calculateMinesMultiplier(isPlaying ? revealedTiles.length + 1 : 1, mineCount, betAmount).toFixed(2)}x
 						</span>
 						per tile, probability of winning:
 						<span class="text-success font-semibold">
@@ -424,7 +418,7 @@
 									<span>Next Tile:</span>
 									<span>
 										+{formatValue(
-											betAmount * (calculateRawMultiplier(revealedTiles.length + 1, mineCount) - 1)
+											betAmount * (calculateMinesMultiplier(revealedTiles.length + 1, mineCount, betAmount) - 1)
 										)}
 									</span>
 								</div>

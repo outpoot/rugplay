@@ -5,6 +5,7 @@ import { user, userPortfolio, transaction, notifications, coin } from '$lib/serv
 import { eq, sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { formatValue, getPrestigeCost, getPrestigeName } from '$lib/utils';
+import { executeSellTrade } from '$lib/server/amm';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -34,12 +35,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             throw error(400, 'Maximum prestige level reached');
         }
 
+        const currentCashBalance = Number(userData.baseCurrencyBalance);
+        if (currentCashBalance < prestigeCost) {
+            throw error(400, `Insufficient cash funds for prestige. Need ${formatValue(prestigeCost)} cash, have ${formatValue(currentCashBalance)} cash. Coin holdings cannot be used for prestige costs.`);
+        }
+
         const holdings = await tx
             .select({
                 coinId: userPortfolio.coinId,
                 quantity: userPortfolio.quantity,
                 currentPrice: coin.currentPrice,
-                symbol: coin.symbol
+                symbol: coin.symbol,
+                poolCoinAmount: coin.poolCoinAmount,
+                poolBaseCurrencyAmount: coin.poolBaseCurrencyAmount,
+                circulatingSupply: coin.circulatingSupply
             })
             .from(userPortfolio)
             .leftJoin(coin, eq(userPortfolio.coinId, coin.id))
@@ -53,18 +62,37 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
             for (const holding of holdings) {
                 const quantity = Number(holding.quantity);
-                const price = Number(holding.currentPrice);
-                const saleValue = quantity * price;
-                totalSaleValue += saleValue;
+                const currentPrice = Number(holding.currentPrice);
 
-                await tx.insert(transaction).values({
-                    coinId: holding.coinId!,
-                    type: 'SELL',
-                    quantity: holding.quantity,
-                    pricePerCoin: holding.currentPrice || '0',
-                    totalBaseCurrencyAmount: saleValue.toString(),
-                    timestamp: new Date()
-                });
+                if (Number(holding.poolCoinAmount) <= 0 || Number(holding.poolBaseCurrencyAmount) <= 0) {
+                    const fallbackValue = quantity * currentPrice;
+                    totalSaleValue += fallbackValue;
+
+                    await tx.insert(transaction).values({
+                        userId,
+                        coinId: holding.coinId!,
+                        type: 'SELL',
+                        quantity: holding.quantity,
+                        pricePerCoin: holding.currentPrice || '0',
+                        totalBaseCurrencyAmount: fallbackValue.toString(),
+                        timestamp: new Date()
+                    });
+                    continue;
+                }
+
+                const sellResult = await executeSellTrade(tx, {
+                    id: holding.coinId,
+                    poolCoinAmount: holding.poolCoinAmount,
+                    poolBaseCurrencyAmount: holding.poolBaseCurrencyAmount,
+                    currentPrice: holding.currentPrice,
+                    circulatingSupply: holding.circulatingSupply
+                }, userId, quantity);
+
+                if (sellResult.success && sellResult.baseCurrencyReceived) {
+                    totalSaleValue += sellResult.baseCurrencyReceived;
+                } else {
+                    totalSaleValue += sellResult.fallbackValue || (quantity * currentPrice);
+                }
             }
 
             await tx
@@ -72,16 +100,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 .where(eq(userPortfolio.userId, userId));
         }
 
-        const currentBalance = Number(userData.baseCurrencyBalance) + totalSaleValue;
-        if (currentBalance < prestigeCost) {
-            throw error(400, `Insufficient funds. Need ${formatValue(prestigeCost)}, have ${formatValue(currentBalance)}`);
-        }
-
         await tx
             .update(user)
             .set({
                 baseCurrencyBalance: '100.00000000',
                 prestigeLevel: nextPrestige,
+                lastRewardClaim: null,
                 updatedAt: new Date()
             })
             .where(eq(user.id, userId));
@@ -92,7 +116,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             userId: userId,
             type: 'SYSTEM',
             title: `${prestigeName} Achieved!`,
-            message: `Congratulations! You have successfully reached ${prestigeName}. Your portfolio has been reset and you can now start fresh with your new prestige badge.`,
+            message: `Congratulations! You have successfully reached ${prestigeName}. Your portfolio has been reset, daily reward cooldown has been cleared, and you can now start fresh with your new prestige badge and enhanced daily rewards.`,
+            link: `/user/${userId}`
         });
 
         return json({

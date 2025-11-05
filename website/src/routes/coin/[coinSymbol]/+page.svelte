@@ -31,18 +31,20 @@
 
 	const { data } = $props();
 	let coinSymbol = $derived(data.coinSymbol);
-	let coin = $state<any>(null);
-	let loading = $state(true);
-	let chartData = $state<any[]>([]);
-	let volumeData = $state<any[]>([]);
+	let coin = $state(data.coin);
+	let loading = $state(false);
+	let chartData = $state(data.chartData);
+	let volumeData = $state(data.volumeData);
 	let userHolding = $state(0);
 	let buyModalOpen = $state(false);
 	let sellModalOpen = $state(false);
-	let selectedTimeframe = $state('1m');
+	let selectedTimeframe = $state(data.timeframe || '1m');
 	let lastPriceUpdateTime = 0;
 	let shouldSignIn = $state(false);
 
 	let previousCoinSymbol = $state<string | null>(null);
+	let countdown = $state<number | null>(null);
+	let countdownInterval = $state<NodeJS.Timeout | null>(null);
 
 	const timeframeOptions = [
 		{ value: '1m', label: '1 minute' },
@@ -54,7 +56,6 @@
 	];
 
 	onMount(async () => {
-		await loadCoinData();
 		await loadUserHolding();
 
 		websocketController.setCoin(coinSymbol.toUpperCase());
@@ -90,8 +91,44 @@
 		}
 	});
 
+	$effect(() => {
+		if (coin?.isLocked && coin?.tradingUnlocksAt) {
+			const unlockTime = new Date(coin.tradingUnlocksAt).getTime();
+			
+			const updateCountdown = () => {
+				const now = Date.now();
+				const remaining = Math.max(0, Math.ceil((unlockTime - now) / 1000));
+				countdown = remaining;
+				
+				if (remaining === 0 && countdownInterval) {
+					clearInterval(countdownInterval);
+					countdownInterval = null;
+					if (coin) {
+						coin = { ...coin, isLocked: false };
+					}
+				}
+			};
+			
+			updateCountdown();
+			countdownInterval = setInterval(updateCountdown, 1000);
+		} else {
+			countdown = null;
+			if (countdownInterval) {
+				clearInterval(countdownInterval);
+				countdownInterval = null;
+			}
+		}
+		
+		return () => {
+			if (countdownInterval) {
+				clearInterval(countdownInterval);
+			}
+		};
+	});
+
 	async function loadCoinData() {
 		try {
+			loading = true;
 			const response = await fetch(`/api/coin/${coinSymbol}?timeframe=${selectedTimeframe}`);
 
 			if (!response.ok) {
@@ -274,7 +311,7 @@
 				1
 			);
 
-			const processedChartData = chartData.map((candle) => {
+			const processedChartData = chartData.map((candle: { open: any; close: any; high: number; low: number; }) => {
 				if (candle.open === candle.close) {
 					const basePrice = candle.open;
 					const variation = basePrice * 0.001;
@@ -356,20 +393,32 @@
 			};
 		});
 	}
+
+	function formatCountdown(seconds: number): string {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins}:${secs.toString().padStart(2, '0')}`;
+	}
+
+	let isCreator = $derived(coin && $USER_DATA && coin.creatorId === Number($USER_DATA.id));
+	let isTradingLocked = $derived(coin?.isLocked && countdown !== null && countdown > 0);
+	let canTrade = $derived(!isTradingLocked || isCreator);
+
 </script>
 
 <SEO
 	title={coin
 		? `${coin.name} (*${coin.symbol}) - Rugplay`
-		: `Loading ${coinSymbol.toUpperCase()} - Rugplay Game`}
+		: `Loading ${coinSymbol.toUpperCase()} - Rugplay`}
 	description={coin
 		? `Trade ${coin.name} (*${coin.symbol}) in the Rugplay simulation game. Current price: $${formatPrice(coin.currentPrice)}, Market cap: ${formatMarketCap(coin.marketCap)}, 24h change: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%.`
 		: `Virtual cryptocurrency trading page for ${coinSymbol.toUpperCase()} in the Rugplay simulation game.`}
 	keywords={coin
 		? `${coin.name} cryptocurrency game, *${coin.symbol} virtual trading, ${coin.symbol} price simulation, cryptocurrency trading game, virtual coin ${coin.symbol}`
 		: `${coinSymbol} virtual cryptocurrency, crypto trading simulation, virtual coin trading`}
-	image={coin?.icon ? getPublicUrl(coin.icon) : '/rugplay.svg'}
+	image={coin?.icon ? getPublicUrl(coin.icon) : '/apple-touch-icon.png'}
 	imageAlt={coin ? `${coin.name} (${coin.symbol}) logo` : `${coinSymbol} cryptocurrency logo`}
+	twitterCard="summary"
 />
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
@@ -416,6 +465,11 @@
 									class="animate-pulse border-green-500 text-xs text-green-500"
 								>
 									● LIVE
+								</Badge>
+							{/if}
+							{#if isTradingLocked}
+								<Badge variant="secondary" class="text-xs">
+									🔒 LOCKED {countdown !== null ? formatCountdown(countdown) : ''}
 								</Badge>
 							{/if}
 							{#if !coin.isListed}
@@ -528,6 +582,15 @@
 									{coin.symbol}
 								</p>
 							{/if}
+							{#if isTradingLocked}
+								<p class="text-muted-foreground text-sm">
+									{#if isCreator}
+										🔒 Creator-only period: {countdown !== null ? formatCountdown(countdown) : ''} remaining
+									{:else}
+										🔒 Trading unlocks in: {countdown !== null ? formatCountdown(countdown) : ''}
+									{/if}
+								</p>
+							{/if}
 						</Card.Header>
 						<Card.Content>
 							{#if $USER_DATA}
@@ -537,7 +600,7 @@
 										variant="default"
 										size="lg"
 										onclick={() => (buyModalOpen = true)}
-										disabled={!coin.isListed}
+										disabled={!coin.isListed || !canTrade}
 									>
 										<TrendingUp class="h-4 w-4" />
 										Buy {coin.symbol}
@@ -547,7 +610,7 @@
 										variant="outline"
 										size="lg"
 										onclick={() => (sellModalOpen = true)}
-										disabled={!coin.isListed || userHolding <= 0}
+										disabled={!coin.isListed || userHolding <= 0 || !canTrade}
 									>
 										<TrendingDown class="h-4 w-4" />
 										Sell {coin.symbol}

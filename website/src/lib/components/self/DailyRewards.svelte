@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Gift, Clock, Loader2, CheckIcon } from 'lucide-svelte';
+	import { Gift, Clock, Loader2, CheckIcon, Star } from 'lucide-svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
@@ -11,6 +11,8 @@
 		canClaim: boolean;
 		rewardAmount: number;
 		baseReward: number;
+		prestigeBonus?: number;
+		prestigeLevel?: number;
 		timeRemaining: number;
 		nextClaimTime: string | null;
 		totalRewardsClaimed: number;
@@ -67,9 +69,13 @@
 				const result = await response.json();
 				claimState = 'success';
 
+				const prestigeBonus = result.prestigeBonus || 0;
+				const hasPrestigeBonus = prestigeBonus > 0;
+
 				toast.success(`Daily reward claimed! +$${formatCurrency(result.rewardAmount)}`, {
-					description:
-						rewardStatus.loginStreak > 0
+					description: hasPrestigeBonus 
+						? `Base: $${formatCurrency(result.baseReward)} + Prestige bonus: $${formatCurrency(prestigeBonus)} | Streak: ${rewardStatus.loginStreak} days 🔥`
+						: rewardStatus.loginStreak > 0
 							? `Login streak: ${rewardStatus.loginStreak} days 🔥`
 							: undefined,
 					action: {

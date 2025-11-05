@@ -36,6 +36,7 @@ export async function resolveExpiredQuestions() {
                     question.requiresWebSearch,
                     rugplayData
                 );
+                    console.log('Resolution result:', resolution);
 
                 if (resolution.confidence < 50) {
                     console.log(`Cancelling question ${question.id} due to low confidence: ${resolution.confidence}`);
@@ -120,6 +121,7 @@ export async function resolveExpiredQuestions() {
                                 'HOPIUM',
                                 title,
                                 message,
+                                `/hopium/${question.id}`
                             );
                         }
                     });
@@ -219,6 +221,7 @@ export async function resolveExpiredQuestions() {
                             'HOPIUM',
                             title,
                             message,
+                            `/hopium/${question.id}`
                         );
                     }
                 });

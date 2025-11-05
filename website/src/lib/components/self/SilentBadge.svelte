@@ -8,12 +8,18 @@
 	}
 
 	let { icon: Icon, text, class: className }: Props = $props();
+
+	const isImagePath = $derived(typeof Icon === 'string');
 </script>
 
 <Tooltip.Root>
 	<Tooltip.Trigger>
 		<div class="cursor-pointer rounded-full p-1 opacity-80 hover:opacity-100 {className}">
-			<Icon class="h-4 w-4" />
+			{#if isImagePath}
+				<img src={Icon} alt={text} class="h-4 w-4" />
+			{:else}
+				<Icon class="h-4 w-4" />
+			{/if}
 		</div>
 	</Tooltip.Trigger>
 	<Tooltip.Content

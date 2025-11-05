@@ -28,9 +28,10 @@
 	import type { PredictionQuestion } from '$lib/types/prediction';
 	import HopiumQuestionSkeleton from '$lib/components/self/skeletons/HopiumQuestionSkeleton.svelte';
 
-	let question = $state<PredictionQuestion | null>(null);
-	let loading = $state(true);
-	let probabilityData = $state<any[]>([]);
+	const { data } = $props();
+	let question = $state(data.question);
+	let loading = $state(false);
+	let probabilityData = $state(data.probabilityData);
 
 	// Betting form
 	let betSide = $state<boolean>(true);
@@ -38,7 +39,7 @@
 	let customBetAmount = $state('');
 
 	let userBalance = $derived($PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance : 0);
-	let questionId = $derived(parseInt(page.params.id));
+	let questionId = $derived(data.questionId);
 
 	// Chart related
 	let chartContainer = $state<HTMLDivElement>();
@@ -46,7 +47,6 @@
 	let lineSeries: any = null;
 
 	onMount(() => {
-		fetchQuestion();
 		if ($USER_DATA) {
 			fetchPortfolioSummary();
 		}
@@ -54,6 +54,7 @@
 
 	async function fetchQuestion() {
 		try {
+			loading = true;
 			const response = await fetch(`/api/hopium/questions/${questionId}`);
 			if (response.ok) {
 				const result = await response.json();
@@ -223,7 +224,7 @@
 				<MessageCircleQuestion class="h-14 w-14" />
 			</div>
 			<div class="flex-1">
-				<h1 class="text-2xl font-semibold">{question.question}</h1>
+				<h1 class="text-2xl font-semibold break-all">{question.question}</h1>
 				{#if question.status === 'ACTIVE'}
 					<p class="text-muted-foreground mt-1 text-sm">
 						{formatTimeUntil(question.resolutionDate).startsWith('Ended')

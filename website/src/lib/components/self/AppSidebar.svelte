@@ -32,7 +32,8 @@
 		BookOpen,
 		Info,
 		Bell,
-		Crown
+		Crown,
+		Key
 	} from 'lucide-svelte';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -49,6 +50,7 @@
 	import { liveTradesStore, isLoadingTrades } from '$lib/stores/websocket';
 	import { onMount } from 'svelte';
 	import { UNREAD_COUNT, fetchNotifications } from '$lib/stores/notifications';
+	import { GAMBLING_STATS, fetchGamblingStats } from '$lib/stores/gambling-stats';
 
 	const data = {
 		navMain: [
@@ -75,8 +77,10 @@
 		if ($USER_DATA) {
 			fetchPortfolioSummary();
 			fetchNotifications();
+			fetchGamblingStats();
 		} else {
 			PORTFOLIO_SUMMARY.set(null);
+			GAMBLING_STATS.set(null);
 		}
 	});
 
@@ -156,6 +160,11 @@
 
 	function handlePrestigeClick() {
 		goto('/prestige');
+		setOpenMobile(false);
+	}
+
+	function handleAPIClick() {
+		goto('/api');
 		setOpenMobile(false);
 	}
 </script>
@@ -411,7 +420,7 @@
 								</div>
 							</DropdownMenu.Label>
 							<DropdownMenu.Separator />
-							
+
 							<!-- Profile & Settings Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAccountClick}>
@@ -427,11 +436,15 @@
 									Prestige
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
-							
+
 							<DropdownMenu.Separator />
-							
+
 							<!-- Features Group -->
 							<DropdownMenu.Group>
+								<DropdownMenu.Item onclick={handleAPIClick}>
+									<Key />
+									API
+								</DropdownMenu.Item>
 								<DropdownMenu.Item
 									onclick={() => {
 										showPromoCode = true;
@@ -483,9 +496,9 @@
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>
 							{/if}
-							
+
 							<DropdownMenu.Separator />
-							
+
 							<!-- Legal Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleTermsClick}>
@@ -497,9 +510,9 @@
 									Privacy Policy
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
-							
+
 							<DropdownMenu.Separator />
-							
+
 							<!-- Sign Out -->
 							<DropdownMenu.Item
 								onclick={() => {

@@ -1,1 +1,0 @@
-ALTER TABLE "user" ADD COLUMN "prestige_level" integer DEFAULT 0;

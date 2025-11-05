@@ -5,12 +5,13 @@
 		title = 'Rugplay',
 		description = 'Experience realistic cryptocurrency trading simulation game with AI-powered markets, rug pull mechanics, and virtual currencies. Learn crypto trading without financial risk in this educational game.',
 		type = 'website',
-		image = '/rugplay.svg',
+		image = '/apple-touch-icon.png',
 		imageAlt = 'Rugplay Logo',
 		keywords = '',
 		author = 'Outpoot',
 		canonicalUrl = '',
-		noindex = false
+		noindex = false,
+		twitterCard = 'summary_large_image'
 	}: {
 		title?: string;
 		description?: string;
@@ -21,6 +22,7 @@
 		author?: string;
 		canonicalUrl?: string;
 		noindex?: boolean;
+		twitterCard?: 'summary' | 'summary_large_image';
 	} = $props();
 
 	let currentUrl = $derived($page?.url?.href || '');
@@ -64,7 +66,7 @@
 	<meta property="og:locale" content="en_US" />
 
 	<!-- Twitter Card Meta Tags -->
-	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:card" content={twitterCard} />
 	<meta name="twitter:title" content={title} />
 	<meta name="twitter:description" content={description} />
 	<meta name="twitter:image" content={fullImageUrl} />

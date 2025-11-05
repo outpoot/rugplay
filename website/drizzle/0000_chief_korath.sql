@@ -42,6 +42,30 @@ CREATE TABLE IF NOT EXISTS "account_deletion_request" (
 	CONSTRAINT "account_deletion_request_user_id_unique" UNIQUE("user_id")
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "apikey" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" text,
+	"start" text,
+	"prefix" text,
+	"key" text NOT NULL,
+	"user_id" integer NOT NULL,
+	"refill_interval" integer,
+	"refill_amount" integer,
+	"last_refill_at" timestamp,
+	"enabled" boolean,
+	"rate_limit_enabled" boolean,
+	"rate_limit_time_window" integer,
+	"rate_limit_max" integer,
+	"request_count" integer,
+	"remaining" integer,
+	"last_request" timestamp,
+	"expires_at" timestamp,
+	"created_at" timestamp NOT NULL,
+	"updated_at" timestamp NOT NULL,
+	"permissions" text,
+	"metadata" text
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "coin" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar(255) NOT NULL,
@@ -189,6 +213,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"last_reward_claim" timestamp with time zone,
 	"total_rewards_claimed" numeric(20, 8) DEFAULT '0.00000000' NOT NULL,
 	"login_streak" integer DEFAULT 0 NOT NULL,
+	"prestige_level" integer DEFAULT 0,
 	CONSTRAINT "user_email_unique" UNIQUE("email"),
 	CONSTRAINT "user_username_unique" UNIQUE("username")
 );
@@ -218,6 +243,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "account_deletion_request" ADD CONSTRAINT "account_deletion_request_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "apikey" ADD CONSTRAINT "apikey_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -345,6 +376,15 @@ END $$;
 CREATE INDEX IF NOT EXISTS "account_deletion_request_user_id_idx" ON "account_deletion_request" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "account_deletion_request_scheduled_deletion_idx" ON "account_deletion_request" USING btree ("scheduled_deletion_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "account_deletion_request_open_idx" ON "account_deletion_request" USING btree ("user_id") WHERE is_processed = false;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_apikey_user" ON "apikey" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_symbol_idx" ON "coin" USING btree ("symbol");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_creator_id_idx" ON "coin" USING btree ("creator_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_is_listed_idx" ON "coin" USING btree ("is_listed");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_market_cap_idx" ON "coin" USING btree ("market_cap");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_current_price_idx" ON "coin" USING btree ("current_price");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_change24h_idx" ON "coin" USING btree ("change_24h");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_volume24h_idx" ON "coin" USING btree ("volume_24h");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "coin_created_at_idx" ON "coin" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "comment_user_id_idx" ON "comment" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "comment_coin_id_idx" ON "comment" USING btree ("coin_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "notification_user_id_idx" ON "notification" USING btree ("user_id");--> statement-breakpoint
@@ -357,4 +397,16 @@ CREATE INDEX IF NOT EXISTS "prediction_bet_user_question_idx" ON "prediction_bet
 CREATE INDEX IF NOT EXISTS "prediction_bet_created_at_idx" ON "prediction_bet" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "prediction_question_creator_id_idx" ON "prediction_question" USING btree ("creator_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "prediction_question_status_idx" ON "prediction_question" USING btree ("status");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "prediction_question_resolution_date_idx" ON "prediction_question" USING btree ("resolution_date");
+CREATE INDEX IF NOT EXISTS "prediction_question_resolution_date_idx" ON "prediction_question" USING btree ("resolution_date");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "prediction_question_status_resolution_idx" ON "prediction_question" USING btree ("status","resolution_date");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_user_id_idx" ON "transaction" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_coin_id_idx" ON "transaction" USING btree ("coin_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_type_idx" ON "transaction" USING btree ("type");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_timestamp_idx" ON "transaction" USING btree ("timestamp");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_user_coin_idx" ON "transaction" USING btree ("user_id","coin_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transaction_coin_type_idx" ON "transaction" USING btree ("coin_id","type");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_username_idx" ON "user" USING btree ("username");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_is_banned_idx" ON "user" USING btree ("is_banned");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_is_admin_idx" ON "user" USING btree ("is_admin");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_created_at_idx" ON "user" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_updated_at_idx" ON "user" USING btree ("updated_at");

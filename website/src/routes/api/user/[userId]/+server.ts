@@ -26,6 +26,9 @@ export async function GET({ params }) {
                 isAdmin: true,
                 loginStreak: true,
                 prestigeLevel: true,
+                halloweenBadge2025: true,
+                gamblingWins: true,
+                gamblingLosses: true,
             }
         });
 

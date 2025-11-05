@@ -26,9 +26,18 @@ export const POST: RequestHandler = async ({ request }) => {
 
         const sessionRaw = await redis.get(getSessionKey(sessionToken));
         const game = sessionRaw ? JSON.parse(sessionRaw) : null;
+        const userId = Number(session.user.id);
 
         if (!game) {
             return json({ error: 'Invalid session' }, { status: 400 });
+        }
+
+        if (game.userId !== userId) {
+            return json({ error: 'Unauthorized: Session belongs to another user' }, { status: 403 });
+        }
+
+        if (game.status !== 'active') {
+            return json({ error: 'Game is not active' }, { status: 400 });
         }
 
         if (game.revealedTiles.includes(tileIndex)) {
@@ -40,7 +49,13 @@ export const POST: RequestHandler = async ({ request }) => {
         if (game.minePositions.includes(tileIndex)) {
             game.status = 'lost';
             const minePositions = game.minePositions;
-        
+
+            const deleted = await redis.del(getSessionKey(sessionToken));
+
+            if (!deleted) {
+                return json({ error: 'Session already processed' }, { status: 400 });
+            }
+
             const userId = Number(session.user.id);
             const [userData] = await db
                 .select({ baseCurrencyBalance: user.baseCurrencyBalance })
@@ -58,9 +73,7 @@ export const POST: RequestHandler = async ({ request }) => {
                     updatedAt: new Date()
                 })
                 .where(eq(user.id, userId));
-        
-            await redis.del(getSessionKey(sessionToken));
-        
+
             return json({
                 hitMine: true,
                 minePositions,
@@ -80,6 +93,13 @@ export const POST: RequestHandler = async ({ request }) => {
 
         if (game.revealedTiles.length === 25 - game.mineCount) {
             game.status = 'won';
+
+            const deleted = await redis.del(getSessionKey(sessionToken));
+
+            if (!deleted) {
+                return json({ error: 'Session already processed' }, { status: 400 });
+            }
+
             const userId = Number(session.user.id);
             const [userData] = await db
                 .select({ baseCurrencyBalance: user.baseCurrencyBalance })
@@ -101,8 +121,6 @@ export const POST: RequestHandler = async ({ request }) => {
                 })
                 .where(eq(user.id, userId));
 
-            await redis.del(getSessionKey(sessionToken));
-
             return json({
                 hitMine: false,
                 currentMultiplier: game.currentMultiplier,
@@ -112,7 +130,23 @@ export const POST: RequestHandler = async ({ request }) => {
             });
         }
 
-        await redis.set(getSessionKey(sessionToken), JSON.stringify(game));
+        const luaScript = `
+            if redis.call("exists", KEYS[1]) == 1 then
+                redis.call("set", KEYS[1], ARGV[1])
+                return 1
+            else
+                return 0
+            end
+        `;
+
+        const updated = await redis.eval(luaScript, {
+            keys: [getSessionKey(sessionToken)],
+            arguments: [JSON.stringify(game)]
+        }) as number;
+
+        if (!updated) {
+            return json({ error: 'Session was modified or removed' }, { status: 400 });
+        }
 
         return json({
             hitMine: false,

@@ -385,6 +385,24 @@ export function getMaxPrestigeLevel(): number {
     return 5;
 }
 
+export function validateBetAmount(amount: unknown, minBet: number = 0.01, maxBet: number = 1000000): number {
+    if (!amount || typeof amount !== 'number' || !Number.isFinite(amount)) {
+        throw new Error('Invalid bet amount');
+    }
+
+    const roundedBet = Math.round(amount * 100000000) / 100000000;
+
+    if (roundedBet < minBet) {
+        throw new Error(`Bet amount must be at least $${minBet.toFixed(2)}`);
+    }
+
+    if (roundedBet > maxBet) {
+        throw new Error('Bet amount too large');
+    }
+
+    return roundedBet;
+}
+
 export function calculateMinesMultiplier(picks: number, mines: number, betAmount: number): number {
     const TOTAL_TILES = 25;
     const HOUSE_EDGE = 0.05;

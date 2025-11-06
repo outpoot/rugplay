@@ -5,6 +5,7 @@ import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import { publishGamblingActivity } from '$lib/server/gambling-activity';
+import { validateBetAmount } from '$lib/utils';
 import type { RequestHandler } from './$types';
 
 interface CoinflipRequest {
@@ -28,13 +29,7 @@ export const POST: RequestHandler = async ({ request }) => {
             return json({ error: 'Invalid side' }, { status: 400 });
         }
 
-        if (!amount || amount <= 0 || !Number.isFinite(amount)) {
-            return json({ error: 'Invalid bet amount' }, { status: 400 });
-        }
-
-        if (amount > 1000000) {
-            return json({ error: 'Bet amount too large' }, { status: 400 });
-        }
+        const roundedBet = validateBetAmount(amount);
 
         const userId = Number(session.user.id);
 
@@ -51,23 +46,21 @@ export const POST: RequestHandler = async ({ request }) => {
                 .limit(1);
 
             const currentBalance = Number(userData.baseCurrencyBalance);
-
-            const roundedAmount = Math.round(amount * 100000000) / 100000000;
             const roundedBalance = Math.round(currentBalance * 100000000) / 100000000;
 
-            if (roundedAmount > roundedBalance) {
-                throw new Error(`Insufficient funds. You need *${roundedAmount.toFixed(2)} but only have *${roundedBalance.toFixed(2)}`);
+            if (roundedBet > roundedBalance) {
+                throw new Error(`Insufficient funds. You need $${roundedBet.toFixed(2)} but only have $${roundedBalance.toFixed(2)}`);
             }
 
             const gameResult: 'heads' | 'tails' = randomBytes(1)[0] < 128 ? 'heads' : 'tails';
             const won = gameResult === side;
 
             const multiplier = 2;
-            const payout = won ? roundedAmount * multiplier : 0;
-            const newBalance = roundedBalance - roundedAmount + payout;
+            const payout = won ? roundedBet * multiplier : 0;
+            const newBalance = roundedBalance - roundedBet + payout;
 
             // Calculate gambling stats
-            const netResult = payout - roundedAmount;
+            const netResult = payout - roundedBet;
             const isWin = netResult > 0;
 
             const updateData: any = {
@@ -91,7 +84,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 result: gameResult,
                 newBalance,
                 payout,
-                amountWagered: roundedAmount
+                amountWagered: roundedBet
             };
         });
 

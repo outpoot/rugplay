@@ -5,6 +5,7 @@ import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { getSessionKey } from '$lib/server/games/mines';
+import { validateBetAmount } from '$lib/utils';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -20,13 +21,11 @@ export const POST: RequestHandler = async ({ request }) => {
         const { betAmount, mineCount } = await request.json();
         const userId = Number(session.user.id);
 
-        if (!betAmount || betAmount <= 0 || !mineCount || mineCount < 3 || mineCount > 24) {
-            return json({ error: 'Invalid bet amount or mine count' }, { status: 400 });
+        if (!mineCount || mineCount < 3 || mineCount > 24) {
+            return json({ error: 'Invalid mine count' }, { status: 400 });
         }
 
-        if (betAmount > 1000000) {
-            return json({ error: 'Bet amount too large' }, { status: 400 });
-        }
+        const roundedBet = validateBetAmount(betAmount);
 
         const result = await db.transaction(async (tx) => {
             const [userData] = await tx
@@ -37,11 +36,10 @@ export const POST: RequestHandler = async ({ request }) => {
                 .limit(1);
 
             const currentBalance = Number(userData.baseCurrencyBalance);
-            const roundedAmount = Math.round(betAmount * 100000000) / 100000000;
             const roundedBalance = Math.round(currentBalance * 100000000) / 100000000;
 
-            if (roundedAmount > roundedBalance) {
-                throw new Error(`Insufficient funds. You need *${roundedAmount.toFixed(2)} but only have *${roundedBalance.toFixed(2)}`);
+            if (roundedBet > roundedBalance) {
+                throw new Error(`Insufficient funds. You need $${roundedBet.toFixed(2)} but only have $${roundedBalance.toFixed(2)}`);
             }
 
             // Generate mine positions
@@ -58,13 +56,13 @@ export const POST: RequestHandler = async ({ request }) => {
                 .join('');
 
             const now = Date.now();
-            const newBalance = roundedBalance - roundedAmount;
+            const newBalance = roundedBalance - roundedBet;
 
             await redis.set(
                 getSessionKey(sessionToken),
                 JSON.stringify({
                     sessionToken,
-                    betAmount: roundedAmount,
+                    betAmount: roundedBet,
                     mineCount,
                     minePositions: Array.from(positions),
                     revealedTiles: [],

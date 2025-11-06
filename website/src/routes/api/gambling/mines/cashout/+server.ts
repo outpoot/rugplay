@@ -9,6 +9,8 @@ import { publishGamblingActivity } from '$lib/server/gambling-activity';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
+    return json({ error: 'Mines is currently under maintenance. Please check back later.' }, { status: 503 });
+
     const session = await auth.api.getSession({
         headers: request.headers
     });

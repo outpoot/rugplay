@@ -215,6 +215,12 @@
 
 	onMount(async () => {
 		volumeSettings.load();
+
+		toast.warning('Mines is under maintenance', {
+			description: 'This game is currently unavailable. Please check back later.',
+			duration: 5000
+		});
+
 		try {
 			const data = await fetchPortfolioSummary();
 			if (data) {

@@ -23,6 +23,7 @@
 	const MAX_BET_AMOUNT = 1000000;
 	const MIN_MINES = 3;
 	const AUTO_CASHOUT_TIME = 15;
+	const MIN_BET_AMOUNT = 0.01;
 
 	let {
 		balance = $bindable(),
@@ -69,11 +70,17 @@
 	}
 
 	function handleBetAmountInput(event: Event) {
-		const value = (event.target as HTMLInputElement).value.replace(/,/g, '');
-		const num = parseFloat(value) || 0;
+		const input = (event.target as HTMLInputElement).value.replace(/,/g, '');
+		let num = parseFloat(input);
+
+		if (!isFinite(num) || num < MIN_BET_AMOUNT) {
+			num = MIN_BET_AMOUNT;
+		}
+
 		const clamped = Math.min(num, Math.min(balance, MAX_BET_AMOUNT));
+
 		betAmount = clamped;
-		betAmountDisplay = value;
+		betAmountDisplay = clamped.toString();
 	}
 
 	function handleBetAmountBlur() {

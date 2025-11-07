@@ -243,7 +243,11 @@ export async function POST({ params, request }) {
             }
 
             // Allow more aggressive selling for rug pull simulation - prevent only mathematical breakdown
-            const maxSellable = Math.floor(Number(coinData.poolCoinAmount) * 0.995);
+            let maxSellable = Math.floor(Number(coinData.poolCoinAmount) * 0.995);
+            if (maxSellable < 1 ){
+                maxSellable = 1
+            }
+            
             if (amount > maxSellable) {
                 throw error(400, `Cannot sell more than 99.5% of pool tokens. Max sellable: ${maxSellable} tokens`);
             }

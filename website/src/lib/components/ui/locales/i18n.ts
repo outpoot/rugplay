@@ -3,7 +3,7 @@ import { init, register } from 'svelte-i18n';
 
 export const defaultLocale = 'en';
 export const supportedLocales = ['en'];
-register('en', () => import('./en.json'));
+register('en', async () => (await import('./en')).default);
 
 init({
 	fallbackLocale: defaultLocale,

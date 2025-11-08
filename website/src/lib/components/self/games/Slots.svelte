@@ -14,6 +14,7 @@
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount } from 'svelte';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
+	import { _ } from 'svelte-i18n';
 
 	interface SlotsResult {
 		won: boolean;
@@ -230,8 +231,8 @@
 
 <Card>
 	<CardHeader>
-		<CardTitle>Slots</CardTitle>
-		<CardDescription>Match 3 symbols to win big!</CardDescription>
+		<CardTitle>{$_('gambling.games.slots.title')}</CardTitle>
+		<CardDescription>{$_('gambling.games.slots.description')}</CardDescription>
 	</CardHeader>
 	<CardContent>
 		<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -239,7 +240,7 @@
 			<div class="flex flex-col space-y-4">
 				<!-- Balance Display -->
 				<div class="text-center">
-					<p class="text-muted-foreground text-sm">Balance</p>
+					<p class="text-muted-foreground text-sm">{$_('gambling.balance')}</p>
 					<p class="text-2xl font-bold">{formatValue(balance)}</p>
 				</div>
 
@@ -274,15 +275,23 @@
 				<div class="flex items-center justify-center text-center">
 					{#if lastResult && !isSpinning}
 						<div class="bg-muted/50 w-full rounded-lg p-3">
-							{#if lastResult.won}
+							{#if lastResult?.won}
 								<p class="text-success font-semibold">
-									WIN - {lastResult.winType}
+									{$_(`gambling.games.slots.win.title`).replace(
+										'{{winType}}',
+										$_(`gambling.games.slots.win.${lastResult.winType}`)
+									)}
 								</p>
 								<p class="text-sm">
-									Won {formatValue(lastResult.payout)}
+									{$_(`gambling.games.slots.win.description`).replace(
+										'{{amount}}',
+										formatValue(lastResult.payout)
+									)}
 								</p>
 							{:else}
-								<p class="text-destructive font-semibold">NO MATCH</p>
+								<p class="text-destructive font-semibold">
+									{$_(`gambling.games.slots.loss.title`)}
+								</p>
 								<p class="text-sm">
 									Lost {formatValue(lastResult.amountWagered)}
 								</p>
@@ -296,14 +305,14 @@
 			<div class="space-y-4">
 				<!-- Paytable -->
 				<div>
-					<div class="mb-2 block text-sm font-medium">Paytable</div>
+					<div class="mb-2 block text-sm font-medium">{$_(`gambling.games.slots.paytable`)}</div>
 					<div class="bg-muted/50 space-y-1 rounded-lg p-3 text-xs">
 						<div class="flex justify-between">
-							<span>3 Same Symbols:</span>
+							<span>{$_(`gambling.games.slots.5x`)}</span>
 							<span class="text-success">5x</span>
 						</div>
 						<div class="flex justify-between">
-							<span>2 Same Symbols:</span>
+							<span>{$_(`gambling.games.slots.2x`)}</span>
 							<span class="text-success">2x</span>
 						</div>
 					</div>
@@ -311,7 +320,9 @@
 
 				<!-- Bet Amount -->
 				<div>
-					<label for="bet-amount" class="mb-2 block text-sm font-medium">Bet Amount</label>
+					<label for="bet-amount" class="mb-2 block text-sm font-medium"
+						>{$_(`gambling.betAmount`)}</label
+					>
 					<Input
 						id="bet-amount"
 						type="text"
@@ -319,10 +330,10 @@
 						oninput={handleBetAmountInput}
 						onblur={handleBetAmountBlur}
 						disabled={isSpinning}
-						placeholder="Enter bet amount"
+						placeholder={$_(`gambling.betAmountPlaceholder`)}
 					/>
 					<p class="text-muted-foreground mt-1 text-xs">
-						Max bet: {MAX_BET_AMOUNT.toLocaleString()}
+						{$_(`gambling.maxBet`).replace('{{amount}}', MAX_BET_AMOUNT.toLocaleString())}
 					</p>
 				</div>
 
@@ -358,7 +369,7 @@
 
 				<!-- Spin Button -->
 				<Button class="h-12 w-full text-lg" onclick={spin} disabled={!canBet}>
-					{isSpinning ? 'Spinning...' : 'Spin'}
+					{isSpinning ? $_(`gambling.games.slots.spinning`) : $_(`gambling.games.slots.spin`)}
 				</Button>
 			</div>
 		</div>

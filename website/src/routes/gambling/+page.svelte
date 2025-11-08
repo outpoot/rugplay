@@ -61,16 +61,16 @@
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
 <div class="container mx-auto p-6">
-	<h1 class="mb-6 text-center text-3xl font-bold">Gambling</h1>
+	<h1 class="mb-6 text-center text-3xl font-bold">{$_('gambling.title')}</h1>
 
 	{#if !$USER_DATA}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">Sign in to start gambling</div>
+				<div class="text-muted-foreground mb-4 text-xl">{$_('gambling.signin.title')}</div>
 				<p class="text-muted-foreground mb-4 text-sm">
-					You need an account to gamble away your life savings
+					{$_('gambling.signin.description')}
 				</p>
-				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+				<Button onclick={() => (shouldSignIn = true)}>{$_('signin.button')}</Button>
 			</div>
 		</div>
 	{:else}
@@ -81,19 +81,19 @@
 					variant={activeGame === 'coinflip' ? 'default' : 'outline'}
 					onclick={() => (activeGame = 'coinflip')}
 				>
-					Coinflip
+					{$_('gambling.games.coinflip.title')}
 				</Button>
 				<Button
 					variant={activeGame === 'slots' ? 'default' : 'outline'}
 					onclick={() => (activeGame = 'slots')}
 				>
-					Slots
+					{$_('gambling.games.slots.title')}
 				</Button>
 				<Button
 					variant={activeGame === 'mines' ? 'default' : 'outline'}
 					onclick={() => (activeGame = 'mines')}
 				>
-					Mines
+					{$_('gambling.games.mines.title')}
 				</Button>
 				<Button
 					variant={activeGame === 'dice' ? 'default' : 'outline'}
@@ -124,9 +124,9 @@
 						{#if filteredActivities.length === 0}
 							<div class="flex flex-col items-center justify-center py-8 text-center">
 								<PiggyBank class="text-muted-foreground/50 mb-4 h-12 w-12" />
-								<h3 class="mb-2 text-base font-semibold">Waiting for activity...</h3>
+								<h3 class="mb-2 text-base font-semibold">{$_('gambling.live.noData.title')}</h3>
 								<p class="text-muted-foreground text-sm">
-									High stakes gambling activity will appear here in real-time.
+									{$_('gambling.live.noData.description')}
 								</p>
 							</div>
 						{:else}
@@ -158,7 +158,7 @@
 										</HoverCard.Root>
 
 										<span class="text-muted-foreground text-sm"
-											>{activity.won ? 'won' : 'lost'}</span
+											>{activity.won ? $_('gambling.live.won') : $_('gambling.live.lost')}</span
 										>
 										<span
 											class="font-mono text-sm font-medium {activity.won
@@ -167,7 +167,9 @@
 										>
 											{formatValue(activity.amount)}
 										</span>
-										<span class="text-muted-foreground text-sm">on {activity.game}</span>
+										<span class="text-muted-foreground text-sm"
+											>{$_('gambling.live.on').replace('{{game}}', activity.game)}</span
+										>
 									</div>
 
 									<div class="text-muted-foreground flex items-center gap-1 text-xs">
@@ -181,7 +183,7 @@
 					</div>
 				</CardContent>
 				<CardFooter>
-					<p class="text-muted-foreground text-xs">Showing bets of $1,000 or more only</p>
+					<p class="text-muted-foreground text-xs">{$_('gambling.live.description')}</p>
 				</CardFooter>
 			</Card>
 		</div>

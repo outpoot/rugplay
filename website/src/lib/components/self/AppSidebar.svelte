@@ -268,7 +268,9 @@
 							</div>
 						{/each}
 					{:else if $liveTradesStore.length === 0}
-						<div class="text-muted-foreground py-2 text-center text-xs">No big trades yet...</div>
+						<div class="text-muted-foreground py-2 text-center text-xs">
+							{$_('livetrades.notrades')}
+						</div>
 					{:else}
 						{#each $liveTradesStore.slice(0, 5) as trade, index (`${trade.timestamp}-${trade.username}-${trade.coinSymbol}-${index}`)}
 							<button
@@ -290,7 +292,7 @@
 											variant="outline"
 											class="h-4 border-green-500 px-1 py-0 text-[10px] text-green-500"
 										>
-											BUY
+											{$_('base.buy2')}
 										</Badge>
 									{:else}
 										<TrendingDown class="h-3 w-3 text-red-500" />
@@ -298,7 +300,7 @@
 											variant="outline"
 											class="h-4 border-red-500 px-1 py-0 text-[10px] text-red-500"
 										>
-											SELL
+											{$_('base.sell2')}
 										</Badge>
 									{/if}
 									<div class="flex-1 truncate">

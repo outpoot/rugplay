@@ -189,7 +189,7 @@
 				<div class="relative">
 					<Textarea
 						bind:value={newComment}
-						placeholder="Share your thoughts about this coin..."
+						placeholder={$_('coin.comments.placeholder')}
 						class="min-h-[80px] w-full pr-20 pb-8 break-words"
 						style="word-break: break-word; overflow-wrap: break-word;"
 						maxlength={500}

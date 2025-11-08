@@ -17,6 +17,7 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { calculateMinesMultiplier } from '$lib/utils';
+	import { _ } from 'svelte-i18n';
 
 	const GRID_SIZE = 5;
 	const TOTAL_TILES = GRID_SIZE * GRID_SIZE;
@@ -231,10 +232,8 @@
 
 <Card>
 	<CardHeader>
-		<CardTitle>Mines</CardTitle>
-		<CardDescription>
-			Navigate through the minefield and cash out before hitting a mine!
-		</CardDescription>
+		<CardTitle>{$_('gambling.games.mines.title')}</CardTitle>
+		<CardDescription>{$_('gambling.games.mines.description')}</CardDescription>
 	</CardHeader>
 	<CardContent>
 		<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -242,7 +241,7 @@
 			<div class="flex flex-col space-y-4">
 				<!-- Balance Display -->
 				<div class="text-center">
-					<p class="text-muted-foreground text-sm">Balance</p>
+					<p class="text-muted-foreground text-sm">{$_('gambling.balance')}</p>
 					<p class="text-2xl font-bold">{formatValue(balance)}</p>
 				</div>
 
@@ -282,7 +281,9 @@
 			<!-- Right Side: Controls -->
 			<div class="space-y-4">
 				<div>
-					<label for="mine-count" class="mb-2 block text-sm font-medium">Number of Mines</label>
+					<label for="mine-count" class="mb-2 block text-sm font-medium"
+						>{$_('gambling.games.mines.numberMines')}</label
+					>
 					<div class="flex items-center gap-2">
 						<Button
 							variant="secondary"
@@ -317,7 +318,7 @@
 						>
 					</div>
 					<p class="text-muted-foreground mt-1 text-xs">
-						You will get
+						{$_('gambling.games.mines.1.0')}
 						<span class="text-success font-semibold">
 							{calculateMinesMultiplier(
 								isPlaying ? revealedTiles.length + 1 : 1,
@@ -325,17 +326,19 @@
 								betAmount
 							).toFixed(2)}x
 						</span>
-						per tile, probability of winning:
+						{$_('gambling.games.mines.1.1')}
 						<span class="text-success font-semibold">
 							{calculateProbability(isPlaying ? 1 : 1, mineCount)}%
 						</span>
 					</p>
 					<span class="text-muted-foreground text-xs">
-						Note: Maximum payout per game is capped at $2,000,000.
+						{$_('gambling.games.mines.2')}
 					</span>
 				</div>
 				<div>
-					<label for="bet-amount" class="mb-2 block text-sm font-medium">Bet Amount</label>
+					<label for="bet-amount" class="mb-2 block text-sm font-medium"
+						>{$_('gambling.betAmount')}</label
+					>
 					<Input
 						id="bet-amount"
 						type="text"
@@ -343,10 +346,10 @@
 						oninput={handleBetAmountInput}
 						onblur={handleBetAmountBlur}
 						disabled={isPlaying}
-						placeholder="Enter bet amount"
+						placeholder={$_('gambling.betAmountPlaceholder')}
 					/>
 					<p class="text-muted-foreground mt-1 text-xs">
-						Max bet: {MAX_BET_AMOUNT.toLocaleString()}
+						{$_('gambling.maxBet').replace('{{amount}}', MAX_BET_AMOUNT.toLocaleString())}
 					</p>
 				</div>
 				<div>
@@ -380,7 +383,7 @@
 				<div class="flex flex-col gap-2">
 					{#if !isPlaying}
 						<Button class="h-12 flex-1 text-lg" onclick={startGame} disabled={!canBet}>
-							Start Game
+							{$_('gambling.games.mines.start')}
 						</Button>
 					{:else}
 						{#if hasRevealedTile}
@@ -400,19 +403,21 @@
 							</div>
 						{/if}
 						<Button class="h-12 flex-1 text-lg" onclick={cashOut} disabled={!isPlaying}>
-							{hasRevealedTile ? 'Cash Out' : 'Abort Bet'}
+							{hasRevealedTile
+								? $_('gambling.games.mines.cashOut')
+								: $_('gambling.games.mines.abort')}
 						</Button>
 						<!-- Current Stats -->
 						{#if hasRevealedTile}
 							<div class="bg-muted/50 space-y-2 rounded-lg p-3">
 								<div class="flex justify-between">
-									<span>Current Profit:</span>
+									<span>{$_('gambling.games.mines.currentProfit')}</span>
 									<span class="text-success">
 										+{formatValue(betAmount * (currentMultiplier - 1))}
 									</span>
 								</div>
 								<div class="flex justify-between">
-									<span>Next Tile:</span>
+									<span>{$_('gambling.games.mines.nextTile')}</span>
 									<span>
 										+{formatValue(
 											betAmount *
@@ -422,7 +427,7 @@
 									</span>
 								</div>
 								<div class="flex justify-between">
-									<span>Current Multiplier:</span>
+									<span>{$_('gambling.games.mines.currentMultiplier')}</span>
 									<span>{currentMultiplier.toFixed(2)}x</span>
 								</div>
 							</div>

@@ -124,9 +124,9 @@
 
 	// Custom tabs implementation
 	const tabs = [
-		{ value: 'active', label: $_("hopium.active") },
-		{ value: 'resolved', label: $_("hopium.resolved") },
-		{ value: 'all', label: $_("hopium.all") }
+		{ value: 'active', label: $_('hopium.active') },
+		{ value: 'resolved', label: $_('hopium.resolved') },
+		{ value: 'all', label: $_('hopium.all') }
 	];
 </script>
 

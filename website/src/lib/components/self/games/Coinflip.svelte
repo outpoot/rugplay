@@ -165,6 +165,7 @@
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount } from 'svelte';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
+	import { _ } from 'svelte-i18n';
 
 	interface CoinflipResult {
 		won: boolean;
@@ -332,8 +333,8 @@
 
 <Card>
 	<CardHeader>
-		<CardTitle>Coinflip</CardTitle>
-		<CardDescription>Choose heads or tails and double your money!</CardDescription>
+		<CardTitle>{$_('gambling.games.coinflip.title')}</CardTitle>
+		<CardDescription>{$_('gambling.games.coinflip.description')}</CardDescription>
 	</CardHeader>
 	<CardContent>
 		<!-- Main Layout: Coin/Balance Left, Controls Right -->
@@ -342,7 +343,7 @@
 			<div class="flex flex-col space-y-4">
 				<!-- Balance Display -->
 				<div class="text-center">
-					<p class="text-muted-foreground text-sm">Balance</p>
+					<p class="text-muted-foreground text-sm">{$_('gambling.balance')}</p>
 					<p class="text-2xl font-bold">{formatValue(balance)}</p>
 				</div>
 
@@ -373,14 +374,18 @@
 					{#if lastResult && !isFlipping}
 						<div class="bg-muted/50 w-full rounded-lg p-3">
 							{#if lastResult.won}
-								<p class="text-success font-semibold">WIN</p>
+								<p class="text-success font-semibold">{$_('gambling.games.coinflip.win.0')}</p>
 								<p class="text-sm">
-									Won {formatValue(lastResult.payout)} on {lastResult.result}
+									{$_('gambling.games.coinflip.win.1')
+										.replace('{{amount}}', formatValue(lastResult.payout))
+										.replace('{{lastR}}', $_(`gambling.games.coinflip.${lastResult.result}`))}
 								</p>
 							{:else}
-								<p class="text-destructive font-semibold">LOSS</p>
+								<p class="text-destructive font-semibold">{$_('gambling.games.coinflip.loss.0')}</p>
 								<p class="text-sm">
-									Lost {formatValue(lastResult.amountWagered)} on {lastResult.result}
+									{$_('gambling.games.coinflip.loss.1')
+										.replace('{{amount}}', formatValue(lastResult.amountWagered))
+										.replace('{{lastR}}', $_(`gambling.games.coinflip.${lastResult.result}`))}
 								</p>
 							{/if}
 						</div>
@@ -392,7 +397,9 @@
 			<div class="space-y-4">
 				<!-- Side Selection (Inline) -->
 				<div>
-					<div class="mb-2 block text-sm font-medium">Choose Side</div>
+					<div class="mb-2 block text-sm font-medium">
+						{$_('gambling.games.coinflip.chooseSide')}
+					</div>
 					<div class="flex gap-3">
 						<Button
 							variant={selectedSide === 'heads' ? 'default' : 'outline'}
@@ -403,10 +410,10 @@
 							<div class="text-center">
 								<img
 									src="/facedev/avif/bliptext.avif"
-									alt="Heads"
+									alt={$_('gambling.games.coinflip.heads')}
 									class="mx-auto mb-1 h-8 w-8 object-contain"
 								/>
-								<div>Heads</div>
+								<div>{$_('gambling.games.coinflip.heads')}</div>
 							</div>
 						</Button>
 						<Button
@@ -418,10 +425,10 @@
 							<div class="text-center">
 								<img
 									src="/facedev/avif/wattesigma.avif"
-									alt="Tails"
+									alt={$_('gambling.games.coinflip.tails')}
 									class="mx-auto mb-1 h-8 w-8 object-contain"
 								/>
-								<div>Tails</div>
+								<div>{$_('gambling.games.coinflip.tails')}</div>
 							</div>
 						</Button>
 					</div>
@@ -429,7 +436,9 @@
 
 				<!-- Bet Amount -->
 				<div>
-					<label for="bet-amount" class="mb-2 block text-sm font-medium">Bet Amount</label>
+					<label for="bet-amount" class="mb-2 block text-sm font-medium"
+						>{$_('gambling.betAmount')}</label
+					>
 					<Input
 						id="bet-amount"
 						type="text"
@@ -437,10 +446,10 @@
 						oninput={handleBetAmountInput}
 						onblur={handleBetAmountBlur}
 						disabled={isFlipping}
-						placeholder="Enter bet amount"
+						placeholder={$_('gambling.betAmountPlaceholder')}
 					/>
 					<p class="text-muted-foreground mt-1 text-xs">
-						Max bet: {MAX_BET_AMOUNT.toLocaleString()}
+						{$_('gambling.maxBet').replace('{{amount}}', MAX_BET_AMOUNT.toLocaleString())}
 					</p>
 				</div>
 
@@ -478,7 +487,7 @@
 
 				<!-- Flip Button -->
 				<Button class="h-12 w-full text-lg" onclick={flipCoin} disabled={!canBet}>
-					{isFlipping ? 'Flipping...' : 'Flip'}
+					{isFlipping ? $_('gambling.games.coinflip.flipping') : $_('gambling.games.coinflip.flip')}
 				</Button>
 			</div>
 		</div>

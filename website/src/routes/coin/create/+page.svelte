@@ -28,18 +28,18 @@
 
 	let nameError = $derived(
 		name.length > 0 && (name.length < 2 || name.length > 255)
-			? $_("coin.create.details.name.err")
+			? $_('coin.create.details.name.err')
 			: ''
 	);
 
 	let symbolError = $derived(
 		symbol.length > 0 && (symbol.length < 2 || symbol.length > 10)
-			? $_("coin.create.details.symbol.err")
+			? $_('coin.create.details.symbol.err')
 			: ''
 	);
 
 	let iconError = $derived(
-		iconFile && iconFile.size > 1 * 1024 * 1024 ? $_("coin.create.details.icon.err.1") : ''
+		iconFile && iconFile.size > 1 * 1024 * 1024 ? $_('coin.create.details.icon.err.1') : ''
 	);
 
 	let isFormValid = $derived(
@@ -66,7 +66,7 @@
 				};
 				reader.readAsDataURL(file);
 			} else {
-				error = $_("coin.create.details.icon.err.0");
+				error = $_('coin.create.details.icon.err.0');
 				target.value = '';
 			}
 		} else {
@@ -100,15 +100,15 @@
 			const result = await response.json();
 
 			if (!response.ok) {
-				throw new Error(result.message || $_("coin.create.err.title"));
+				throw new Error(result.message || $_('coin.create.err.title'));
 			}
 
 			await fetchPortfolioData();
 
 			goto(`/coin/${result.coin.symbol}`);
 		} catch (e) {
-			toast.error($_("coin.create.err.title"), {
-				description: (e as Error).message || $_("coin.create.err.unknown")
+			toast.error($_('coin.create.err.title'), {
+				description: (e as Error).message || $_('coin.create.err.unknown')
 			});
 		} finally {
 			isSubmitting = false;
@@ -334,7 +334,7 @@
 				<!-- Info Card -->
 				<Card>
 					<CardHeader class="pb-2">
-						<CardTitle class="text-base">{$_("coin.create.whathappensnext.title")}</CardTitle>
+						<CardTitle class="text-base">{$_('coin.create.whathappensnext.title')}</CardTitle>
 					</CardHeader>
 					<CardContent class="space-y-4">
 						<div class="space-y-3">
@@ -345,9 +345,9 @@
 									1
 								</div>
 								<div>
-									<p class="font-medium">{$_("coin.create.whathappensnext.1.0")}</p>
+									<p class="font-medium">{$_('coin.create.whathappensnext.1.0')}</p>
 									<p class="text-muted-foreground text-sm">
-										{$_("coin.create.whathappensnext.1.1")}
+										{$_('coin.create.whathappensnext.1.1')}
 									</p>
 								</div>
 							</div>
@@ -358,9 +358,9 @@
 									2
 								</div>
 								<div>
-									<p class="font-medium">{$_("coin.create.whathappensnext.2.0")}</p>
+									<p class="font-medium">{$_('coin.create.whathappensnext.2.0')}</p>
 									<p class="text-muted-foreground text-sm">
-										{$_("coin.create.whathappensnext.2.1")}
+										{$_('coin.create.whathappensnext.2.1')}
 									</p>
 								</div>
 							</div>
@@ -371,9 +371,9 @@
 									3
 								</div>
 								<div>
-									<p class="font-medium">{$_("coin.create.whathappensnext.3.0")}</p>
+									<p class="font-medium">{$_('coin.create.whathappensnext.3.0')}</p>
 									<p class="text-muted-foreground text-sm">
-										{$_("coin.create.whathappensnext.3.1")}
+										{$_('coin.create.whathappensnext.3.1')}
 									</p>
 								</div>
 							</div>

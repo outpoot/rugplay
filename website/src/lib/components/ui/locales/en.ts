@@ -123,16 +123,16 @@ export default {
 	coin: {
 		create: {
 			title: 'Create coin',
-			err:{
-				title: "Failed to create coin",
-				unknown: "An error occurred while creating the coin"
+			err: {
+				title: 'Failed to create coin',
+				unknown: 'An error occurred while creating the coin'
 			},
 			details: {
 				title: 'Coin Details',
 				icon: {
 					title: 'Coin Icon (Optional)',
 					description: "Click to upload your coin's icon (PNG or JPG, max 1MB)",
-					err: ["Please select a valid image file", "Icon must be smaller than 1MB"]
+					err: ['Please select a valid image file', 'Icon must be smaller than 1MB']
 				},
 				name: {
 					title: 'Coin Name',

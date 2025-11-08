@@ -468,7 +468,31 @@ export default {
 	portfolio: {
 		description: 'Manage your investments and transactions',
 		loginMessage: 'You need to be logged in to view your portfolio',
-		title: 'Portfolio'
+		title: 'Portfolio',
+		err: ['Failed to load portfolio data', 'Failed to load transactions'],
+		holdings: {
+			title: 'Your holdings',
+			description: 'Current positions in your portfolio'
+		},
+		sendMoney: {
+			title: 'Send Money'
+		},
+		recentTransactions: 'Recent Transactions',
+		total: 'Total',
+		cashBalance: ['Cash Balance', '{{percent}}% of portfolio'],
+		coinHoldings: ['Coin Holdings', '{{count}} positions'],
+		noCoins: [
+			'No coin holdings',
+			"You haven't invested in any coins yet. Start by buying existing coins.",
+			'Browse Coins'
+		],
+		noTransactions: [
+			'No transactions yet',
+			"You haven't made any trades yet. Start by buying or selling coins."
+		],
+		value: "Value",
+		pl: "P&L %",
+		portfolioPercent: "Portfolio %"
 	},
 	prestige: {
 		title: 'Presige'
@@ -559,6 +583,7 @@ export default {
 		},
 		recentTrading: {
 			description: 'Latest transactions by {{name}}',
+			portfolio: 'Your latest trading activity',
 			title: 'Recent Trading Activity'
 		},
 		sellActivity: {
@@ -588,5 +613,6 @@ export default {
 			title: 'Win Rate'
 		}
 	},
-	viewall: 'View all'
+	viewall: 'View all',
+	tryagain: 'Try Again'
 };

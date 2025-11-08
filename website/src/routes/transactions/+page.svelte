@@ -23,6 +23,7 @@
 	} from 'lucide-svelte';
 	import { formatPrice, formatValue, formatQuantity, formatDate, debounce } from '$lib/utils';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { _ } from 'svelte-i18n';
 
 	let transactions = $state<any[]>([]);
 	let totalCount = $state(0);
@@ -112,11 +113,11 @@
 				transactions = result.transactions;
 				totalCount = result.total;
 			} else {
-				toast.error('Failed to load transactions');
+				toast.error($_('portfolio.err.1'));
 			}
 		} catch (e) {
 			console.error('Failed to fetch transactions:', e);
-			toast.error('Failed to load transactions');
+			toast.error($_('portfolio.err.1'));
 		} finally {
 			loading = false;
 		}

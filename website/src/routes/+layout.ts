@@ -15,7 +15,6 @@ export const load = async ({ data }) => {
 	if (browser && !supportedLocales.includes(loc)) {
 		loc = defaultLocale;
 	}
-	console.log(loc);
 	if (browser) {
 		locale.set(loc);
 		await waitLocale();

@@ -73,7 +73,7 @@
 	let holdingsColumns = $derived([
 		{
 			key: 'coin',
-			label: $_("base.coin"),
+			label: $_('base.coin'),
 			class: 'w-[25%] min-w-[120px] md:w-[12%]',
 			render: (value: any, row: any) => ({
 				component: 'coin',
@@ -85,21 +85,21 @@
 		},
 		{
 			key: 'quantity',
-			label: $_("base.quantity"),
+			label: $_('base.quantity'),
 			class: 'w-[15%] min-w-[80px] md:w-[10%] font-mono',
 			sortable: true,
 			render: (value: any) => formatQuantity(value)
 		},
 		{
 			key: 'currentPrice',
-			label: $_("coin.price"),
+			label: $_('coin.price'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono',
 			sortable: true,
 			render: (value: any) => `$${formatPrice(value)}`
 		},
 		{
 			key: 'percentageChange',
-			label: $_("portfolio.pl"),
+			label: $_('portfolio.pl'),
 			class: 'w-[15%] min-w-[80px] md:w-[12%]',
 			sortable: true,
 			render: (value: any) => ({
@@ -110,7 +110,7 @@
 		},
 		{
 			key: 'change24h',
-			label: $_("coin.24hChange"),
+			label: $_('coin.24hChange'),
 			class: 'w-[15%] min-w-[80px] md:w-[12%]',
 			sortable: true,
 			render: (value: any) => ({
@@ -121,7 +121,7 @@
 		},
 		{
 			key: 'value',
-			label: $_("portfolio.value"),
+			label: $_('portfolio.value'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono font-medium',
 			sortable: true,
 			defaultSort: true,
@@ -129,7 +129,7 @@
 		},
 		{
 			key: 'portfolioPercent',
-			label: $_("portfolio.portfolioPercent"),
+			label: $_('portfolio.portfolioPercent'),
 			class: 'hidden md:table-cell md:w-[12%]',
 			render: (value: any, row: any) => ({
 				component: 'badge',
@@ -143,7 +143,7 @@
 	let transactionsColumns = $derived([
 		{
 			key: 'type',
-			label: $_("base.type"),
+			label: $_('base.type'),
 			class: 'w-[12%] min-w-[60px] md:w-[8%]',
 			render: (value: any, row: any) => {
 				if (row.isTransfer) {
@@ -164,7 +164,7 @@
 		},
 		{
 			key: 'coin',
-			label: $_("base.coin"),
+			label: $_('base.coin'),
 			class: 'w-[20%] min-w-[100px] md:w-[12%]',
 			render: (value: any, row: any) => {
 				if (row.isTransfer) {
@@ -190,7 +190,7 @@
 		},
 		{
 			key: 'sender',
-			label: $_("base.sender"),
+			label: $_('base.sender'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%]',
 			render: (value: any, row: any) => ({
 				component: 'text',
@@ -203,7 +203,7 @@
 		},
 		{
 			key: 'recipient',
-			label: $_("base.receiver"),
+			label: $_('base.receiver'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%]',
 			render: (value: any, row: any) => ({
 				component: 'text',
@@ -216,20 +216,20 @@
 		},
 		{
 			key: 'quantity',
-			label: $_("base.quantity"),
+			label: $_('base.quantity'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono text-sm',
 			render: (value: any, row: any) =>
 				row.isTransfer && value === 0 ? '-' : formatQuantity(value)
 		},
 		{
 			key: 'totalBaseCurrencyAmount',
-			label: $_("base.amount"),
+			label: $_('base.amount'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono text-sm font-medium',
 			render: (value: any) => formatValue(value)
 		},
 		{
 			key: 'timestamp',
-			label: $_("base.date"),
+			label: $_('base.date'),
 			class: 'hidden md:table-cell md:w-[18%] text-muted-foreground text-sm',
 			render: (value: any) => formatDate(value)
 		}

@@ -490,9 +490,9 @@ export default {
 			'No transactions yet',
 			"You haven't made any trades yet. Start by buying or selling coins."
 		],
-		value: "Value",
-		pl: "P&L %",
-		portfolioPercent: "Portfolio %"
+		value: 'Value',
+		pl: 'P&L %',
+		portfolioPercent: 'Portfolio %'
 	},
 	prestige: {
 		title: 'Presige'

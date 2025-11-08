@@ -26,6 +26,8 @@
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { _ } from 'svelte-i18n';
+	import { defaultLocale } from '$lib/components/ui/locales/i18n.js';
+	import { browser } from '$app/environment';
 	let { data } = $props();
 	let username = $derived(data.username);
 
@@ -98,10 +100,13 @@
 
 	let memberSince = $derived(
 		profileData?.profile
-			? new Date(profileData.profile.createdAt).toLocaleDateString('en-US', {
-					year: 'numeric',
-					month: 'long'
-				})
+			? new Date(profileData.profile.createdAt).toLocaleDateString(
+					browser ? window.navigator.language : defaultLocale,
+					{
+						year: 'numeric',
+						month: 'long'
+					}
+				)
 			: ''
 	);
 	let hasCreatedCoins = $derived(
@@ -427,7 +432,7 @@
 
 						<div class="text-muted-foreground flex items-center gap-2 text-sm">
 							<Calendar class="h-4 w-4" />
-							<span>Joined {memberSince}</span>
+							<span>{$_('user.joined').replace('{{date}}', memberSince)}</span>
 						</div>
 					</div>
 				</div>

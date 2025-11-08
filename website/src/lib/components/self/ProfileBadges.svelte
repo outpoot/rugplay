@@ -3,6 +3,7 @@
 	import SilentBadge from './SilentBadge.svelte';
 	import { Hash, Hammer, Flame, Star } from 'lucide-svelte';
 	import { getPrestigeName, getPrestigeColor } from '$lib/utils';
+	import { _ } from 'svelte-i18n';
 
 	let {
 		user,
@@ -23,7 +24,11 @@
 
 <div class="flex items-center gap-1">
 	{#if showId}
-		<SilentBadge icon={Hash} class="text-muted-foreground {badgeClass}" text="#{user.id} to join" />
+		<SilentBadge
+			icon={Hash}
+			class="text-muted-foreground {badgeClass}"
+			text={$_('user.id').replace('{{id}}', user.id.toString())}
+		/>
 	{/if}
 	{#if prestigeName}
 		<SilentBadge icon={Star} text={prestigeName} class="{prestigeColor} {badgeClass}" />

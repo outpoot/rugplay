@@ -27,6 +27,7 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import ProfileBadges from '$lib/components/self/ProfileBadges.svelte';
 	import { _ } from 'svelte-i18n';
+	import { browser } from '$app/environment';
 	let searchOffset = $state(0);
 	let searchQuery = $state('');
 	let searchQueryValue = $state('');
@@ -349,7 +350,7 @@
 													<div class="flex items-center justify-between">
 														<span class="text-muted-foreground flex items-center gap-2 text-xs">
 															<Wallet class="h-3 w-3" />
-															Portfolio
+															{$_('portfolio.title')}
 														</span>
 														<span class="font-mono text-sm font-medium">
 															{formatValue(user.totalPortfolioValue)}
@@ -359,7 +360,7 @@
 													<div class="flex items-center justify-between">
 														<span class="text-muted-foreground flex items-center gap-2 text-xs">
 															<Wallet class="h-3 w-3" />
-															Cash
+															{$_('sidebar.portfolio.cash')}
 														</span>
 														<span class="text-success font-mono text-sm font-medium">
 															{formatValue(user.baseCurrencyBalance)}
@@ -369,10 +370,16 @@
 												<div class="mt-2 flex items-center gap-2">
 													<Calendar class="text-muted-foreground h-4 w-4" />
 													<p class="text-muted-foreground text-xs">
-														Joined {new Date(user.createdAt).toLocaleDateString('en-US', {
-															year: 'numeric',
-															month: 'long'
-														})}
+														{$_('user.joined').replace(
+															'{{date}}',
+															new Date(user.createdAt).toLocaleDateString(
+																browser ? window.navigator.language : 'en-US',
+																{
+																	year: 'numeric',
+																	month: 'long'
+																}
+															)
+														)}
 													</p>
 												</div>
 											</div>

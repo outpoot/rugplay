@@ -57,11 +57,14 @@
 			<CardTitle class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
 				<div class="flex items-center gap-2">
 					<Activity class="h-5 w-5" />
-					Stream
+					{$_('livetrades.stream')}
 				</div>
 				{#if $allTradesStore.length > 0}
 					<Badge variant="secondary" class="w-fit sm:ml-auto">
-						{$allTradesStore.length} trade{$allTradesStore.length !== 1 ? 's' : ''}
+						{$_(`livetrades.trades.${$allTradesStore.length !== 1 ? 1 : 0}`).replace(
+							'{{count}}',
+							$allTradesStore.length.toString()
+						)}
 					</Badge>
 				{/if}
 			</CardTitle>
@@ -73,9 +76,11 @@
 				{:else if $allTradesStore.length === 0}
 					<div class="flex flex-col items-center justify-center py-12 text-center sm:py-16">
 						<Activity class="text-muted-foreground/50 mb-4 h-12 w-12 sm:h-16 sm:w-16" />
-						<h3 class="mb-2 text-base font-semibold sm:text-lg">Waiting for trades...</h3>
+						<h3 class="mb-2 text-base font-semibold sm:text-lg">
+							{$_('livetrades.waiting.title')}
+						</h3>
 						<p class="text-muted-foreground text-sm sm:text-base">
-							All trades will appear here in real-time.
+							{$_('livetrades.waiting.description')}
 						</p>
 					</div>
 				{:else}
@@ -131,7 +136,7 @@
 												</span>
 											</button>
 											<span class="text-muted-foreground text-xs sm:text-sm">
-												{trade.type === 'BUY' ? 'bought by' : 'sold by'}
+												{$_(`livetrades.d.${trade.type === 'BUY' ? 'bought' : 'sold'}`)}
 											</span>
 										{/if}
 
@@ -174,12 +179,12 @@
 										<span>{formatValue(trade.totalValue)}</span>
 									{:else if trade.type === 'BUY'}
 										<TrendingUp class="h-3.5 w-3.5 text-green-500 sm:h-4 sm:w-4" />
-										<span class="text-green-500">BUY</span>
+										<span class="text-green-500">{$_('base.buy2')}</span>
 										<span class="text-muted-foreground">|</span>
 										<span>{formatValue(trade.totalValue)}</span>
 									{:else}
 										<TrendingDown class="h-3.5 w-3.5 text-red-500 sm:h-4 sm:w-4" />
-										<span class="text-red-500">SELL</span>
+										<span class="text-red-500">{$_('base.sell2')}</span>
 										<span class="text-muted-foreground">|</span>
 										<span>{formatValue(trade.totalValue)}</span>
 									{/if}

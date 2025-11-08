@@ -6,6 +6,8 @@
 	import { getPublicUrl, formatValue } from '$lib/utils';
 	import { Calendar, Wallet } from 'lucide-svelte';
 	import type { UserProfileData } from '$lib/types/user-profile';
+	import { browser } from '$app/environment';
+	import { _ } from 'svelte-i18n';
 
 	let { userId, showBio = true }: { userId: number; showBio?: boolean } = $props();
 
@@ -102,7 +104,7 @@
 						<div class="flex items-center justify-between">
 							<span class="text-muted-foreground flex items-center gap-1 text-xs">
 								<Wallet class="h-3 w-3" />
-								Portfolio
+								{$_('portfolio.title')}
 							</span>
 							<span class="font-mono text-sm font-medium">
 								{formatValue(stats.totalPortfolioValue)}
@@ -112,7 +114,7 @@
 						<div class="flex items-center justify-between">
 							<span class="text-muted-foreground flex items-center gap-1 text-xs">
 								<Wallet class="h-3 w-3" />
-								Cash
+								{$_('sidebar.portfolio.cash')}
 							</span>
 							<span class="text-success font-mono text-sm font-medium">
 								{formatValue(stats.baseCurrencyBalance)}
@@ -124,10 +126,16 @@
 				<div class="flex items-center pt-2">
 					<Calendar class="mr-2 h-4 w-4 opacity-70" />
 					<span class="text-muted-foreground text-xs">
-						Joined {new Date(profile.createdAt).toLocaleDateString('en-US', {
-							year: 'numeric',
-							month: 'long'
-						})}
+						{$_('user.joined').replace(
+							'{{date}}',
+							new Date(profile.createdAt).toLocaleDateString(
+								browser ? window.navigator.language : 'en-US',
+								{
+									year: 'numeric',
+									month: 'long'
+								}
+							)
+						)}
 					</span>
 				</div>
 			</div>

@@ -19,7 +19,8 @@
 		Globe,
 		Loader2,
 		CheckIcon,
-		XIcon
+		XIcon,
+		ChartScatter
 	} from 'lucide-svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { PORTFOLIO_SUMMARY, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
@@ -28,6 +29,7 @@
 	import { formatDateWithYear, formatTimeUntil, formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import type { PredictionQuestion } from '$lib/types/prediction';
+	import { _ } from 'svelte-i18n';
 
 	let questions = $state<PredictionQuestion[]>([]);
 	let loading = $state(true);
@@ -107,7 +109,7 @@
 			return;
 		}
 		if (userBalance <= 100_000) {
-			toast.error('You need at least $100,000 in your portfolio (cash) to create a question.');
+			toast.error($_('hopium.minBalance'));
 			return;
 		}
 		showCreateDialog = true;
@@ -122,9 +124,9 @@
 
 	// Custom tabs implementation
 	const tabs = [
-		{ value: 'active', label: 'Active' },
-		{ value: 'resolved', label: 'Resolved' },
-		{ value: 'all', label: 'All' }
+		{ value: 'active', label: $_("hopium.active") },
+		{ value: 'resolved', label: $_("hopium.resolved") },
+		{ value: 'all', label: $_("hopium.all") }
 	];
 </script>
 
@@ -140,35 +142,42 @@
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				<Sparkles class="h-5 w-5" />
-				Create
+				{$_('hopium.create.title')}
 			</Dialog.Title>
-			<Dialog.Description>Create a yes/no question that will be resolved by AI.</Dialog.Description>
+			<Dialog.Description>{$_('hopium.create.description')}</Dialog.Description>
 		</Dialog.Header>
 
 		<div class="space-y-4">
 			<div class="space-y-2">
-				<Label for="question">Question *</Label>
+				<Label for="question">{$_('hopium.create.question')}</Label>
 				<Input
 					id="question"
 					bind:value={newQuestion}
-					placeholder="Will *SKIBIDI reach $100 price today?"
+					placeholder={$_('hopium.create.input.placeholder')}
 					maxlength={200}
 				/>
-				<p class="text-muted-foreground text-xs">{newQuestion.length}/200 characters</p>
 				<p class="text-muted-foreground text-xs">
-					The AI will automatically determine the appropriate resolution date and criteria.
+					{$_('hopium.create.input.characterLimit').replace(
+						'{{chars}}',
+						newQuestion.length.toString()
+					)}
+				</p>
+				<p class="text-muted-foreground text-xs">
+					{$_('hopium.create.description2')}
 				</p>
 			</div>
 		</div>
 
 		<Dialog.Footer>
-			<Button variant="outline" onclick={() => (showCreateDialog = false)}>Cancel</Button>
+			<Button variant="outline" onclick={() => (showCreateDialog = false)}
+				>{$_('base.cancel')}</Button
+			>
 			<Button onclick={createQuestion} disabled={creatingQuestion || !newQuestion.trim()}>
 				{#if creatingQuestion}
 					<Loader2 class="h-4 w-4 animate-spin" />
-					Processing...
+					{$_('hopium.publish.1')}
 				{:else}
-					Publish
+					{$_('hopium.publish.0')}
 				{/if}
 			</Button>
 		</Dialog.Footer>
@@ -180,10 +189,10 @@
 		<div class="text-center">
 			<h1 class="mb-2 flex items-center justify-center gap-2 text-3xl font-bold">
 				<Sparkles class="h-8 w-8 text-purple-500" />
-				Hopium
+				{$_('hopium.title')}
 			</h1>
 			<p class="text-muted-foreground mb-6">
-				AI-powered prediction markets. Create questions and bet on outcomes.
+				{$_('hopium.description')}
 			</p>
 		</div>
 	</header>
@@ -210,7 +219,7 @@
 			{#if $USER_DATA}
 				<Button onclick={handleCreateQuestion}>
 					<Plus class="h-4 w-4" />
-					Ask
+					{$_('hopium.ask')}
 				</Button>
 			{/if}
 		</div>
@@ -221,8 +230,8 @@
 				<HopiumSkeleton />
 			{:else if questions.length === 0}
 				<div class="py-16 text-center">
-					<h3 class="mb-2 text-lg font-semibold">No questions yet</h3>
-					<p class="text-muted-foreground mb-6">Be the first to create a prediction question!</p>
+					<h3 class="mb-2 text-lg font-semibold">{$_('hopium.noQuestions.title')}</h3>
+					<p class="text-muted-foreground mb-6">{$_('hopium.noQuestions.description')}</p>
 				</div>
 			{:else}
 				<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -249,10 +258,10 @@
 											>
 												{#if question.aiResolution}
 													<CheckIcon class="h-3 w-3" />
-													YES
+													{$_('base.yes2')}
 												{:else}
 													<XIcon class="h-3 w-3" />
-													NO
+													{$_('base.no2')}
 												{/if}
 											</Badge>
 										{:else if question.status === 'CANCELLED'}
@@ -261,7 +270,7 @@
 												class="text-muted-foreground border-muted-foreground flex flex-shrink-0 items-center gap-1"
 											>
 												<XIcon class="h-3 w-3" />
-												SKIP
+												{$_('base.skip')}
 											</Badge>
 										{/if}
 
@@ -302,8 +311,11 @@
 										<Clock class="h-3 w-3" />
 										{#if question.status === 'ACTIVE'}
 											{formatTimeUntil(question.resolutionDate).startsWith('Ended')
-												? 'Resolving'
-												: `${formatTimeUntil(question.resolutionDate)} remaining`}
+												? $_('hopium.resolving')
+												: $_('hopium.resolving').replace(
+														'{{time}}',
+														formatTimeUntil(question.resolutionDate)
+													)}
 										{:else}
 											Resolved {formatDateWithYear(question.resolvedAt || '')}
 										{/if}
@@ -345,12 +357,12 @@
 								<!-- User's bet amounts if they have any -->
 								{#if question.userBets && (question.userBets.yesAmount > 0 || question.userBets.noAmount > 0)}
 									<div class="text-muted-foreground flex items-center gap-4 text-sm">
-										<span>Your bets:</span>
+										<span>{$_('hopium.yourBets')}</span>
 										{#if question.userBets.yesAmount > 0}
 											<div class="flex items-center gap-1">
 												<TrendingUp class="h-3 w-3 text-green-600" />
 												<span class="text-green-600"
-													>YES: ${question.userBets.yesAmount.toFixed(2)}</span
+													>{$_('base.yes2')}: ${question.userBets.yesAmount.toFixed(2)}</span
 												>
 											</div>
 										{/if}
@@ -358,7 +370,7 @@
 											<div class="flex items-center gap-1">
 												<TrendingDown class="h-3 w-3 text-red-600" />
 												<span class="text-red-600"
-													>NO: ${question.userBets.noAmount.toFixed(2)}</span
+													>{$_('base.no2')}: ${question.userBets.noAmount.toFixed(2)}</span
 												>
 											</div>
 										{/if}

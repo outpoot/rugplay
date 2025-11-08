@@ -83,7 +83,7 @@
 			'/market': $_('market.title'),
 			'/portfolio': $_('portfolio.title'),
 			'/leaderboard': $_('leaderboard.title'),
-			'/coin/create': $_('createcoin.title'),
+			'/coin/create': $_('coin.create.title'),
 			'/settings': $_('settings.title'),
 			'/admin': $_('admin.title'),
 			'/admin/promo': $_('admin.promocodes.title'),

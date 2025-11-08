@@ -52,19 +52,19 @@
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
 					<Coins class="text-primary h-5 w-5" />
-					{$_("about.rugplay.title")}
+					{$_('about.rugplay.title')}
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<div class="space-y-3">
 					<p class="text-muted-foreground text-sm">
-						{$_("about.rugplay.description.0")}
+						{$_('about.rugplay.description.0')}
 					</p>
 					<p class="text-muted-foreground text-sm">
-						{$_("about.rugplay.description.1")}
+						{$_('about.rugplay.description.1')}
 					</p>
 					<p class="text-muted-foreground text-sm">
-						{$_("about.rugplay.description.2")}
+						{$_('about.rugplay.description.2')}
 					</p>
 				</div>
 			</CardContent>
@@ -74,38 +74,38 @@
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
 					<TrendingUp class="text-primary h-5 w-5" />
-					{$_("about.features.title")}
+					{$_('about.features.title')}
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<div class="space-y-2">
 					<div class="flex items-center gap-2 text-sm">
 						<span>🪙</span>
-						<span>{$_("about.features.description.0")}</span>
+						<span>{$_('about.features.description.0')}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>🟢</span>
-						<span>{$_("about.features.description.1")}</span>
+						<span>{$_('about.features.description.1')}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>🔴</span>
-						<span>{$_("about.features.description.2")}</span>
+						<span>{$_('about.features.description.2')}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>⚖️</span>
-						<span>{$_("about.features.description.3")}</span>
+						<span>{$_('about.features.description.3')}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>🎲</span>
-						<span>{$_("about.features.description.4")}</span>
+						<span>{$_('about.features.description.4')}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>📊</span>
-						<span>{$_("about.features.description.5")}</span>
+						<span>{$_('about.features.description.5')}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>🏆</span>
-						<span>{$_("about.features.description.6")}</span>
+						<span>{$_('about.features.description.6')}</span>
 					</div>
 				</div>
 			</CardContent>
@@ -115,12 +115,14 @@
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
 					<User class="text-primary h-5 w-5" />
-					{$_("about.credits.title")}
+					{$_('about.credits.title')}
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<div class="space-y-4">
-					<p class="text-muted-foreground text-sm">{$_("about.credits.description.0")} <strong>{$_("about.credits.description.1")}</strong></p>
+					<p class="text-muted-foreground text-sm">
+						{$_('about.credits.description.0')} <strong>{$_('about.credits.description.1')}</strong>
+					</p>
 					<div class="flex flex-wrap gap-2">
 						<Button
 							variant="outline"

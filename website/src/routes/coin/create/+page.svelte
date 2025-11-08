@@ -13,6 +13,7 @@
 	import { toast } from 'svelte-sonner';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
+	import { _ } from 'svelte-i18n';
 
 	let name = $state('');
 	let symbol = $state('');
@@ -27,18 +28,18 @@
 
 	let nameError = $derived(
 		name.length > 0 && (name.length < 2 || name.length > 255)
-			? 'Name must be between 2 and 255 characters'
+			? $_("coin.create.details.name.err")
 			: ''
 	);
 
 	let symbolError = $derived(
 		symbol.length > 0 && (symbol.length < 2 || symbol.length > 10)
-			? 'Symbol must be between 2 and 10 characters'
+			? $_("coin.create.details.symbol.err")
 			: ''
 	);
 
 	let iconError = $derived(
-		iconFile && iconFile.size > 1 * 1024 * 1024 ? 'Icon must be smaller than 1MB' : ''
+		iconFile && iconFile.size > 1 * 1024 * 1024 ? $_("coin.create.details.icon.err.1") : ''
 	);
 
 	let isFormValid = $derived(
@@ -65,7 +66,7 @@
 				};
 				reader.readAsDataURL(file);
 			} else {
-				error = 'Please select a valid image file';
+				error = $_("coin.create.details.icon.err.0");
 				target.value = '';
 			}
 		} else {
@@ -99,15 +100,15 @@
 			const result = await response.json();
 
 			if (!response.ok) {
-				throw new Error(result.message || 'Failed to create coin');
+				throw new Error(result.message || $_("coin.create.err.title"));
 			}
 
 			await fetchPortfolioData();
 
 			goto(`/coin/${result.coin.symbol}`);
 		} catch (e) {
-			toast.error('Failed to create coin', {
-				description: (e as Error).message || 'An error occurred while creating the coin'
+			toast.error($_("coin.create.err.title"), {
+				description: (e as Error).message || $_("coin.create.err.unknown")
 			});
 		} finally {
 			isSubmitting = false;
@@ -129,9 +130,11 @@
 	{#if !$PORTFOLIO_SUMMARY}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">Sign in to create your own coin</div>
-				<p class="text-muted-foreground mb-4 text-sm">You need an account to create coins.</p>
-				<Button onclick={() => (shouldSignIn = true)} class="w-fit">Sign in to continue</Button>
+				<div class="text-muted-foreground mb-4 text-xl">{$_('coin.create.signin.title')}</div>
+				<p class="text-muted-foreground mb-4 text-sm">{$_('coin.create.signin.description')}</p>
+				<Button onclick={() => (shouldSignIn = true)} class="w-fit"
+					>{$_('coin.create.signin.button')}</Button
+				>
 			</div>
 		</div>
 	{:else}
@@ -140,13 +143,13 @@
 			<div class="lg:col-span-2">
 				<Card>
 					<CardHeader>
-						<CardTitle class="text-lg">Coin Details</CardTitle>
+						<CardTitle class="text-lg">{$_('coin.create.details.title')}</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<form onsubmit={handleSubmit} class="space-y-6">
 							<!-- Icon Upload -->
 							<div>
-								<Label for="icon">Coin Icon (Optional)</Label>
+								<Label for="icon">{$_('coin.create.details.icon.title')}</Label>
 								<div class="mt-2 space-y-2">
 									<label for="icon" class="block cursor-pointer">
 										<div
@@ -174,7 +177,7 @@
 										{:else if iconFile}
 											{iconFile.name} ({(iconFile.size / 1024).toFixed(2)} KB)
 										{:else}
-											Click to upload your coin's icon (PNG or JPG, max 1MB)
+											{$_('coin.create.details.icon.description')}
 										{/if}
 									</p>
 								</div>
@@ -182,26 +185,26 @@
 
 							<!-- Name Input -->
 							<div class="space-y-2">
-								<Label for="name">Coin Name</Label>
+								<Label for="name">{$_('coin.create.details.name.title')}</Label>
 								<Input
 									id="name"
 									type="text"
 									bind:value={name}
-									placeholder="e.g., Bitcoin"
+									placeholder={$_('coin.create.details.name.placeholder')}
 									required
 								/>
 								{#if nameError}
 									<p class="text-destructive text-xs">{nameError}</p>
 								{:else}
 									<p class="text-muted-foreground text-sm">
-										Choose a memorable name for your cryptocurrency
+										{$_('coin.create.details.name.description')}
 									</p>
 								{/if}
 							</div>
 
 							<!-- Symbol Input -->
 							<div class="space-y-2">
-								<Label for="symbol">Symbol</Label>
+								<Label for="symbol">{$_('coin.create.details.symbol.title')}</Label>
 								<div class="relative">
 									<span
 										class="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 text-sm"
@@ -211,7 +214,7 @@
 										id="symbol"
 										type="text"
 										bind:value={symbol}
-										placeholder="BTC"
+										placeholder={$_('coin.create.details.symbol.placeholder')}
 										class="pl-8 uppercase"
 										required
 									/>
@@ -220,8 +223,10 @@
 									<p class="text-destructive text-xs">{symbolError}</p>
 								{:else}
 									<p class="text-muted-foreground text-sm">
-										Short identifier for your coin (e.g., BTC for Bitcoin). Will be displayed as *{symbol ||
-											'SYMBOL'}
+										{$_('coin.create.details.symbol.description').replace(
+											'{{name}}',
+											symbol || 'SYMBOL'
+										)}
 									</p>
 								{/if}
 							</div>
@@ -230,18 +235,41 @@
 							<Alert variant="default" class="bg-muted/50">
 								<Info class="h-4 w-4" />
 								<AlertDescription class="space-y-2">
-									<p class="font-medium">Fair Launch Settings</p>
+									<p class="font-medium">{$_('coin.create.details.fairLaunchSettings.0')}</p>
 									<div class="text-muted-foreground space-y-1 text-sm">
-										<p>• Total Supply: <span class="font-medium">1,000,000,000 tokens</span></p>
-										<p>• Starting Price: <span class="font-medium">$0.000001 per token</span></p>
-										<p>• You receive <span class="font-medium">100%</span> of the supply</p>
-										<p>• Initial Market Cap: <span class="font-medium">$1,000</span></p>
 										<p>
-											• Trading Lock: <span class="font-medium">1 minute creator-only period</span>
+											• {$_('coin.create.details.fairLaunchSettings.1.0')}
+											<span class="font-medium"
+												>{$_('coin.create.details.fairLaunchSettings.1.1')}</span
+											>
+										</p>
+										<p>
+											• {$_('coin.create.details.fairLaunchSettings.2.0')}
+											<span class="font-medium"
+												>{$_('coin.create.details.fairLaunchSettings.2.1')}</span
+											>
+										</p>
+										<p>
+											• {$_('coin.create.details.fairLaunchSettings.3.0')}
+											<span class="font-medium"
+												>{$_('coin.create.details.fairLaunchSettings.3.1')}</span
+											>
+											{$_('coin.create.details.fairLaunchSettings.3.2')}
+										</p>
+										<p>
+											• {$_('coin.create.details.fairLaunchSettings.4.0')}
+											<span class="font-medium"
+												>{$_('coin.create.details.fairLaunchSettings.4.1')}</span
+											>
+										</p>
+										<p>
+											• {$_('coin.create.details.fairLaunchSettings.5.0')}:
+											<span class="font-medium"
+												>{$_('coin.create.details.fairLaunchSettings.5.1')}</span
+											>
 										</p>
 										<p class="mt-2 text-sm">
-											After creation, you'll have 1 minute of exclusive trading time before others
-											can trade. This allows you to purchase your initial supply.
+											{$_('coin.create.details.fairLaunchSettings.6')}
 										</p>
 									</div>
 								</AlertDescription>
@@ -251,10 +279,13 @@
 							<Button type="submit" disabled={!canSubmit} class="w-full" size="lg">
 								{#if isSubmitting}
 									<Loader2 class="h-4 w-4 animate-spin" />
-									Creating...
+									{$_('coin.create.details.createCoin.1')}
 								{:else}
 									<Coins class="h-4 w-4" />
-									Create Coin (${TOTAL_COST.toFixed(2)})
+									{$_('coin.create.details.createCoin.0').replace(
+										'{{price}}',
+										TOTAL_COST.toFixed(2)
+									)}
 								{/if}
 							</Button>
 						</form>
@@ -269,9 +300,9 @@
 					<Card>
 						<CardHeader class="pb-2">
 							<div class="flex items-center justify-between">
-								<CardTitle class="text-base">Cost Summary</CardTitle>
+								<CardTitle class="text-base">{$_('coin.create.costsummary.title')}</CardTitle>
 								<div class="text-sm">
-									<span class="text-muted-foreground">Balance: </span>
+									<span class="text-muted-foreground">{$_('coin.create.costsummary.balance')}</span>
 									<span class={hasEnoughFunds ? 'text-green-600' : 'text-destructive'}>
 										${$PORTFOLIO_SUMMARY.baseCurrencyBalance.toLocaleString()}
 									</span>
@@ -280,16 +311,20 @@
 						</CardHeader>
 						<CardContent class="space-y-2">
 							<div class="flex justify-between text-sm">
-								<span class="text-muted-foreground">Creation Fee</span>
+								<span class="text-muted-foreground"
+									>{$_('coin.create.costsummary.creationFee')}</span
+								>
 								<span>${CREATION_FEE}</span>
 							</div>
 							<div class="flex justify-between text-sm">
-								<span class="text-muted-foreground">Initial Liquidity</span>
+								<span class="text-muted-foreground"
+									>{$_('coin.create.costsummary.initialLiquidity')}</span
+								>
 								<span>${INITIAL_LIQUIDITY}</span>
 							</div>
 							<Separator class="my-2" />
 							<div class="flex justify-between font-medium">
-								<span>Total Cost</span>
+								<span>{$_('coin.create.costsummary.totalCost')}</span>
 								<span class="text-primary">${TOTAL_COST}</span>
 							</div>
 						</CardContent>
@@ -299,7 +334,7 @@
 				<!-- Info Card -->
 				<Card>
 					<CardHeader class="pb-2">
-						<CardTitle class="text-base">What Happens After Launch?</CardTitle>
+						<CardTitle class="text-base">{$_("coin.create.whathappensnext.title")}</CardTitle>
 					</CardHeader>
 					<CardContent class="space-y-4">
 						<div class="space-y-3">
@@ -310,9 +345,9 @@
 									1
 								</div>
 								<div>
-									<p class="font-medium">Fair Distribution</p>
+									<p class="font-medium">{$_("coin.create.whathappensnext.1.0")}</p>
 									<p class="text-muted-foreground text-sm">
-										Everyone starts buying at the same price - no pre-sales or hidden allocations
+										{$_("coin.create.whathappensnext.1.1")}
 									</p>
 								</div>
 							</div>
@@ -323,10 +358,9 @@
 									2
 								</div>
 								<div>
-									<p class="font-medium">Price Discovery</p>
+									<p class="font-medium">{$_("coin.create.whathappensnext.2.0")}</p>
 									<p class="text-muted-foreground text-sm">
-										Token price increases automatically as more people buy, following a bonding
-										curve
+										{$_("coin.create.whathappensnext.2.1")}
 									</p>
 								</div>
 							</div>
@@ -337,9 +371,9 @@
 									3
 								</div>
 								<div>
-									<p class="font-medium">Instant Trading</p>
+									<p class="font-medium">{$_("coin.create.whathappensnext.3.0")}</p>
 									<p class="text-muted-foreground text-sm">
-										Trading begins immediately - buy, sell, or distribute your tokens as you wish
+										{$_("coin.create.whathappensnext.3.1")}
 									</p>
 								</div>
 							</div>

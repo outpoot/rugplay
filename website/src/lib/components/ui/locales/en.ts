@@ -70,29 +70,29 @@ export default {
 			},
 			title: 'User Manual'
 		},
-		rugplay:{
-			title: "About Rugplay",
+		rugplay: {
+			title: 'About Rugplay',
 			description: [
-				"Rugplay is a realistic cryptocurrency trading simulation that focuses on DeFi (Decentralized Finance) mechanics and the inherent risks of decentralized trading.",
-				"Practice trading strategies, create your own coins, and learn about market dynamics without any real financial risk. Experience AMM trading, liquidity pools, and even rug pulls. (duh)",
-				"Join the community of degenerates where paranoia is profitable!"
+				'Rugplay is a realistic cryptocurrency trading simulation that focuses on DeFi (Decentralized Finance) mechanics and the inherent risks of decentralized trading.',
+				'Practice trading strategies, create your own coins, and learn about market dynamics without any real financial risk. Experience AMM trading, liquidity pools, and even rug pulls. (duh)',
+				'Join the community of degenerates where paranoia is profitable!'
 			]
 		},
 		features: {
-			title: "Features",
+			title: 'Features',
 			description: [
-				"Create coins",
-				"Buy coins",
-				"Sell coins",
-				"Bet on questions (similar to Polymarket)",
-				"Gamble it all",
-				"View a Treemap graph of entire market",
-				"Compete on leaderboards"
+				'Create coins',
+				'Buy coins',
+				'Sell coins',
+				'Bet on questions (similar to Polymarket)',
+				'Gamble it all',
+				'View a Treemap graph of entire market',
+				'Compete on leaderboards'
 			]
 		},
 		credits: {
-			title: "Credits",
-			description: ["Created by", "FaceDev"]
+			title: 'Credits',
+			description: ['Created by', 'FaceDev']
 		}
 	},
 	base: {
@@ -121,6 +121,71 @@ export default {
 		unknown: 'Unknown'
 	},
 	coin: {
+		create: {
+			title: 'Create coin',
+			err:{
+				title: "Failed to create coin",
+				unknown: "An error occurred while creating the coin"
+			},
+			details: {
+				title: 'Coin Details',
+				icon: {
+					title: 'Coin Icon (Optional)',
+					description: "Click to upload your coin's icon (PNG or JPG, max 1MB)",
+					err: ["Please select a valid image file", "Icon must be smaller than 1MB"]
+				},
+				name: {
+					title: 'Coin Name',
+					placeholder: 'e.g., Bitcoin',
+					description: 'Choose a memorable name for your cryptocurrency',
+					err: 'Name must be between 2 and 255 characters'
+				},
+				symbol: {
+					title: 'Symbol',
+					placeholder: 'BTC',
+					description:
+						'Short identifier for your coin (e.g., BTC for Bitcoin). Will be displayed as *{{name}}',
+					err: 'Symbol must be between 2 and 10 characters'
+				},
+				fairLaunchSettings: [
+					'Fair Launch Settings',
+					['Total Supply:', '1,000,000,000 tokens'],
+					['Starting Price:', '$0.000001 per token'],
+					['You receive', '100%', 'of the supply'],
+					['Initial Market Cap:', '$1,000'],
+					['Trading Lock:', '1 minute creator-only period'],
+					"After creation, you'll have 1 minute of exclusive trading time before others can trade. This allows you to purchase your initial supply."
+				],
+				createCoin: ['Create coin (${{price}})', 'Creating...']
+			},
+			costsummary: {
+				title: 'Cost Summary',
+				balance: 'Balance:',
+				creationFee: 'Creation Fee',
+				initialLiquidity: 'Initial Liquidity',
+				totalCost: 'Total Cost'
+			},
+			whathappensnext: {
+				title: 'What Happens after Launch?',
+				'1': [
+					'Fair Distribution',
+					'Everyone starts buying at the same price - no pre-sales or hidden allocations'
+				],
+				'2': [
+					'Price Discovery',
+					'Token price increases automatically as more people buy, following a bonding curve'
+				],
+				'3': [
+					'Instant Trading',
+					'Trading begins immediately - buy, sell, or distribute your tokens as you wish'
+				]
+			},
+			signin: {
+				title: 'Sign in to create your own coin',
+				description: 'You need an account to create coins.',
+				button: 'Sign in to continue'
+			}
+		},
 		'24hChange': '24h Change',
 		'24hVolume': '24h Volume',
 		baseCurrency: 'Base Currency',
@@ -166,9 +231,6 @@ export default {
 		},
 		volume: 'Volume',
 		volume24h: 'Volume (24h)'
-	},
-	createcoin: {
-		title: 'Create coin'
 	},
 	gambling: {
 		title: 'Gambling',
@@ -383,14 +445,14 @@ export default {
 	},
 	notifications: {
 		title: 'Notifications',
-		description: "Stay updated with your activities",
+		description: 'Stay updated with your activities',
 		noNotifications: {
-			title: "No notifications yet",
+			title: 'No notifications yet',
 			description: "You'll see updates about your activities here"
 		},
 		signin: {
-			title: "Please sign in",
-			description: "You need to be signed in to view notifications",
+			title: 'Please sign in',
+			description: 'You need to be signed in to view notifications'
 		}
 	},
 	pagination: {

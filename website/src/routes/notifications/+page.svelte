@@ -97,8 +97,8 @@
 <div class="container mx-auto max-w-4xl p-6">
 	<header class="mb-8">
 		<div class="text-center">
-			<h1 class="mb-2 text-3xl font-bold">{$_("notifications.title")}</h1>
-			<p class="text-muted-foreground mb-6">{$_("notifications.description")}</p>
+			<h1 class="mb-2 text-3xl font-bold">{$_('notifications.title')}</h1>
+			<p class="text-muted-foreground mb-6">{$_('notifications.description')}</p>
 		</div>
 	</header>
 
@@ -111,8 +111,8 @@
 					>
 						<Bell class="text-muted-foreground h-8 w-8" />
 					</div>
-					<h3 class="mb-2 text-lg font-semibold">{$_("notifications.signin.title")}</h3>
-					<p class="text-muted-foreground">{$_("notifications.signin.description")}</p>
+					<h3 class="mb-2 text-lg font-semibold">{$_('notifications.signin.title')}</h3>
+					<p class="text-muted-foreground">{$_('notifications.signin.description')}</p>
 				</div>
 			{:else if loading}
 				<NotificationsSkeleton />
@@ -123,8 +123,8 @@
 					>
 						<Bell class="text-muted-foreground h-8 w-8" />
 					</div>
-					<h3 class="mb-2 text-lg font-semibold">{$_("notifications.noNotifications.title")}</h3>
-					<p class="text-muted-foreground">{$_("notifications.noNotifications.description")}</p>
+					<h3 class="mb-2 text-lg font-semibold">{$_('notifications.noNotifications.title')}</h3>
+					<p class="text-muted-foreground">{$_('notifications.noNotifications.description')}</p>
 				</div>
 			{:else}
 				<ScrollArea class="h-[600px]">

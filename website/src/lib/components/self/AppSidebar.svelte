@@ -66,7 +66,7 @@
 				icon: BriefcaseBusiness
 			},
 			{ title: $_('treemap.title'), url: '/treemap', icon: ChartColumn },
-			{ title: $_('createcoin.title'), url: '/coin/create', icon: Coins },
+			{ title: $_('coin.create.title'), url: '/coin/create', icon: Coins },
 			{ title: $_('notifications.title'), url: '/notifications', icon: Bell },
 			{ title: $_('about.title'), url: '/about', icon: Info }
 		]

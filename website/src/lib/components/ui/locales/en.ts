@@ -69,6 +69,30 @@ export default {
 				}
 			},
 			title: 'User Manual'
+		},
+		rugplay:{
+			title: "About Rugplay",
+			description: [
+				"Rugplay is a realistic cryptocurrency trading simulation that focuses on DeFi (Decentralized Finance) mechanics and the inherent risks of decentralized trading.",
+				"Practice trading strategies, create your own coins, and learn about market dynamics without any real financial risk. Experience AMM trading, liquidity pools, and even rug pulls. (duh)",
+				"Join the community of degenerates where paranoia is profitable!"
+			]
+		},
+		features: {
+			title: "Features",
+			description: [
+				"Create coins",
+				"Buy coins",
+				"Sell coins",
+				"Bet on questions (similar to Polymarket)",
+				"Gamble it all",
+				"View a Treemap graph of entire market",
+				"Compete on leaderboards"
+			]
+		},
+		credits: {
+			title: "Credits",
+			description: ["Created by", "FaceDev"]
 		}
 	},
 	base: {
@@ -358,7 +382,16 @@ export default {
 		title: 'Market'
 	},
 	notifications: {
-		title: 'Notifications'
+		title: 'Notifications',
+		description: "Stay updated with your activities",
+		noNotifications: {
+			title: "No notifications yet",
+			description: "You'll see updates about your activities here"
+		},
+		signin: {
+			title: "Please sign in",
+			description: "You need to be signed in to view notifications",
+		}
 	},
 	pagination: {
 		morepages: 'More pages',

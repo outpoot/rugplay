@@ -52,22 +52,19 @@
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
 					<Coins class="text-primary h-5 w-5" />
-					About Rugplay
+					{$_("about.rugplay.title")}
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<div class="space-y-3">
 					<p class="text-muted-foreground text-sm">
-						Rugplay is a realistic cryptocurrency trading simulation that focuses on DeFi
-						(Decentralized Finance) mechanics and the inherent risks of decentralized trading.
+						{$_("about.rugplay.description.0")}
 					</p>
 					<p class="text-muted-foreground text-sm">
-						Practice trading strategies, create your own coins, and learn about market dynamics
-						without any real financial risk. Experience AMM trading, liquidity pools, and even rug
-						pulls. (duh)
+						{$_("about.rugplay.description.1")}
 					</p>
 					<p class="text-muted-foreground text-sm">
-						Join the community of degenerates where paranoia is profitable!
+						{$_("about.rugplay.description.2")}
 					</p>
 				</div>
 			</CardContent>
@@ -77,38 +74,38 @@
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
 					<TrendingUp class="text-primary h-5 w-5" />
-					Features
+					{$_("about.features.title")}
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<div class="space-y-2">
 					<div class="flex items-center gap-2 text-sm">
 						<span>🪙</span>
-						<span>Create coins</span>
+						<span>{$_("about.features.description.0")}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>🟢</span>
-						<span>Buy coins</span>
+						<span>{$_("about.features.description.1")}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>🔴</span>
-						<span>Sell coins</span>
+						<span>{$_("about.features.description.2")}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>⚖️</span>
-						<span>Bet on questions (similar to Polymarket)</span>
+						<span>{$_("about.features.description.3")}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>🎲</span>
-						<span>Gamble it all</span>
+						<span>{$_("about.features.description.4")}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>📊</span>
-						<span>View a Treemap graph of the entire market</span>
+						<span>{$_("about.features.description.5")}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>🏆</span>
-						<span>Compete on leaderboards</span>
+						<span>{$_("about.features.description.6")}</span>
 					</div>
 				</div>
 			</CardContent>
@@ -118,12 +115,12 @@
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
 					<User class="text-primary h-5 w-5" />
-					Credits
+					{$_("about.credits.title")}
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<div class="space-y-4">
-					<p class="text-muted-foreground text-sm">Created by <strong>FaceDev</strong></p>
+					<p class="text-muted-foreground text-sm">{$_("about.credits.description.0")} <strong>{$_("about.credits.description.1")}</strong></p>
 					<div class="flex flex-wrap gap-2">
 						<Button
 							variant="outline"

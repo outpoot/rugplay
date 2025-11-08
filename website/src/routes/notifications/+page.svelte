@@ -17,6 +17,7 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import NotificationItem from './NotificationItem.svelte';
+	import { _ } from 'svelte-i18n';
 
 	let loading = $state(true);
 	let newNotificationIds = $state<number[]>([]);
@@ -96,8 +97,8 @@
 <div class="container mx-auto max-w-4xl p-6">
 	<header class="mb-8">
 		<div class="text-center">
-			<h1 class="mb-2 text-3xl font-bold">Notifications</h1>
-			<p class="text-muted-foreground mb-6">Stay updated with your activities</p>
+			<h1 class="mb-2 text-3xl font-bold">{$_("notifications.title")}</h1>
+			<p class="text-muted-foreground mb-6">{$_("notifications.description")}</p>
 		</div>
 	</header>
 
@@ -110,8 +111,8 @@
 					>
 						<Bell class="text-muted-foreground h-8 w-8" />
 					</div>
-					<h3 class="mb-2 text-lg font-semibold">Please sign in</h3>
-					<p class="text-muted-foreground">You need to be signed in to view notifications</p>
+					<h3 class="mb-2 text-lg font-semibold">{$_("notifications.signin.title")}</h3>
+					<p class="text-muted-foreground">{$_("notifications.signin.description")}</p>
 				</div>
 			{:else if loading}
 				<NotificationsSkeleton />
@@ -122,8 +123,8 @@
 					>
 						<Bell class="text-muted-foreground h-8 w-8" />
 					</div>
-					<h3 class="mb-2 text-lg font-semibold">No notifications yet</h3>
-					<p class="text-muted-foreground">You'll see updates about your activities here</p>
+					<h3 class="mb-2 text-lg font-semibold">{$_("notifications.noNotifications.title")}</h3>
+					<p class="text-muted-foreground">{$_("notifications.noNotifications.description")}</p>
 				</div>
 			{:else}
 				<ScrollArea class="h-[600px]">

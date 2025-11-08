@@ -28,6 +28,7 @@
 	import { websocketController, type PriceUpdate, isConnectedStore } from '$lib/stores/websocket';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
+	import { _ } from 'svelte-i18n';
 
 	const { data } = $props();
 	let coinSymbol = $derived(data.coinSymbol);
@@ -94,12 +95,12 @@
 	$effect(() => {
 		if (coin?.isLocked && coin?.tradingUnlocksAt) {
 			const unlockTime = new Date(coin.tradingUnlocksAt).getTime();
-			
+
 			const updateCountdown = () => {
 				const now = Date.now();
 				const remaining = Math.max(0, Math.ceil((unlockTime - now) / 1000));
 				countdown = remaining;
-				
+
 				if (remaining === 0 && countdownInterval) {
 					clearInterval(countdownInterval);
 					countdownInterval = null;
@@ -108,7 +109,7 @@
 					}
 				}
 			};
-			
+
 			updateCountdown();
 			countdownInterval = setInterval(updateCountdown, 1000);
 		} else {
@@ -118,7 +119,7 @@
 				countdownInterval = null;
 			}
 		}
-		
+
 		return () => {
 			if (countdownInterval) {
 				clearInterval(countdownInterval);
@@ -311,18 +312,20 @@
 				1
 			);
 
-			const processedChartData = chartData.map((candle: { open: any; close: any; high: number; low: number; }) => {
-				if (candle.open === candle.close) {
-					const basePrice = candle.open;
-					const variation = basePrice * 0.001;
-					return {
-						...candle,
-						high: Math.max(candle.high, basePrice + variation),
-						low: Math.min(candle.low, basePrice - variation)
-					};
+			const processedChartData = chartData.map(
+				(candle: { open: any; close: any; high: number; low: number }) => {
+					if (candle.open === candle.close) {
+						const basePrice = candle.open;
+						const variation = basePrice * 0.001;
+						return {
+							...candle,
+							high: Math.max(candle.high, basePrice + variation),
+							low: Math.min(candle.low, basePrice - variation)
+						};
+					}
+					return candle;
 				}
-				return candle;
-			});
+			);
 
 			candlestickSeries.setData(processedChartData);
 			volumeSeries.setData(generateVolumeData(chartData, volumeData));
@@ -403,7 +406,6 @@
 	let isCreator = $derived(coin && $USER_DATA && coin.creatorId === Number($USER_DATA.id));
 	let isTradingLocked = $derived(coin?.isLocked && countdown !== null && countdown > 0);
 	let canTrade = $derived(!isTradingLocked || isCreator);
-
 </script>
 
 <SEO
@@ -464,7 +466,7 @@
 									variant="outline"
 									class="animate-pulse border-green-500 text-xs text-green-500"
 								>
-									● LIVE
+									● {$_('base.live').toUpperCase()}
 								</Badge>
 							{/if}
 							{#if isTradingLocked}
@@ -504,7 +506,7 @@
 
 					<HoverCard.Root>
 						<HoverCard.Trigger
-							class="flex min-w-0 max-w-[200px] cursor-pointer items-center gap-1 rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 sm:max-w-[250px]"
+							class="flex max-w-[200px] min-w-0 cursor-pointer items-center gap-1 rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 sm:max-w-[250px]"
 							onclick={() => goto(`/user/${coin.creatorUsername}`)}
 						>
 							<Avatar.Root class="h-4 w-4 flex-shrink-0">
@@ -575,11 +577,12 @@
 					<!-- Trading Actions -->
 					<Card.Root>
 						<Card.Header>
-							<Card.Title>Trade {coin.symbol}</Card.Title>
+							<Card.Title>{$_('coin.trade.title').replace('{{coin}}', coin.symbol)}</Card.Title>
 							{#if userHolding > 0}
 								<p class="text-muted-foreground text-sm">
-									You own: {formatSupply(userHolding)}
-									{coin.symbol}
+									{$_('coin.trade.youOwn')
+										.replace('{{amount}}', formatSupply(userHolding))
+										.replace('{{coin}}', coin.symbol)}
 								</p>
 							{/if}
 							{#if isTradingLocked}
@@ -603,7 +606,7 @@
 										disabled={!coin.isListed || !canTrade}
 									>
 										<TrendingUp class="h-4 w-4" />
-										Buy {coin.symbol}
+										{$_('coin.trade.buy.title').replace('{{coin}}', coin.symbol)}
 									</Button>
 									<Button
 										class="w-full"
@@ -613,7 +616,7 @@
 										disabled={!coin.isListed || userHolding <= 0 || !canTrade}
 									>
 										<TrendingDown class="h-4 w-4" />
-										Sell {coin.symbol}
+										{$_('coin.trade.sell.title').replace('{{coin}}', coin.symbol)}
 									</Button>
 								</div>
 							{:else}
@@ -629,7 +632,7 @@
 						<Card.Content>
 							<div class="space-y-4">
 								<div>
-									<h4 class="mb-3 font-medium">Pool Composition</h4>
+									<h4 class="mb-3 font-medium">{$_('coin.poolComposition')}</h4>
 									<div class="space-y-2">
 										<div class="flex justify-between">
 											<span class="text-muted-foreground text-sm">{coin.symbol}:</span>
@@ -638,7 +641,7 @@
 											</span>
 										</div>
 										<div class="flex justify-between">
-											<span class="text-muted-foreground text-sm">Base Currency:</span>
+											<span class="text-muted-foreground text-sm">{$_('coin.baseCurrency')}:</span>
 											<span class="font-mono text-sm">
 												${Number(coin.poolBaseCurrencyAmount).toLocaleString()}
 											</span>
@@ -646,16 +649,17 @@
 									</div>
 								</div>
 								<div>
-									<h4 class="mb-3 font-medium">Pool Stats</h4>
+									<h4 class="mb-3 font-medium">{$_('coin.poolStats')}</h4>
 									<div class="space-y-2">
 										<div class="flex justify-between">
-											<span class="text-muted-foreground text-sm">Total Liquidity:</span>
+											<span class="text-muted-foreground text-sm">{$_('coin.totalLiquidity')}:</span
+											>
 											<span class="font-mono text-sm">
 												${(Number(coin.poolBaseCurrencyAmount) * 2).toLocaleString()}
 											</span>
 										</div>
 										<div class="flex justify-between">
-											<span class="text-muted-foreground text-sm">Current Price:</span>
+											<span class="text-muted-foreground text-sm">{$_('coin.currentPrice')}:</span>
 											<span class="font-mono text-sm">${formatPrice(coin.currentPrice)}</span>
 										</div>
 									</div>
@@ -675,7 +679,7 @@
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
 							<DollarSign class="h-4 w-4" />
-							Market Cap
+							{$_('coin.marketCap')}
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>
@@ -690,7 +694,7 @@
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
 							<ChartColumn class="h-4 w-4" />
-							24h Volume
+							{$_('coin.24hVolume')}
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>
@@ -705,7 +709,7 @@
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
 							<Coins class="h-4 w-4" />
-							Circulating Supply
+							{$_('coin.circulatingSupply.title')}
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>
@@ -713,7 +717,10 @@
 							{formatSupply(coin.circulatingSupply)}<span
 								class="text-muted-foreground ml-1 text-xs"
 							>
-								of {formatSupply(coin.initialSupply)} total
+								{$_('coin.circulatingSupply.of').replace(
+									'{{total}}',
+									formatSupply(coin.initialSupply)
+								)}
 							</span>
 						</p>
 					</Card.Content>
@@ -722,7 +729,7 @@
 				<!-- 24h Change -->
 				<Card.Root class="gap-1">
 					<Card.Header>
-						<Card.Title class="text-sm font-medium">24h Change</Card.Title>
+						<Card.Title class="text-sm font-medium">{$_('coin.24hChange')}</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						<div class="flex items-center gap-2">

@@ -9,7 +9,7 @@ if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
  * update.
  */
 const globalForDb = globalThis as unknown as {
-    client: postgres.Sql | undefined;
+	client: postgres.Sql | undefined;
 };
 
 const client = globalForDb.client ?? postgres(env.DATABASE_URL);

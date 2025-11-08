@@ -21,7 +21,7 @@
 						<div class="flex items-center gap-2 border-b pb-3 last:border-b-0 md:gap-4 md:pb-4">
 							<Skeleton class="h-5 w-6 md:h-6 md:w-8" />
 							<Skeleton class="h-6 w-6 rounded-full md:h-8 md:w-8" />
-							<div class="flex-1 min-w-0">
+							<div class="min-w-0 flex-1">
 								<Skeleton class="h-3 w-16 md:h-4 md:w-24" />
 								<Skeleton class="mt-1 h-2 w-12 md:h-3 md:w-16" />
 							</div>

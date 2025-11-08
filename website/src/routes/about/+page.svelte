@@ -12,6 +12,7 @@
 		Shield
 	} from 'lucide-svelte';
 	import UserManualModal from '$lib/components/self/UserManualModal.svelte';
+	import { _ } from 'svelte-i18n';
 
 	let showUserManual = $state(false);
 	function handleManual() {
@@ -33,16 +34,15 @@
 	<div class="space-y-4 text-center">
 		<div class="mb-4 flex items-center justify-center gap-2">
 			<img src="/rugplay.svg" class="h-12 w-12" alt="Rugplay" />
-			<h1 class="text-4xl font-bold">Rugplay</h1>
+			<h1 class="text-4xl font-bold">{$_('title')}</h1>
 		</div>
 		<p class="text-muted-foreground mx-auto max-w-2xl text-lg">
-			A crypto trading simulator where you can practice trading without losing real money. Create
-			coins, trade them, and rug pull!
+			{$_('about.desc')}
 		</p>
 		<div class="flex flex-wrap justify-center gap-4">
 			<Button onclick={handleManual} size="lg">
 				<BookOpen class="h-4 w-4" />
-				User Manual
+				{$_('about.usermanual.title')}
 			</Button>
 		</div>
 	</div>

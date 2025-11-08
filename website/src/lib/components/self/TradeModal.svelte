@@ -7,6 +7,7 @@
 	import { TrendingUp, TrendingDown, Loader2 } from 'lucide-svelte';
 	import { PORTFOLIO_SUMMARY } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
+	import { _ } from 'svelte-i18n';
 
 	let {
 		open = $bindable(false),
@@ -126,14 +127,16 @@
 			<Dialog.Title class="flex items-center gap-2">
 				{#if type === 'BUY'}
 					<TrendingUp class="h-5 w-5 text-green-500" />
-					Buy {coin.symbol}
+					{$_('coin.trade.buy.title').replace('{{coin}}', coin.symbol)}
 				{:else}
 					<TrendingDown class="h-5 w-5 text-red-500" />
-					Sell {coin.symbol}
+					{$_('coin.trade.sell.title').replace('{{coin}}', coin.symbol)}
 				{/if}
 			</Dialog.Title>
 			<Dialog.Description>
-				Current price: ${coin.currentPrice.toFixed(6)} per {coin.symbol}
+				{$_('coin.trade.curPrice')
+					.replace('{{coin}}', coin.symbol)
+					.replace('{{price}}', coin.currentPrice.toFixed(6))}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -175,7 +178,9 @@
 				<div class="bg-muted/50 rounded-lg p-3">
 					<div class="flex items-center justify-between">
 						<span class="text-sm font-medium">
-							{type === 'BUY' ? `${coin.symbol} you'll get:` : "You'll receive:"}
+							{type === 'BUY'
+								? $_('coin.trade.buy.rec').replace('{{coin}}', coin.symbol)
+								: $_('coin.trade.sell.rec')}
 						</span>
 						<span class="font-bold">
 							{type === 'BUY'
@@ -184,7 +189,7 @@
 						</span>
 					</div>
 					<p class="text-muted-foreground mt-1 text-xs">
-						AMM estimation - includes slippage from pool impact
+						{$_('coin.trade.estimation')}
 					</p>
 				</div>
 			{/if}
@@ -197,7 +202,8 @@
 		</div>
 
 		<Dialog.Footer class="flex gap-2">
-			<Button variant="outline" onclick={handleClose} disabled={loading}>Cancel</Button>
+			<Button variant="outline" onclick={handleClose} disabled={loading}>{$_('base.cancel')}</Button
+			>
 			<Button
 				onclick={handleTrade}
 				disabled={!canTrade}
@@ -207,7 +213,10 @@
 					<Loader2 class="h-4 w-4 animate-spin" />
 					Processing...
 				{:else}
-					{type === 'BUY' ? 'Buy' : 'Sell'} {coin.symbol}
+					{(type === 'BUY' ? $_('coin.trade.buy.title') : $_('coin.trade.sell.title')).replace(
+						'{{coin}}',
+						coin.symbol
+					)}
 				{/if}
 			</Button>
 		</Dialog.Footer>

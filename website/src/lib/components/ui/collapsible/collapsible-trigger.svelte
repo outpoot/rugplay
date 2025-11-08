@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { Collapsible as CollapsiblePrimitive } from "bits-ui";
-	import { browser } from "$app/environment";
+	import { Collapsible as CollapsiblePrimitive } from 'bits-ui';
+	import { browser } from '$app/environment';
 
-	let { 
-		ref = $bindable(null), 
+	let {
+		ref = $bindable(null),
 		children,
-		...restProps 
+		...restProps
 	}: CollapsiblePrimitive.TriggerProps = $props();
 </script>
 

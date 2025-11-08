@@ -9,7 +9,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { signIn } from '$lib/auth-client';
 	import { page } from '$app/state';
-
+	import { _ } from 'svelte-i18n';
 	async function onConfirm() {
 		await signIn.social({
 			provider: 'google',
@@ -25,10 +25,9 @@
 <Dialog bind:open>
 	<DialogContent class="sm:max-w-md">
 		<DialogHeader>
-			<DialogTitle>Sign in to Rugplay</DialogTitle>
+			<DialogTitle>{$_('signin.title')}</DialogTitle>
 			<DialogDescription>
-				Choose a service to sign in with. Your account will be created automatically if you don't
-				have one.
+				{$_('signin.description')}
 			</DialogDescription>
 		</DialogHeader>
 		<div class="flex flex-col gap-4 py-2">
@@ -42,14 +41,14 @@
 					src="https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-jiKhxDx1FrYbtRHKJ9z_hELisAlapwE9LUPh6fcXIfb5vwpbMl4xl9H9TRFPc5NOO8Sb3VSgIBrfRYvW6cUA"
 					alt="Google"
 				/>
-				<span>Continue with Google</span>
+				<span>{$_('signin.options.google')}</span>
 			</Button>
 
 			<p class="text-muted-foreground text-center text-xs">
-				By continuing, you agree to our
-				<a href="/legal/terms" class="text-primary hover:underline">Terms of Service</a>
-				and
-				<a href="/legal/privacy" class="text-primary hover:underline">Privacy Policy</a>
+				{$_('signin.terms.0')}
+				<a href="/legal/terms" class="text-primary hover:underline">{$_('terms.service')}</a>
+				{$_('signin.terms.1')}
+				<a href="/legal/privacy" class="text-primary hover:underline">{$_('terms.privacy')}</a>
 			</p>
 		</div>
 	</DialogContent>

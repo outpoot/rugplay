@@ -17,6 +17,7 @@
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import { Clock, PiggyBank } from 'lucide-svelte';
 	import { formatValue, formatRelativeTime, getPublicUrl } from '$lib/utils';
+	import { _ } from 'svelte-i18n';
 
 	let shouldSignIn = $state(false);
 	let balance = $state(0);
@@ -51,7 +52,7 @@
 	});
 </script>
 
-<SEO 
+<SEO
 	title="Gambling - Rugplay"
 	description="Play virtual gambling games with simulated currency in Rugplay. Try coinflip, slots, and mines games using virtual money with no real-world value - purely for entertainment."
 	keywords="virtual gambling simulation, coinflip game, slots game, mines game, virtual casino, simulated gambling, entertainment games"
@@ -66,7 +67,9 @@
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
 				<div class="text-muted-foreground mb-4 text-xl">Sign in to start gambling</div>
-				<p class="text-muted-foreground mb-4 text-sm">You need an account to gamble away your life savings</p>
+				<p class="text-muted-foreground mb-4 text-sm">
+					You need an account to gamble away your life savings
+				</p>
 				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 			</div>
 		</div>
@@ -114,7 +117,7 @@
 			<!-- Live Gambling Activity Feed -->
 			<Card>
 				<CardHeader>
-					<CardTitle>Live</CardTitle>
+					<CardTitle>{$_('base.live')}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<div class="space-y-3">
@@ -154,7 +157,9 @@
 											</HoverCard.Content>
 										</HoverCard.Root>
 
-										<span class="text-muted-foreground text-sm">{activity.won ? 'won' : 'lost'}</span>
+										<span class="text-muted-foreground text-sm"
+											>{activity.won ? 'won' : 'lost'}</span
+										>
 										<span
 											class="font-mono text-sm font-medium {activity.won
 												? 'text-green-500'
@@ -167,7 +172,8 @@
 
 									<div class="text-muted-foreground flex items-center gap-1 text-xs">
 										<Clock class="h-3 w-3" />
-										<span class="font-mono">{formatRelativeTime(new Date(activity.timestamp))}</span>
+										<span class="font-mono">{formatRelativeTime(new Date(activity.timestamp))}</span
+										>
 									</div>
 								</div>
 							{/each}

@@ -24,7 +24,7 @@
 	}
 
 	const MAX_BET_AMOUNT = 1000000;
-	const baseRotation = "rotate3d(1, 1, 0, 340deg)";
+	const baseRotation = 'rotate3d(1, 1, 0, 340deg)';
 
 	const faceRotations = {
 		1: { x: 0, y: 0 },
@@ -86,9 +86,9 @@
 	}
 
 	function getRotate(x?: number, y?: number, z?: number) {
-		const rotateX = x !== undefined ? `rotateX(${x}deg)` : "";
-		const rotateY = y !== undefined ? `rotateY(${y}deg)` : "";
-		const rotateZ = z !== undefined ? `rotateZ(${z}deg)` : "";
+		const rotateX = x !== undefined ? `rotateX(${x}deg)` : '';
+		const rotateY = y !== undefined ? `rotateY(${y}deg)` : '';
+		const rotateZ = z !== undefined ? `rotateZ(${z}deg)` : '';
 		return `${rotateX} ${rotateY} ${rotateZ}`;
 	}
 
@@ -181,8 +181,8 @@
 				diceElement.style.transform = getDiceTransform(resultData.result, true, spinFactor);
 			}
 
-			await new Promise(resolve => setTimeout(resolve, animationDuration));
-			await new Promise(resolve => setTimeout(resolve, 200)); // Small delay to show the Result
+			await new Promise((resolve) => setTimeout(resolve, animationDuration));
+			await new Promise((resolve) => setTimeout(resolve, 200)); // Small delay to show the Result
 
 			balance = resultData.newBalance;
 			lastResult = resultData;
@@ -235,7 +235,7 @@
 					<p class="text-2xl font-bold">{formatValue(balance)}</p>
 				</div>
 
-				<div class="flex-1 flex items-center justify-center">
+				<div class="flex flex-1 items-center justify-center">
 					<div class="dice-container">
 						<div class="dice" bind:this={diceElement}>
 							{#each Array(6) as _, i}
@@ -369,12 +369,24 @@
 		box-sizing: border-box;
 	}
 
-	.face:nth-child(1) { transform: translateZ(50px); }
-	.face:nth-child(2) { transform: rotateY(90deg) translateZ(50px); }
-	.face:nth-child(3) { transform: rotateX(90deg) translateZ(50px); }
-	.face:nth-child(4) { transform: rotateX(-90deg) translateZ(50px); }
-	.face:nth-child(5) { transform: rotateY(-90deg) translateZ(50px); }
-	.face:nth-child(6) { transform: rotateY(180deg) translateZ(50px); }
+	.face:nth-child(1) {
+		transform: translateZ(50px);
+	}
+	.face:nth-child(2) {
+		transform: rotateY(90deg) translateZ(50px);
+	}
+	.face:nth-child(3) {
+		transform: rotateX(90deg) translateZ(50px);
+	}
+	.face:nth-child(4) {
+		transform: rotateX(-90deg) translateZ(50px);
+	}
+	.face:nth-child(5) {
+		transform: rotateY(-90deg) translateZ(50px);
+	}
+	.face:nth-child(6) {
+		transform: rotateY(180deg) translateZ(50px);
+	}
 
 	.dot-container {
 		width: 100%;
@@ -395,25 +407,67 @@
 	}
 
 	/* Dot positions for each face */
-	.face:nth-child(1) .dot { grid-area: 2 / 2; }
-	.face:nth-child(2) .dot:nth-child(1) { grid-area: 1 / 1; }
-	.face:nth-child(2) .dot:nth-child(2) { grid-area: 3 / 3; }
-	.face:nth-child(3) .dot:nth-child(1) { grid-area: 1 / 1; }
-	.face:nth-child(3) .dot:nth-child(2) { grid-area: 2 / 2; }
-	.face:nth-child(3) .dot:nth-child(3) { grid-area: 3 / 3; }
-	.face:nth-child(4) .dot:nth-child(1) { grid-area: 1 / 1; }
-	.face:nth-child(4) .dot:nth-child(2) { grid-area: 1 / 3; }
-	.face:nth-child(4) .dot:nth-child(3) { grid-area: 3 / 1; }
-	.face:nth-child(4) .dot:nth-child(4) { grid-area: 3 / 3; }
-	.face:nth-child(5) .dot:nth-child(1) { grid-area: 1 / 1; }
-	.face:nth-child(5) .dot:nth-child(2) { grid-area: 1 / 3; }
-	.face:nth-child(5) .dot:nth-child(3) { grid-area: 2 / 2; }
-	.face:nth-child(5) .dot:nth-child(4) { grid-area: 3 / 1; }
-	.face:nth-child(5) .dot:nth-child(5) { grid-area: 3 / 3; }
-	.face:nth-child(6) .dot:nth-child(1) { grid-area: 1 / 1; }
-	.face:nth-child(6) .dot:nth-child(2) { grid-area: 1 / 3; }
-	.face:nth-child(6) .dot:nth-child(3) { grid-area: 2 / 1; }
-	.face:nth-child(6) .dot:nth-child(4) { grid-area: 2 / 3; }
-	.face:nth-child(6) .dot:nth-child(5) { grid-area: 3 / 1; }
-	.face:nth-child(6) .dot:nth-child(6) { grid-area: 3 / 3; }
+	.face:nth-child(1) .dot {
+		grid-area: 2 / 2;
+	}
+	.face:nth-child(2) .dot:nth-child(1) {
+		grid-area: 1 / 1;
+	}
+	.face:nth-child(2) .dot:nth-child(2) {
+		grid-area: 3 / 3;
+	}
+	.face:nth-child(3) .dot:nth-child(1) {
+		grid-area: 1 / 1;
+	}
+	.face:nth-child(3) .dot:nth-child(2) {
+		grid-area: 2 / 2;
+	}
+	.face:nth-child(3) .dot:nth-child(3) {
+		grid-area: 3 / 3;
+	}
+	.face:nth-child(4) .dot:nth-child(1) {
+		grid-area: 1 / 1;
+	}
+	.face:nth-child(4) .dot:nth-child(2) {
+		grid-area: 1 / 3;
+	}
+	.face:nth-child(4) .dot:nth-child(3) {
+		grid-area: 3 / 1;
+	}
+	.face:nth-child(4) .dot:nth-child(4) {
+		grid-area: 3 / 3;
+	}
+	.face:nth-child(5) .dot:nth-child(1) {
+		grid-area: 1 / 1;
+	}
+	.face:nth-child(5) .dot:nth-child(2) {
+		grid-area: 1 / 3;
+	}
+	.face:nth-child(5) .dot:nth-child(3) {
+		grid-area: 2 / 2;
+	}
+	.face:nth-child(5) .dot:nth-child(4) {
+		grid-area: 3 / 1;
+	}
+	.face:nth-child(5) .dot:nth-child(5) {
+		grid-area: 3 / 3;
+	}
+	.face:nth-child(6) .dot:nth-child(1) {
+		grid-area: 1 / 1;
+	}
+	.face:nth-child(6) .dot:nth-child(2) {
+		grid-area: 1 / 3;
+	}
+	.face:nth-child(6) .dot:nth-child(3) {
+		grid-area: 2 / 1;
+	}
+	.face:nth-child(6) .dot:nth-child(4) {
+		grid-area: 2 / 3;
+	}
+	.face:nth-child(6) .dot:nth-child(5) {
+		grid-area: 3 / 1;
+	}
+	.face:nth-child(6) .dot:nth-child(6) {
+		grid-area: 3 / 3;
+	}
 </style>

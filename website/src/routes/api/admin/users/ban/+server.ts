@@ -53,9 +53,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				})
 				.where(eq(user.id, targetUser.id));
 
-			await tx
-				.delete(session)
-				.where(eq(session.userId, targetUser.id));
+			await tx.delete(session).where(eq(session.userId, targetUser.id));
 		});
 
 		try {

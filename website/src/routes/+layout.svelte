@@ -12,14 +12,13 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { page } from '$app/state';
 	import { websocketController } from '$lib/stores/websocket';
+	import { _ } from 'svelte-i18n';
 
 	let { data, children } = $props<{
 		data: { userSession?: any };
 		children: any;
 	}>();
-
 	USER_DATA.set(data?.userSession ?? null);
-
 	$effect(() => {
 		USER_DATA.set(data?.userSession ?? null);
 	});
@@ -80,22 +79,22 @@
 		if (!routeId) return 'Rugplay';
 
 		const titleMap: Record<string, string> = {
-			'/': 'Home',
-			'/market': 'Market',
-			'/portfolio': 'Portfolio',
-			'/leaderboard': 'Leaderboard',
-			'/coin/create': 'Create Coin',
-			'/settings': 'Settings',
-			'/admin': 'Admin',
-			'/admin/promo': 'Promo Codes',
-			'/transactions': 'Transactions',
-			'/hopium': 'Hopium',
-			'/gambling': 'Gambling',
-			'/live': 'Live Trades',
-			'/treemap': 'Treemap',
-			'/about': 'About',
-			'/legal/privacy': 'Privacy Policy',
-			'/legal/terms': 'Terms of Service',
+			'/': $_('home.title'),
+			'/market': $_('market.title'),
+			'/portfolio': $_('portfolio.title'),
+			'/leaderboard': $_('leaderboard.title'),
+			'/coin/create': $_('createcoin.title'),
+			'/settings': $_('settings.title'),
+			'/admin': $_('admin.title'),
+			'/admin/promo': $_('admin.promocodes.title'),
+			'/transactions': $_('transactions.title'),
+			'/hopium': $_('hopium.title'),
+			'/gambling': $_('gambling.title'),
+			'/live': $_('livetrades.title'),
+			'/treemap': $_('treemap.title'),
+			'/about': $_('about.title'),
+			'/legal/privacy': $_('terms.privacy'),
+			'/legal/terms': $_('terms.service')
 		};
 
 		// Handle dynamic routes
@@ -121,7 +120,7 @@
 
 	<Sidebar.Inset class="sidebar-container">
 		<header
-			class="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear"
+			class="flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
 		>
 			<div class="flex w-full items-center gap-4 px-4 lg:px-6">
 				<Sidebar.Trigger class="-ml-1" />

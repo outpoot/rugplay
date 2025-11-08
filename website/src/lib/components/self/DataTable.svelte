@@ -7,6 +7,7 @@
 	import UserProfilePreview from './UserProfilePreview.svelte';
 	import { getPublicUrl } from '$lib/utils';
 	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
+	import { _ } from 'svelte-i18n';
 
 	interface Column {
 		key: string;
@@ -23,7 +24,7 @@
 		onRowClick,
 		emptyMessage = 'No data available',
 		emptyIcon,
-		emptyTitle = 'No data',
+		emptyTitle = $_('base.noData'),
 		emptyDescription = '',
 		enableUserPreview = false
 	}: {
@@ -191,7 +192,7 @@
 							{:else if cellData.type === 'coin'}
 								<div class="flex items-center gap-2">
 									<CoinIcon icon={cellData.icon} symbol={cellData.symbol} size={cellData.size} />
-									<span class="font-medium max-w-44 truncate">{cellData.name}</span>
+									<span class="max-w-44 truncate font-medium">{cellData.name}</span>
 								</div>
 							{:else if cellData.type === 'rank'}
 								<div class="flex items-center gap-2">

@@ -131,9 +131,7 @@
 			<div class="text-center">
 				<div class="text-muted-foreground mb-4 text-xl">Sign in to create your own coin</div>
 				<p class="text-muted-foreground mb-4 text-sm">You need an account to create coins.</p>
-				<Button onclick={() => (shouldSignIn = true)} class="w-fit">
-					Sign in to continue
-				</Button>
+				<Button onclick={() => (shouldSignIn = true)} class="w-fit">Sign in to continue</Button>
 			</div>
 		</div>
 	{:else}
@@ -206,7 +204,7 @@
 								<Label for="symbol">Symbol</Label>
 								<div class="relative">
 									<span
-										class="text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+										class="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 text-sm"
 										>*</span
 									>
 									<Input
@@ -238,9 +236,12 @@
 										<p>• Starting Price: <span class="font-medium">$0.000001 per token</span></p>
 										<p>• You receive <span class="font-medium">100%</span> of the supply</p>
 										<p>• Initial Market Cap: <span class="font-medium">$1,000</span></p>
-										<p>• Trading Lock: <span class="font-medium">1 minute creator-only period</span></p>
+										<p>
+											• Trading Lock: <span class="font-medium">1 minute creator-only period</span>
+										</p>
 										<p class="mt-2 text-sm">
-											After creation, you'll have 1 minute of exclusive trading time before others can trade. This allows you to purchase your initial supply.
+											After creation, you'll have 1 minute of exclusive trading time before others
+											can trade. This allows you to purchase your initial supply.
 										</p>
 									</div>
 								</AlertDescription>

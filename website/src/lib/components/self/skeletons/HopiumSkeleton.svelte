@@ -33,7 +33,7 @@
 				</div>
 
 				<!-- Creator info skeleton -->
-				<div class="mb-2 mt-2 flex items-center gap-2">
+				<div class="mt-2 mb-2 flex items-center gap-2">
 					<Skeleton class="h-5 w-5 rounded-full" />
 					<Skeleton class="h-4 w-20" />
 				</div>

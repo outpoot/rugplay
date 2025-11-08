@@ -73,7 +73,7 @@
 				const hasPrestigeBonus = prestigeBonus > 0;
 
 				toast.success(`Daily reward claimed! +$${formatCurrency(result.rewardAmount)}`, {
-					description: hasPrestigeBonus 
+					description: hasPrestigeBonus
 						? `Base: $${formatCurrency(result.baseReward)} + Prestige bonus: $${formatCurrency(prestigeBonus)} | Streak: ${rewardStatus.loginStreak} days 🔥`
 						: rewardStatus.loginStreak > 0
 							? `Login streak: ${rewardStatus.loginStreak} days 🔥`

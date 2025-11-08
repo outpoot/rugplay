@@ -20,6 +20,7 @@ cp .env.example .env
 ```
 
 Key variables to configure:
+
 - `PUBLIC_BETTER_AUTH_URL`: Set to `http://localhost:3002` if you want to deploy
 - `OPENROUTER_API_KEY`: Your OpenRouter API key for AI features
 - AWS credentials (optional but recommended)

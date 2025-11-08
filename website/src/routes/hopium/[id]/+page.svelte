@@ -252,7 +252,7 @@
 			</div>
 		</div>
 
-		<div class="text-muted-foreground mb-4 mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+		<div class="text-muted-foreground mt-3 mb-4 flex flex-wrap items-center gap-1.5 text-xs">
 			<span>Created by</span>
 
 			<HoverCard.Root>

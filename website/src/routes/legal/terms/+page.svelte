@@ -14,7 +14,7 @@
 	const MINIMUM_AGE = 18;
 </script>
 
-<SEO 
+<SEO
 	title="Terms of Service - Rugplay"
 	description="Terms of Service for Rugplay - cryptocurrency trading simulation game. Learn about virtual currency, rug pull mechanics, gambling features, and platform rules."
 	keywords="terms of service, legal terms, simulation game rules, virtual currency terms, rug pull simulation"

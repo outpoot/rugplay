@@ -12,6 +12,7 @@
 	import LiveTradeSkeleton from '$lib/components/self/skeletons/LiveTradeSkeleton.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 
 	function handleUserClick(username: string) {
 		goto(`/user/${username}`);
@@ -26,27 +27,27 @@
 	}
 
 	onMount(() => {
-		loadInitialTrades("expanded");
-	})
+		loadInitialTrades('expanded');
+	});
 </script>
 
-<SEO 
+<SEO
 	title="Live Trades - Rugplay"
 	description="Watch real-time virtual cryptocurrency trading activity in the Rugplay simulation game. See live trades, user activity, and market movements as they happen."
 	keywords="live crypto trades game, real-time trading simulation, virtual trading activity, crypto game stream"
 />
 
 <svelte:head>
-	<title>Live Trades - Rugplay</title>
+	<title>{$_('livetrades.title')} - Rugplay</title>
 	<meta name="description" content="Real-time cryptocurrency trading activity on Rugplay" />
 </svelte:head>
 
 <div class="container mx-auto max-w-7xl p-6">
 	<header class="mb-8">
 		<div>
-			<h1 class="text-2xl font-bold sm:text-3xl">Live Trades</h1>
+			<h1 class="text-2xl font-bold sm:text-3xl">{$_('livetrades.title')}</h1>
 			<p class="text-muted-foreground text-sm sm:text-base">
-				Real-time trading activity for all trades
+				{$_('livetrades.desc')}
 			</p>
 		</div>
 	</header>
@@ -188,7 +189,7 @@
 									class="text-muted-foreground flex items-center gap-1 text-xs sm:gap-1 sm:text-sm"
 								>
 									<Clock class="h-3 w-3 sm:h-4 sm:w-4" />
-									<span class="whitespace-nowrap font-mono"
+									<span class="font-mono whitespace-nowrap"
 										>{formatRelativeTime(new Date(trade.timestamp))}</span
 									>
 								</div>

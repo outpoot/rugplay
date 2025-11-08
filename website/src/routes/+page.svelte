@@ -11,6 +11,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
+	import { _ } from 'svelte-i18n';
 
 	let shouldSignIn = $state(false);
 	let coins = $state<any[]>([]);
@@ -35,7 +36,7 @@
 	const marketColumns = [
 		{
 			key: 'name',
-			label: 'Name',
+			label: $_('coin.name'),
 			class: 'font-medium',
 			render: (value: any, row: any) => {
 				return {
@@ -85,11 +86,13 @@
 <div class="container mx-auto p-6">
 	<header class="mb-8">
 		<h1 class="mb-2 truncate text-3xl font-bold">
-			{$USER_DATA ? getTimeBasedGreeting($USER_DATA?.name) : 'Welcome to Rugplay!'}
+			{$USER_DATA
+				? $_(`home.good.${getTimeBasedGreeting()}`).replace('{{name}}', $USER_DATA?.name)
+				: $_('home.welcome')}
 		</h1>
 		<p class="text-muted-foreground">
 			{#if $USER_DATA}
-				Here's the market overview for today.
+				{$_('home.marketOverview.description')}
 			{:else}
 				You need to <button
 					class="text-primary underline hover:cursor-pointer"
@@ -105,8 +108,8 @@
 	{:else if coins.length === 0}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">No coins available</div>
-				<p class="text-muted-foreground text-sm">Be the first to create a coin!</p>
+				<div class="text-muted-foreground mb-4 text-xl">{$_('home.nocoinsavailable.title')}</div>
+				<p class="text-muted-foreground text-sm">{$_('home.nocoinsavailable.description')}</p>
 			</div>
 		</div>
 	{:else}
@@ -140,7 +143,7 @@
 		</div>
 
 		<div class="mt-12">
-			<h2 class="mb-4 text-2xl font-bold">Market Overview</h2>
+			<h2 class="mb-4 text-2xl font-bold">{$_('home.marketOverview.title')}</h2>
 			<Card.Root>
 				<Card.Content>
 					<DataTable

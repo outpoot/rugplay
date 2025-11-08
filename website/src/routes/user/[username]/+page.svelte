@@ -25,7 +25,7 @@
 	} from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
-
+	import { _ } from 'svelte-i18n';
 	let { data } = $props();
 	let username = $derived(data.username);
 
@@ -41,7 +41,7 @@
 
 	onMount(async () => {
 		previousUsername = username;
-		
+
 		if (isOwnProfile) {
 			await fetchTransactions();
 		}
@@ -167,7 +167,7 @@
 	const createdCoinsColumns = [
 		{
 			key: 'coin',
-			label: 'Coin',
+			label: $_('base.coin'),
 			class: 'pl-6 font-medium',
 			render: (value: any, row: any) => ({
 				component: 'coin',
@@ -178,19 +178,19 @@
 		},
 		{
 			key: 'currentPrice',
-			label: 'Price',
+			label: $_('coin.price'),
 			class: 'font-mono',
 			render: (value: any) => `$${formatPrice(parseFloat(value))}`
 		},
 		{
 			key: 'marketCap',
-			label: 'Market Cap',
+			label: $_('coin.marketCap'),
 			class: 'hidden font-mono sm:table-cell',
 			render: (value: any) => formatValue(parseFloat(value))
 		},
 		{
 			key: 'change24h',
-			label: '24h Change',
+			label: $_('coin.24hChange'),
 			class: 'hidden md:table-cell',
 			render: (value: any) => ({
 				component: 'badge',
@@ -200,7 +200,7 @@
 		},
 		{
 			key: 'createdAt',
-			label: 'Created',
+			label: $_('coin.created'),
 			class: 'text-muted-foreground hidden text-sm lg:table-cell',
 			render: (value: any) => formatDate(value)
 		}
@@ -209,7 +209,7 @@
 	const transactionsColumns = [
 		{
 			key: 'type',
-			label: 'Type',
+			label: $_('base.type'),
 			class: 'w-[12%] min-w-[60px] md:w-[8%] pl-6',
 			render: (value: any, row: any) => {
 				// Handle transfer types (TRANSFER_IN, TRANSFER_OUT) from user profile API
@@ -217,7 +217,7 @@
 					return {
 						component: 'badge',
 						variant: 'default',
-						text: value === 'TRANSFER_IN' ? 'Received' : 'Sent',
+						text: value === 'TRANSFER_IN' ? $_('base.received') : $_('base.sent'),
 						class: 'text-xs'
 					};
 				}
@@ -226,21 +226,21 @@
 					return {
 						component: 'badge',
 						variant: 'default',
-						text: row.isIncoming ? 'Received' : 'Sent',
+						text: row.isIncoming ? $_('base.received') : $_('base.sent'),
 						class: 'text-xs'
 					};
 				}
 				return {
 					component: 'badge',
 					variant: value === 'BUY' ? 'success' : 'destructive',
-					text: value === 'BUY' ? 'Buy' : 'Sell',
+					text: value === 'BUY' ? $_('base.buy') : $_('base.sell'),
 					class: 'text-xs'
 				};
 			}
 		},
 		{
 			key: 'coin',
-			label: 'Coin',
+			label: $_('base.coin'),
 			class: 'w-[20%] min-w-[100px] md:w-[12%]',
 			render: (value: any, row: any) => {
 				// Handle transfer format from transactions API
@@ -281,20 +281,20 @@
 		},
 		{
 			key: 'sender',
-			label: 'Sender',
+			label: $_('base.sender'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%]',
 			render: (value: any, row: any) => {
 				if (row.isTransfer) {
 					return {
 						component: 'text',
-						text: row.sender || 'Unknown',
+						text: row.sender || $_('base.unknown'),
 						class: row.sender && row.sender !== 'Unknown' ? 'font-medium' : 'text-muted-foreground'
 					};
 				}
 				if (row.type === 'TRANSFER_IN' || row.type === 'TRANSFER_OUT') {
 					return {
 						component: 'text',
-						text: row.senderUsername || 'Unknown',
+						text: row.senderUsername || $_('base.unknown'),
 						class: row.senderUsername ? 'font-medium' : 'text-muted-foreground'
 					};
 				}
@@ -307,7 +307,7 @@
 		},
 		{
 			key: 'recipient',
-			label: 'Receiver',
+			label: $_('base.receiver'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%]',
 			render: (value: any, row: any) => {
 				if (row.isTransfer) {
@@ -334,7 +334,7 @@
 		},
 		{
 			key: 'quantity',
-			label: 'Quantity',
+			label: $_('base.quantity'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono text-sm',
 			render: (value: any, row: any) => {
 				if (
@@ -348,13 +348,13 @@
 		},
 		{
 			key: 'totalBaseCurrencyAmount',
-			label: 'Amount',
+			label: $_('base.amount'),
 			class: 'w-[12%] min-w-[70px] md:w-[10%] font-mono text-sm font-medium',
 			render: (value: any) => formatValue(parseFloat(value))
 		},
 		{
 			key: 'timestamp',
-			label: 'Date',
+			label: $_('base.date'),
 			class: 'hidden md:table-cell md:w-[18%] text-muted-foreground text-sm',
 			render: (value: any) => formatDate(value)
 		}
@@ -369,7 +369,9 @@
 		? `${profileData.profile.bio} - View ${profileData.profile.name}'s simulated trading activity and virtual portfolio in the Rugplay cryptocurrency simulation game.`
 		: `View @${username}'s profile and simulated trading activity in Rugplay - cryptocurrency trading simulation game platform.`}
 	type="profile"
-	image={profileData?.profile?.image ? getPublicUrl(profileData.profile.image) : '/apple-touch-icon.png'}
+	image={profileData?.profile?.image
+		? getPublicUrl(profileData.profile.image)
+		: '/apple-touch-icon.png'}
 	imageAlt={profileData?.profile?.name
 		? `${profileData.profile.name}'s profile picture`
 		: `@${username}'s profile`}
@@ -438,13 +440,20 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-muted-foreground text-sm font-medium">Total Portfolio</div>
+						<div class="text-muted-foreground text-sm font-medium">
+							{$_('user.totalPortfolio.title')}
+						</div>
 						<Wallet class="text-muted-foreground h-4 w-4" />
 					</div>
 					<div class="mt-1 text-2xl font-bold">
 						{formatValue(totalPortfolioValue)}
 					</div>
-					<p class="text-muted-foreground text-xs">{profileData.stats.holdingsCount} holdings</p>
+					<p class="text-muted-foreground text-xs">
+						{$_('user.totalPortfolio.description').replace(
+							'{{count}}',
+							profileData.stats.holdingsCount
+						)}
+					</p>
 				</Card.Content>
 			</Card.Root>
 
@@ -452,12 +461,14 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-muted-foreground text-sm font-medium">Liquid Value</div>
+						<div class="text-muted-foreground text-sm font-medium">
+							{$_('user.liquidValue.title')}
+						</div>
 					</div>
 					<div class="text-success mt-1 text-2xl font-bold">
 						{formatValue(baseCurrencyBalance)}
 					</div>
-					<p class="text-muted-foreground text-xs">Available cash</p>
+					<p class="text-muted-foreground text-xs">{$_('user.liquidValue.description')}</p>
 				</Card.Content>
 			</Card.Root>
 
@@ -465,12 +476,14 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-muted-foreground text-sm font-medium">Illiquid Value</div>
+						<div class="text-muted-foreground text-sm font-medium">
+							{$_('user.illiquidValue.title')}
+						</div>
 					</div>
 					<div class="text-success mt-1 text-2xl font-bold">
 						{formatValue(holdingsValue)}
 					</div>
-					<p class="text-muted-foreground text-xs">Coin holdings</p>
+					<p class="text-muted-foreground text-xs">{$_('user.illiquidValue.description')}</p>
 				</Card.Content>
 			</Card.Root>
 
@@ -478,7 +491,9 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-muted-foreground text-sm font-medium">Buy/Sell Ratio</div>
+						<div class="text-muted-foreground text-sm font-medium">
+							{$_('user.buySellRatio.title')}
+						</div>
 						<div class="flex gap-1">
 							<div class="bg-success h-2 w-2 rounded-full"></div>
 							<div class="h-2 w-2 rounded-full bg-red-500"></div>
@@ -486,9 +501,9 @@
 					</div>
 					<div class="mt-1 flex items-center gap-2">
 						<span class="text-success text-xl font-bold">{buyPercentage.toFixed(1)}%</span>
-						<span class="text-muted-foreground text-xs">buy</span>
+						<span class="text-muted-foreground text-xs">{$_('user.buySellRatio.buy')}</span>
 						<span class="text-xl font-bold text-red-600">{sellPercentage.toFixed(1)}%</span>
-						<span class="text-muted-foreground text-xs">sell</span>
+						<span class="text-muted-foreground text-xs">{$_('user.buySellRatio.sell')}</span>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -500,20 +515,20 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-foreground text-sm font-medium">Buy Activity</div>
+						<div class="text-foreground text-sm font-medium">{$_('user.buyActivity.title')}</div>
 						<TrendingUp class="text-success h-4 w-4" />
 					</div>
 					<div class="mt-1">
 						<div class="text-success text-2xl font-bold">
 							{formatValue(totalBuyVolume)}
 						</div>
-						<div class="text-muted-foreground text-xs">Total amount spent</div>
+						<div class="text-muted-foreground text-xs">{$_('user.buyActivity.description')}</div>
 					</div>
 					<div class="border-muted mt-3 border-t pt-3">
 						<div class="text-success text-lg font-bold">
 							{formatValue(buyVolume24h)}
 						</div>
-						<div class="text-muted-foreground text-xs">24h buy volume</div>
+						<div class="text-muted-foreground text-xs">{$_('user.buyActivity.description2')}</div>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -522,20 +537,20 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-foreground text-sm font-medium">Sell Activity</div>
+						<div class="text-foreground text-sm font-medium">{$_('user.sellActivity.title')}</div>
 						<TrendingDown class="h-4 w-4 text-red-600" />
 					</div>
 					<div class="mt-1">
 						<div class="text-2xl font-bold text-red-600">
 							{formatValue(totalSellVolume)}
 						</div>
-						<div class="text-muted-foreground text-xs">Total amount received</div>
+						<div class="text-muted-foreground text-xs">{$_('user.sellActivity.description')}</div>
 					</div>
 					<div class="border-muted mt-3 border-t pt-3">
 						<div class="text-lg font-bold text-red-600">
 							{formatValue(sellVolume24h)}
 						</div>
-						<div class="text-muted-foreground text-xs">24h sell volume</div>
+						<div class="text-muted-foreground text-xs">{$_('user.sellActivity.description2')}</div>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -544,14 +559,19 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-muted-foreground text-sm font-medium">Total Trading Volume</div>
+						<div class="text-muted-foreground text-sm font-medium">
+							{$_('user.totalVolume.title')}
+						</div>
 						<Badge variant="outline" class="text-xs">All Time</Badge>
 					</div>
 					<div class="mt-1 text-2xl font-bold">
 						{formatValue(totalTradingVolumeAllTime)}
 					</div>
 					<div class="text-muted-foreground text-xs">
-						{profileData.stats.totalTransactions} total trades
+						{$_('user.totalVolume.description').replace(
+							'{{count}}',
+							profileData.stats.totalTransactions.toString()
+						)}
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -560,14 +580,19 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-muted-foreground text-sm font-medium">24h Trading Volume</div>
+						<div class="text-muted-foreground text-sm font-medium">
+							{$_('user.24hTradingVolume.title')}
+						</div>
 						<Badge variant="outline" class="text-xs">24h</Badge>
 					</div>
 					<div class="mt-1 text-2xl font-bold">
 						{formatValue(totalTradingVolume24h)}
 					</div>
 					<div class="text-muted-foreground text-xs">
-						{profileData.stats.transactions24h || 0} trades today
+						{$_('user.24hTradingVolume.description').replace(
+							'{{count}}',
+							(profileData.stats.transactions24h || 0).toString()
+						)}
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -579,13 +604,13 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-foreground text-sm font-medium">Total Wins</div>
+						<div class="text-foreground text-sm font-medium">{$_('user.totalWins.title')}</div>
 						<TrendingUp class="text-success h-4 w-4" />
 					</div>
 					<div class="text-success mt-1 text-2xl font-bold">
 						{formatValue(gamblingWins)}
 					</div>
-					<div class="text-muted-foreground text-xs">Total gambling winnings</div>
+					<div class="text-muted-foreground text-xs">{$_('user.totalWins.description')}</div>
 				</Card.Content>
 			</Card.Root>
 
@@ -593,13 +618,13 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-foreground text-sm font-medium">Total Losses</div>
+						<div class="text-foreground text-sm font-medium">{$_('user.totalLosses.title')}</div>
 						<TrendingDown class="h-4 w-4 text-red-600" />
 					</div>
 					<div class="mt-1 text-2xl font-bold text-red-600">
 						{formatValue(gamblingLosses)}
 					</div>
-					<div class="text-muted-foreground text-xs">Total gambling losses</div>
+					<div class="text-muted-foreground text-xs">{$_('user.totalLosses.description')}</div>
 				</Card.Content>
 			</Card.Root>
 
@@ -607,13 +632,13 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-muted-foreground text-sm font-medium">Win Rate</div>
+						<div class="text-muted-foreground text-sm font-medium">{$_('user.winRate.title')}</div>
 						<Percent class="text-muted-foreground h-4 w-4" />
 					</div>
 					<div class="mt-1 text-2xl font-bold">
 						{winRate}%
 					</div>
-					<div class="text-muted-foreground text-xs">Percentage of wins</div>
+					<div class="text-muted-foreground text-xs">{$_('user.winRate.description')}</div>
 				</Card.Content>
 			</Card.Root>
 
@@ -621,9 +646,15 @@
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
-						<div class="text-muted-foreground text-sm font-medium">Net Profit</div>
+						<div class="text-muted-foreground text-sm font-medium">
+							{$_('user.netProfit.title')}
+						</div>
 					</div>
-					<div class="mt-1 text-2xl font-bold" class:text-success={netProfit >= 0} class:text-red-600={netProfit < 0}>
+					<div
+						class="mt-1 text-2xl font-bold"
+						class:text-success={netProfit >= 0}
+						class:text-red-600={netProfit < 0}
+					>
 						{#if netProfit >= 0}
 							{formatValue(netProfit)}
 						{:else}
@@ -631,7 +662,9 @@
 						{/if}
 					</div>
 					<div class="text-muted-foreground text-xs">
-						{netProfit >= 0 ? 'Overall profit' : 'Overall loss'}
+						{netProfit >= 0
+							? $_('user.netProfit.description.0')
+							: $_('user.netProfit.description.1')}
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -643,9 +676,17 @@
 				<Card.Header class="pb-3">
 					<Card.Title class="flex items-center gap-2">
 						<Coins class="h-5 w-5" />
-						Created Coins ({profileData.createdCoins.length})
+						{$_('user.createdCoins.title').replace(
+							'{{count}}',
+							profileData.createdCoins.length.toString()
+						)}
 					</Card.Title>
-					<Card.Description>Coins launched by {profileData.profile.name}</Card.Description>
+					<Card.Description
+						>{$_('user.createdCoins.description').replace(
+							'{{name}}',
+							profileData.profile.name
+						)}</Card.Description
+					>
 				</Card.Header>
 				<Card.Content class="p-0">
 					<DataTable
@@ -662,9 +703,14 @@
 			<Card.Header class="pb-3">
 				<Card.Title class="flex items-center gap-2">
 					<Activity class="h-5 w-5" />
-					Recent Trading Activity
+					{$_('user.recentTrading.title')}
 				</Card.Title>
-				<Card.Description>Latest transactions by {profileData.profile.name}</Card.Description>
+				<Card.Description
+					>{$_('user.recentTrading.description').replace(
+						'{{name}}',
+						profileData.profile.name
+					)}</Card.Description
+				>
 			</Card.Header>
 			<Card.Content class="p-0">
 				<DataTable

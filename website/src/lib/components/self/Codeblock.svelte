@@ -20,8 +20,8 @@
 	}
 </script>
 
-<div class="flex w-full items-center gap-2 overflow-hidden rounded-md border bg-primary/10">
-	<code class="block flex-grow overflow-x-auto whitespace-pre-wrap p-3 font-mono text-sm">
+<div class="bg-primary/10 flex w-full items-center gap-2 overflow-hidden rounded-md border">
+	<code class="block flex-grow overflow-x-auto p-3 font-mono text-sm whitespace-pre-wrap">
 		{text}
 	</code>
 
@@ -29,7 +29,7 @@
 		<Button
 			variant="ghost"
 			size="sm"
-			class="mr-1 h-8 w-8 flex-shrink-0 p-0 hover:bg-primary/15"
+			class="hover:bg-primary/15 mr-1 h-8 w-8 flex-shrink-0 p-0"
 			onclick={copyToClipboard}
 			aria-label="Copy to clipboard"
 		>

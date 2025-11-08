@@ -16,7 +16,7 @@
 </div>
 
 <!-- Creator Info -->
-<div class="mb-4 mt-3 flex flex-wrap items-center gap-1.5">
+<div class="mt-3 mb-4 flex flex-wrap items-center gap-1.5">
 	<Skeleton class="h-3 w-16" />
 	<Skeleton class="h-4 w-4 rounded-full" />
 	<Skeleton class="h-4 w-32" />

@@ -11,7 +11,7 @@
 	import { allTradesStore } from '$lib/stores/websocket';
 	import { Button } from '$lib/components/ui/button';
 	import SEO from '$lib/components/self/SEO.svelte';
-
+	import { _ } from 'svelte-i18n';
 	interface CoinData {
 		symbol: string;
 		name: string;
@@ -86,7 +86,7 @@
 		},
 		tooltip: {
 			enabled: true,
-			custom: function ({ seriesIndex, dataPointIndex }: any) {
+			custom: ({ seriesIndex, dataPointIndex }: any) => {
 				const coin = coins[dataPointIndex];
 				if (!coin) return '';
 
@@ -98,10 +98,10 @@
 						<div class="font-semibold text-lg mb-2">*${coin.symbol}</div>
 						<div class="text-sm text-muted-foreground mb-1">${coin.name}</div>
 						<div class="space-y-1 text-xs">
-							<div>Price: <span class="font-mono">${formatValue(coin.currentPrice)}</span></div>
-							<div>Market Cap: <span class="font-mono">${formatValue(coin.marketCap)}</span></div>
-							<div>24h Volume: <span class="font-mono">${formatValue(coin.volume24h)}</span></div>
-							<div>24h Change: <span class="font-mono" style="color: ${changeColor}">${changeSign}${coin.priceChange24h.toFixed(2)}%</span></div>
+							<div>${$_('coin.price')}: <span class="font-mono">${formatValue(coin.currentPrice)}</span></div>
+							<div>${$_('coin.marketCap')}: <span class="font-mono">${formatValue(coin.marketCap)}</span></div>
+							<div>${$_('coin.24hVolume')}: <span class="font-mono">${formatValue(coin.volume24h)}</span></div>
+							<div>${$_('coin.24hChange')}: <span class="font-mono" style="color: ${changeColor}">${changeSign}${coin.priceChange24h.toFixed(2)}%</span></div>
 						</div>
 					</div>
 				`;
@@ -193,7 +193,7 @@
 	});
 </script>
 
-<SEO 
+<SEO
 	title="Treemap - Rugplay"
 	description="Interactive virtual cryptocurrency market treemap visualization. View simulated market cap and 24h price changes for all coins in our trading game's visual treemap format."
 	keywords="virtual cryptocurrency treemap, market visualization game, crypto market cap simulation, price changes game, market analysis simulator"
@@ -208,7 +208,7 @@
 			<div class="mb-2 flex items-center justify-between">
 				<div class="flex items-center gap-3">
 					<ChartColumn class="h-6 w-6" />
-					<h1 class="text-2xl font-bold">Market Treemap</h1>
+					<h1 class="text-2xl font-bold">{$_('treemap.title²')}</h1>
 				</div>
 				<div class="flex items-center gap-2">
 					<Button
@@ -221,30 +221,29 @@
 					>
 						{#if isLiveUpdatesEnabled}
 							<Activity class="h-4 w-4" />
-							Live
+							{$_('base.live')}
 						{:else}
 							<Activity class="h-4 w-4" />
-							Paused
+							{$_('base.paused')}
 						{/if}
 					</Button>
 					<Button variant="outline" size="sm" onclick={toggleFullscreen}>
 						{#if isFullscreen}
 							<Minimize class="h-4 w-4" />
-							Exit Fullscreen
+							{$_('treemap.fullscreen.leave')}
 						{:else}
 							<Maximize class="h-4 w-4" />
-							Fullscreen
+							{$_('treemap.fullscreen.join')}
 						{/if}
 					</Button>
 				</div>
 			</div>
 			<p class="text-muted-foreground">
-				Visual representation of the cryptocurrency market. Size indicates market cap, color shows
-				24h price change.
+				{$_('treemap.description')}
 			</p>
 			{#if coins.length > 0}
 				<p class="text-muted-foreground mt-1 text-sm">
-					Last updated: {lastUpdated.toLocaleTimeString()}
+					{$_('treemap.lastUpdated').replace('{{time}}', lastUpdated.toLocaleTimeString())}
 				</p>
 			{/if}
 		</div>
@@ -280,8 +279,8 @@
 				<Card.Content class="p-8 text-center">
 					<div class="text-muted-foreground">
 						<ChartColumn class="mx-auto mb-2 h-12 w-12 opacity-50" />
-						<p class="text-lg font-medium">No coins available</p>
-						<p class="text-sm">Create some coins to see the treemap visualization.</p>
+						<p class="text-lg font-medium">{$_('home.nocoinsavailable.title')}</p>
+						<p class="text-sm">{$_('treemap.noCoins.description')}</p>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -291,14 +290,14 @@
 					<div class="text-muted-foreground mb-4 flex flex-wrap gap-4 text-sm">
 						<div class="flex items-center gap-2">
 							<div class="h-3 w-3 rounded bg-green-500"></div>
-							<span>Positive 24h change</span>
+							<span>{$_('treemap.positive')}</span>
 						</div>
 						<div class="flex items-center gap-2">
 							<div class="h-3 w-3 rounded bg-red-500"></div>
-							<span>Negative 24h change</span>
+							<span>{$_('treemap.negative')}</span>
 						</div>
 						<Badge variant="outline" class="ml-auto">
-							{coins.length} coins
+							{$_('treemap.coins').replace('{{count}}', coins.length.toString())}
 						</Badge>
 					</div>
 					<div use:chart={treemapOptions}></div>

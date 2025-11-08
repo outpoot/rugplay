@@ -117,8 +117,8 @@
 			{#if loading}
 				<div class="space-y-4">
 					{#each Array(5) as _}
-						<div class="flex items-center justify-between p-4 border rounded">
-							<div class="space-y-2 flex-1">
+						<div class="flex items-center justify-between rounded border p-4">
+							<div class="flex-1 space-y-2">
 								<Skeleton class="h-4 w-48" />
 								<Skeleton class="h-3 w-32" />
 								<Skeleton class="h-3 w-64" />
@@ -128,18 +128,19 @@
 					{/each}
 				</div>
 			{:else if bannedUsers.length === 0}
-				<div class="text-center py-8">
+				<div class="py-8 text-center">
 					<p class="text-muted-foreground">No banned users found.</p>
 				</div>
 			{:else}
 				<div class="space-y-4">
 					{#each bannedUsers as user}
-						<div class="flex items-center justify-between p-4 border rounded">
-							<div class="space-y-1 flex-1">
+						<div class="flex items-center justify-between rounded border p-4">
+							<div class="flex-1 space-y-1">
 								<div class="font-medium">{user.name}</div>
-								<div class="text-sm text-muted-foreground">@{user.username}</div>
+								<div class="text-muted-foreground text-sm">@{user.username}</div>
 								<div class="text-sm">
-									<span class="font-medium">Reason:</span> {user.banReason}
+									<span class="font-medium">Reason:</span>
+									{user.banReason}
 								</div>
 							</div>
 							<Button
@@ -163,13 +164,11 @@
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Ban User</Dialog.Title>
-			<Dialog.Description>
-				Enter the username and reason to ban a user.
-			</Dialog.Description>
+			<Dialog.Description>Enter the username and reason to ban a user.</Dialog.Description>
 		</Dialog.Header>
 		<div class="space-y-4">
 			<div>
-				<label for="username" class="block text-sm font-medium mb-2">Username</label>
+				<label for="username" class="mb-2 block text-sm font-medium">Username</label>
 				<Input
 					id="username"
 					bind:value={usernameToAction}
@@ -178,7 +177,7 @@
 				/>
 			</div>
 			<div>
-				<label for="reason" class="block text-sm font-medium mb-2">Reason for ban</label>
+				<label for="reason" class="mb-2 block text-sm font-medium">Reason for ban</label>
 				<Textarea
 					id="reason"
 					bind:value={banReason}
@@ -188,7 +187,7 @@
 			</div>
 		</div>
 		<Dialog.Footer>
-			<Button variant="outline" onclick={() => banDialogOpen = false}>Cancel</Button>
+			<Button variant="outline" onclick={() => (banDialogOpen = false)}>Cancel</Button>
 			<Button
 				variant="destructive"
 				onclick={banUser}

@@ -1,8 +1,12 @@
 <script lang="ts">
-	import { Tooltip as TooltipPrimitive } from "bits-ui";
+	import { Tooltip as TooltipPrimitive } from 'bits-ui';
 	import { browser } from '$app/environment';
 
-	let { ref = $bindable(null), disabled = false, ...restProps }: TooltipPrimitive.TriggerProps = $props();
+	let {
+		ref = $bindable(null),
+		disabled = false,
+		...restProps
+	}: TooltipPrimitive.TriggerProps = $props();
 </script>
 
 {#if browser}

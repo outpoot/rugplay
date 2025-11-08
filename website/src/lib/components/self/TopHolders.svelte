@@ -13,7 +13,7 @@
 	import UserProfilePreview from './UserProfilePreview.svelte';
 	import DataTable from './DataTable.svelte';
 	import HoldersSkeleton from './skeletons/HoldersSkeleton.svelte';
-
+	import { _ } from 'svelte-i18n';
 	interface Holder {
 		rank: number;
 		userId: number;
@@ -126,15 +126,15 @@
 	onclick={() => holdersData && holdersData.holders.length > 3 && (modalOpen = true)}
 >
 	<Card.Header>
-		<Card.Title class="flex items-center gap-2">Top Holders</Card.Title>
+		<Card.Title class="flex items-center gap-2">{$_('coin.topHolders.title')}</Card.Title>
 	</Card.Header>
 	<Card.Content class="relative">
 		{#if loading}
-            <HoldersSkeleton />
+			<HoldersSkeleton />
 		{:else if !holdersData || holdersData.holders.length === 0}
 			<div class="py-4 text-center">
 				<Users class="text-muted-foreground mx-auto mb-2 h-8 w-8" />
-				<p class="text-muted-foreground text-sm">No holders found</p>
+				<p class="text-muted-foreground text-sm">{$_('coin.topHolders.noHolders')}</p>
 			</div>
 		{:else}
 			<div class="space-y-3">
@@ -197,7 +197,7 @@
 		<Dialog.Header class="flex-shrink-0">
 			<Dialog.Title class="flex items-center gap-2">
 				<Users class="h-5 w-5" />
-				Top Holders (*{holdersData?.coinSymbol})
+				{$_('coin.topHolders')} (*{holdersData?.coinSymbol})
 			</Dialog.Title>
 			<Dialog.Description>This list is limited to the top 50 holders.</Dialog.Description>
 		</Dialog.Header>

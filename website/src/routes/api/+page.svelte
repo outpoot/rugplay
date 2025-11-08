@@ -95,9 +95,7 @@
 			<CardContent class="flex flex-col items-center justify-center py-12">
 				<Key class="text-muted-foreground mb-4 h-12 w-12" />
 				<h3 class="mb-2 text-lg font-semibold">Sign in required</h3>
-				<p class="text-muted-foreground mb-4 text-center">
-					Sign in to get your free API key.
-				</p>
+				<p class="text-muted-foreground mb-4 text-center">Sign in to get your free API key.</p>
 				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 			</CardContent>
 		</Card>
@@ -179,7 +177,9 @@
 			<CardContent class="space-y-4">
 				<!-- Authentication -->
 				<Collapsible.Root bind:open={authOpen}>
-					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
+					<Collapsible.Trigger
+						class="hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-4"
+					>
 						<h3 class="text-lg font-semibold">Authentication</h3>
 						{#if authOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -200,7 +200,9 @@
 
 				<!-- Top Coins Endpoint -->
 				<Collapsible.Root bind:open={topCoinsOpen}>
-					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
+					<Collapsible.Trigger
+						class="hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-4"
+					>
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Top Coins</h3>
 							<p class="text-muted-foreground text-sm">GET /api/v1/top</p>
@@ -212,9 +214,7 @@
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-3 p-4">
-						<p class="text-muted-foreground text-sm">
-							Returns the top 50 coins by market cap.
-						</p>
+						<p class="text-muted-foreground text-sm">Returns the top 50 coins by market cap.</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
 							<Codeblock text="GET https://rugplay.com/api/v1/top" displayOnly={true} />
@@ -243,7 +243,9 @@
 
 				<!-- Market Data Endpoint -->
 				<Collapsible.Root bind:open={marketDataOpen}>
-					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
+					<Collapsible.Trigger
+						class="hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-4"
+					>
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Market Data</h3>
 							<p class="text-muted-foreground text-sm">GET /api/v1/market</p>
@@ -266,13 +268,32 @@
 							<h4 class="font-medium">Query Parameters</h4>
 							<div class="rounded-md border p-3">
 								<div class="space-y-1 text-sm">
-									<div><code class="bg-muted rounded px-1">search</code> - Search by coin name or symbol</div>
-									<div><code class="bg-muted rounded px-1">sortBy</code> - Sort field: marketCap, currentPrice, change24h, volume24h, createdAt (default: marketCap)</div>
-									<div><code class="bg-muted rounded px-1">sortOrder</code> - Sort order: asc, desc (default: desc)</div>
-									<div><code class="bg-muted rounded px-1">priceFilter</code> - Price range: all, under1, 1to10, 10to100, over100 (default: all)</div>
-									<div><code class="bg-muted rounded px-1">changeFilter</code> - Change filter: all, gainers, losers, hot, wild (default: all)</div>
-									<div><code class="bg-muted rounded px-1">page</code> - Page number (default: 1)</div>
-									<div><code class="bg-muted rounded px-1">limit</code> - Items per page, max 100 (default: 12)</div>
+									<div>
+										<code class="bg-muted rounded px-1">search</code> - Search by coin name or symbol
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">sortBy</code> - Sort field: marketCap, currentPrice,
+										change24h, volume24h, createdAt (default: marketCap)
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">sortOrder</code> - Sort order: asc, desc (default:
+										desc)
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">priceFilter</code> - Price range: all, under1,
+										1to10, 10to100, over100 (default: all)
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">changeFilter</code> - Change filter: all, gainers,
+										losers, hot, wild (default: all)
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">page</code> - Page number (default: 1)
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">limit</code> - Items per page, max 100 (default:
+										12)
+									</div>
 								</div>
 							</div>
 						</div>
@@ -306,7 +327,9 @@
 
 				<!-- Coin Details Endpoint -->
 				<Collapsible.Root bind:open={coinDetailsOpen}>
-					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
+					<Collapsible.Trigger
+						class="hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-4"
+					>
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Coin Details</h3>
 							<p class="text-muted-foreground text-sm">GET /api/v1/coin/&lbrace;symbol&rbrace;</p>
@@ -323,14 +346,22 @@
 						</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
-							<Codeblock text="GET https://rugplay.com/api/v1/coin/&lbrace;symbol&rbrace;" displayOnly={true} />
+							<Codeblock
+								text="GET https://rugplay.com/api/v1/coin/&lbrace;symbol&rbrace;"
+								displayOnly={true}
+							/>
 						</div>
 						<div class="space-y-2">
 							<h4 class="font-medium">Parameters</h4>
 							<div class="rounded-md border p-3">
 								<div class="space-y-1 text-sm">
-									<div><code class="bg-muted rounded px-1">symbol</code> - Coin symbol (e.g., "TEST")</div>
-									<div><code class="bg-muted rounded px-1">timeframe</code> - Optional. Chart timeframe: 1m, 5m, 15m, 1h, 4h, 1d (default: 1m)</div>
+									<div>
+										<code class="bg-muted rounded px-1">symbol</code> - Coin symbol (e.g., "TEST")
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">timeframe</code> - Optional. Chart timeframe:
+										1m, 5m, 15m, 1h, 4h, 1d (default: 1m)
+									</div>
 								</div>
 							</div>
 						</div>
@@ -384,10 +415,14 @@
 
 				<!-- Coin Holders Endpoint -->
 				<Collapsible.Root bind:open={holdersOpen}>
-					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
+					<Collapsible.Trigger
+						class="hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-4"
+					>
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Coin Holders</h3>
-							<p class="text-muted-foreground text-sm">GET /api/v1/holders/&lbrace;symbol&rbrace;</p>
+							<p class="text-muted-foreground text-sm">
+								GET /api/v1/holders/&lbrace;symbol&rbrace;
+							</p>
 						</div>
 						{#if holdersOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -401,14 +436,22 @@
 						</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
-							<Codeblock text="GET https://rugplay.com/api/v1/holders/&lbrace;symbol&rbrace;" displayOnly={true} />
+							<Codeblock
+								text="GET https://rugplay.com/api/v1/holders/&lbrace;symbol&rbrace;"
+								displayOnly={true}
+							/>
 						</div>
 						<div class="space-y-2">
 							<h4 class="font-medium">Parameters</h4>
 							<div class="rounded-md border p-3">
 								<div class="space-y-1 text-sm">
-									<div><code class="bg-muted rounded px-1">symbol</code> - Coin symbol (e.g., "TEST")</div>
-									<div><code class="bg-muted rounded px-1">limit</code> - Number of holders to return, max 200 (default: 50)</div>
+									<div>
+										<code class="bg-muted rounded px-1">symbol</code> - Coin symbol (e.g., "TEST")
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">limit</code> - Number of holders to return, max
+										200 (default: 50)
+									</div>
 								</div>
 							</div>
 						</div>
@@ -445,7 +488,9 @@
 
 				<!-- Hopium Questions Endpoint -->
 				<Collapsible.Root bind:open={hopiumOpen}>
-					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
+					<Collapsible.Trigger
+						class="hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-4"
+					>
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Prediction Markets (Hopium)</h3>
 							<p class="text-muted-foreground text-sm">GET /api/v1/hopium</p>
@@ -468,9 +513,17 @@
 							<h4 class="font-medium">Query Parameters</h4>
 							<div class="rounded-md border p-3">
 								<div class="space-y-1 text-sm">
-									<div><code class="bg-muted rounded px-1">status</code> - Filter by status: ACTIVE, RESOLVED, CANCELLED, ALL (default: ACTIVE)</div>
-									<div><code class="bg-muted rounded px-1">page</code> - Page number (default: 1)</div>
-									<div><code class="bg-muted rounded px-1">limit</code> - Items per page, max 100 (default: 20)</div>
+									<div>
+										<code class="bg-muted rounded px-1">status</code> - Filter by status: ACTIVE, RESOLVED,
+										CANCELLED, ALL (default: ACTIVE)
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">page</code> - Page number (default: 1)
+									</div>
+									<div>
+										<code class="bg-muted rounded px-1">limit</code> - Items per page, max 100 (default:
+										20)
+									</div>
 								</div>
 							</div>
 						</div>
@@ -515,10 +568,14 @@
 
 				<!-- Hopium Question Details Endpoint -->
 				<Collapsible.Root bind:open={hopiumDetailsOpen}>
-					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
+					<Collapsible.Trigger
+						class="hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-4"
+					>
 						<div class="text-left">
 							<h3 class="text-lg font-semibold">Get Prediction Market Details</h3>
-							<p class="text-muted-foreground text-sm">GET /api/v1/hopium/&lbrace;question_id&rbrace;</p>
+							<p class="text-muted-foreground text-sm">
+								GET /api/v1/hopium/&lbrace;question_id&rbrace;
+							</p>
 						</div>
 						{#if hopiumDetailsOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -528,17 +585,23 @@
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-3 p-4">
 						<p class="text-muted-foreground text-sm">
-							Returns detailed information about a specific prediction market question including recent bets and probability history.
+							Returns detailed information about a specific prediction market question including
+							recent bets and probability history.
 						</p>
 						<div class="space-y-2">
 							<h4 class="font-medium">Endpoint</h4>
-							<Codeblock text="GET https://rugplay.com/api/v1/hopium/&lbrace;question_id&rbrace;" displayOnly={true} />
+							<Codeblock
+								text="GET https://rugplay.com/api/v1/hopium/&lbrace;question_id&rbrace;"
+								displayOnly={true}
+							/>
 						</div>
 						<div class="space-y-2">
 							<h4 class="font-medium">Parameters</h4>
 							<div class="rounded-md border p-3">
 								<div class="space-y-1 text-sm">
-									<div><code class="bg-muted rounded px-1">question_id</code> - Question ID (e.g., 101)</div>
+									<div>
+										<code class="bg-muted rounded px-1">question_id</code> - Question ID (e.g., 101)
+									</div>
 								</div>
 							</div>
 						</div>
@@ -593,7 +656,7 @@
     }
   ]
 }`}
-							displayOnly={true}
+								displayOnly={true}
 							/>
 						</div>
 					</Collapsible.Content>
@@ -601,7 +664,9 @@
 
 				<!-- Rate Limiting -->
 				<Collapsible.Root bind:open={rateLimitingOpen}>
-					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
+					<Collapsible.Trigger
+						class="hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-4"
+					>
 						<h3 class="text-lg font-semibold">Rate Limiting</h3>
 						{#if rateLimitingOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -612,9 +677,14 @@
 					<Collapsible.Content class="p-4">
 						<div class="rounded-md border p-4">
 							<div class="space-y-2 text-sm">
-								<div>• <strong>Daily limit:</strong> {maxDailyRequests.toLocaleString()} requests per day</div>
+								<div>
+									• <strong>Daily limit:</strong>
+									{maxDailyRequests.toLocaleString()} requests per day
+								</div>
 								<div>• <strong>Cost:</strong> 1 credit per API call</div>
-								<div>• <strong>Error response:</strong> 429 Too Many Requests when limit exceeded</div>
+								<div>
+									• <strong>Error response:</strong> 429 Too Many Requests when limit exceeded
+								</div>
 								<div>• <strong>Reset:</strong> Daily limits reset every 24 hours</div>
 							</div>
 						</div>
@@ -623,7 +693,9 @@
 
 				<!-- Error Responses -->
 				<Collapsible.Root bind:open={errorResponsesOpen}>
-					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
+					<Collapsible.Trigger
+						class="hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-4"
+					>
 						<h3 class="text-lg font-semibold">Error Responses</h3>
 						{#if errorResponsesOpen}
 							<ChevronDown class="h-4 w-4" />
@@ -635,10 +707,20 @@
 						<h4 class="font-medium">Common Error Codes</h4>
 						<div class="rounded-md border p-4">
 							<div class="space-y-2 text-sm">
-								<div>• <code class="bg-muted rounded px-1">400</code> - Bad Request (invalid parameters)</div>
-								<div>• <code class="bg-muted rounded px-1">401</code> - Unauthorized (invalid or missing API key)</div>
-								<div>• <code class="bg-muted rounded px-1">404</code> - Not Found (coin/question doesn't exist)</div>
-								<div>• <code class="bg-muted rounded px-1">429</code> - Too Many Requests (rate limit exceeded)</div>
+								<div>
+									• <code class="bg-muted rounded px-1">400</code> - Bad Request (invalid parameters)
+								</div>
+								<div>
+									• <code class="bg-muted rounded px-1">401</code> - Unauthorized (invalid or missing
+									API key)
+								</div>
+								<div>
+									• <code class="bg-muted rounded px-1">404</code> - Not Found (coin/question doesn't
+									exist)
+								</div>
+								<div>
+									• <code class="bg-muted rounded px-1">429</code> - Too Many Requests (rate limit exceeded)
+								</div>
 								<div>• <code class="bg-muted rounded px-1">500</code> - Internal Server Error</div>
 							</div>
 						</div>

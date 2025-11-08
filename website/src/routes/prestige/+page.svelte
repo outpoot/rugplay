@@ -251,7 +251,8 @@
 								<div>
 									<p class="font-medium">Gain Status</p>
 									<p class="text-muted-foreground text-sm">
-										Earn an exclusive prestige title, enhanced daily rewards, and reset your daily reward cooldown
+										Earn an exclusive prestige title, enhanced daily rewards, and reset your daily
+										reward cooldown
 									</p>
 								</div>
 							</div>

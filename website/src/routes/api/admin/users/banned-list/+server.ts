@@ -7,7 +7,7 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ request }) => {
 	const session = await auth.api.getSession({ headers: request.headers });
-	
+
 	if (!session?.user) {
 		throw error(401, 'Not authenticated');
 	}
@@ -32,10 +32,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			})
 			.from(user)
 			.where(
-				and(
-					eq(user.isBanned, true),
-					not(like(user.banReason, '%Account deletion requested%'))
-				)
+				and(eq(user.isBanned, true), not(like(user.banReason, '%Account deletion requested%')))
 			)
 			.orderBy(desc(user.updatedAt));
 

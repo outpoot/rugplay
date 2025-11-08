@@ -192,12 +192,14 @@
 	<div class="w-full">
 		<div class="mb-6 flex items-center justify-center gap-2">
 			<!-- Custom Tabs List -->
-			<div class="bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]">
+			<div
+				class="bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]"
+			>
 				<div class="grid w-full max-w-md grid-cols-3">
 					{#each tabs as tab}
 						<button
-							onclick={() => activeTab = tab.value}
-							class="data-[state=active]:bg-background data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-sm font-medium transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm"
+							onclick={() => (activeTab = tab.value)}
+							class="data-[state=active]:bg-background data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm"
 							data-state={activeTab === tab.value ? 'active' : 'inactive'}
 						>
 							{tab.label}
@@ -232,7 +234,7 @@
 							<Card.Header class="pb-4">
 								<div class="flex items-start justify-between gap-3">
 									<div class="flex-1">
-										<h3 class="break-words text-lg font-medium">
+										<h3 class="text-lg font-medium break-words">
 											{question.question}
 										</h3>
 									</div>
@@ -254,7 +256,10 @@
 												{/if}
 											</Badge>
 										{:else if question.status === 'CANCELLED'}
-											<Badge variant="outline" class="flex flex-shrink-0 items-center gap-1 text-muted-foreground border-muted-foreground">
+											<Badge
+												variant="outline"
+												class="text-muted-foreground border-muted-foreground flex flex-shrink-0 items-center gap-1"
+											>
 												<XIcon class="h-3 w-3" />
 												SKIP
 											</Badge>
@@ -296,7 +301,9 @@
 									<div class="flex items-center gap-1">
 										<Clock class="h-3 w-3" />
 										{#if question.status === 'ACTIVE'}
-											{formatTimeUntil(question.resolutionDate).startsWith('Ended') ? 'Resolving' : `${formatTimeUntil(question.resolutionDate)} remaining`}
+											{formatTimeUntil(question.resolutionDate).startsWith('Ended')
+												? 'Resolving'
+												: `${formatTimeUntil(question.resolutionDate)} remaining`}
 										{:else}
 											Resolved {formatDateWithYear(question.resolvedAt || '')}
 										{/if}
@@ -311,7 +318,7 @@
 									{/if}
 								</div>
 
-								<div class="mb-2 mt-2 flex items-center gap-2 text-sm">
+								<div class="mt-2 mb-2 flex items-center gap-2 text-sm">
 									<HoverCard.Root>
 										<HoverCard.Trigger>
 											<button

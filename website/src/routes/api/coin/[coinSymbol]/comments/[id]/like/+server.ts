@@ -71,7 +71,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 					userId
 				}
 			})
-		)
+		);
 
 		return json({ success: true });
 	} catch (error) {

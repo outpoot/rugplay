@@ -17,6 +17,7 @@
 	import { Search, RefreshCw, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { formatPrice, formatMarketCap, debounce, formatRelativeTime } from '$lib/utils';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { _ } from 'svelte-i18n';
 	import type { CoinData, FilterOption, VolatilityBadge, MarketResponse } from '$lib/types/market';
 
 	let { data } = $props();
@@ -36,24 +37,24 @@
 	let perPage = $derived(isDesktop.current ? 12 : 9);
 	let siblingCount = $derived(isDesktop.current ? 1 : 0);
 	const priceFilterOptions: FilterOption[] = [
-		{ value: 'all', label: 'All prices' },
-		{ value: 'under1', label: 'Under $1' },
-		{ value: '1to10', label: '$1 - $10' },
-		{ value: '10to100', label: '$10 - $100' },
-		{ value: 'over100', label: 'Over $100' }
+		{ value: 'all', label: $_('market.priceRange.values.0') },
+		{ value: 'under1', label: $_('market.priceRange.values.1') },
+		{ value: '1to10', label: $_('market.priceRange.values.2') },
+		{ value: '10to100', label: $_('market.priceRange.values.3') },
+		{ value: 'over100', label: $_('market.priceRange.values.4') }
 	];
 
 	const changeFilterOptions: FilterOption[] = [
-		{ value: 'all', label: 'All changes' },
-		{ value: 'gainers', label: 'Gainers only' },
-		{ value: 'losers', label: 'Losers only' },
-		{ value: 'hot', label: 'Hot (±10%)' },
-		{ value: 'wild', label: 'Wild (±50%)' }
+		{ value: 'all', label: $_('market.24hChange.values.0') },
+		{ value: 'gainers', label: $_('market.24hChange.values.1') },
+		{ value: 'losers', label: $_('market.24hChange.values.2') },
+		{ value: 'hot', label: $_('market.24hChange.values.3') },
+		{ value: 'wild', label: $_('market.24hChange.values.4') }
 	];
 
 	const sortOrderOptions: FilterOption[] = [
-		{ value: 'desc', label: 'High to Low' },
-		{ value: 'asc', label: 'Low to High' }
+		{ value: 'desc', label: $_('market.sortOrder.values.0') },
+		{ value: 'asc', label: $_('market.sortOrder.values.1') }
 	];
 
 	const debouncedSearch = debounce(performSearch, 300);
@@ -250,18 +251,18 @@
 <div class="container mx-auto max-w-7xl p-6">
 	<header class="mb-8">
 		<div class="text-center">
-			<h1 class="mb-2 text-3xl font-bold">Market</h1>
+			<h1 class="mb-2 text-3xl font-bold">{$_('market.title')}</h1>
 			<p class="text-muted-foreground mb-6">
-				Discover coins, track performance, and find your next investment
+				{$_('market.description')}
 			</p>
 
 			<div class="mx-auto flex max-w-2xl items-center justify-center gap-2">
 				<div class="relative flex-1">
-					<Search class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+					<Search class="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
 					<Input
 						bind:value={searchQuery}
-						placeholder="Search coins by name or symbol..."
-						class="pl-10 pr-4"
+						placeholder={$_('market.input.placeholder')}
+						class="pr-4 pl-10"
 						onblur={updateSearchUrl}
 						onkeydown={handleSearchKeydown}
 					/>
@@ -271,7 +272,7 @@
 					<Popover.Trigger>
 						<Button variant="outline" size="default" class="flex items-center gap-2">
 							<SlidersHorizontal class="h-4 w-4" />
-							Filters
+							{$_('market.input.filters.title')}
 							{#if hasActiveFilters}
 								<Badge variant="secondary" class="h-5 w-5 rounded-full p-0 text-xs">•</Badge>
 							{/if}
@@ -280,41 +281,41 @@
 					<Popover.Content class="w-80 p-4" align="end">
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<Label class="text-sm font-medium">Sort By</Label>
+								<Label class="text-sm font-medium">{$_('market.sortBy')}</Label>
 								<div class="grid grid-cols-2 gap-2">
 									<Button
 										variant={sortBy === 'marketCap' ? 'default' : 'outline'}
 										size="sm"
 										onclick={() => handleSortChange('marketCap')}
 									>
-										Market Cap
+										{$_('coin.marketCap')}
 									</Button>
 									<Button
 										variant={sortBy === 'currentPrice' ? 'default' : 'outline'}
 										size="sm"
 										onclick={() => handleSortChange('currentPrice')}
 									>
-										Price
+										{$_('coin.price')}
 									</Button>
 									<Button
 										variant={sortBy === 'change24h' ? 'default' : 'outline'}
 										size="sm"
 										onclick={() => handleSortChange('change24h')}
 									>
-										24h Change
+										{$_('coin.24hChange')}
 									</Button>
 									<Button
 										variant={sortBy === 'volume24h' ? 'default' : 'outline'}
 										size="sm"
 										onclick={() => handleSortChange('volume24h')}
 									>
-										Volume
+										{$_('coin.volume')}
 									</Button>
 								</div>
 							</div>
 
 							<div class="space-y-2">
-								<Label class="text-sm font-medium">Sort Order</Label>
+								<Label class="text-sm font-medium">{$_('market.sortOrder.title')}</Label>
 								<Select.Root
 									type="single"
 									bind:value={sortOrder}
@@ -336,7 +337,7 @@
 							</div>
 
 							<div class="space-y-2">
-								<Label class="text-sm font-medium">Price Range</Label>
+								<Label class="text-sm font-medium">{$_('market.priceRange.title')}</Label>
 								<Select.Root
 									type="single"
 									bind:value={priceFilter}
@@ -358,7 +359,7 @@
 							</div>
 
 							<div class="space-y-2">
-								<Label class="text-sm font-medium">24h Change</Label>
+								<Label class="text-sm font-medium">{$_('market.24hChange.title')}</Label>
 								<Select.Root
 									type="single"
 									bind:value={changeFilter}
@@ -381,9 +382,10 @@
 
 							<div class="flex gap-2 pt-2">
 								<Button variant="outline" size="sm" onclick={resetFilters} class="flex-1">
-									Reset
+									{$_('base.reset')}
 								</Button>
-								<Button size="sm" onclick={applyFilters} class="flex-1">Apply</Button>
+								<Button size="sm" onclick={applyFilters} class="flex-1">{$_('market.apply')}</Button
+								>
 							</div>
 						</div>
 					</Popover.Content>
@@ -416,18 +418,21 @@
 	{:else if coins.length === 0}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
-				<div class="mb-4 text-xl">No coins found</div>
+				<div class="mb-4 text-xl">{$_('market.noCoinsFound.title')}</div>
 				<div class="text-muted-foreground mb-4">
 					{#if searchQuery}
-						No coins match your search "{searchQuery}". Try different keywords or adjust filters.
+						{$_('market.input.noMatch').replace('{{query}}', searchQuery)}
 					{:else}
-						The market seems quiet... <a href="/coin/create" class="text-primary underline"
-							>create a coin</a
-						>? :)
+						{$_('market.noCoinsFound.description.0')}
+						<a href="/coin/create" class="text-primary underline"
+							>{$_('market.noCoinsFound.description.1')}</a
+						>{$_('market.noCoinsFound.description.2')}
 					{/if}
 				</div>
 				{#if hasActiveFilters}
-					<Button variant="outline" onclick={resetFilters}>Clear all filters</Button>
+					<Button variant="outline" onclick={resetFilters}
+						>{$_('market.input.filters.clearAll')}</Button
+					>
 				{/if}
 			</div>
 		</div>
@@ -445,7 +450,7 @@
 							<div class="flex items-center gap-3">
 								<CoinIcon icon={coin.icon} symbol={coin.symbol} size={8} />
 								<div>
-									<h3 class="truncate max-w-44 text-lg font-semibold leading-tight">{coin.name}</h3>
+									<h3 class="max-w-44 truncate text-lg leading-tight font-semibold">{coin.name}</h3>
 									<p class="text-muted-foreground truncate text-sm">*{coin.symbol}</p>
 								</div>
 							</div>

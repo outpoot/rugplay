@@ -16,7 +16,9 @@
 
 	let badgeClass = $derived(size === 'sm' ? 'text-xs' : '');
 	let prestigeName = $derived(user.prestigeLevel ? getPrestigeName(user.prestigeLevel) : null);
-	let prestigeColor = $derived(user.prestigeLevel ? getPrestigeColor(user.prestigeLevel) : 'text-gray-500');
+	let prestigeColor = $derived(
+		user.prestigeLevel ? getPrestigeColor(user.prestigeLevel) : 'text-gray-500'
+	);
 </script>
 
 <div class="flex items-center gap-1">

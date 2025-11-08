@@ -7,7 +7,7 @@ import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authSession = await auth.api.getSession({ headers: request.headers });
-	
+
 	if (!authSession?.user) {
 		throw error(401, 'Not authenticated');
 	}

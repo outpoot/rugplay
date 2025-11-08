@@ -62,6 +62,7 @@
 		"sharp": "^0.34.2",
 		"svelte-apexcharts": "^1.0.2",
 		"svelte-confetti": "^2.3.1",
+		"svelte-i18n": "^4.0.1",
 		"svelte-lightweight-charts": "^2.2.0"
 	},
 	"optionalDependencies": {

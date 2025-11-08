@@ -51,19 +51,24 @@
 	import { onMount } from 'svelte';
 	import { UNREAD_COUNT, fetchNotifications } from '$lib/stores/notifications';
 	import { GAMBLING_STATS, fetchGamblingStats } from '$lib/stores/gambling-stats';
+	import { _ } from 'svelte-i18n';
 
 	const data = {
 		navMain: [
-			{ title: 'Home', url: '/', icon: Home },
-			{ title: 'Market', url: '/market', icon: Store },
-			{ title: 'Hopium', url: '/hopium', icon: TrendingUpDown },
-			{ title: 'Gambling', url: '/gambling', icon: PiggyBank },
-			{ title: 'Leaderboard', url: '/leaderboard', icon: Trophy },
-			{ title: 'Portfolio', url: '/portfolio', icon: BriefcaseBusiness },
-			{ title: 'Treemap', url: '/treemap', icon: ChartColumn },
-			{ title: 'Create coin', url: '/coin/create', icon: Coins },
-			{ title: 'Notifications', url: '/notifications', icon: Bell },
-			{ title: 'About', url: '/about', icon: Info }
+			{ title: $_('home.title'), url: '/', icon: Home },
+			{ title: $_('market.title'), url: '/market', icon: Store },
+			{ title: $_('hopium.title'), url: '/hopium', icon: TrendingUpDown },
+			{ title: $_('gambling.title'), url: '/gambling', icon: PiggyBank },
+			{ title: $_('leaderboard.title'), url: '/leaderboard', icon: Trophy },
+			{
+				title: $_('portfolio.title'),
+				url: '/portfolio',
+				icon: BriefcaseBusiness
+			},
+			{ title: $_('treemap.title'), url: '/treemap', icon: ChartColumn },
+			{ title: $_('createcoin.title'), url: '/coin/create', icon: Coins },
+			{ title: $_('notifications.title'), url: '/notifications', icon: Bell },
+			{ title: $_('about.title'), url: '/about', icon: Info }
 		]
 	};
 	type MenuButtonProps = HTMLAttributes<HTMLAnchorElement | HTMLButtonElement>;
@@ -177,7 +182,7 @@
 		<div class="flex items-center gap-2 px-2 py-2">
 			<img src="/rugplay.svg" class="h-5 w-5" alt="twoblade" />
 			<div class="flex items-center gap-2">
-				<span class="text-base font-semibold">Rugplay</span>
+				<span class="text-base font-semibold">{$_('title')}</span>
 				{#if $USER_DATA?.isAdmin}
 					<span class="text-muted-foreground text-xs">| Admin</span>
 				{/if}
@@ -236,13 +241,13 @@
 			<Sidebar.GroupLabel class="flex items-center justify-between">
 				<div class="flex items-center gap-2">
 					<Activity class="h-4 w-4" />
-					<span>Live Trades</span>
+					<span>{$_('livetrades.title')}</span>
 				</div>
 				<button
 					onclick={handleLiveTradesClick}
 					class="text-muted-foreground hover:text-foreground cursor-pointer text-xs transition-colors"
 				>
-					View All
+					{$_('viewall')}
 				</button>
 			</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
@@ -296,24 +301,24 @@
 											SELL
 										</Badge>
 									{/if}
-								</div>
-								<div class="flex-1 truncate">
-									<div class="flex items-center gap-1">
-										<span class="text-foreground font-medium">
-											{formatValue(trade.totalValue)}
-										</span>
-										{#if trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT'}
-											{#if trade.amount > 0}
-												<span class="text-muted-foreground">*{trade.coinSymbol}</span>
-											{/if}
-											<span class="text-muted-foreground">
-												{trade.type === 'TRANSFER_IN' ? 'to' : 'from'}
+									<div class="flex-1 truncate">
+										<div class="flex items-center gap-1">
+											<span class="text-foreground font-medium">
+												{formatValue(trade.totalValue)}
 											</span>
-										{:else}
-											<span class="text-muted-foreground">*{trade.coinSymbol}</span>
-											<span class="text-muted-foreground">by</span>
-										{/if}
-										<span class="text-muted-foreground">@{trade.username}</span>
+											{#if trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT'}
+												{#if trade.amount > 0}
+													<span class="text-muted-foreground">*{trade.coinSymbol}</span>
+												{/if}
+												<span class="text-muted-foreground">
+													{trade.type === 'TRANSFER_IN' ? 'to' : 'from'}
+												</span>
+											{:else}
+												<span class="text-muted-foreground">*{trade.coinSymbol}</span>
+												<span class="text-muted-foreground">by</span>
+											{/if}
+											<span class="text-muted-foreground">@{trade.username}</span>
+										</div>
 									</div>
 								</div>
 							</button>
@@ -351,7 +356,7 @@
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-2">
 									<Wallet class="text-muted-foreground h-4 w-4" />
-									<span class="text-sm font-medium">Total Value</span>
+									<span class="text-sm font-medium">{$_('sidebar.portfolio.totalValue')}</span>
 								</div>
 								<Badge variant="secondary" class="font-mono">
 									${formatCurrency($PORTFOLIO_SUMMARY.totalValue)}
@@ -359,13 +364,13 @@
 							</div>
 							<div class="text-muted-foreground space-y-1 text-xs">
 								<div class="flex justify-between">
-									<span>Cash:</span>
+									<span>{$_('sidebar.portfolio.cash')}:</span>
 									<span class="font-mono"
 										>${formatCurrency($PORTFOLIO_SUMMARY.baseCurrencyBalance)}</span
 									>
 								</div>
 								<div class="flex justify-between">
-									<span>Coins:</span>
+									<span>{$_('sidebar.portfolio.coins')}:</span>
 									<span class="font-mono">${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}</span
 									>
 								</div>
@@ -425,15 +430,15 @@
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAccountClick}>
 									<User />
-									Account
+									{$_('sidebar.account')}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleSettingsClick}>
 									<Settings />
-									Settings
+									{$_('settings.title')}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handlePrestigeClick}>
 									<Crown />
-									Prestige
+									{$_('prestige.title')}
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
 
@@ -443,7 +448,7 @@
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAPIClick}>
 									<Key />
-									API
+									{$_('sidebar.api')}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item
 									onclick={() => {
@@ -452,19 +457,19 @@
 									}}
 								>
 									<Gift />
-									Promo code
+									{$_('sidebar.promocode')}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleUserManualClick}>
 									<BookOpen />
-									User Manual
+									{$_('about.usermanual.title')}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleModeToggle}>
 									{#if mode.current === 'light'}
 										<Moon />
-										Dark Mode
+										{$_('sidebar.themes.dark')}
 									{:else}
 										<Sun />
-										Light Mode
+										{$_('sidebar.themes.light')}
 									{/if}
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
@@ -503,11 +508,11 @@
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleTermsClick}>
 									<Scale />
-									Terms of Service
+									{$_('terms.service')}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handlePrivacyClick}>
 									<ShieldCheck />
-									Privacy Policy
+									{$_('terms.privacy')}
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
 
@@ -523,7 +528,7 @@
 								}}
 							>
 								<LogOutIcon />
-								Log out
+								{$_('sidebar.logout')}
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
@@ -538,7 +543,7 @@
 						{#snippet child({ props }: { props: MenuButtonProps })}
 							<a href="/legal/terms" onclick={handleTermsClick} class={`${props.class}`}>
 								<Scale />
-								<span>Terms of Service</span>
+								<span>{$_('terms.service')}</span>
 							</a>
 						{/snippet}
 					</Sidebar.MenuButton>
@@ -548,7 +553,7 @@
 						{#snippet child({ props }: { props: MenuButtonProps })}
 							<a href="/legal/privacy" onclick={handlePrivacyClick} class={`${props.class}`}>
 								<ShieldCheck />
-								<span>Privacy Policy</span>
+								<span>{$_('terms.privacy')}</span>
 							</a>
 						{/snippet}
 					</Sidebar.MenuButton>

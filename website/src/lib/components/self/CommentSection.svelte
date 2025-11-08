@@ -13,7 +13,7 @@
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import { websocketController } from '$lib/stores/websocket';
-
+	import { _ } from 'svelte-i18n';
 	const { coinSymbol } = $props<{ coinSymbol: string }>();
 	import type { Comment } from '$lib/types/comment';
 	let comments = $state<Comment[]>([]);
@@ -179,7 +179,7 @@
 	<Card.Header>
 		<Card.Title class="flex items-center gap-2">
 			<MessageCircle class="h-5 w-5" />
-			Comments ({comments.length})
+			{$_('coin.comments.title').replace('{{count}}', comments.length.toString())}
 		</Card.Title>
 	</Card.Header>
 	<Card.Content class="space-y-4">
@@ -190,20 +190,20 @@
 					<Textarea
 						bind:value={newComment}
 						placeholder="Share your thoughts about this coin..."
-						class="min-h-[80px] w-full break-words pb-8 pr-20"
+						class="min-h-[80px] w-full pr-20 pb-8 break-words"
 						style="word-break: break-word; overflow-wrap: break-word;"
 						maxlength={500}
 						onkeydown={handleKeydown}
 					/>
 					<kbd
-						class="bg-muted pointer-events-none absolute bottom-2 right-2 hidden h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-70 sm:flex"
+						class="bg-muted pointer-events-none absolute right-2 bottom-2 hidden h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-70 select-none sm:flex"
 					>
 						<span class="text-xs">⌘</span>Enter
 					</kbd>
 				</div>
 				<div class="flex justify-between">
 					<span class="text-muted-foreground text-xs">
-						{newComment.length}/500 characters
+						{$_('coin.comments.characterLimit').replace('{{chars}}', newComment.length.toString())}
 					</span>
 					<Button onclick={submitComment} disabled={!newComment.trim() || isSubmitting} size="sm">
 						{#if isSubmitting}
@@ -211,7 +211,7 @@
 							Posting...
 						{:else}
 							<Send class="h-4 w-4" />
-							Post
+							{$_('coin.comments.post')}
 						{/if}
 					</Button>
 				</div>
@@ -231,7 +231,7 @@
 		{:else if comments.length === 0}
 			<div class="text-center">
 				<p class="text-muted-foreground mt-2 text-sm">
-					No comments yet. Be the first to share your thoughts!
+					{$_('coin.comments.noCommentsYet')}
 				</p>
 			</div>
 		{:else}
@@ -254,7 +254,7 @@
 								<div class="flex items-center gap-2">
 									<HoverCard.Root>
 										<HoverCard.Trigger
-											class="min-w-0 max-w-[120px] flex-shrink cursor-pointer text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 sm:max-w-[180px] sm:text-base"
+											class="max-w-[120px] min-w-0 flex-shrink cursor-pointer text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 sm:max-w-[180px] sm:text-base"
 											onclick={() => goto(`/user/${comment.userUsername}`)}
 										>
 											<span class="block truncate">{comment.userName}</span>
@@ -271,13 +271,13 @@
 											<span class="truncate">@{comment.userUsername}</span>
 										</Badge>
 									</button>
-									<span class="text-muted-foreground flex-shrink-0 whitespace-nowrap text-xs">
+									<span class="text-muted-foreground flex-shrink-0 text-xs whitespace-nowrap">
 										{formatTimeAgo(comment.createdAt)}
 									</span>
 								</div>
 								<div class="space-y-1">
 									<p
-										class="whitespace-pre-wrap break-words text-sm leading-relaxed"
+										class="text-sm leading-relaxed break-words whitespace-pre-wrap"
 										style="word-break: break-word; overflow-wrap: break-word;"
 									>
 										{displayContent}

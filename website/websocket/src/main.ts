@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: join(__dirname, '../../.env') });
 
 if (!process.env.REDIS_URL) {
-	console.error("REDIS_URL is not defined in environment variables.");
+	console.error('REDIS_URL is not defined in environment variables.');
 	process.exit(1);
 }
 
@@ -30,18 +30,20 @@ redis.on('error', (err) => console.error('Redis Client Error', err));
 
 redis.on('connect', () => {
 	redis.psubscribe('comments:*', 'prices:*', 'notifications:*', (err, count) => {
-		if (err) console.error("Failed to psubscribe to patterns", err);
+		if (err) console.error('Failed to psubscribe to patterns', err);
 		else console.log(`Successfully psubscribed to patterns. Active psubscriptions: ${count}`);
 	});
 
 	redis.subscribe('trades:all', 'trades:large', 'gambling:activity', (err, count) => {
-		if (err) console.error("Failed to subscribe to channels", err);
+		if (err) console.error('Failed to subscribe to channels', err);
 		else console.log(`Successfully subscribed to channels. Active subscriptions: ${count}`);
 	});
 });
 
 redis.on('pmessage', (pattern, channel, msg) => {
-	console.log(`[Redis pmessage RECEIVED] Pattern: "${pattern}", Channel: "${channel}", Message: "${msg}"`);
+	console.log(
+		`[Redis pmessage RECEIVED] Pattern: "${pattern}", Channel: "${channel}", Message: "${msg}"`
+	);
 	try {
 		if (channel.startsWith('comments:')) {
 			const coinSymbol = channel.substring('comments:'.length);
@@ -84,7 +86,11 @@ redis.on('pmessage', (pattern, channel, msg) => {
 			}
 		}
 	} catch (error) {
-		console.error('Error processing Redis pmessage:', error, `Pattern: ${pattern}, Channel: ${channel}, Raw message: ${msg}`);
+		console.error(
+			'Error processing Redis pmessage:',
+			error,
+			`Pattern: ${pattern}, Channel: ${channel}, Raw message: ${msg}`
+		);
 	}
 });
 
@@ -130,7 +136,11 @@ redis.on('message', (channel, msg) => {
 			}
 		}
 	} catch (error) {
-		console.error('Error processing Redis message:', error, `Channel: ${channel}, Raw message: ${msg}`);
+		console.error(
+			'Error processing Redis message:',
+			error,
+			`Channel: ${channel}, Raw message: ${msg}`
+		);
 	}
 });
 
@@ -177,7 +187,9 @@ function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string) {
 function checkConnections() {
 	const now = Date.now();
 	for (const [coinSymbol, sockets] of coinSockets.entries()) {
-		const staleSockets = Array.from(sockets).filter(ws => now - ws.data.lastActivity > HEARTBEAT_INTERVAL * 2);
+		const staleSockets = Array.from(sockets).filter(
+			(ws) => now - ws.data.lastActivity > HEARTBEAT_INTERVAL * 2
+		);
 		for (const socket of staleSockets) {
 			socket.terminate();
 		}
@@ -193,13 +205,19 @@ const server = Bun.serve<WebSocketData, undefined>({
 		const url = new URL(request.url);
 
 		if (url.pathname === '/health') {
-			return new Response(JSON.stringify({
-				status: 'ok',
-				timestamp: new Date().toISOString(),
-				activeConnections: Array.from(coinSockets.values()).reduce((total, set) => total + set.size, 0)
-			}), {
-				headers: { 'Content-Type': 'application/json' }
-			});
+			return new Response(
+				JSON.stringify({
+					status: 'ok',
+					timestamp: new Date().toISOString(),
+					activeConnections: Array.from(coinSockets.values()).reduce(
+						(total, set) => total + set.size,
+						0
+					)
+				}),
+				{
+					headers: { 'Content-Type': 'application/json' }
+				}
+			);
 		}
 
 		const upgraded = server.upgrade(request, {
@@ -247,7 +265,8 @@ const server = Bun.serve<WebSocketData, undefined>({
 			}, HEARTBEAT_INTERVAL);
 
 			pingIntervals.set(ws, interval);
-		}, close(ws) {
+		},
+		close(ws) {
 			const interval = pingIntervals.get(ws);
 			if (interval) {
 				clearInterval(interval);

@@ -12,7 +12,7 @@
 	const CONTACT_EMAIL = 'contact@outpoot.com';
 </script>
 
-<SEO 
+<SEO
 	title="Privacy Policy - Rugplay"
 	description="Privacy Policy for Rugplay cryptocurrency simulation game. Learn about data collection, account deletion process, virtual currency privacy, and your rights."
 	keywords="privacy policy, data protection, account deletion, virtual currency privacy, simulation game privacy"
@@ -112,7 +112,7 @@
 					</li>
 				</ul>
 
-				<h3 class="mb-2 mt-4 text-lg font-medium">
+				<h3 class="mt-4 mb-2 text-lg font-medium">
 					3.1 Automated Decision-Making (Prediction Markets)
 				</h3>
 				<p class="mb-2">
@@ -392,9 +392,7 @@
 			<Button variant="outline" size="lg" onclick={() => goto('/legal/terms')}>
 				Terms of Service →
 			</Button>
-			<Button variant="outline" size="lg" onclick={() => goto('/settings')}>
-				Export My Data
-			</Button>
+			<Button variant="outline" size="lg" onclick={() => goto('/settings')}>Export My Data</Button>
 		</div>
 	</Card.Root>
 </div>

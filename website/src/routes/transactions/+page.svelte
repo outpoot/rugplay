@@ -344,11 +344,11 @@
 
 			<div class="mx-auto flex max-w-2xl items-center justify-center gap-2">
 				<div class="relative flex-1">
-					<Search class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+					<Search class="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
 					<Input
 						bind:value={searchQuery}
 						placeholder="Search by coin name or symbol..."
-						class="pl-10 pr-4"
+						class="pr-4 pl-10"
 						onblur={updateSearchUrl}
 						onkeydown={handleSearchKeydown}
 					/>

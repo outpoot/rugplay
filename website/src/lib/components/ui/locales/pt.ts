@@ -115,6 +115,7 @@ export default {
 		paused: 'Pausado',
 		quantity: 'Quantidade',
 		received: 'Recebido',
+		rank: 'Posição',
 		rec: 'REC',
 		receiver: 'Recebedor',
 		reset: 'Redefinir',
@@ -126,7 +127,8 @@ export default {
 		skip: 'PULAR',
 		type: 'Tipo',
 		total: "Total",
-		unknown: 'Desconhecido'
+		unknown: 'Desconhecido',
+		user: 'Usuário'
 	},
 	coin: {
 		create: {
@@ -376,6 +378,7 @@ export default {
 		yourBets: 'Suas apostas:'
 	},
 	leaderboard: {
+		err: 'Falha ao carregar dados da tabela de classificação',
 		description: 'Melhores desempenhos e atividade do mercado',
 		biggestLosses: {
 			description: 'Usuários que experimentaram as maiores perdas hoje',
@@ -387,7 +390,8 @@ export default {
 			description: 'Usuários com os maiores saldos em dinheiro líquido',
 			noData: 'Nenhum portfólio grande ainda! 📉',
 			portfolio: 'Portfólio',
-			title: 'Maiores Valores de Portfólio'
+			title: 'Maiores Valores de Portfólio',
+			liquidity: "Liquidez"
 		},
 		rank: 'Classificação',
 		title: 'Tabela de Classificação',
@@ -403,7 +407,16 @@ export default {
 			profit: 'Lucro',
 			title: 'Maiores Rugpullers (24h)'
 		},
-		user: 'Usuário'
+		user: 'Usuário',
+		search: {
+			placeholder: "Pesquisar por nome de usuário...",
+			noFound: {
+				title: "Nenhum usuário encontrado",
+				description: 'Nenhum usuário corresponde à sua pesquisa "{{search}}"',
+				clear: "Limpar Pesquisa"
+			},
+			description: "Mostrando {{1}} - {{2}} de {{3}} resultados"
+		}
 	},
 	livetrades: {
 		d: {
@@ -576,7 +589,8 @@ export default {
 			description: 'Moedas lançadas por {{name}}',
 			title: 'Moedas Criadas ({{count}})'
 		},
-		id: '#{{id}} para participar',
+		id: '{{id}}º a entrar',
+		streak: "Sequência de {{days}} dias",
 		illiquidValue: {
 			description: 'Ativos em Moedas',
 			title: 'Valor Não Líquido'

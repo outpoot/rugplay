@@ -114,6 +114,7 @@ export default {
 		noData: 'No data',
 		paused: 'Paused',
 		quantity: 'Quantity',
+		rank: 'Rank',
 		received: 'Received',
 		rec: 'REC',
 		receiver: 'Receiver',
@@ -126,7 +127,8 @@ export default {
 		skip: 'SKIP',
 		type: 'Type',
 		total: "Total",
-		unknown: 'Unknown'
+		unknown: 'Unknown',
+		user: 'User'
 	},
 	coin: {
 		create: {
@@ -376,6 +378,7 @@ export default {
 		yourBets: 'Your bets:'
 	},
 	leaderboard: {
+		err: 'Failed to load leaderboard data',
 		description: 'Top performers and market activity',
 		biggestLosses: {
 			description: 'Users who experienced the largest losses today',
@@ -387,7 +390,8 @@ export default {
 			description: 'Users with the highest liquid cash balances',
 			noData: 'No large portfolios yet! 📉',
 			portfolio: 'Portfolio',
-			title: 'Highest Portfolio Values'
+			title: 'Highest Portfolio Values',
+			liquidity: "Liquidity"
 		},
 		rank: 'Rank',
 		title: 'Leaderboard',
@@ -403,7 +407,16 @@ export default {
 			profit: 'Profit',
 			title: 'Top Rugpullers (24h)'
 		},
-		user: 'User'
+		user: 'User',
+		search: {
+			placeholder: "Search by username...",
+			noFound: {
+				title: "No users found",
+				description: 'No users match your search "{{search}}"',
+				clear: "Clear Search"
+			},
+			description: "Showing {{1}} - {{2}} of {{3}} results"
+		}
 	},
 	livetrades: {
 		d: {
@@ -577,6 +590,7 @@ export default {
 			title: 'Created Coins ({{count}})'
 		},
 		id: '#{{id}} to join',
+		streak: "{{days}} day streak",
 		illiquidValue: {
 			description: 'Coin Holdings',
 			title: 'Illiquid Value'

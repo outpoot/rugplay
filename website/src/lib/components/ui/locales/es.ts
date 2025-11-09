@@ -1,4 +1,4 @@
-import en from "./en"
+import type en from './en';
 export default {
 	lang: {
 		code: 'es',

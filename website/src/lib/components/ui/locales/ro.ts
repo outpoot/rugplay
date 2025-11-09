@@ -1,4 +1,6 @@
-import type en from "./en";
+// Needs a human to review it, may have some errors
+// - Generated with AI
+import type en from './en';
 
 export default {
 	lang: {

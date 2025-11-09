@@ -37,6 +37,16 @@ export const supportedLocales = [
 		id: 'hi',
 		countryFlag: 'in',
 		loader: async () => (await import('./hi')).default
+	},
+	{
+		id: 'de',
+		countryFlag: 'de',
+		loader: async () => (await import('./de')).default
+	},
+	{
+		id: 'ja',
+		countryFlag: 'jp',
+		loader: async () => (await import('./ja')).default
 	}
 ].sort((a, b) => (a.id > b.id ? +1 : b.id > a.id ? -1 : 0));
 

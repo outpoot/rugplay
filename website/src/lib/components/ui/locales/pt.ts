@@ -1,4 +1,4 @@
-import type en from "./en";
+import type en from './en';
 
 export default {
 	lang: {
@@ -797,4 +797,4 @@ export default {
 	error: {
 		unknown: 'Um erro aconteceu'
 	}
-} satisfies typeof en
+} satisfies typeof en;

@@ -14,7 +14,6 @@ export const supportedLocales = [
 		loader: async () => (await import("./pt")).default
 	},
 ].sort((a,b)=>a.id > b.id ? +1 : b.id > a.id ? -1 : 0)
-console.log(supportedLocales)
 export const rawSupportedLocales = supportedLocales.map(l => l.id);
 
 for (const lang of supportedLocales) {
@@ -35,7 +34,6 @@ export function getUserLoc() {
 
 	return defaultLocale
 }
-console.log(getUserLoc())
 init({
 	fallbackLocale: defaultLocale,
 	initialLocale: getUserLoc()

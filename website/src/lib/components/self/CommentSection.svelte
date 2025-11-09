@@ -100,10 +100,10 @@
 				newComment = '';
 			} else {
 				const error = await response.json();
-				toast.error(error.message || $_("coin.comments.err"));
+				toast.error(error.message || $_('coin.comments.err'));
 			}
 		} catch (e) {
-			toast.error($_("coin.comments.err"));
+			toast.error($_('coin.comments.err'));
 		} finally {
 			isSubmitting = false;
 		}
@@ -218,8 +218,8 @@
 			</div>
 		{:else}
 			<div class="text-center">
-				<p class="text-muted-foreground mb-3 text-sm">{$_("coin.comments.signin")}</p>
-				<Button onclick={() => (shouldSignIn = true)} size="sm">{$_("signin.button")}</Button>
+				<p class="text-muted-foreground mb-3 text-sm">{$_('coin.comments.signin')}</p>
+				<Button onclick={() => (shouldSignIn = true)} size="sm">{$_('signin.button')}</Button>
 			</div>
 		{/if}
 

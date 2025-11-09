@@ -77,20 +77,20 @@
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				<Gift class="h-5 w-5" />
-				{$_("promocode.title")}
+				{$_('promocode.title')}
 			</Dialog.Title>
 			<Dialog.Description>
-				{$_("promocode.description")}
+				{$_('promocode.description')}
 			</Dialog.Description>
 		</Dialog.Header>
 
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div class="space-y-2">
-				<Label for="promo-code">{$_("promocode.input.0")}</Label>
+				<Label for="promo-code">{$_('promocode.input.0')}</Label>
 				<Input
 					id="promo-code"
 					bind:value={promoCode}
-					placeholder={$_("promocode.input.1")}
+					placeholder={$_('promocode.input.1')}
 					disabled={isVerifying}
 					class="uppercase"
 					style="text-transform: uppercase;"
@@ -109,9 +109,9 @@
 					{/if}
 					<AlertDescription>
 						{#if isSuccess}
-						{$_("promocode.messages.RD").replace("{{balance}}", amountWon.toLocaleString())}
+							{$_('promocode.messages.RD').replace('{{balance}}', amountWon.toLocaleString())}
 						{:else}
-						{$_("promocode.messages."+message)}
+							{$_('promocode.messages.' + message)}
 						{/if}
 					</AlertDescription>
 				</Alert>
@@ -124,14 +124,14 @@
 					onclick={() => (open = false)}
 					disabled={isVerifying}
 				>
-					{$_("base.cancel")}
+					{$_('base.cancel')}
 				</Button>
 				<Button type="submit" disabled={!promoCode.trim() || isVerifying}>
 					{#if isVerifying}
 						<Loader2 class="h-4 w-4 animate-spin" />
-						{$_("promocode.redeem.1")}
+						{$_('promocode.redeem.1')}
 					{:else}
-						{$_("promocode.redeem.0")}
+						{$_('promocode.redeem.0')}
 					{/if}
 				</Button>
 			</div>

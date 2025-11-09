@@ -150,14 +150,14 @@
 					return {
 						component: 'badge',
 						variant: 'default',
-						text: row.isIncoming ? $_("base.received") : $_("base.sent"),
+						text: row.isIncoming ? $_('base.received') : $_('base.sent'),
 						class: 'text-xs'
 					};
 				}
 				return {
 					component: 'badge',
 					variant: value === 'BUY' ? 'success' : 'destructive',
-					text: value === 'BUY' ? $_("base.buy") : $_("base.sell"),
+					text: value === 'BUY' ? $_('base.buy') : $_('base.sell'),
 					class: 'text-xs'
 				};
 			}
@@ -194,9 +194,9 @@
 			class: 'w-[12%] min-w-[70px] md:w-[10%]',
 			render: (value: any, row: any) => ({
 				component: 'text',
-				text: row.isTransfer ? row.sender || $_("base.unknown") : '-',
+				text: row.isTransfer ? row.sender || $_('base.unknown') : '-',
 				class:
-					row.isTransfer && row.sender && row.sender !== $_("base.unknown")
+					row.isTransfer && row.sender && row.sender !== $_('base.unknown')
 						? 'font-medium'
 						: 'text-muted-foreground'
 			})

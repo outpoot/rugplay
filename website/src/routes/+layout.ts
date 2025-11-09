@@ -6,7 +6,7 @@ export const ssr = false;
 /** @type {import('@sveltejs/kit').Load} */
 export const load = async ({ data }) => {
 	// TODO: Option to change language
-	const loc = getUserLoc()
+	const loc = getUserLoc();
 
 	locale.set(loc);
 	await waitLocale();

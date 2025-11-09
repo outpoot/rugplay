@@ -254,7 +254,7 @@
 		</div>
 
 		<div class="text-muted-foreground mt-3 mb-4 flex flex-wrap items-center gap-1.5 text-xs">
-			<span>{$_("coin.createdBy")}</span>
+			<span>{$_('coin.createdBy')}</span>
 
 			<HoverCard.Root>
 				<HoverCard.Trigger

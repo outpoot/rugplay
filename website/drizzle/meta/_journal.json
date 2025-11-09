@@ -1,34 +1,34 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1750863600119,
-      "tag": "0000_chief_korath",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1752593600974,
-      "tag": "0001_heavy_leo",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1752597309305,
-      "tag": "0002_lonely_the_fallen",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1761581605464,
-      "tag": "0003_flaky_agent_brand",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1750863600119,
+			"tag": "0000_chief_korath",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1752593600974,
+			"tag": "0001_heavy_leo",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1752597309305,
+			"tag": "0002_lonely_the_fallen",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1761581605464,
+			"tag": "0003_flaky_agent_brand",
+			"breakpoints": true
+		}
+	]
 }

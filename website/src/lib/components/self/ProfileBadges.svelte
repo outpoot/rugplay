@@ -36,7 +36,7 @@
 	{#if user.loginStreak && user.loginStreak > 1}
 		<SilentBadge
 			icon={Flame}
-			text={$_("user.streak").replace("{{days}}", user.loginStreak.toLocaleString())}
+			text={$_('user.streak').replace('{{days}}', user.loginStreak.toLocaleString())}
 			class="text-orange-500 {badgeClass}"
 		/>
 	{/if}

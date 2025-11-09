@@ -72,11 +72,11 @@
 			if (response.ok) {
 				leaderboardData = await response.json();
 			} else {
-				toast.error($_("leaderboard.err"));
+				toast.error($_('leaderboard.err'));
 			}
 		} catch (e) {
 			console.error('Failed to fetch leaderboard data:', e);
-			toast.error($_("leaderboard.err"));
+			toast.error($_('leaderboard.err'));
 		} finally {
 			loading = false;
 		}
@@ -105,7 +105,7 @@
 	const searchColumns = [
 		{
 			key: 'user',
-			label: $_("base.user"),
+			label: $_('base.user'),
 			render: (value: any, row: any) => ({
 				component: 'user',
 				image: row.image,
@@ -118,7 +118,7 @@
 	const rugpullersColumns = [
 		{
 			key: 'rank',
-			label: $_("base.rank"),
+			label: $_('base.rank'),
 			render: (value: any, row: any, index: number) => {
 				const rankInfo = getRankIcon(index);
 				return {
@@ -131,7 +131,7 @@
 		},
 		{
 			key: 'user',
-			label: $_("base.user"),
+			label: $_('base.user'),
 			render: (value: any, row: any) => ({
 				component: 'user',
 				image: row.image,
@@ -141,7 +141,7 @@
 		},
 		{
 			key: 'totalExtracted',
-			label: $_("leaderboard.topRugpullers.profit"),
+			label: $_('leaderboard.topRugpullers.profit'),
 			class: 'text-success font-mono text-sm font-bold',
 			render: (value: any) => formatValue(value)
 		}
@@ -150,7 +150,7 @@
 	const losersColumns = [
 		{
 			key: 'rank',
-			label: $_("base.rank"),
+			label: $_('base.rank'),
 			render: (value: any, row: any, index: number) => {
 				const rankInfo = getRankIcon(index);
 				return {
@@ -163,7 +163,7 @@
 		},
 		{
 			key: 'user',
-			label: $_("base.user"),
+			label: $_('base.user'),
 			render: (value: any, row: any) => ({
 				component: 'user',
 				image: row.image,
@@ -173,7 +173,7 @@
 		},
 		{
 			key: 'totalLoss',
-			label: $_("leaderboard.biggestLosses.loss"),
+			label: $_('leaderboard.biggestLosses.loss'),
 			class: 'text-destructive font-mono text-sm font-bold',
 			render: (value: any) => `-${formatValue(value)}`
 		}
@@ -182,7 +182,7 @@
 	const cashKingsColumns = [
 		{
 			key: 'rank',
-			label: $_("base.rank"),
+			label: $_('base.rank'),
 			render: (value: any, row: any, index: number) => {
 				const rankInfo = getRankIcon(index);
 				return {
@@ -195,7 +195,7 @@
 		},
 		{
 			key: 'user',
-			label: $_("base.user"),
+			label: $_('base.user'),
 			render: (value: any, row: any) => ({
 				component: 'user',
 				image: row.image,
@@ -205,7 +205,7 @@
 		},
 		{
 			key: 'baseCurrencyBalance',
-			label: $_("leaderboard.topCash.cash"),
+			label: $_('leaderboard.topCash.cash'),
 			class: 'text-success font-mono text-sm font-bold',
 			render: (value: any) => formatValue(value)
 		}
@@ -214,7 +214,7 @@
 	const millionairesColumns = [
 		{
 			key: 'rank',
-			label: $_("base.rank"),
+			label: $_('base.rank'),
 			render: (value: any, row: any, index: number) => {
 				const rankInfo = getRankIcon(index);
 				return {
@@ -227,7 +227,7 @@
 		},
 		{
 			key: 'user',
-			label: $_("base.user"),
+			label: $_('base.user'),
 			render: (value: any, row: any) => ({
 				component: 'user',
 				image: row.image,
@@ -237,13 +237,13 @@
 		},
 		{
 			key: 'totalPortfolioValue',
-			label: $_("portfolio.title"),
+			label: $_('portfolio.title'),
 			class: 'text-success font-mono text-sm font-bold',
 			render: (value: any) => formatValue(value)
 		},
 		{
 			key: 'liquidityRatio',
-			label: $_("leaderboard.highestPortfolio.liquidity"),
+			label: $_('leaderboard.highestPortfolio.liquidity'),
 			render: (value: any) => {
 				const info = getLiquidityWarning(value);
 				return {
@@ -275,7 +275,7 @@
 					<Search size={16} class="pointer-events-none absolute left-3"></Search>
 					<Input
 						type="text"
-						placeholder={$_("leaderboard.search.placeholder")}
+						placeholder={$_('leaderboard.search.placeholder')}
 						class="flex-grow pl-10"
 						bind:value={searchQuery}
 						onkeydown={handleSearchKeydown}
@@ -391,7 +391,13 @@
 					</div>
 					<div class="flex flex-col items-center justify-between gap-2 lg:flex-row xl:col-span-2">
 						<h2 class="text-muted-foreground text-sm">
-							{$_("leaderboard.search.description").replace("{{1}}",(1 + searchOffset).toLocaleString()).replace("{{2}}", (Math.min(leaderboardData.results.length, 9)+searchOffset).toLocaleString()).replace("{{3}}", leaderboardData.total.toString())}
+							{$_('leaderboard.search.description')
+								.replace('{{1}}', (1 + searchOffset).toLocaleString())
+								.replace(
+									'{{2}}',
+									(Math.min(leaderboardData.results.length, 9) + searchOffset).toLocaleString()
+								)
+								.replace('{{3}}', leaderboardData.total.toString())}
 						</h2>
 						<div
 							class="flex w-full flex-grow items-center justify-center gap-2 overflow-x-auto lg:w-auto lg:justify-end"
@@ -414,9 +420,9 @@
 					</div>
 				{:else}
 					<div class="flex h-60 flex-col items-center justify-center xl:col-span-2">
-						<h2 class="mb-4 text-xl">{$_("leaderboard.search.noFound.title")}</h2>
+						<h2 class="mb-4 text-xl">{$_('leaderboard.search.noFound.title')}</h2>
 						<p class="text-muted-foreground mb-4 text-sm md:text-base">
-							{$_("leaderboard.search.noFound.description").replace("{{search}}",searchQueryValue)}
+							{$_('leaderboard.search.noFound.description').replace('{{search}}', searchQueryValue)}
 						</p>
 						<Button
 							variant="outline"
@@ -426,7 +432,7 @@
 								fetchLeaderboardData();
 							}}
 						>
-							<h2 class="text-sm">{$_("leaderboard.search.noFound.clear")}</h2>
+							<h2 class="text-sm">{$_('leaderboard.search.noFound.clear')}</h2>
 						</Button>
 					</div>
 				{/if}

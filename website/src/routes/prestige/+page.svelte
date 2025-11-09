@@ -61,11 +61,11 @@
 
 		try {
 			const response = await fetch('/api/prestige');
-			if (!response.ok) throw new Error($_("prestige.err"));
+			if (!response.ok) throw new Error($_('prestige.err'));
 			prestigeData = await response.json();
 		} catch (e) {
 			console.error('Failed to fetch prestige data:', e);
-			toast.error($_("prestige.err"));
+			toast.error($_('prestige.err'));
 		}
 	}
 
@@ -86,13 +86,13 @@
 			const result = await response.json();
 
 			if (!response.ok) {
-				throw new Error(result.message || $_("prestige.popup.err"));
+				throw new Error(result.message || $_('prestige.popup.err'));
 			}
 
-			toast.success($_("prestige.popup.done").replace("{{name}}", prestigeName ?? ''));
+			toast.success($_('prestige.popup.done').replace('{{name}}', prestigeName ?? ''));
 			await fetchPrestigeData();
 		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : $_("error.unknown");
+			const errorMessage = err instanceof Error ? err.message : $_('error.unknown');
 			error = errorMessage;
 			toast.error(errorMessage);
 		} finally {
@@ -131,10 +131,10 @@
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				<AlertTriangle class="text-destructive h-5 w-5" />
-				{$_("prestige.popup.title")}
+				{$_('prestige.popup.title')}
 			</Dialog.Title>
 			<Dialog.Description>
-				{$_("prestige.popup.description")}
+				{$_('prestige.popup.description')}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -142,43 +142,49 @@
 			<Alert variant="destructive">
 				<AlertTriangle class="h-4 w-4" />
 				<AlertDescription>
-					<strong>{$_("prestige.popup.lose.0")}</strong>
+					<strong>{$_('prestige.popup.lose.0')}</strong>
 					<ul class="mt-2 list-disc space-y-1 pl-4">
-						<li>{$_("prestige.popup.lose.1").replace("{{amount}}", formatValue(currentBalance))}</li>
+						<li>
+							{$_('prestige.popup.lose.1').replace('{{amount}}', formatValue(currentBalance))}
+						</li>
 						{#if holdingsValue > 0}
-							<li>{$_("prestige.popup.lose.2").replace("{{amount}}", formatValue(holdingsValue))}</li>
+							<li>
+								{$_('prestige.popup.lose.2').replace('{{amount}}', formatValue(holdingsValue))}
+							</li>
 						{/if}
-						<li>{$_("prestige.popup.lose.3").replace("{{amount}}", formatValue(totalValue))}</li>
+						<li>{$_('prestige.popup.lose.3').replace('{{amount}}', formatValue(totalValue))}</li>
 					</ul>
-					<strong class="mt-2 block text-green-600">{$_("prestige.popup.gain.0")}</strong>
+					<strong class="mt-2 block text-green-600">{$_('prestige.popup.gain.0')}</strong>
 					<ul class="mt-1 list-disc space-y-1 pl-4">
-						<li>{$_("prestige.popup.gain.1")}</li>
-						<li>{$_("prestige.popup.gain.2")}</li>
-						<li>{$_("prestige.popup.gain.3")}</li>
+						<li>{$_('prestige.popup.gain.1')}</li>
+						<li>{$_('prestige.popup.gain.2')}</li>
+						<li>{$_('prestige.popup.gain.3')}</li>
 					</ul>
-					{$_("prestige.popup.gain.4")}
+					{$_('prestige.popup.gain.4')}
 				</AlertDescription>
 			</Alert>
 
 			<div class="space-y-2">
-				<Label for="confirmation" class="text-sm font-medium">{$_("prestige.popup.confirm.0")}</Label>
+				<Label for="confirmation" class="text-sm font-medium"
+					>{$_('prestige.popup.confirm.0')}</Label
+				>
 				<Input
 					id="confirmation"
 					bind:value={confirmationText}
-					placeholder={$_("prestige.popup.confirm.1")}
+					placeholder={$_('prestige.popup.confirm.1')}
 					class="uppercase"
 				/>
 			</div>
 		</div>
 
 		<Dialog.Footer>
-			<Button variant="ghost" onclick={closeConfirmDialog}>{$_("base.cancel")}</Button>
+			<Button variant="ghost" onclick={closeConfirmDialog}>{$_('base.cancel')}</Button>
 			<Button onclick={handlePrestige} disabled={!canConfirmPrestige || isPrestiging}>
 				{#if isPrestiging}
 					<Loader2 class="h-4 w-4 animate-spin" />
-					{$_("prestige.popup.proceed.0")}
+					{$_('prestige.popup.proceed.0')}
 				{:else}
-					{$_("prestige.popup.proceed.1")}
+					{$_('prestige.popup.proceed.1')}
 				{/if}
 			</Button>
 		</Dialog.Footer>
@@ -201,9 +207,9 @@
 	{:else if !userData}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">{$_("prestige.signin.title")}</div>
-				<p class="text-muted-foreground mb-4 text-sm">{$_("prestige.signin.description")}</p>
-				<Button onclick={() => (shouldSignIn = true)}>{$_("signin.button")}</Button>
+				<div class="text-muted-foreground mb-4 text-xl">{$_('prestige.signin.title')}</div>
+				<p class="text-muted-foreground mb-4 text-sm">{$_('prestige.signin.description')}</p>
+				<Button onclick={() => (shouldSignIn = true)}>{$_('signin.button')}</Button>
 			</div>
 		</div>
 	{:else}
@@ -213,7 +219,7 @@
 				<!-- How -->
 				<Card.Root class="mb-6 gap-1">
 					<Card.Header class="pb-2">
-						<Card.Title class="text-base">{$_("prestige.how.0")}</Card.Title>
+						<Card.Title class="text-base">{$_('prestige.how.0')}</Card.Title>
 					</Card.Header>
 					<Card.Content class="space-y-4">
 						<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -224,9 +230,9 @@
 									1
 								</div>
 								<div>
-									<p class="font-medium">{$_("prestige.how.1.0")}</p>
+									<p class="font-medium">{$_('prestige.how.1.0')}</p>
 									<p class="text-muted-foreground text-sm">
-										{$_("prestige.how.1.1")}
+										{$_('prestige.how.1.1')}
 									</p>
 								</div>
 							</div>
@@ -237,9 +243,9 @@
 									2
 								</div>
 								<div>
-									<p class="font-medium">{$_("prestige.how.2.0")}</p>
+									<p class="font-medium">{$_('prestige.how.2.0')}</p>
 									<p class="text-muted-foreground text-sm">
-										{$_("prestige.how.2.1")}
+										{$_('prestige.how.2.1')}
 									</p>
 								</div>
 							</div>
@@ -250,9 +256,9 @@
 									3
 								</div>
 								<div>
-									<p class="font-medium">{$_("prestige.how.3.0")}</p>
+									<p class="font-medium">{$_('prestige.how.3.0')}</p>
 									<p class="text-muted-foreground text-sm">
-										{$_("prestige.how.3.1")}
+										{$_('prestige.how.3.1')}
 									</p>
 								</div>
 							</div>
@@ -266,7 +272,7 @@
 						<Card.Header>
 							<Card.Title class="flex items-center gap-2">
 								<Star class="h-5 w-5" />
-								{$_("prestige.progress.title")}
+								{$_('prestige.progress.title')}
 							</Card.Title>
 						</Card.Header>
 						<Card.Content class="flex flex-1 flex-col space-y-6">
@@ -274,7 +280,12 @@
 							<div class="space-y-6">
 								<div class="space-y-2">
 									<div class="flex items-center justify-between text-sm">
-										<span class="font-medium">{$_("prestige.progress.description").replace("{{name}}",prestigeName ?? '')}</span>
+										<span class="font-medium"
+											>{$_('prestige.progress.description').replace(
+												'{{name}}',
+												prestigeName ?? ''
+											)}</span
+										>
 										<span class="font-mono">{progressPercentage.toFixed(1)}%</span>
 									</div>
 									<Progress value={progressPercentage} class="h-2" />
@@ -285,13 +296,17 @@
 									<table class="w-full text-sm">
 										<tbody class="divide-y">
 											<tr>
-												<td class="text-muted-foreground px-3 py-2 font-medium">{$_("prestige.progress.required")}:</td>
+												<td class="text-muted-foreground px-3 py-2 font-medium"
+													>{$_('prestige.progress.required')}:</td
+												>
 												<td class="px-3 py-2 text-right font-mono font-bold">
 													{formatValue(prestigeCost || 0)}
 												</td>
 											</tr>
 											<tr>
-												<td class="text-muted-foreground px-3 py-2 font-medium">{$_("prestige.progress.yourCash")}:</td>
+												<td class="text-muted-foreground px-3 py-2 font-medium"
+													>{$_('prestige.progress.yourCash')}:</td
+												>
 												<td
 													class="px-3 py-2 text-right font-mono font-bold"
 													class:text-green-600={canAfford}
@@ -302,7 +317,9 @@
 											</tr>
 											{#if !canAfford}
 												<tr>
-													<td class="text-muted-foreground px-3 py-2 font-medium">{$_("prestige.progress.stillNeeded")}:</td>
+													<td class="text-muted-foreground px-3 py-2 font-medium"
+														>{$_('prestige.progress.stillNeeded')}:</td
+													>
 													<td class="px-3 py-2 text-right font-mono font-bold text-red-600">
 														{formatValue(amountNeeded)}
 													</td>
@@ -314,11 +331,11 @@
 							</div>
 
 							{#if !canAfford}
-								<Label>{$_("prestige.progress.tip")}</Label>
+								<Label>{$_('prestige.progress.tip')}</Label>
 							{:else}
 								<Alert variant="destructive">
 									<AlertTriangle class="h-4 w-4" />
-									<AlertDescription>{$_("prestige.progress.perma")}</AlertDescription>
+									<AlertDescription>{$_('prestige.progress.perma')}</AlertDescription>
 								</Alert>
 							{/if}
 
@@ -332,11 +349,11 @@
 							>
 								{#if isPrestiging}
 									<Loader2 class="h-4 w-4 animate-spin" />
-									{$_("prestige.progress.button.2").replace("{{name}}", prestigeName ?? '')}
+									{$_('prestige.progress.button.2').replace('{{name}}', prestigeName ?? '')}
 								{:else if !canAfford}
-									{$_("prestige.progress.button.0").replace("{{bal}}", formatValue(amountNeeded))}
+									{$_('prestige.progress.button.0').replace('{{bal}}', formatValue(amountNeeded))}
 								{:else}
-									{$_("prestige.progress.button.1")}
+									{$_('prestige.progress.button.1')}
 								{/if}
 							</Button>
 						</Card.Content>
@@ -346,9 +363,9 @@
 					<Card.Root class="flex flex-1 flex-col gap-1">
 						<Card.Content class="py-16 text-center">
 							<Star class="mx-auto mb-6 h-20 w-20 text-yellow-500" />
-							<h3 class="mb-3 text-2xl font-bold">{$_("prestige.progress.star.0")}</h3>
+							<h3 class="mb-3 text-2xl font-bold">{$_('prestige.progress.star.0')}</h3>
 							<p class="text-muted-foreground">
-								{$_("prestige.progress.star.1")}
+								{$_('prestige.progress.star.1')}
 							</p>
 						</Card.Content>
 					</Card.Root>
@@ -371,12 +388,13 @@
 				{#if userData}
 					<Card.Root class="flex-1 gap-1">
 						<Card.Header class="pb-2">
-							<Card.Title class="text-base">{$_("prestige.preview.title")}</Card.Title>
+							<Card.Title class="text-base">{$_('prestige.preview.title')}</Card.Title>
 						</Card.Header>
 						<Card.Content class="space-y-4">
 							<!-- Current Profile -->
 							<div class="space-y-2">
-								<Label class="text-muted-foreground text-xs">{$_("prestige.preview.current")}</Label>
+								<Label class="text-muted-foreground text-xs">{$_('prestige.preview.current')}</Label
+								>
 								<div class="flex items-center gap-3 rounded-lg border p-3">
 									<Avatar.Root class="h-10 w-10 shrink-0">
 										<Avatar.Image src={getPublicUrl(userData.image)} alt={userData.name} />
@@ -407,7 +425,7 @@
 
 							<!-- Prestige Preview -->
 							<div class="space-y-2">
-								<Label class="text-muted-foreground text-xs">{$_("prestige.preview.after")}</Label>
+								<Label class="text-muted-foreground text-xs">{$_('prestige.preview.after')}</Label>
 								<div
 									class="flex items-center gap-3 rounded-lg border-2 border-yellow-500/30 bg-yellow-50/50 p-3 dark:bg-yellow-950/20"
 								>
@@ -437,7 +455,9 @@
 									</div>
 								</div>
 							</div>
-							<p class="text-xs">{$_("prestige.preview.description").replace("{{percent}}", "25")}</p>
+							<p class="text-xs">
+								{$_('prestige.preview.description').replace('{{percent}}', '25')}
+							</p>
 						</Card.Content>
 					</Card.Root>
 				{/if}
@@ -445,7 +465,7 @@
 				<!-- All Prestige Levels -->
 				<Card.Root class="flex-1 gap-1">
 					<Card.Header class="pb-2">
-						<Card.Title class="text-base">{$_("prestige.levels.title")}</Card.Title>
+						<Card.Title class="text-base">{$_('prestige.levels.title')}</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						{#each Object.entries(PRESTIGE_COSTS) as [level, cost]}

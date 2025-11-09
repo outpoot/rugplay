@@ -48,12 +48,12 @@
 	let countdownInterval = $state<NodeJS.Timeout | null>(null);
 
 	const timeframeOptions = [
-		{ value: '1m', label: $_("time.1m") },
-		{ value: '5m', label: $_("time.5m") },
-		{ value: '15m', label: $_("time.15m") },
-		{ value: '1h', label: $_("time.1h") },
-		{ value: '4h', label: $_("time.4h") },
-		{ value: '1d', label: $_("time.1d") }
+		{ value: '1m', label: $_('time.1m') },
+		{ value: '5m', label: $_('time.5m') },
+		{ value: '15m', label: $_('time.15m') },
+		{ value: '1h', label: $_('time.1h') },
+		{ value: '4h', label: $_('time.4h') },
+		{ value: '1d', label: $_('time.1d') }
 	];
 
 	onMount(async () => {
@@ -502,7 +502,7 @@
 			<!-- Creator Info -->
 			{#if coin.creatorName}
 				<div class="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-					<span>{$_("coin.createdBy")}</span>
+					<span>{$_('coin.createdBy')}</span>
 
 					<HoverCard.Root>
 						<HoverCard.Trigger
@@ -535,7 +535,7 @@
 							<div class="flex items-center justify-between">
 								<Card.Title class="flex items-center gap-2">
 									<ChartColumn class="h-5 w-5" />
-									{$_("coin.priceChart").replace("{{time}}",selectedTimeframe)}
+									{$_('coin.priceChart').replace('{{time}}', selectedTimeframe)}
 								</Card.Title>
 								<div class="w-24">
 									<Select.Root
@@ -588,9 +588,15 @@
 							{#if isTradingLocked}
 								<p class="text-muted-foreground text-sm">
 									{#if isCreator}
-										{$_("coin.locked.0").replace("{{time}}", countdown !== null ? formatCountdown(countdown) : '')}
+										{$_('coin.locked.0').replace(
+											'{{time}}',
+											countdown !== null ? formatCountdown(countdown) : ''
+										)}
 									{:else}
-										{$_("coin.locked.1").replace("{{time}}", countdown !== null ? formatCountdown(countdown) : '')}
+										{$_('coin.locked.1').replace(
+											'{{time}}',
+											countdown !== null ? formatCountdown(countdown) : ''
+										)}
 									{/if}
 								</p>
 							{/if}
@@ -621,8 +627,8 @@
 								</div>
 							{:else}
 								<div class="py-4 text-center">
-									<p class="text-muted-foreground mb-3 text-sm">{$_("coin.signin.title")}</p>
-									<Button onclick={() => (shouldSignIn = true)}>{$_("signin.button")}</Button>
+									<p class="text-muted-foreground mb-3 text-sm">{$_('coin.signin.title')}</p>
+									<Button onclick={() => (shouldSignIn = true)}>{$_('signin.button')}</Button>
 								</div>
 							{/if}
 						</Card.Content>
@@ -717,7 +723,10 @@
 							{formatSupply(coin.circulatingSupply)}<span
 								class="text-muted-foreground ml-1 text-xs"
 							>
-								{$_('coin.circulatingSupply.of').replace("{{total}}", formatSupply(coin.initialSupply))}
+								{$_('coin.circulatingSupply.of').replace(
+									'{{total}}',
+									formatSupply(coin.initialSupply)
+								)}
 							</span>
 						</p>
 					</Card.Content>

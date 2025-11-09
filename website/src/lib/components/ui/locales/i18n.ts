@@ -1,33 +1,33 @@
-import { init, register } from "svelte-i18n";
-import { browser } from "$app/environment";
+import { init, register } from 'svelte-i18n';
+import { browser } from '$app/environment';
 
-export const defaultLocale = "en";
+export const defaultLocale = 'en';
 export const supportedLocales = [
 	{
-		id: "en",
-		countryFlag: "us",
-		loader: async () => (await import("./en")).default,
+		id: 'en',
+		countryFlag: 'us',
+		loader: async () => (await import('./en')).default
 	},
 	{
-		id: "es",
-		countryFlag: "es",
-		loader: async () => (await import("./es")).default,
+		id: 'es',
+		countryFlag: 'es',
+		loader: async () => (await import('./es')).default
 	},
 	{
-		id: "fr",
-		countryFlag: "fr",
-		loader: async () => (await import("./fr")).default,
+		id: 'fr',
+		countryFlag: 'fr',
+		loader: async () => (await import('./fr')).default
 	},
 	{
-		id: "pt",
-		countryFlag: "pt",
-		loader: async () => (await import("./pt")).default,
+		id: 'pt',
+		countryFlag: 'pt',
+		loader: async () => (await import('./pt')).default
 	},
 	{
-		id: "ro",
-		countryFlag: "ro",
-		loader: async () => (await import("./ro")).default,
-	},
+		id: 'ro',
+		countryFlag: 'ro',
+		loader: async () => (await import('./ro')).default
+	}
 ];
 
 export const rawSupportedLocales = supportedLocales.map((l) => l.id);
@@ -39,12 +39,12 @@ for (const lang of supportedLocales) {
 export function getUserLoc() {
 	if (!browser) return defaultLocale;
 
-	const localStorageValue = localStorage.getItem("language");
+	const localStorageValue = localStorage.getItem('language');
 	if (localStorageValue && rawSupportedLocales.includes(localStorageValue))
 		return localStorageValue;
 
 	const browserLang = window.navigator.language;
-	const PBrowserLang = browserLang.split("-")[0];
+	const PBrowserLang = browserLang.split('-')[0];
 
 	if (rawSupportedLocales.includes(browserLang)) return browserLang;
 	if (rawSupportedLocales.includes(PBrowserLang)) return PBrowserLang;
@@ -53,5 +53,5 @@ export function getUserLoc() {
 }
 init({
 	fallbackLocale: defaultLocale,
-	initialLocale: getUserLoc(),
+	initialLocale: getUserLoc()
 });

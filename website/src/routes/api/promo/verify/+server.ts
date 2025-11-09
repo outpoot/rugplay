@@ -14,7 +14,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const { code } = await request.json();
 
 	if (!code || typeof code !== 'string' || code.trim().length === 0) {
-		return json({ t: "PR", error: 'Promo code is required' }, { status: 400 });
+		return json({ t: 'PR', error: 'Promo code is required' }, { status: 400 });
 	}
 
 	const normalizedCode = code.trim().toUpperCase();
@@ -37,15 +37,15 @@ export const POST: RequestHandler = async ({ request }) => {
 			.limit(1);
 
 		if (!promoData) {
-			return json({ t: "IPC", error: 'Invalid promo code' }, { status: 400 });
+			return json({ t: 'IPC', error: 'Invalid promo code' }, { status: 400 });
 		}
 
 		if (!promoData.isActive) {
-			return json({ t: "NA", error: 'This promo code is no longer active' }, { status: 400 });
+			return json({ t: 'NA', error: 'This promo code is no longer active' }, { status: 400 });
 		}
 
 		if (promoData.expiresAt && new Date() > promoData.expiresAt) {
-			return json({ t: "EX", error: 'This promo code has expired' }, { status: 400 });
+			return json({ t: 'EX', error: 'This promo code has expired' }, { status: 400 });
 		}
 
 		const [existingRedemption] = await tx
@@ -60,7 +60,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			.limit(1);
 
 		if (existingRedemption) {
-			return json({ t: "AU", error: 'You have already used this promo code' }, { status: 400 });
+			return json({ t: 'AU', error: 'You have already used this promo code' }, { status: 400 });
 		}
 
 		if (promoData.maxUses !== null) {
@@ -70,7 +70,10 @@ export const POST: RequestHandler = async ({ request }) => {
 				.where(eq(promoCodeRedemption.promoCodeId, promoData.id));
 
 			if (totalUses >= promoData.maxUses) {
-				return json({ t: "UL", error: 'This promo code has reached its usage limit' }, { status: 400 });
+				return json(
+					{ t: 'UL', error: 'This promo code has reached its usage limit' },
+					{ status: 400 }
+				);
 			}
 		}
 

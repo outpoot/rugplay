@@ -402,11 +402,14 @@
 	{#if !loading && totalCount > 0}
 		<div class="mb-4 flex items-center justify-between">
 			<div class="text-muted-foreground text-sm">
-				{$_("market.showing").replace("{{val}}",startIndex.toLocaleString()).replace("{{total}}", endIndex.toLocaleString()).replace("{{coins}}", totalCount.toLocaleString())}
+				{$_('market.showing')
+					.replace('{{val}}', startIndex.toLocaleString())
+					.replace('{{total}}', endIndex.toLocaleString())
+					.replace('{{coins}}', totalCount.toLocaleString())}
 			</div>
 			{#if hasActiveFilters}
 				<Button variant="link" size="sm" onclick={resetFilters} class="h-auto p-0">
-					{$_("market.input.filters.clearAll2")}
+					{$_('market.input.filters.clearAll2')}
 				</Button>
 			{/if}
 		</div>

@@ -94,11 +94,12 @@
 			{#if $USER_DATA}
 				{$_('home.marketOverview.description')}
 			{:else}
-				{$_("home.signInRequired.0")} <button
+				{$_('home.signInRequired.0')}
+				<button
 					class="text-primary underline hover:cursor-pointer"
-					onclick={() => (shouldSignIn = !shouldSignIn)}>{$_("home.signInRequired.1")}</button
+					onclick={() => (shouldSignIn = !shouldSignIn)}>{$_('home.signInRequired.1')}</button
 				>
-				{$_("home.signInRequired.2")}
+				{$_('home.signInRequired.2')}
 			{/if}
 		</p>
 	</header>
@@ -127,13 +128,15 @@
 									{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
 								</Badge>
 							</Card.Title>
-							<Card.Description>{$_("coin.marketCap")}: {formatMarketCap(coin.marketCap)}</Card.Description>
+							<Card.Description
+								>{$_('coin.marketCap')}: {formatMarketCap(coin.marketCap)}</Card.Description
+							>
 						</Card.Header>
 						<Card.Content>
 							<div class="flex items-baseline justify-between">
 								<span class="text-3xl font-bold">${formatPrice(coin.price)}</span>
 								<span class="text-muted-foreground text-sm">
-									{$_("coin.24hVolume")}: {formatMarketCap(coin.volume24h)}
+									{$_('coin.24hVolume')}: {formatMarketCap(coin.volume24h)}
 								</span>
 							</div>
 						</Card.Content>

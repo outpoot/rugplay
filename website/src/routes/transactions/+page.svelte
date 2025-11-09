@@ -40,16 +40,16 @@
 	let siblingCount = $derived(isDesktop.current ? 1 : 0);
 
 	const typeFilterOptions = [
-		{ value: 'all', label: $_("transactions.input.filters.transactionType.1") },
-		{ value: 'BUY', label: $_("transactions.input.filters.transactionType.2") },
-		{ value: 'SELL', label: $_("transactions.input.filters.transactionType.3") },
-		{ value: 'TRANSFER_IN', label: $_("transactions.input.filters.transactionType.4") },
-		{ value: 'TRANSFER_OUT', label: $_("transactions.input.filters.transactionType.5") }
+		{ value: 'all', label: $_('transactions.input.filters.transactionType.1') },
+		{ value: 'BUY', label: $_('transactions.input.filters.transactionType.2') },
+		{ value: 'SELL', label: $_('transactions.input.filters.transactionType.3') },
+		{ value: 'TRANSFER_IN', label: $_('transactions.input.filters.transactionType.4') },
+		{ value: 'TRANSFER_OUT', label: $_('transactions.input.filters.transactionType.5') }
 	];
 
 	const sortOrderOptions = [
-		{ value: 'desc', label: $_("transactions.input.filters.sortOrder.1") },
-		{ value: 'asc', label: $_("transactions.input.filters.sortOrder.2") }
+		{ value: 'desc', label: $_('transactions.input.filters.sortOrder.1') },
+		{ value: 'asc', label: $_('transactions.input.filters.sortOrder.2') }
 	];
 
 	const debouncedSearch = debounce(performSearch, 300);
@@ -213,28 +213,28 @@
 	let transactionsColumns = $derived([
 		{
 			key: 'type',
-			label: $_("base.type"),
+			label: $_('base.type'),
 			class: 'w-[10%] min-w-[80px]',
 			render: (value: any, row: any) => {
 				if (row.isTransfer) {
 					return {
 						component: 'badge',
 						variant: 'default',
-						text: row.isIncoming ? $_("base.received") : $_("base.sent"),
+						text: row.isIncoming ? $_('base.received') : $_('base.sent'),
 						class: 'text-xs'
 					};
 				}
 				return {
 					component: 'badge',
 					variant: value === 'BUY' ? 'success' : 'destructive',
-					text: value === 'BUY' ? $_("base.buy") : $_("base.sell"),
+					text: value === 'BUY' ? $_('base.buy') : $_('base.sell'),
 					class: 'text-xs'
 				};
 			}
 		},
 		{
 			key: 'coin',
-			label: $_("base.asset"),
+			label: $_('base.asset'),
 			class: 'w-[20%] min-w-[120px]',
 			render: (value: any, row: any) => {
 				if (row.isTransfer) {
@@ -264,7 +264,7 @@
 		},
 		{
 			key: 'sender',
-			label: $_("base.sender"),
+			label: $_('base.sender'),
 			class: 'w-[12%] min-w-[80px]',
 			render: (value: any, row: any) => ({
 				component: 'text',
@@ -277,7 +277,7 @@
 		},
 		{
 			key: 'recipient',
-			label: $_("base.receiver"),
+			label: $_('base.receiver'),
 			class: 'w-[12%] min-w-[80px]',
 			render: (value: any, row: any) => ({
 				component: 'text',
@@ -290,7 +290,7 @@
 		},
 		{
 			key: 'quantity',
-			label: $_("base.quantity"),
+			label: $_('base.quantity'),
 			class: 'w-[15%] min-w-[100px] font-mono',
 			render: (value: any, row: any) => {
 				if (row.isTransfer && value === 0) {
@@ -301,7 +301,7 @@
 		},
 		{
 			key: 'pricePerCoin',
-			label: $_("coin.price"),
+			label: $_('coin.price'),
 			class: 'w-[15%] min-w-[80px] font-mono',
 			render: (value: any, row: any) => {
 				if (row.isTransfer || value === 0) {
@@ -312,7 +312,7 @@
 		},
 		{
 			key: 'totalBaseCurrencyAmount',
-			label: $_("base.total"),
+			label: $_('base.total'),
 			class: 'w-[15%] min-w-[80px] font-mono font-medium',
 			render: (value: any, row: any) => {
 				const prefix = row.type === 'TRANSFER_IN' || row.type === 'BUY' ? '+' : '-';
@@ -321,7 +321,7 @@
 		},
 		{
 			key: 'timestamp',
-			label: $_("base.date"),
+			label: $_('base.date'),
 			class: 'w-[25%] min-w-[120px] text-muted-foreground',
 			render: (value: any) => formatDate(value)
 		}
@@ -338,9 +338,9 @@
 <div class="container mx-auto max-w-7xl p-6">
 	<header class="mb-8">
 		<div class="text-center">
-			<h1 class="mb-2 text-3xl font-bold">{$_("transactions.title")}</h1>
+			<h1 class="mb-2 text-3xl font-bold">{$_('transactions.title')}</h1>
 			<p class="text-muted-foreground mb-6">
-				{$_("transactions.description")}
+				{$_('transactions.description')}
 			</p>
 
 			<div class="mx-auto flex max-w-2xl items-center justify-center gap-2">
@@ -348,7 +348,7 @@
 					<Search class="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
 					<Input
 						bind:value={searchQuery}
-						placeholder={$_("transactions.input.placeholder")}
+						placeholder={$_('transactions.input.placeholder')}
 						class="pr-4 pl-10"
 						onblur={updateSearchUrl}
 						onkeydown={handleSearchKeydown}
@@ -359,7 +359,7 @@
 					<Popover.Trigger>
 						<Button variant="outline" size="default" class="flex items-center gap-2">
 							<SlidersHorizontal class="h-4 w-4" />
-							{$_("transactions.input.filters.name")}
+							{$_('transactions.input.filters.name')}
 							{#if hasActiveFilters}
 								<Badge variant="secondary" class="h-5 w-5 rounded-full p-0 text-xs">•</Badge>
 							{/if}
@@ -368,41 +368,43 @@
 					<Popover.Content class="w-80 p-4" align="end">
 						<div class="space-y-4">
 							<div class="space-y-2">
-								<Label class="text-sm font-medium">{$_("transactions.input.filters.sortBy")}</Label>
+								<Label class="text-sm font-medium">{$_('transactions.input.filters.sortBy')}</Label>
 								<div class="grid grid-cols-2 gap-2">
 									<Button
 										variant={sortBy === 'timestamp' ? 'default' : 'outline'}
 										size="sm"
 										onclick={() => handleSortChange('timestamp')}
 									>
-										{$_("base.date")}
+										{$_('base.date')}
 									</Button>
 									<Button
 										variant={sortBy === 'totalBaseCurrencyAmount' ? 'default' : 'outline'}
 										size="sm"
 										onclick={() => handleSortChange('totalBaseCurrencyAmount')}
 									>
-										{$_("base.amount")}
+										{$_('base.amount')}
 									</Button>
 									<Button
 										variant={sortBy === 'quantity' ? 'default' : 'outline'}
 										size="sm"
 										onclick={() => handleSortChange('quantity')}
 									>
-										{$_("base.quantity")}
+										{$_('base.quantity')}
 									</Button>
 									<Button
 										variant={sortBy === 'pricePerCoin' ? 'default' : 'outline'}
 										size="sm"
 										onclick={() => handleSortChange('pricePerCoin')}
 									>
-										{$_("coin.price")}
+										{$_('coin.price')}
 									</Button>
 								</div>
 							</div>
 
 							<div class="space-y-2">
-								<Label class="text-sm font-medium">{$_("transactions.input.filters.sortOrder.0")}</Label>
+								<Label class="text-sm font-medium"
+									>{$_('transactions.input.filters.sortOrder.0')}</Label
+								>
 								<Select.Root
 									type="single"
 									bind:value={sortOrder}
@@ -424,7 +426,9 @@
 							</div>
 
 							<div class="space-y-2">
-								<Label class="text-sm font-medium">{$_("transactions.input.filters.transactionType.0")}</Label>
+								<Label class="text-sm font-medium"
+									>{$_('transactions.input.filters.transactionType.0')}</Label
+								>
 								<Select.Root
 									type="single"
 									bind:value={typeFilter}
@@ -447,9 +451,9 @@
 
 							<div class="flex gap-2 pt-2">
 								<Button variant="outline" size="sm" onclick={resetFilters} class="flex-1">
-									{$_("base.reset")}
+									{$_('base.reset')}
 								</Button>
-								<Button size="sm" onclick={applyFilters} class="flex-1">{$_("base.apply")}</Button>
+								<Button size="sm" onclick={applyFilters} class="flex-1">{$_('base.apply')}</Button>
 							</div>
 						</div>
 					</Popover.Content>
@@ -470,7 +474,7 @@
 			</div>
 			{#if hasActiveFilters}
 				<Button variant="link" size="sm" onclick={resetFilters} class="h-auto p-0">
-					{$_("market.input.filters.clearAll2")}
+					{$_('market.input.filters.clearAll2')}
 				</Button>
 			{/if}
 		</div>
@@ -481,9 +485,9 @@
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2">
 				<Receipt class="h-5 w-5" />
-				{$_("transactions.history.title")}
+				{$_('transactions.history.title')}
 			</Card.Title>
-			<Card.Description>{$_("transactions.history.description")}</Card.Description>
+			<Card.Description>{$_('transactions.history.description')}</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			{#if loading}
@@ -502,11 +506,10 @@
 						}
 					}}
 					emptyIcon={Receipt}
-					emptyTitle={$_("transactions.empty.title")}
+					emptyTitle={$_('transactions.empty.title')}
 					emptyDescription={hasActiveFilters
-						? $_("transactions.empty.description.1")
-						: $_("transactions.empty.description.0")
-					}
+						? $_('transactions.empty.description.1')
+						: $_('transactions.empty.description.0')}
 				/>
 			{/if}
 		</Card.Content>
@@ -527,7 +530,7 @@
 						<Pagination.Item>
 							<Pagination.PrevButton>
 								<ChevronLeft class="h-4 w-4" />
-								<span class="hidden sm:block">{$_("pagination.previous.title")}</span>
+								<span class="hidden sm:block">{$_('pagination.previous.title')}</span>
 							</Pagination.PrevButton>
 						</Pagination.Item>
 						{#each pages as page (page.key)}
@@ -545,7 +548,7 @@
 						{/each}
 						<Pagination.Item>
 							<Pagination.NextButton>
-								<span class="hidden sm:block">{$_("pagination.next.title")}</span>
+								<span class="hidden sm:block">{$_('pagination.next.title')}</span>
 								<ChevronRight class="h-4 w-4" />
 							</Pagination.NextButton>
 						</Pagination.Item>

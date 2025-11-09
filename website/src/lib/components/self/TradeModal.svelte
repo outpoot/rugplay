@@ -7,6 +7,7 @@
 	import { TrendingUp, TrendingDown, Loader2 } from 'lucide-svelte';
 	import { PORTFOLIO_SUMMARY } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
+	import { AMMBuy, AMMSell } from '$lib/server/amm';
 
 	let {
 		open = $bindable(false),
@@ -49,18 +50,10 @@
 
 		if (poolCoin <= 0 || poolBase <= 0) return { result: 0 };
 
-		const k = poolCoin * poolBase;
-
 		if (tradeType === 'BUY') {
-			// AMM formula: how many coins for spending 'amount' dollars
-			const newPoolBase = poolBase + amount;
-			const newPoolCoin = k / newPoolBase;
-			return { result: poolCoin - newPoolCoin };
+			return { result: AMMBuy(poolCoin, poolBase, amount) };
 		} else {
-			// AMM formula: how many dollars for selling 'amount' coins
-			const newPoolCoin = poolCoin + amount;
-			const newPoolBase = k / newPoolCoin;
-			return { result: poolBase - newPoolBase };
+			return { result: AMMSell(poolCoin, poolBase, amount) };
 		}
 	}
 

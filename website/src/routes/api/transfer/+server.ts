@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
 import { formatValue } from '$lib/utils';
 import type { RequestHandler } from './$types';
+import { AMMSell } from '$lib/server/amm';
 
 interface TransferRequest {
     recipientUsername: string;
@@ -147,7 +148,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 const normalizedSymbol = coinSymbol!.toUpperCase();
 
                 const [coinData] = await tx
-                    .select({ id: coin.id, symbol: coin.symbol, name: coin.name, currentPrice: coin.currentPrice })
+                    .select({ id: coin.id, symbol: coin.symbol, name: coin.name, currentPrice: coin.currentPrice, poolCoinAmount: coin.poolCoinAmount, poolBaseCurrencyAmount: coin.poolBaseCurrencyAmount })
                     .from(coin)
                     .where(eq(coin.symbol, normalizedSymbol))
                     .limit(1);
@@ -157,10 +158,13 @@ export const POST: RequestHandler = async ({ request }) => {
                 }
 
                 const coinPrice = Number(coinData.currentPrice) || 0;
-                const estimatedValue = amount * coinPrice;
+                const poolCoinAmount = Number(coinData.poolCoinAmount);
+                const poolBaseCurrencyAmount = Number(coinData.poolBaseCurrencyAmount);
 
-                if (estimatedValue < 10) {
-                    throw error(400, `Coin transfers require a minimum estimated value of $10.00. ${amount.toFixed(6)} ${coinData.symbol} is worth approximately $${estimatedValue.toFixed(2)}`);
+                const value = AMMSell(poolCoinAmount, poolBaseCurrencyAmount, amount);
+
+                if (value < 10) {
+                    throw error(400, `Coin transfers require a minimum estimated value of $10.00. ${amount.toFixed(6)} ${coinData.symbol} is worth approximately $${value.toFixed(2)}`);
                 }
 
                 const [senderHolding] = await tx
@@ -189,8 +193,6 @@ export const POST: RequestHandler = async ({ request }) => {
                     ))
                     .for('update')
                     .limit(1);
-
-                const totalValue = amount * coinPrice;
 
                 const newSenderQuantity = Number(senderHolding.quantity) - amount;
                 if (newSenderQuantity > 0.000001) {
@@ -241,7 +243,7 @@ export const POST: RequestHandler = async ({ request }) => {
                     type: 'TRANSFER_OUT',
                     quantity: amount.toString(),
                     pricePerCoin: coinPrice.toString(),
-                    totalBaseCurrencyAmount: totalValue.toString(),
+                    totalBaseCurrencyAmount: value.toString(),
                     timestamp: new Date(),
                     senderUserId: senderId,
                     recipientUserId: recipientData.id
@@ -253,7 +255,7 @@ export const POST: RequestHandler = async ({ request }) => {
                     type: 'TRANSFER_IN',
                     quantity: amount.toString(),
                     pricePerCoin: coinPrice.toString(),
-                    totalBaseCurrencyAmount: totalValue.toString(),
+                    totalBaseCurrencyAmount: value.toString(),
                     timestamp: new Date(),
                     senderUserId: senderId,
                     recipientUserId: recipientData.id

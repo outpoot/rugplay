@@ -102,7 +102,9 @@ export default {
 	},
 	base: {
 		'24hChange': 'Mudança em 24h',
+		asset: "Ativo",
 		amount: 'Quantia',
+		apply: "Aplicar",
 		buy: 'Comprar',
 		buy2: 'COMPRAR',
 		cancel: 'Cancelar',
@@ -123,6 +125,7 @@ export default {
 		signin: 'Entrar',
 		skip: 'PULAR',
 		type: 'Tipo',
+		total: "Total",
 		unknown: 'Desconhecido'
 	},
 	coin: {
@@ -441,6 +444,7 @@ export default {
 			title: 'Faixa de Preço',
 			values: ['Todos os preços', 'Abaixo de $1', '$1 - $10', '$10 - $100', 'Acima de $100']
 		},
+		showing: "Mostrando {{val}}-{{total}} de {{coins}} moedas",
 		sortBy: 'Ordenar Por',
 		sortOrder: {
 			title: 'Ordem de Classificação',
@@ -627,5 +631,26 @@ export default {
 		"1h": "1 hora",
 		"4h": "4 horas",
 		"1d": "1 dia",
-	}
+	},
+	transactions: {
+		title: "Transações",
+		description: "Registro completo de sua atividade de negociação e transações",
+		input: {
+			placeholder: "Pesquisar por nome ou símbolo da moeda...",
+			filters: {
+				name: "Filtros",
+				sortBy: "Ordenar por",
+				sortOrder: ["Ordem de Classificação", "Mais recentes primeiro", "Mais antigos primeiro"],
+				transactionType: ["Tipo de Transação", "Todas as negociações", "Apenas compras", "Apenas vendas", "Transferências recebidas", "Transferências enviadas"]
+			},
+		},
+		history: {
+			title: "Histórico",
+			description: "Registro completo de sua atividade de negociação e transferências"
+		},
+		empty: {
+			title: "Nenhuma transação encontrada",
+			description: ["Você ainda não fez nenhuma negociação ou transferência. Comece comprando moedas ou enviando dinheiro para outros usuários.", "Nenhuma transação corresponde aos seus filtros atuais. Tente ajustar seus critérios de pesquisa."]
+		}
+	},
 };

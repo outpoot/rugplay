@@ -27,6 +27,7 @@
 	import { createChart, ColorType, type IChartApi, LineSeries } from 'lightweight-charts';
 	import type { PredictionQuestion } from '$lib/types/prediction';
 	import HopiumQuestionSkeleton from '$lib/components/self/skeletons/HopiumQuestionSkeleton.svelte';
+	import { _ } from 'svelte-i18n';
 
 	const { data } = $props();
 	let question = $state(data.question);
@@ -253,7 +254,7 @@
 		</div>
 
 		<div class="text-muted-foreground mt-3 mb-4 flex flex-wrap items-center gap-1.5 text-xs">
-			<span>Created by</span>
+			<span>{$_("coin.createdBy")}</span>
 
 			<HoverCard.Root>
 				<HoverCard.Trigger

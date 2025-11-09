@@ -102,7 +102,9 @@ export default {
 	},
 	base: {
 		'24hChange': '24h Change',
+		asset: "Asset",
 		amount: 'Amount',
+		apply: "Apply",
 		buy: 'Buy',
 		buy2: 'BUY',
 		cancel: 'Cancel',
@@ -123,6 +125,7 @@ export default {
 		signin: 'Sign In',
 		skip: 'SKIP',
 		type: 'Type',
+		total: "Total",
 		unknown: 'Unknown'
 	},
 	coin: {
@@ -441,6 +444,7 @@ export default {
 			title: 'Price Range',
 			values: ['All prices', 'Under $1', '$1 - $10', '$10 - $100', 'Over $100']
 		},
+		showing: "Showing {{val}}-{{total}} of {{coins}} coins",
 		sortBy: 'Sort By',
 		sortOrder: {
 			title: 'Sort Order',
@@ -620,12 +624,33 @@ export default {
 	},
 	viewall: 'View all',
 	tryagain: 'Try Again',
-	time:{
+	time: {
 		"1m": "1 minute",
 		"5m": "5 minutes",
 		"15m": "15 minutes",
 		"1h": "1 hour",
 		"4h": "4 hours",
 		"1d": "1 day",
-	}
+	},
+	transactions: {
+		title: "Transactions",
+		description: "Complete record of your trading activity and transactions",
+		input: {
+			placeholder: "Search by coin name or symbol...",
+			filters: {
+				name: "Filters",
+				sortBy: "Sort by",
+				sortOrder: ["Sort Order", "Newest first", "Oldest first"],
+				transactionType: ["Transaction Type", "All trades", "Buys only", "Sells only", "Received transfers", "Sent transfers"]
+			},
+		},
+		history: {
+			title: "History",
+			description: "Complete record of your trading activity and transfers"
+		},
+		empty: {
+			title: "No transactions found",
+			description: ["You haven't made any trades or transfers yet. Start by buying coins or sending money to other users.", "No transactions match your current filters. Try adjusting your search criteria."]
+		}
+	},
 };

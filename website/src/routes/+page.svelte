@@ -50,12 +50,12 @@
 		},
 		{
 			key: 'price',
-			label: 'Price',
+			label: $_('coin.price'),
 			render: (value: any) => `$${formatPrice(value)}`
 		},
 		{
 			key: 'change24h',
-			label: '24h Change',
+			label: $_('coin.24hChange'),
 			render: (value: any) => ({
 				component: 'badge',
 				variant: value >= 0 ? 'success' : 'destructive',
@@ -64,12 +64,12 @@
 		},
 		{
 			key: 'marketCap',
-			label: 'Market Cap',
+			label: $_('coin.marketCap'),
 			render: (value: any) => formatMarketCap(value)
 		},
 		{
 			key: 'volume24h',
-			label: 'Volume (24h)',
+			label: $_('coin.volume24h'),
 			render: (value: any) => formatMarketCap(value)
 		}
 	];
@@ -133,7 +133,7 @@
 							<div class="flex items-baseline justify-between">
 								<span class="text-3xl font-bold">${formatPrice(coin.price)}</span>
 								<span class="text-muted-foreground text-sm">
-									24h Vol: {formatMarketCap(coin.volume24h)}
+									{$_("coin.24hVolume")}: {formatMarketCap(coin.volume24h)}
 								</span>
 							</div>
 						</Card.Content>

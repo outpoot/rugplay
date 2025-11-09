@@ -502,7 +502,7 @@
 			<!-- Creator Info -->
 			{#if coin.creatorName}
 				<div class="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-					<span>Created by</span>
+					<span>{$_("coin.createdBy")}</span>
 
 					<HoverCard.Root>
 						<HoverCard.Trigger

@@ -717,8 +717,7 @@
 							{formatSupply(coin.circulatingSupply)}<span
 								class="text-muted-foreground ml-1 text-xs"
 							>
-								{$_('coin.circulatingSupply.of', { values: { total: coin.initialSupply.toString() }}
-								)}
+								{$_('coin.circulatingSupply.of').replace("{{total}}", formatSupply(coin.initialSupply))}
 							</span>
 						</p>
 					</Card.Content>

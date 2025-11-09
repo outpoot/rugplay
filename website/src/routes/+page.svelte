@@ -94,11 +94,11 @@
 			{#if $USER_DATA}
 				{$_('home.marketOverview.description')}
 			{:else}
-				You need to <button
+				{$_("home.signInRequired.0")} <button
 					class="text-primary underline hover:cursor-pointer"
-					onclick={() => (shouldSignIn = !shouldSignIn)}>sign in</button
+					onclick={() => (shouldSignIn = !shouldSignIn)}>{$_("home.signInRequired.1")}</button
 				>
-				to play.
+				{$_("home.signInRequired.2")}
 			{/if}
 		</p>
 	</header>

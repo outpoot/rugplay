@@ -144,7 +144,7 @@
 			<!-- Amount Input -->
 			<div class="space-y-2">
 				<Label for="amount">
-					{type === 'BUY' ? 'Amount to spend ($)' : `Amount (${coin.symbol})`}
+					{type === 'BUY' ? $_("coin.trade.buy.spentAmount") : $_("coin.trade.sell.amount").replace("{{coin}}", coin.symbol)}
 				</Label>
 				<div class="flex gap-2">
 					<Input
@@ -160,15 +160,14 @@
 				</div>
 				{#if type === 'SELL'}
 					<p class="text-muted-foreground text-xs">
-						Available: {userHolding.toFixed(6)}
-						{coin.symbol}
+						{$_("coin.trade.sell.available").replace("{{amount}}", userHolding.toFixed(6)).replace("{{coin}}", coin.symbol)}
 						{#if maxSellableAmount < userHolding}
-							<br />Max sellable: {maxSellableAmount.toFixed(0)} {coin.symbol} (pool limit)
+							<br />{$_("coin.trade.sell.maxSellable").replace("{{amount}}", maxSellableAmount.toFixed(0)).replace("{{coin}}", coin.symbol)}
 						{/if}
 					</p>
 				{:else if $PORTFOLIO_SUMMARY}
 					<p class="text-muted-foreground text-xs">
-						Balance: ${userBalance.toFixed(6)}
+						{$_("coin.trade.balance").replace("{{bal}}", userBalance.toFixed(6))}
 					</p>
 				{/if}
 			</div>

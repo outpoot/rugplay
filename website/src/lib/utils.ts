@@ -15,7 +15,7 @@ export type WithoutChildren<T> = T extends { children?: any } ? Omit<T, "childre
 export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
 
-export function getTimeBasedGreeting(name: string): string {
+export function getTimeBasedGreeting(): string {
     const hour = new Date().getHours();
 
     if (hour < 12) {

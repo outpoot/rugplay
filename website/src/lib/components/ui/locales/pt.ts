@@ -228,13 +228,17 @@ export default {
 			balance: 'Saldo: ${{bal}}',
 			buy: {
 				rec: "{{coin}} Você receberá:",
-				title: 'Comprar {{coin}}'
+				title: 'Comprar {{coin}}',
+				spentAmount: "Valor a ser gasto ($)"
 			},
 			curPrice: 'Preço atual: ${{price}} por {{coin}}',
 			estimation: 'Estimativa AMM - inclui slippage pelo impacto no pool',
 			sell: {
 				rec: "Você receberá:",
-				title: 'Vender {{coin}}'
+				title: 'Vender {{coin}}',
+				amount: "Quantidade ({{coin}})",
+				available: "Disponível: {{amount}} {{coin}}",
+				maxSellable: "Máximo vendável: {{amount}} {{coin}} (limite do pool)"
 			},
 			title: 'Negociar {{coin}}',
 			youOwn: 'Você possui: {{amount}} {{coin}}'
@@ -325,7 +329,8 @@ export default {
 			title: 'Nenhuma moeda disponível'
 		},
 		title: 'Início',
-		welcome: 'Bem-vindo ao Rugplay!'
+		welcome: 'Bem-vindo ao Rugplay!',
+		signInRequired: ["Você precisa", "entrar", "para jogar."]
 	},
 	hopium: {
 		active: 'Ativo',
@@ -532,7 +537,6 @@ export default {
 			title: 'Portfólio',
 			totalValue: 'Valor Total'
 		},
-		promocode: 'Código promocional',
 		themes: {
 			dark: 'Modo Escuro',
 			light: 'Modo Claro'
@@ -667,4 +671,20 @@ export default {
 			description: ["Você ainda não fez nenhuma negociação ou transferência. Comece comprando moedas ou enviando dinheiro para outros usuários.", "Nenhuma transação corresponde aos seus filtros atuais. Tente ajustar seus critérios de pesquisa."]
 		}
 	},
+	promocode: {
+		title: "Código promocional",
+		description: "Insira seu código promocional abaixo para resgatar recompensas e bônus.",
+		input: ["Código Promocional", "CÓDIGO..."],
+		redeem: ["Resgatar Código", "Verificando..."],
+		err: ["Código promocional inválido", 'Falha ao verificar o código promocional. Por favor, tente novamente.'],
+		messages: {
+			PR: 'O código promocional é obrigatório',
+			IPC: 'Código promocional inválido',
+			NA: 'Este código promocional não está mais ativo',
+			EX: 'Este código promocional expirou',
+			AU: 'Você já usou este código promocional',
+			UL: 'Este código promocional atingiu seu limite de uso',
+			RD: 'Código promocional resgatado! Você recebeu ${{balance}}.'
+		}
+	}
 };

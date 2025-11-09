@@ -5,6 +5,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert';
 	import { Gift, XCircle, Loader2, CheckIcon } from 'lucide-svelte';
+	import { _ } from 'svelte-i18n';
 
 	let { open = $bindable() } = $props();
 
@@ -13,13 +14,14 @@
 	let isSuccess = $state(false);
 	let message = $state('');
 	let hasResult = $state(false);
+	let amountWon = $state(0);
 
 	async function verifyPromoCode() {
 		if (!promoCode.trim()) return;
 
 		isVerifying = true;
 		hasResult = false;
-
+		amountWon = 0;
 		try {
 			const response = await fetch('/api/promo/verify', {
 				method: 'POST',
@@ -32,11 +34,12 @@
 			const result = await response.json();
 
 			isSuccess = response.ok;
-			message = response.ok ? result.message : result.error;
+			message = response.ok ? result.message : result.t;
 			hasResult = true;
+			amountWon = result.rewardAmount;
 		} catch (error) {
 			isSuccess = false;
-			message = 'Failed to verify promo code. Please try again.';
+			message = $_('promocode.err.1');
 			hasResult = true;
 		} finally {
 			isVerifying = false;
@@ -54,6 +57,7 @@
 		message = '';
 		hasResult = false;
 		isVerifying = false;
+		amountWon = 0;
 	}
 
 	$effect(() => {
@@ -73,20 +77,20 @@
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				<Gift class="h-5 w-5" />
-				Promo Code
+				{$_("promocode.title")}
 			</Dialog.Title>
 			<Dialog.Description>
-				Enter your promo code below to redeem rewards and bonuses.
+				{$_("promocode.description")}
 			</Dialog.Description>
 		</Dialog.Header>
 
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div class="space-y-2">
-				<Label for="promo-code">Promo Code</Label>
+				<Label for="promo-code">{$_("promocode.input.0")}</Label>
 				<Input
 					id="promo-code"
 					bind:value={promoCode}
-					placeholder="CODE..."
+					placeholder={$_("promocode.input.1")}
 					disabled={isVerifying}
 					class="uppercase"
 					style="text-transform: uppercase;"
@@ -104,7 +108,11 @@
 						<XCircle class="h-4 w-4" />
 					{/if}
 					<AlertDescription>
-						{message}
+						{#if isSuccess}
+						{$_("promocode.messages.RD").replace("{{balance}}", amountWon.toLocaleString())}
+						{:else}
+						{$_("promocode.messages."+message)}
+						{/if}
 					</AlertDescription>
 				</Alert>
 			{/if}
@@ -116,14 +124,14 @@
 					onclick={() => (open = false)}
 					disabled={isVerifying}
 				>
-					Cancel
+					{$_("base.cancel")}
 				</Button>
 				<Button type="submit" disabled={!promoCode.trim() || isVerifying}>
 					{#if isVerifying}
 						<Loader2 class="h-4 w-4 animate-spin" />
-						Verifying...
+						{$_("promocode.redeem.1")}
 					{:else}
-						Redeem Code
+						{$_("promocode.redeem.0")}
 					{/if}
 				</Button>
 			</div>

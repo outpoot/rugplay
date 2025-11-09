@@ -472,7 +472,7 @@ function handleLangToggle() {
 									}}
 								>
 									<Gift />
-									{$_('sidebar.promocode')}
+									{$_('promocode.title')}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleUserManualClick}>
 									<BookOpen />

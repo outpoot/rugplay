@@ -228,13 +228,17 @@ export default {
 			balance: 'Balance: ${{bal}}',
 			buy: {
 				rec: "{{coin}} You'll get:",
-				title: 'Buy {{coin}}'
+				title: 'Buy {{coin}}',
+				spentAmount: "Amount to spend ($)"
 			},
 			curPrice: 'Current price: ${{price}} per {{coin}}',
 			estimation: 'AMM estimation - includes slippage from pool impact',
 			sell: {
 				rec: "You'll receive:",
-				title: 'Sell {{coin}}'
+				title: 'Sell {{coin}}',
+				amount: "Amount ({{coin}})",
+				available: "Available: {{amount}} {{coin}}",
+				maxSellable: "Max sellable: {{amount}} {{coin}} (pool limit)"
 			},
 			title: 'Trade {{coin}}',
 			youOwn: 'You own: {{amount}} {{coin}}'
@@ -325,7 +329,8 @@ export default {
 			title: 'No coins available'
 		},
 		title: 'Home',
-		welcome: 'Welcome to Rugplay!'
+		welcome: 'Welcome to Rugplay!',
+		signInRequired: ["You need to", "sign in", "to play."]
 	},
 	hopium: {
 		active: 'Active',
@@ -497,7 +502,14 @@ export default {
 			description: 'Current positions in your portfolio'
 		},
 		sendMoney: {
-			title: 'Send Money'
+			title: 'Send Money',
+			title2: "Send",
+			description: "Send cash or coins to another user",
+			recipient: ["Recipient", "Enter username (without @)"],
+			type: ["Type", "Cash ($)", "Coins"],
+			coins: ["Select Coin", "*{{name}} ({{available}} available)"],
+			failed: "Transfer Failed",
+			sent: ["Coins sent successfully!"]
 		},
 		recentTransactions: 'Recent Transactions',
 		total: 'Total',
@@ -532,7 +544,6 @@ export default {
 			title: 'Portfolio',
 			totalValue: 'Total Value'
 		},
-		promocode: 'Promo code',
 		themes: {
 			dark: 'Dark Mode',
 			light: 'Light Mode'
@@ -667,4 +678,20 @@ export default {
 			description: ["You haven't made any trades or transfers yet. Start by buying coins or sending money to other users.", "No transactions match your current filters. Try adjusting your search criteria."]
 		}
 	},
+	promocode: {
+		title: "Promo code",
+		description: "Enter your promo code bellow to redeem rewards and bonuses.",
+		input: ["Promo Code", "CODE..."],
+		redeem: ["Redeem Code", "Verifying..."],
+		err: ["Invalid promo code", 'Failed to verify promo code. Please try again.'],
+		messages: {
+			PR: 'Promo code is required',
+			IPC: 'Invalid promo code',
+			NA: 'This promo code is no longer active',
+			EX: 'This promo code has expired',
+			AU: 'You have already used this promo code',
+			UL: 'This promo code has reached its usage limit',
+			RD: 'Promo code redeemed! You received ${{balance}}.'
+		}
+	}
 };

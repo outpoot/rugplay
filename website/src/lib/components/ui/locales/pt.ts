@@ -570,7 +570,8 @@ export default {
 		signin:{
 			title: "Entre para prestigiar",
 			description: "Você precisa de uma conta para prestigiar."
-		}
+		},
+		err: 'Falhou para carregar dados do prestígio'
 	},
 	settings: {
 		title: 'Configurações'

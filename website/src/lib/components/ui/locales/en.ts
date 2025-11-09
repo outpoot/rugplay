@@ -575,7 +575,8 @@ export default {
 		signin:{
 			title: "Sign in to prestige",
 			description: "You need an account to prestige"
-		}
+		},
+		err: 'Failed to load prestige data'
 	},
 	settings: {
 		title: 'Settings'

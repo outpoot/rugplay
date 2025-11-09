@@ -7,11 +7,11 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import { AlertTriangle, Crown, Loader2, Star } from 'lucide-svelte';
+	import { AlertTriangle, Loader2, Star } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { formatValue, getPublicUrl, PRESTIGE_COSTS, PRESTIGE_NAMES } from '$lib/utils';
+	import { formatValue, getPublicUrl, PRESTIGE_COSTS } from '$lib/utils';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import ProfileBadges from '$lib/components/self/ProfileBadges.svelte';
@@ -61,11 +61,11 @@
 
 		try {
 			const response = await fetch('/api/prestige');
-			if (!response.ok) throw new Error('Failed to fetch prestige data');
+			if (!response.ok) throw new Error($_("prestige.err"));
 			prestigeData = await response.json();
 		} catch (e) {
 			console.error('Failed to fetch prestige data:', e);
-			toast.error('Failed to load prestige data');
+			toast.error($_("prestige.err"));
 		}
 	}
 

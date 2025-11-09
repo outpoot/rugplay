@@ -127,7 +127,7 @@
 									{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
 								</Badge>
 							</Card.Title>
-							<Card.Description>Market Cap: {formatMarketCap(coin.marketCap)}</Card.Description>
+							<Card.Description>{$_("coin.marketCap")}: {formatMarketCap(coin.marketCap)}</Card.Description>
 						</Card.Header>
 						<Card.Content>
 							<div class="flex items-baseline justify-between">

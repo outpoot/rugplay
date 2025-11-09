@@ -1,4 +1,9 @@
 export default {
+	lang: {
+		code: "en",
+		name: "English",
+		flagCode: "us"
+	},
 	about: {
 		desc: 'A crypto trading simulator where you can practice trading without losing real money. Create coins, trade them, and rug pull!',
 		title: 'About',
@@ -614,5 +619,13 @@ export default {
 		}
 	},
 	viewall: 'View all',
-	tryagain: 'Try Again'
+	tryagain: 'Try Again',
+	time:{
+		"1m": "1 minute",
+		"5m": "5 minutes",
+		"15m": "15 minutes",
+		"1h": "1 hour",
+		"4h": "4 hours",
+		"1d": "1 day",
+	}
 };

@@ -48,12 +48,12 @@
 	let countdownInterval = $state<NodeJS.Timeout | null>(null);
 
 	const timeframeOptions = [
-		{ value: '1m', label: '1 minute' },
-		{ value: '5m', label: '5 minutes' },
-		{ value: '15m', label: '15 minutes' },
-		{ value: '1h', label: '1 hour' },
-		{ value: '4h', label: '4 hours' },
-		{ value: '1d', label: '1 day' }
+		{ value: '1m', label: $_("time.1m") },
+		{ value: '5m', label: $_("time.5m") },
+		{ value: '15m', label: $_("time.15m") },
+		{ value: '1h', label: $_("time.1h") },
+		{ value: '4h', label: $_("time.4h") },
+		{ value: '1d', label: $_("time.1d") }
 	];
 
 	onMount(async () => {
@@ -535,7 +535,7 @@
 							<div class="flex items-center justify-between">
 								<Card.Title class="flex items-center gap-2">
 									<ChartColumn class="h-5 w-5" />
-									Price Chart ({selectedTimeframe})
+									{$_("coin.priceChart").replace("{{time}}",selectedTimeframe)}
 								</Card.Title>
 								<div class="w-24">
 									<Select.Root

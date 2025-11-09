@@ -1,177 +1,192 @@
 <script lang="ts">
-	import * as Sidebar from '$lib/components/ui/sidebar';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import {
-		Moon,
-		Sun,
-		Home,
-		Store,
-		BriefcaseBusiness,
-		Coins,
-		ChevronsUpDownIcon,
-		LogOutIcon,
-		Wallet,
-		Trophy,
-		Activity,
-		TrendingUp,
-		TrendingDown,
-		User,
-		Settings,
-		Gift,
-		Shield,
-		Ticket,
-		PiggyBank,
-		ChartColumn,
-		TrendingUpDown,
-		Scale,
-		ShieldCheck,
-		Hammer,
-		BookOpen,
-		Info,
-		Bell,
-		Crown,
-		Key
-	} from 'lucide-svelte';
-	import { mode, setMode } from 'mode-watcher';
-	import type { HTMLAttributes } from 'svelte/elements';
-	import { USER_DATA } from '$lib/stores/user-data';
-	import { PORTFOLIO_SUMMARY, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
-	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
-	import SignInConfirmDialog from './SignInConfirmDialog.svelte';
-	import DailyRewards from './DailyRewards.svelte';
-	import PromoCodeDialog from './PromoCodeDialog.svelte';
-	import UserManualModal from './UserManualModal.svelte';
-	import { signOut } from '$lib/auth-client';
-	import { formatValue, getPublicUrl } from '$lib/utils';
-	import { goto } from '$app/navigation';
-	import { liveTradesStore, isLoadingTrades } from '$lib/stores/websocket';
-	import { onMount } from 'svelte';
-	import { UNREAD_COUNT, fetchNotifications } from '$lib/stores/notifications';
-	import { GAMBLING_STATS, fetchGamblingStats } from '$lib/stores/gambling-stats';
-	import { _ } from 'svelte-i18n';
+import * as Sidebar from "$lib/components/ui/sidebar";
+import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+import * as Avatar from "$lib/components/ui/avatar";
+import { Badge } from "$lib/components/ui/badge";
+import { Skeleton } from "$lib/components/ui/skeleton";
+import {
+	Moon,
+	Sun,
+	Home,
+	Store,
+	BriefcaseBusiness,
+	Coins,
+	ChevronsUpDownIcon,
+	LogOutIcon,
+	Wallet,
+	Trophy,
+	Activity,
+	TrendingUp,
+	TrendingDown,
+	User,
+	Settings,
+	Gift,
+	Shield,
+	Ticket,
+	PiggyBank,
+	ChartColumn,
+	TrendingUpDown,
+	Scale,
+	ShieldCheck,
+	Hammer,
+	BookOpen,
+	Info,
+	Bell,
+	Crown,
+	Key,
+} from "lucide-svelte";
+import { mode, setMode } from "mode-watcher";
+import type { HTMLAttributes } from "svelte/elements";
+import { USER_DATA } from "$lib/stores/user-data";
+import {
+	PORTFOLIO_SUMMARY,
+	fetchPortfolioSummary,
+} from "$lib/stores/portfolio-data";
+import { useSidebar } from "$lib/components/ui/sidebar/index.js";
+import SignInConfirmDialog from "./SignInConfirmDialog.svelte";
+import DailyRewards from "./DailyRewards.svelte";
+import PromoCodeDialog from "./PromoCodeDialog.svelte";
+import UserManualModal from "./UserManualModal.svelte";
+import { signOut } from "$lib/auth-client";
+import { formatValue, getPublicUrl } from "$lib/utils";
+import { goto } from "$app/navigation";
+import { liveTradesStore, isLoadingTrades } from "$lib/stores/websocket";
+import { onMount } from "svelte";
+import { UNREAD_COUNT, fetchNotifications } from "$lib/stores/notifications";
+import { GAMBLING_STATS, fetchGamblingStats } from "$lib/stores/gambling-stats";
+import { _, locale } from "svelte-i18n";
+import { getUserLoc, supportedLocales } from "../ui/locales/i18n";
 
-	const data = {
-		navMain: [
-			{ title: $_('home.title'), url: '/', icon: Home },
-			{ title: $_('market.title'), url: '/market', icon: Store },
-			{ title: $_('hopium.title'), url: '/hopium', icon: TrendingUpDown },
-			{ title: $_('gambling.title'), url: '/gambling', icon: PiggyBank },
-			{ title: $_('leaderboard.title'), url: '/leaderboard', icon: Trophy },
-			{
-				title: $_('portfolio.title'),
-				url: '/portfolio',
-				icon: BriefcaseBusiness
-			},
-			{ title: $_('treemap.title'), url: '/treemap', icon: ChartColumn },
-			{ title: $_('coin.create.title'), url: '/coin/create', icon: Coins },
-			{ title: $_('notifications.title'), url: '/notifications', icon: Bell },
-			{ title: $_('about.title'), url: '/about', icon: Info }
-		]
-	};
-	type MenuButtonProps = HTMLAttributes<HTMLAnchorElement | HTMLButtonElement>;
+const data = {
+	navMain: [
+		{ title: $_("home.title"), url: "/", icon: Home },
+		{ title: $_("market.title"), url: "/market", icon: Store },
+		{ title: $_("hopium.title"), url: "/hopium", icon: TrendingUpDown },
+		{ title: $_("gambling.title"), url: "/gambling", icon: PiggyBank },
+		{ title: $_("leaderboard.title"), url: "/leaderboard", icon: Trophy },
+		{
+			title: $_("portfolio.title"),
+			url: "/portfolio",
+			icon: BriefcaseBusiness,
+		},
+		{ title: $_("treemap.title"), url: "/treemap", icon: ChartColumn },
+		{ title: $_("coin.create.title"), url: "/coin/create", icon: Coins },
+		{ title: $_("notifications.title"), url: "/notifications", icon: Bell },
+		{ title: $_("about.title"), url: "/about", icon: Info },
+	],
+};
+type MenuButtonProps = HTMLAttributes<HTMLAnchorElement | HTMLButtonElement>;
 
-	const { setOpenMobile, isMobile } = useSidebar();
-	let shouldSignIn = $state(false);
-	let showPromoCode = $state(false);
-	let showUserManual = $state(false);
+const { setOpenMobile, isMobile } = useSidebar();
+let shouldSignIn = $state(false);
+let showPromoCode = $state(false);
+let showUserManual = $state(false);
 
-	onMount(() => {
-		if ($USER_DATA) {
-			fetchPortfolioSummary();
-			fetchNotifications();
-			fetchGamblingStats();
-		} else {
-			PORTFOLIO_SUMMARY.set(null);
-			GAMBLING_STATS.set(null);
-		}
+onMount(() => {
+	if ($USER_DATA) {
+		fetchPortfolioSummary();
+		fetchNotifications();
+		fetchGamblingStats();
+	} else {
+		PORTFOLIO_SUMMARY.set(null);
+		GAMBLING_STATS.set(null);
+	}
+});
+
+function handleNavClick(title: string) {
+	setOpenMobile(false);
+}
+
+function handleModeToggle() {
+	setMode(mode.current === "light" ? "dark" : "light");
+	// Remove setOpenMobile(false) to keep menu open
+}
+
+function formatCurrency(value: number): string {
+	return value.toLocaleString("en-US", {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
 	});
+}
 
-	function handleNavClick(title: string) {
+function handleLiveTradesClick() {
+	goto("/live");
+	setOpenMobile(false);
+}
+
+async function handleTradeClick(coinSymbol: string, trade: any) {
+	if (trade.type === "TRANSFER_IN" || trade.type === "TRANSFER_OUT") {
+		const targetPath = `/user/${trade.username}`;
+		await goto(targetPath, { invalidateAll: true });
+	} else {
+		const targetPath = `/coin/${coinSymbol.toLowerCase()}`;
+		await goto(targetPath, { invalidateAll: true });
+	}
+	setOpenMobile(false);
+}
+
+function handleAccountClick() {
+	if ($USER_DATA) {
+		goto(`/user/${$USER_DATA.id}`);
 		setOpenMobile(false);
 	}
+}
 
-	function handleModeToggle() {
-		setMode(mode.current === 'light' ? 'dark' : 'light');
-		// Remove setOpenMobile(false) to keep menu open
-	}
+function handleSettingsClick() {
+	goto("/settings");
+	setOpenMobile(false);
+}
 
-	function formatCurrency(value: number): string {
-		return value.toLocaleString('en-US', {
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2
-		});
-	}
+function handleAdminClick() {
+	goto("/admin");
+	setOpenMobile(false);
+}
 
-	function handleLiveTradesClick() {
-		goto('/live');
-		setOpenMobile(false);
-	}
+function handleUserManagementClick() {
+	goto("/admin/users");
+	setOpenMobile(false);
+}
 
-	async function handleTradeClick(coinSymbol: string, trade: any) {
-		if (trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT') {
-			const targetPath = `/user/${trade.username}`;
-			await goto(targetPath, { invalidateAll: true });
-		} else {
-			const targetPath = `/coin/${coinSymbol.toLowerCase()}`;
-			await goto(targetPath, { invalidateAll: true });
-		}
-		setOpenMobile(false);
-	}
+function handlePromoCodesClick() {
+	goto("/admin/promo");
+	setOpenMobile(false);
+}
 
-	function handleAccountClick() {
-		if ($USER_DATA) {
-			goto(`/user/${$USER_DATA.id}`);
-			setOpenMobile(false);
-		}
-	}
+function handleTermsClick() {
+	goto("/legal/terms");
+	setOpenMobile(false);
+}
 
-	function handleSettingsClick() {
-		goto('/settings');
-		setOpenMobile(false);
-	}
+function handlePrivacyClick() {
+	goto("/legal/privacy");
+	setOpenMobile(false);
+}
 
-	function handleAdminClick() {
-		goto('/admin');
-		setOpenMobile(false);
-	}
+function handleUserManualClick() {
+	showUserManual = true;
+	setOpenMobile(false);
+}
 
-	function handleUserManagementClick() {
-		goto('/admin/users');
-		setOpenMobile(false);
-	}
+function handlePrestigeClick() {
+	goto("/prestige");
+	setOpenMobile(false);
+}
 
-	function handlePromoCodesClick() {
-		goto('/admin/promo');
-		setOpenMobile(false);
-	}
+function handleAPIClick() {
+	goto("/api");
+	setOpenMobile(false);
+}
 
-	function handleTermsClick() {
-		goto('/legal/terms');
-		setOpenMobile(false);
-	}
+function handleLangToggle() {
+	const v =
+		(supportedLocales.findIndex((p) => p.id === getUserLoc()) + 1) %
+		supportedLocales.length;
+	localStorage.setItem("language", supportedLocales[v].id);
+	locale.set(supportedLocales[v].id);
+	location.reload()
+	setOpenMobile(true);
+}
 
-	function handlePrivacyClick() {
-		goto('/legal/privacy');
-		setOpenMobile(false);
-	}
-
-	function handleUserManualClick() {
-		showUserManual = true;
-		setOpenMobile(false);
-	}
-
-	function handlePrestigeClick() {
-		goto('/prestige');
-		setOpenMobile(false);
-	}
-
-	function handleAPIClick() {
-		goto('/api');
-		setOpenMobile(false);
-	}
 </script>
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
@@ -473,6 +488,10 @@
 										<Sun />
 										{$_('sidebar.themes.light')}
 									{/if}
+								</DropdownMenu.Item>
+								<DropdownMenu.Item onclick={handleLangToggle}>
+										<img src={`https://flagcdn.com/w20/${$_('lang.flagCode')}.png`} alt="">
+										{$_('lang.name')}
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
 

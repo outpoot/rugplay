@@ -19,13 +19,13 @@ export function getTimeBasedGreeting(name: string): string {
     const hour = new Date().getHours();
 
     if (hour < 12) {
-        return `Good morning, ${name}`;
+        return 'morning';
     } else if (hour < 17) {
-        return `Good afternoon, ${name}`;
+        return 'afternoon';
     } else if (hour < 22) {
-        return `Good evening, ${name}`;
+        return 'evening';
     } else {
-        return `Good night, ${name}`;
+        return 'night';
     }
 }
 

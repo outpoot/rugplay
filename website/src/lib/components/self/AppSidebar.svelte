@@ -182,11 +182,9 @@ function handleLangToggle() {
 		(supportedLocales.findIndex((p) => p.id === getUserLoc()) + 1) %
 		supportedLocales.length;
 	localStorage.setItem("language", supportedLocales[v].id);
-	locale.set(supportedLocales[v].id);
-	location.reload()
+	location.reload();
 	setOpenMobile(true);
 }
-
 </script>
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
@@ -490,7 +488,7 @@ function handleLangToggle() {
 									{/if}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleLangToggle}>
-										<img src={`https://flagcdn.com/w20/${$_('lang.flagCode')}.png`} alt="">
+										<img src={`https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.5.0/flags/1x1/${$_('lang.flagCode')}.svg`} alt={`Flag that represents ${$_('lang.name')} language`} width="16" height="16">
 										{$_('lang.name')}
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>

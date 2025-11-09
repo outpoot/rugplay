@@ -406,7 +406,7 @@
 			</div>
 			{#if hasActiveFilters}
 				<Button variant="link" size="sm" onclick={resetFilters} class="h-auto p-0">
-					Clear all filters
+					{$_("market.input.filters.clearAll2")}
 				</Button>
 			{/if}
 		</div>

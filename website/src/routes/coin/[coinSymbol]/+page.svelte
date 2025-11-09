@@ -588,9 +588,9 @@
 							{#if isTradingLocked}
 								<p class="text-muted-foreground text-sm">
 									{#if isCreator}
-										🔒 Creator-only period: {countdown !== null ? formatCountdown(countdown) : ''} remaining
+										{$_("coin.locked.0").replace("{{time}}", countdown !== null ? formatCountdown(countdown) : '')}
 									{:else}
-										🔒 Trading unlocks in: {countdown !== null ? formatCountdown(countdown) : ''}
+										{$_("coin.locked.1").replace("{{time}}", countdown !== null ? formatCountdown(countdown) : '')}
 									{/if}
 								</p>
 							{/if}
@@ -621,8 +621,8 @@
 								</div>
 							{:else}
 								<div class="py-4 text-center">
-									<p class="text-muted-foreground mb-3 text-sm">Sign in to start trading</p>
-									<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+									<p class="text-muted-foreground mb-3 text-sm">{$_("coin.signin.title")}</p>
+									<Button onclick={() => (shouldSignIn = true)}>{$_("signin.button")}</Button>
 								</div>
 							{/if}
 						</Card.Content>

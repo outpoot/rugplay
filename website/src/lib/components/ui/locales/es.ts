@@ -5,7 +5,7 @@ export default {
 		flagCode: "es",
 	},
 	about: {
-		desc: "Un simulador de trading de criptomonedas donde puedes practicar sin perder dinero real. ¡Crea monedas, trádalas, y haz rug pull!",
+		desc: "Un simulador de trading de criptomonedas donde puedes practicar sin perder dinero real. ¡Crea monedas, haz comercio con ellas, y haz rug pull!",
 		title: "Acerca de",
 		usermanual: {
 			tips: {

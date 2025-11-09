@@ -17,6 +17,7 @@
 	import ProfileBadges from '$lib/components/self/ProfileBadges.svelte';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import PrestigeSkeleton from '$lib/components/self/skeletons/PrestigeSkeleton.svelte';
+	import { _ } from 'svelte-i18n';
 
 	let isPrestiging = $state(false);
 	let error = $state('');
@@ -38,7 +39,7 @@
 	const prestigeName = $derived.by(() => {
 		if (!prestigeData) return null;
 		const nextLevel = currentPrestige + 1;
-		return PRESTIGE_NAMES[nextLevel as keyof typeof PRESTIGE_NAMES] || null;
+		return $_(`prestige.levels.d.${nextLevel}`) || null;
 	});
 	const currentBalance = $derived(prestigeData?.profile?.baseCurrencyBalance || 0);
 	const holdingsValue = $derived(prestigeData?.stats?.holdingsValue || 0);
@@ -85,13 +86,13 @@
 			const result = await response.json();
 
 			if (!response.ok) {
-				throw new Error(result.message || 'Failed to prestige');
+				throw new Error(result.message || $_("prestige.popup.err"));
 			}
 
-			toast.success(`Congratulations! You've reached ${prestigeName}!`);
+			toast.success($_("prestige.popup.done").replace("{{name}}", prestigeName ?? ''));
 			await fetchPrestigeData();
 		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+			const errorMessage = err instanceof Error ? err.message : $_("error.unknown");
 			error = errorMessage;
 			toast.error(errorMessage);
 		} finally {
@@ -130,10 +131,10 @@
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				<AlertTriangle class="text-destructive h-5 w-5" />
-				Confirm
+				{$_("prestige.popup.title")}
 			</Dialog.Title>
 			<Dialog.Description>
-				This action is permanent and cannot be undone. Please review the consequences carefully.
+				{$_("prestige.popup.description")}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -141,43 +142,43 @@
 			<Alert variant="destructive">
 				<AlertTriangle class="h-4 w-4" />
 				<AlertDescription>
-					<strong>You will lose:</strong>
+					<strong>{$_("prestige.popup.lose.0")}</strong>
 					<ul class="mt-2 list-disc space-y-1 pl-4">
-						<li>Cash balance: {formatValue(currentBalance)}</li>
+						<li>{$_("prestige.popup.lose.1").replace("{{amount}}", formatValue(currentBalance))}</li>
 						{#if holdingsValue > 0}
-							<li>All coin holdings worth {formatValue(holdingsValue)}</li>
+							<li>{$_("prestige.popup.lose.2").replace("{{amount}}", formatValue(holdingsValue))}</li>
 						{/if}
-						<li>Total portfolio value: {formatValue(totalValue)}</li>
+						<li>{$_("prestige.popup.lose.3").replace("{{amount}}", formatValue(totalValue))}</li>
 					</ul>
-					<strong class="mt-2 block text-green-600">You will gain:</strong>
+					<strong class="mt-2 block text-green-600">{$_("prestige.popup.gain.0")}</strong>
 					<ul class="mt-1 list-disc space-y-1 pl-4">
-						<li>More money in daily rewards</li>
-						<li>A daily reward reset</li>
-						<li>Prestige badge and status</li>
+						<li>{$_("prestige.popup.gain.1")}</li>
+						<li>{$_("prestige.popup.gain.2")}</li>
+						<li>{$_("prestige.popup.gain.3")}</li>
 					</ul>
-					We will automatically sell all your coin holdings.
+					{$_("prestige.popup.gain.4")}
 				</AlertDescription>
 			</Alert>
 
 			<div class="space-y-2">
-				<Label for="confirmation" class="text-sm font-medium">Type "PRESTIGE" to confirm:</Label>
+				<Label for="confirmation" class="text-sm font-medium">{$_("prestige.popup.confirm.0")}</Label>
 				<Input
 					id="confirmation"
 					bind:value={confirmationText}
-					placeholder="Type PRESTIGE here"
+					placeholder={$_("prestige.popup.confirm.1")}
 					class="uppercase"
 				/>
 			</div>
 		</div>
 
 		<Dialog.Footer>
-			<Button variant="ghost" onclick={closeConfirmDialog}>Cancel</Button>
+			<Button variant="ghost" onclick={closeConfirmDialog}>{$_("base.cancel")}</Button>
 			<Button onclick={handlePrestige} disabled={!canConfirmPrestige || isPrestiging}>
 				{#if isPrestiging}
 					<Loader2 class="h-4 w-4 animate-spin" />
-					Advancing...
+					{$_("prestige.popup.proceed.0")}
 				{:else}
-					Proceed
+					{$_("prestige.popup.proceed.1")}
 				{/if}
 			</Button>
 		</Dialog.Footer>
@@ -189,9 +190,9 @@
 		<div class="text-center">
 			<div class="mb-2 flex items-center justify-center gap-3">
 				<Star class="h-8 w-8 text-yellow-500" />
-				<h1 class="text-3xl font-bold">Prestige</h1>
+				<h1 class="text-3xl font-bold">{$_('prestige.title')}</h1>
 			</div>
-			<p class="text-muted-foreground mb-6">Reset your progress to advance your trading status</p>
+			<p class="text-muted-foreground mb-6">{$_('prestige.description')}</p>
 		</div>
 	</header>
 
@@ -200,9 +201,9 @@
 	{:else if !userData}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">Sign in to prestige</div>
-				<p class="text-muted-foreground mb-4 text-sm">You need an account to prestige</p>
-				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+				<div class="text-muted-foreground mb-4 text-xl">{$_("prestige.signin.title")}</div>
+				<p class="text-muted-foreground mb-4 text-sm">{$_("prestige.signin.description")}</p>
+				<Button onclick={() => (shouldSignIn = true)}>{$_("signin.button")}</Button>
 			</div>
 		</div>
 	{:else}
@@ -212,7 +213,7 @@
 				<!-- How -->
 				<Card.Root class="mb-6 gap-1">
 					<Card.Header class="pb-2">
-						<Card.Title class="text-base">How</Card.Title>
+						<Card.Title class="text-base">{$_("prestige.how.0")}</Card.Title>
 					</Card.Header>
 					<Card.Content class="space-y-4">
 						<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -223,9 +224,9 @@
 									1
 								</div>
 								<div>
-									<p class="font-medium">Meet Requirements</p>
+									<p class="font-medium">{$_("prestige.how.1.0")}</p>
 									<p class="text-muted-foreground text-sm">
-										Accumulate enough cash to afford the prestige cost
+										{$_("prestige.how.1.1")}
 									</p>
 								</div>
 							</div>
@@ -236,9 +237,9 @@
 									2
 								</div>
 								<div>
-									<p class="font-medium">Reset Progress</p>
+									<p class="font-medium">{$_("prestige.how.2.0")}</p>
 									<p class="text-muted-foreground text-sm">
-										All cash and holdings are erased, but history remains
+										{$_("prestige.how.2.1")}
 									</p>
 								</div>
 							</div>
@@ -249,10 +250,9 @@
 									3
 								</div>
 								<div>
-									<p class="font-medium">Gain Status</p>
+									<p class="font-medium">{$_("prestige.how.3.0")}</p>
 									<p class="text-muted-foreground text-sm">
-										Earn an exclusive prestige title, enhanced daily rewards, and reset your daily
-										reward cooldown
+										{$_("prestige.how.3.1")}
 									</p>
 								</div>
 							</div>
@@ -266,7 +266,7 @@
 						<Card.Header>
 							<Card.Title class="flex items-center gap-2">
 								<Star class="h-5 w-5" />
-								Progress
+								{$_("prestige.progress.title")}
 							</Card.Title>
 						</Card.Header>
 						<Card.Content class="flex flex-1 flex-col space-y-6">
@@ -274,7 +274,7 @@
 							<div class="space-y-6">
 								<div class="space-y-2">
 									<div class="flex items-center justify-between text-sm">
-										<span class="font-medium">Progress to {prestigeName}</span>
+										<span class="font-medium">{$_("prestige.progress.description").replace("{{name}}",prestigeName ?? '')}</span>
 										<span class="font-mono">{progressPercentage.toFixed(1)}%</span>
 									</div>
 									<Progress value={progressPercentage} class="h-2" />
@@ -285,13 +285,13 @@
 									<table class="w-full text-sm">
 										<tbody class="divide-y">
 											<tr>
-												<td class="text-muted-foreground px-3 py-2 font-medium">Required:</td>
+												<td class="text-muted-foreground px-3 py-2 font-medium">{$_("prestige.progress.required")}:</td>
 												<td class="px-3 py-2 text-right font-mono font-bold">
 													{formatValue(prestigeCost || 0)}
 												</td>
 											</tr>
 											<tr>
-												<td class="text-muted-foreground px-3 py-2 font-medium">Your Cash:</td>
+												<td class="text-muted-foreground px-3 py-2 font-medium">{$_("prestige.progress.yourCash")}:</td>
 												<td
 													class="px-3 py-2 text-right font-mono font-bold"
 													class:text-green-600={canAfford}
@@ -302,7 +302,7 @@
 											</tr>
 											{#if !canAfford}
 												<tr>
-													<td class="text-muted-foreground px-3 py-2 font-medium">Still needed:</td>
+													<td class="text-muted-foreground px-3 py-2 font-medium">{$_("prestige.progress.stillNeeded")}:</td>
 													<td class="px-3 py-2 text-right font-mono font-bold text-red-600">
 														{formatValue(amountNeeded)}
 													</td>
@@ -314,11 +314,11 @@
 							</div>
 
 							{#if !canAfford}
-								<Label>Tip: sell coin holdings</Label>
+								<Label>{$_("prestige.progress.tip")}</Label>
 							{:else}
 								<Alert variant="destructive">
 									<AlertTriangle class="h-4 w-4" />
-									<AlertDescription>Prestiging is permanent and cannot be undone!</AlertDescription>
+									<AlertDescription>{$_("prestige.progress.perma")}</AlertDescription>
 								</Alert>
 							{/if}
 
@@ -332,11 +332,11 @@
 							>
 								{#if isPrestiging}
 									<Loader2 class="h-4 w-4 animate-spin" />
-									Advancing to {prestigeName}...
+									{$_("prestige.progress.button.2").replace("{{name}}", prestigeName ?? '')}
 								{:else if !canAfford}
-									Need {formatValue(amountNeeded)} more to prestige
+									{$_("prestige.progress.button.0").replace("{{bal}}", formatValue(amountNeeded))}
 								{:else}
-									Let's go
+									{$_("prestige.progress.button.1")}
 								{/if}
 							</Button>
 						</Card.Content>
@@ -346,9 +346,9 @@
 					<Card.Root class="flex flex-1 flex-col gap-1">
 						<Card.Content class="py-16 text-center">
 							<Star class="mx-auto mb-6 h-20 w-20 text-yellow-500" />
-							<h3 class="mb-3 text-2xl font-bold">You're a star!</h3>
+							<h3 class="mb-3 text-2xl font-bold">{$_("prestige.progress.star.0")}</h3>
 							<p class="text-muted-foreground">
-								You have reached the highest prestige level available.
+								{$_("prestige.progress.star.1")}
 							</p>
 						</Card.Content>
 					</Card.Root>
@@ -371,12 +371,12 @@
 				{#if userData}
 					<Card.Root class="flex-1 gap-1">
 						<Card.Header class="pb-2">
-							<Card.Title class="text-base">Preview</Card.Title>
+							<Card.Title class="text-base">{$_("prestige.preview.title")}</Card.Title>
 						</Card.Header>
 						<Card.Content class="space-y-4">
 							<!-- Current Profile -->
 							<div class="space-y-2">
-								<Label class="text-muted-foreground text-xs">Current</Label>
+								<Label class="text-muted-foreground text-xs">{$_("prestige.preview.current")}</Label>
 								<div class="flex items-center gap-3 rounded-lg border p-3">
 									<Avatar.Root class="h-10 w-10 shrink-0">
 										<Avatar.Image src={getPublicUrl(userData.image)} alt={userData.name} />
@@ -407,7 +407,7 @@
 
 							<!-- Prestige Preview -->
 							<div class="space-y-2">
-								<Label class="text-muted-foreground text-xs">After</Label>
+								<Label class="text-muted-foreground text-xs">{$_("prestige.preview.after")}</Label>
 								<div
 									class="flex items-center gap-3 rounded-lg border-2 border-yellow-500/30 bg-yellow-50/50 p-3 dark:bg-yellow-950/20"
 								>
@@ -437,7 +437,7 @@
 									</div>
 								</div>
 							</div>
-							<p class="text-xs">You also get 25% more daily rewards.</p>
+							<p class="text-xs">{$_("prestige.preview.description").replace("{{percent}}", "25")}</p>
 						</Card.Content>
 					</Card.Root>
 				{/if}
@@ -445,7 +445,7 @@
 				<!-- All Prestige Levels -->
 				<Card.Root class="flex-1 gap-1">
 					<Card.Header class="pb-2">
-						<Card.Title class="text-base">Levels</Card.Title>
+						<Card.Title class="text-base">{$_("prestige.levels.title")}</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						{#each Object.entries(PRESTIGE_COSTS) as [level, cost]}
@@ -465,7 +465,7 @@
 										<div class="h-4 w-4"></div>
 									{/if}
 									<span class="text-sm font-medium" class:text-yellow-600={isAchieved}>
-										{PRESTIGE_NAMES[levelNum as keyof typeof PRESTIGE_NAMES]}
+										{$_(`prestige.levels.d.${levelNum}`)}
 									</span>
 								</div>
 								<span class="font-mono text-xs">{formatValue(cost)}</span>

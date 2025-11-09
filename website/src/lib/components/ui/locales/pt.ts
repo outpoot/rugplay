@@ -522,7 +522,55 @@ export default {
 		portfolioPercent: '% do Portfólio'
 	},
 	prestige: {
-		title: 'Prestígio'
+		title: 'Prestígio',
+		description: "Reinicie seu progresso para melhorar seu status de negociação",
+		how: ["Como", ["Atenda aos Requisitos", "Acumule dinheiro suficiente para pagar o custo do prestígio"], ["Redefinir Progresso", "Todo o dinheiro e ativos são apagados, mas o histórico permanece"], ["Ganhe Status", "Ganhe um título de prestígio exclusivo, recompensas diárias aprimoradas e redefina o tempo de recarga de sua recompensa diária"]],
+		progress: {
+			title: "Progresso",
+			description: "Progresso para {{name}}",
+			required: "Requerido",
+			yourCash: "Seu Dinheiro",
+			perma: "Prestigiar é permanente e não pode ser desfeito!",
+			noBal: "Faltam ${{bal}} para prestigiar",
+			stillNeeded: "Ainda necessário",
+			letsGo: "Vamos lá",
+			button: ["Precisa de mais {{bal}} para prestigiar", "Vamos lá", 'Avançando para {{name}}'],
+			star: ["Você é uma estrela!", 'Você alcançou o maior nível de prestígio disponível.'],
+			tip: "Dica: Venda suas posições de moedas"
+		},
+		preview: {
+			title: "Prévia",
+			current: "Atual",
+			after: "Depois",
+			description: "Você também ganha {{percent}}% a mais em recompensas diárias."
+		},
+		levels: {
+			title: "Níveis",
+			d: {
+				"1": "Prestígio I",
+				"2": "Prestígio II",
+				"3": "Prestígio III",
+				"4": "Prestígio IV",
+				"5": "Prestígio V"
+			}
+		},
+		popup: {
+			title: "Confirmar",
+			description: "Esta ação é permanente e não pode ser desfeita. Por favor, revise as consequências cuidadosamente.",
+			lose: ["Você perderá:", "Saldo em dinheiro: {{amount}}", "Todos os ativos em moedas no valor de {{amount}}", "Valor total do portfólio: {{amount}}"],
+			gain: ["Você ganhará:", "Mais dinheiro em recompensas diárias", "Uma redefinição de recompensa diária", "Emblema e status de Prestígio", "Nós venderemos automaticamente todos os seus ativos em moedas"],
+			confirm: [
+				"Digite \"PRESTIGE\" para confirmar", // Don't translate "PRESTIGE" here.
+				"DIGITE PRESTIGE AQUI"
+			],
+			proceed: ["Precedindo...","Prosseguir"],
+			done: "Parabéns! Você alcancou {{name}}!",
+			err: "Falhou em prestigiar."
+		},
+		signin:{
+			title: "Entre para prestigiar",
+			description: "Você precisa de uma conta para prestigiar."
+		}
 	},
 	settings: {
 		title: 'Configurações'
@@ -686,5 +734,8 @@ export default {
 			UL: 'Este código promocional atingiu seu limite de uso',
 			RD: 'Código promocional resgatado! Você recebeu ${{balance}}.'
 		}
+	},
+	error: {
+		unknown: "Um erro aconteceu"
 	}
 };

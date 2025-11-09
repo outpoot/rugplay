@@ -529,7 +529,53 @@ export default {
 		portfolioPercent: 'Portfolio %'
 	},
 	prestige: {
-		title: 'Presige'
+		title: 'Presige',
+		description: 'Reset your progress to advance your trading status',
+		how: ["How", ["Meet Requirements", "Accumulate enough cash to afford the prestige cost"], ["Reset Progress", "All cash and holdings are erased, but history remains"], ["Gain Status", "Earn an exclusive prestige title, enhanced daily rewards, and reset your daily reward cooldown"]],
+		progress: {
+			title: "Progress",
+			description: "Progress to {{name}}",
+			required: "Required",
+			yourCash: "Your Cash",
+			stillNeeded: "Stil Needed",
+			perma: "Prestiging is permanent and cannot be undone!",
+			button: ["Need {{bal}} more to prestige", "Let's go", 'Advancing to {{name}}'],
+			star: ["You're a star!", 'You have reached the highest prestige level available.'],
+			tip: "Tip: sell coin holdings"
+		},
+		preview: {
+			title: "Preview",
+			current: "Current",
+			after: "After",
+			description: "You also get {{percent}}% more daily rewards."
+		},
+		levels: {
+			title: "Levels",
+			d: {
+				"1": "Prestige I",
+				"2": "Prestige II",
+				"3": "Prestige III",
+				"4": "Prestige IV",
+				"5": "Prestige V"
+			}
+		},
+		popup: {
+			title: "Confirm",
+			description: "This action is permanent and cannot be undone. Please review the consequences carefully.",
+			lose: ["You will lose:", "Cash balance: {{amount}}", "All coin holdings worth {{amount}}", "Total portfolio value: {{amount}}"],
+			gain: ["You will gain:", "More money in daily rewards", "A daily reward reset", "Prestige badge and status", "We will automatically sell all your coin holdings"],
+			confirm: [
+				"Type \"PRESTIGE\" to confirm", // Don't translate "PRESTIGE" here.
+				"TYPE PRESTIGE HERE"
+			],
+			proceed: ["Advancing...", "Proceed"],
+			done: "Congratulations! You've reached {{name}}!",
+			err: "Failed to prestige."
+		},
+		signin:{
+			title: "Sign in to prestige",
+			description: "You need an account to prestige"
+		}
 	},
 	settings: {
 		title: 'Settings'
@@ -693,5 +739,8 @@ export default {
 			UL: 'This promo code has reached its usage limit',
 			RD: 'Promo code redeemed! You received ${{balance}}.'
 		}
+	},
+	error: {
+		unknown: "An error occurred"
 	}
 };

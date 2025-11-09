@@ -41,7 +41,7 @@ export default {
 					title: "Conclusión",
 				},
 				"2": {
-					desc: 'Haz clic en "Crear moneda" en la barra lateral para lanzar tu propia criptomoneda. Elige un nombre, símbolo único y sube un ícono. Cada moneda comienza en $0.000001',
+					desc: 'Haz clic en "Crear moneda" en la barra lateral para lanzar tu propia criptomoneda. Elige un nombre, símbolo único y sube un ícono. Cada moneda empieza con un precio de $0.000001',
 					title: "Creando Tu Primera Moneda",
 				},
 				"3": {

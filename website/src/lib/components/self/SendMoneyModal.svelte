@@ -8,6 +8,7 @@
 	import { Send, DollarSign, Coins, Loader2 } from 'lucide-svelte';
 	import { PORTFOLIO_DATA } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
+	import { _ } from 'svelte-i18n';
 
 	let {
 		open = $bindable(false),
@@ -151,8 +152,8 @@
 	}
 
 	let transferTypeOptions = [
-		{ value: 'CASH', label: 'Cash ($)' },
-		{ value: 'COIN', label: 'Coins' }
+		{ value: 'CASH', label: $_("portfolio.sendMoney.type.1") },
+		{ value: 'COIN', label: $_("portfolio.sendMoney.type.2") }
 	];
 
 	let currentTransferTypeLabel = $derived(
@@ -166,7 +167,7 @@
 			: (() => {
 					const holding = coinHoldings.find((h) => h.symbol === selectedCoinSymbol);
 					return holding
-						? `*${holding.symbol} (${holding.quantity.toFixed(6)} available)`
+						? $_("portfolio.sendMoney.coins.1").replace("{{name}}", holding.symbol).replace("{{available}}", holding.quantity.toFixed(6))
 						: selectedCoinSymbol;
 				})()
 	);
@@ -181,43 +182,43 @@
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				<Send class="h-5 w-5" />
-				Send
+				{$_("portfolio.sendMoney.title2")}
 			</Dialog.Title>
-			<Dialog.Description>Send cash or coins to another user</Dialog.Description>
+			<Dialog.Description>{$_("portfolio.sendMoney.description")}</Dialog.Description>
 		</Dialog.Header>
 
 		<div class="space-y-4">
 			<!-- Recipient Username -->
 			<div class="space-y-2">
-				<Label for="recipient">Recipient</Label>
+				<Label for="recipient">{$_("portfolio.sendMoney.recipient.0")}</Label>
 				<Input
 					id="recipient"
 					type="text"
 					bind:value={recipientUsername}
-					placeholder="Enter username (without @)"
+					placeholder={$_("portfolio.sendMoney.recipient.1")}
 					class="flex-1"
 				/>
 			</div>
 
 			<!-- Transfer Type -->
 			<div class="space-y-2">
-				<Label>Type</Label>
+				<Label>{$_("portfolio.sendMoney.type.0")}</Label>
 				<Select.Root type="single" bind:value={transferType} onValueChange={handleTypeChange}>
 					<Select.Trigger class="w-full">
 						{currentTransferTypeLabel}
 					</Select.Trigger>
 					<Select.Content>
 						<Select.Group>
-							<Select.Item value="CASH" label="Cash ($)">
+							<Select.Item value="CASH" label={$_("portfolio.sendMoney.type.1")}>
 								<div class="flex items-center gap-2">
 									<DollarSign class="h-4 w-4" />
-									Cash ($)
+									{$_("portfolio.sendMoney.type.1")}
 								</div>
 							</Select.Item>
-							<Select.Item value="COIN" label="Coins" disabled={coinHoldings.length === 0}>
+							<Select.Item value="COIN" label={$_("portfolio.sendMoney.type.2")} disabled={coinHoldings.length === 0}>
 								<div class="flex items-center gap-2">
 									<Coins class="h-4 w-4" />
-									Coins
+									{$_("portfolio.sendMoney.type.2")}
 								</div>
 							</Select.Item>
 						</Select.Group>
@@ -228,7 +229,7 @@
 			<!-- Coin Selection (if coin transfer) -->
 			{#if transferType === 'COIN'}
 				<div class="space-y-2">
-					<Label>Select Coin</Label>
+					<Label>{$_("portfolio.sendMoney.coins.0")}</Label>
 					<Select.Root
 						type="single"
 						bind:value={selectedCoinSymbol}
@@ -241,7 +242,7 @@
 							<Select.Group>
 								{#each coinHoldings as holding}
 									<Select.Item value={holding.symbol} label="*{holding.symbol}">
-										*{holding.symbol} ({holding.quantity.toFixed(6)} available)
+										{$_("portfolio.sendMoney.coins.1").replace("{{name}}", holding.symbol).replace("{{available}}", holding.quantity.toFixed(6))}
 									</Select.Item>
 								{/each}
 							</Select.Group>

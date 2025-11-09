@@ -1,3 +1,4 @@
+import en from "./en"
 export default {
 	lang: {
 		code: 'es',
@@ -798,4 +799,4 @@ export default {
 	error: {
 		unknown: 'Ocurrió un error desconocido'
 	}
-};
+} satisfies typeof en;

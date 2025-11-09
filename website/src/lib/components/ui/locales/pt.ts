@@ -1,3 +1,5 @@
+import type en from "./en";
+
 export default {
 	lang: {
 		code: 'pt',
@@ -520,7 +522,14 @@ export default {
 			description: 'Posições atuais em seu portfólio'
 		},
 		sendMoney: {
-			title: 'Enviar Dinheiro'
+			title: 'Enviar Dinheiro',
+			title2: 'Enviar',
+			description: 'Envie dinheiro ou moedas para outro usuário',
+			recipient: ['Recipiente', 'Digite o username (sem o @)'],
+			type: ['Tipo', 'Dinheiro ($)', 'Moedas'],
+			coins: ['Selecione uma moeda', '*{{name}} ({{available}} disponível)'],
+			failed: 'Transferência falhou',
+			sent: ['Coins enviados com sucesso!']
 		},
 		recentTransactions: 'Transações Recentes',
 		total: 'Total',
@@ -557,9 +566,7 @@ export default {
 			required: 'Requerido',
 			yourCash: 'Seu Dinheiro',
 			perma: 'Prestigiar é permanente e não pode ser desfeito!',
-			noBal: 'Faltam ${{bal}} para prestigiar',
 			stillNeeded: 'Ainda necessário',
-			letsGo: 'Vamos lá',
 			button: ['Precisa de mais {{bal}} para prestigiar', 'Vamos lá', 'Avançando para {{name}}'],
 			star: ['Você é uma estrela!', 'Você alcançou o maior nível de prestígio disponível.'],
 			tip: 'Dica: Venda suas posições de moedas'
@@ -790,4 +797,4 @@ export default {
 	error: {
 		unknown: 'Um erro aconteceu'
 	}
-};
+} satisfies typeof en

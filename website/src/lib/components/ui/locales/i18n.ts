@@ -27,8 +27,18 @@ export const supportedLocales = [
 		id: 'ro',
 		countryFlag: 'ro',
 		loader: async () => (await import('./ro')).default
+	},
+	{
+		id: 'id',
+		countryFlag: 'id',
+		loader: async () => (await import('./id')).default
+	},
+	{
+		id: 'hi',
+		countryFlag: 'in',
+		loader: async () => (await import('./hi')).default
 	}
-];
+].sort((a, b) => (a.id > b.id ? +1 : b.id > a.id ? -1 : 0));
 
 export const rawSupportedLocales = supportedLocales.map((l) => l.id);
 

@@ -1,3 +1,5 @@
+import type en from "./en";
+
 export default {
 	lang: {
 		code: 'ro',
@@ -802,4 +804,4 @@ export default {
 	error: {
 		unknown: 'A apărut o eroare necunoscută'
 	}
-};
+} satisfies typeof en;

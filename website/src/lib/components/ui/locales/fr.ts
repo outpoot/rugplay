@@ -1,3 +1,5 @@
+import en from "./en"
+
 export default {
 	lang: {
 		code: 'fr',
@@ -819,4 +821,4 @@ export default {
 	error: {
 		unknown: "Une erreur inconnue s'est produite"
 	}
-};
+} satisfies typeof en;

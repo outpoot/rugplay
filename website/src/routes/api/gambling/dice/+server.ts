@@ -58,8 +58,8 @@ export const POST: RequestHandler = async ({ request }) => {
 					`Insufficient funds. You need $${roundedBet.toFixed(2)} but only have $${roundedBalance.toFixed(2)}`
 				);
 			}
-
-			const gameResult = randomInt(1, 6);
+			// min < n < max or 1 < n < 7 = range from 1 to 6
+			const gameResult = randomInt(1, 7);
 			const won = gameResult === selectedNumber;
 
 			const multiplier = 3;

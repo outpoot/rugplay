@@ -245,7 +245,8 @@ export default {
 				done: ['Sold successfully!', 'Sold {{amount}} {{coin}} for ${{amount.2}}']
 			},
 			title: 'Trade {{coin}}',
-			youOwn: 'You own: {{amount}} {{coin}}'
+			youOwn: 'You own: {{amount}} {{coin}}',
+			failed: 'Trade Failed'
 		},
 		volume: 'Volume',
 		volume24h: 'Volume (24h)',

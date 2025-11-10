@@ -247,7 +247,8 @@ export default {
 				done: ['Venda bem sucedida!', 'Vendeu {{amount}} {{coin}} por ${{amount.2}}']
 			},
 			title: 'Negociar {{coin}}',
-			youOwn: 'Você possui: {{amount}} {{coin}}'
+			youOwn: 'Você possui: {{amount}} {{coin}}',
+			failed: 'Negociação falhou'
 		},
 		volume: 'Volume',
 		volume24h: 'Volume (24h)',

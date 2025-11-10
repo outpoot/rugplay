@@ -2,7 +2,7 @@
 	import type { UserProfile } from '$lib/types/user-profile';
 	import SilentBadge from './SilentBadge.svelte';
 	import { Hash, Hammer, Flame, Star } from 'lucide-svelte';
-	import { getPrestigeName, getPrestigeColor } from '$lib/utils';
+	import { getPrestigeColor } from '$lib/utils';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -16,7 +16,7 @@
 	} = $props();
 
 	let badgeClass = $derived(size === 'sm' ? 'text-xs' : '');
-	let prestigeName = $derived(user.prestigeLevel ? getPrestigeName(user.prestigeLevel) : null);
+	let prestigeName = $derived(user.prestigeLevel ? $_(`prestige.levels.d.${user.prestigeLevel}`) : null);
 	let prestigeColor = $derived(
 		user.prestigeLevel ? getPrestigeColor(user.prestigeLevel) : 'text-gray-500'
 	);

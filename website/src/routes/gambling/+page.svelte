@@ -99,7 +99,7 @@
 					variant={activeGame === 'dice' ? 'default' : 'outline'}
 					onclick={() => (activeGame = 'dice')}
 				>
-					Dice
+					{$_("gambling.games.dice.title")}
 				</Button>
 			</div>
 

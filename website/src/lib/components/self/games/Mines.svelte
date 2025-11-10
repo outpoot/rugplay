@@ -142,7 +142,7 @@
 		} catch (error) {
 			console.error('Mines error:', error);
 			toast.error('Failed to reveal tile', {
-				description: error instanceof Error ? error.message : 'Unknown error occurred'
+				description: error instanceof Error ? error.message : $_("error.unknown")
 			});
 		}
 	}
@@ -176,7 +176,7 @@
 		} catch (error) {
 			console.error('Cashout error:', error);
 			toast.error('Failed to cash out', {
-				description: error instanceof Error ? error.message : 'Unknown error occurred'
+				description: error instanceof Error ? error.message : $_("error.unknown")
 			});
 		}
 	}
@@ -209,7 +209,7 @@
 		} catch (error) {
 			console.error('Start game error:', error);
 			toast.error('Failed to start game', {
-				description: error instanceof Error ? error.message : 'Unknown error occurred'
+				description: error instanceof Error ? error.message : $_("error.unknown")
 			});
 		}
 	}

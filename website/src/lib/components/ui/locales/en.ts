@@ -308,6 +308,16 @@ export default {
 				nextTile: 'Next Tile',
 				cashOut: 'Cash Out',
 				currentMultiplier: 'Current Multiplier:'
+			},
+			dice: {
+				title: 'Dice',
+				description: 'Choose a number and roll the dice to win 3x your bet!',
+				chooseNumber: 'Choose Number',
+				roll: 'Roll',
+				rolling: 'Rolling',
+				lost: ['LOSS', 'Lost {{amount}} on {{number}}'],
+				won: ['WIN', 'Won {{amount}} on {{number}}'],
+				failed: "Roll failed"
 			}
 		},
 		live: {
@@ -323,7 +333,8 @@ export default {
 		balance: 'Balance',
 		betAmount: 'Bet Amount',
 		betAmountPlaceholder: 'Enter bet amount',
-		maxBet: 'Max bet: {{amount}}'
+		maxBet: 'Max bet: {{amount}}',
+		failed: 'Failed to place bet'
 	},
 	home: {
 		good: {

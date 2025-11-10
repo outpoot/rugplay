@@ -14,6 +14,7 @@
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount } from 'svelte';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
+	import { _ } from 'svelte-i18n';
 
 	interface DiceResult {
 		won: boolean;
@@ -167,7 +168,7 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to place bet');
+				throw new Error(errorData.error || $_("gambling.failed"));
 			}
 
 			const resultData: DiceResult = await response.json();
@@ -198,8 +199,8 @@
 			isRolling = false;
 		} catch (error) {
 			console.error('Dice roll error:', error);
-			toast.error('Roll failed', {
-				description: error instanceof Error ? error.message : 'Unknown error occurred'
+			toast.error($_("gambling.games.dice.failed"), {
+				description: error instanceof Error ? error.message : $_("error.unknown")
 			});
 			isRolling = false;
 			activeSoundTimeouts.forEach(clearTimeout);
@@ -224,14 +225,14 @@
 
 <Card>
 	<CardHeader>
-		<CardTitle>Dice</CardTitle>
-		<CardDescription>Choose a number and roll the dice to win 3x your bet!</CardDescription>
+		<CardTitle>{$_("gambling.games.dice.title")}</CardTitle>
+		<CardDescription>{$_("gambling.games.dice.description")}</CardDescription>
 	</CardHeader>
 	<CardContent>
 		<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
 			<div class="flex flex-col space-y-4">
 				<div class="text-center">
-					<p class="text-muted-foreground text-sm">Balance</p>
+					<p class="text-muted-foreground text-sm">{$_("gambling.balance")}:</p>
 					<p class="text-2xl font-bold">{formatValue(balance)}</p>
 				</div>
 
@@ -255,14 +256,14 @@
 					{#if lastResult && !isRolling}
 						<div class="bg-muted/50 w-full rounded-lg p-3">
 							{#if lastResult.won}
-								<p class="text-success font-semibold">WIN</p>
+								<p class="text-success font-semibold">{$_("gambling.games.dice.won.0")}</p>
 								<p class="text-sm">
-									Won {formatValue(lastResult.payout)} on {lastResult.result}
+									{$_("gambling.games.dice.won.1").replace("{{amount}}", formatValue(lastResult.payout)).replace("{{number}}", lastResult.result.toString())}
 								</p>
 							{:else}
-								<p class="text-destructive font-semibold">LOSS</p>
+								<p class="text-destructive font-semibold">{$_("gambling.games.dice.lost.0")}</p>
 								<p class="text-sm">
-									Lost {formatValue(lastResult.amountWagered)} on {lastResult.result}
+									{$_("gambling.games.dice.lost.1").replace("{{amount}}", formatValue(lastResult.amountWagered)).replace("{{number}}", lastResult.result.toString())}
 								</p>
 							{/if}
 						</div>
@@ -272,7 +273,8 @@
 
 			<div class="space-y-4">
 				<div>
-					<div class="mb-2 block text-sm font-medium">Choose Number</div>
+					<div class="mb-2 block text-sm font-medium">
+									{$_("gambling.games.dice.chooseNumber")}</div>
 					<div class="grid grid-cols-3 gap-2">
 						{#each Array(6) as _, i}
 							<Button
@@ -288,7 +290,7 @@
 				</div>
 
 				<div>
-					<label for="bet-amount" class="mb-2 block text-sm font-medium">Bet Amount</label>
+				<label for="bet-amount" class="mb-2 block text-sm font-medium">{$_("gambling.betAmount")}</label>
 					<Input
 						id="bet-amount"
 						type="text"
@@ -296,10 +298,10 @@
 						oninput={handleBetAmountInput}
 						onblur={handleBetAmountBlur}
 						disabled={isRolling}
-						placeholder="Enter bet amount"
+						placeholder={$_("gambling.betAmountPlaceholder")}
 					/>
 					<p class="text-muted-foreground mt-1 text-xs">
-						Max bet: {MAX_BET_AMOUNT.toLocaleString()}
+						{$_("gambling.maxBet").replace("{{amount}}", MAX_BET_AMOUNT.toLocaleString())}
 					</p>
 				</div>
 
@@ -335,7 +337,7 @@
 				</div>
 
 				<Button class="h-12 w-full text-lg" onclick={rollDice} disabled={!canBet}>
-					{isRolling ? 'Rolling...' : 'Roll'}
+					{isRolling ? $_("gambling.games.dice.rolling") : $_("gambling.games.dice.roll")}
 				</Button>
 			</div>
 		</div>

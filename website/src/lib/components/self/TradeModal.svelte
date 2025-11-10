@@ -90,7 +90,7 @@
 			const result = await response.json();
 
 			if (!response.ok) {
-				throw new Error(result.message || $_("coin.trade.failed"));
+				throw new Error(result.message || $_('coin.trade.failed'));
 			}
 
 			toast.success($_(`coin.trade.${type === 'BUY' ? 'buy' : 'sell'}.done.0`), {
@@ -109,7 +109,7 @@
 			onSuccess?.();
 			handleClose();
 		} catch (e) {
-			toast.error($_("coin.trade.failed"), {
+			toast.error($_('coin.trade.failed'), {
 				description: (e as Error).message
 			});
 		} finally {

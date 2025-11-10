@@ -310,6 +310,16 @@ export default {
 				nextTile: 'Próximo Ladrilho',
 				cashOut: 'Sacar',
 				currentMultiplier: 'Multiplicador Atual:'
+			},
+			dice: {
+				title: 'Dado',
+				description: 'Escolha um número e role o dado para ganhar 3x a sua aposta!',
+				chooseNumber: 'Escolha um Número',
+				roll: 'Rolar',
+				rolling: 'Rolando',
+				lost: ['DERROTA', 'Perdeu {{amount}} em {{number}}'],
+				won: ['VITÓRIA', 'Ganhou {{amount}} em {{number}}'],
+				failed: "Falhou em rolar o dado"
 			}
 		},
 		live: {
@@ -325,7 +335,8 @@ export default {
 		balance: 'Saldo',
 		betAmount: 'Valor da Aposta',
 		betAmountPlaceholder: 'Insira o valor da aposta',
-		maxBet: 'Aposta máxima: {{amount}}'
+		maxBet: 'Aposta máxima: {{amount}}',
+		failed: "Falhou em apostar"
 	},
 	home: {
 		good: {

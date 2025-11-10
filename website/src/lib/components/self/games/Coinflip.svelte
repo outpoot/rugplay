@@ -249,7 +249,7 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || $_("gambling.failed"));
+				throw new Error(errorData.error || $_('gambling.failed'));
 			}
 
 			const resultData: CoinflipResult = await response.json();
@@ -307,8 +307,8 @@
 			}, animationDuration);
 		} catch (error) {
 			console.error('Coinflip error:', error);
-			toast.error($_("gambling.failed"), {
-				description: error instanceof Error ? error.message : $_("error.unknown")
+			toast.error($_('gambling.failed'), {
+				description: error instanceof Error ? error.message : $_('error.unknown')
 			});
 			isFlipping = false;
 			activeSoundTimeouts.forEach(clearTimeout);

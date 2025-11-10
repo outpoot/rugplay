@@ -317,7 +317,7 @@ export default {
 				rolling: 'Rolling',
 				lost: ['LOSS', 'Lost {{amount}} on {{number}}'],
 				won: ['WIN', 'Won {{amount}} on {{number}}'],
-				failed: "Roll failed"
+				failed: 'Roll failed'
 			}
 		},
 		live: {

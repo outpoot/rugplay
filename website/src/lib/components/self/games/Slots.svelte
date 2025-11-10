@@ -187,7 +187,7 @@
 		} catch (error) {
 			console.error('Slots error:', error);
 			toast.error('Bet failed', {
-				description: error instanceof Error ? error.message : 'Unknown error occurred'
+				description: error instanceof Error ? error.message : $_("error.unknown")
 			});
 			isSpinning = false;
 		}
@@ -293,7 +293,10 @@
 									{$_(`gambling.games.slots.loss.title`)}
 								</p>
 								<p class="text-sm">
-									Lost {formatValue(lastResult.amountWagered)}
+									{$_('gambling.games.slots.loss.description').replace(
+										'{{amount}}',
+										formatValue(lastResult.amountWagered)
+									)}
 								</p>
 							{/if}
 						</div>

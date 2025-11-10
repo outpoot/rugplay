@@ -319,7 +319,7 @@ export default {
 				rolling: 'Rolando',
 				lost: ['DERROTA', 'Perdeu {{amount}} em {{number}}'],
 				won: ['VITÓRIA', 'Ganhou {{amount}} em {{number}}'],
-				failed: "Falhou em rolar o dado"
+				failed: 'Falhou em rolar o dado'
 			}
 		},
 		live: {
@@ -336,7 +336,7 @@ export default {
 		betAmount: 'Valor da Aposta',
 		betAmountPlaceholder: 'Insira o valor da aposta',
 		maxBet: 'Aposta máxima: {{amount}}',
-		failed: "Falhou em apostar"
+		failed: 'Falhou em apostar'
 	},
 	home: {
 		good: {

@@ -115,7 +115,7 @@
 			});
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to reveal tile');
+				throw new Error(errorData.error || $_('gambling.games.mines.errors.0'));
 			}
 			const result = await response.json();
 			if (result.hitMine) {
@@ -141,7 +141,7 @@
 			}
 		} catch (error) {
 			console.error('Mines error:', error);
-			toast.error('Failed to reveal tile', {
+			toast.error($_('gambling.games.mines.errors.0'), {
 				description: error instanceof Error ? error.message : $_('error.unknown')
 			});
 		}
@@ -159,7 +159,7 @@
 			if (!response.ok) {
 				const errorData = await response.json();
 				if (!isAutoCashout || errorData.error !== 'Invalid session') {
-					throw new Error(errorData.error || 'Failed to cash out');
+					throw new Error(errorData.error || $_('gambling.games.mines.errors.0'));
 				}
 				return;
 			}
@@ -175,7 +175,7 @@
 			minePositions = [];
 		} catch (error) {
 			console.error('Cashout error:', error);
-			toast.error('Failed to cash out', {
+			toast.error($_('gambling.games.mines.errors.1'), {
 				description: error instanceof Error ? error.message : $_('error.unknown')
 			});
 		}
@@ -196,7 +196,7 @@
 				const errorData = await response.json();
 				balance += betAmount;
 				onBalanceUpdate?.(balance);
-				throw new Error(errorData.error || 'Failed to start game');
+				throw new Error(errorData.error || $_('gambling.games.mines.errors.2'));
 			}
 			const result = await response.json();
 			isPlaying = true;
@@ -208,7 +208,7 @@
 			minePositions = [];
 		} catch (error) {
 			console.error('Start game error:', error);
-			toast.error('Failed to start game', {
+			toast.error($_('gambling.games.mines.errors.2'), {
 				description: error instanceof Error ? error.message : $_('error.unknown')
 			});
 		}
@@ -390,7 +390,10 @@
 							<div class="space-y-1">
 								<div class="bg-border h-px w-full"></div>
 								<div class="text-muted-foreground text-center text-xs">
-									Auto Cashout in {Math.ceil(AUTO_CASHOUT_TIME - autoCashoutTimer)}s
+									{$_('gambling.games.mines.autoCashout').replace(
+										'{{time}}',
+										Math.ceil(AUTO_CASHOUT_TIME - autoCashoutTimer).toString()
+									)}
 								</div>
 								<div class="bg-muted h-1 w-full overflow-hidden rounded-full">
 									<div

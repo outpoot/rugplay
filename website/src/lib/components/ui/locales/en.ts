@@ -309,7 +309,9 @@ export default {
 				currentProfit: 'Current Profit:',
 				nextTile: 'Next Tile',
 				cashOut: 'Cash Out',
-				currentMultiplier: 'Current Multiplier:'
+				autoCashout: 'Auto Cashout in {{time}}s',
+				currentMultiplier: 'Current Multiplier:',
+				errors: ['Failed to reveal tile', 'Failed to cash out', 'Failed to start game']
 			},
 			dice: {
 				title: 'Dice',

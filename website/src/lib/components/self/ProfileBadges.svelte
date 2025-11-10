@@ -16,7 +16,9 @@
 	} = $props();
 
 	let badgeClass = $derived(size === 'sm' ? 'text-xs' : '');
-	let prestigeName = $derived(user.prestigeLevel ? $_(`prestige.levels.d.${user.prestigeLevel}`) : null);
+	let prestigeName = $derived(
+		user.prestigeLevel ? $_(`prestige.levels.d.${user.prestigeLevel}`) : null
+	);
 	let prestigeColor = $derived(
 		user.prestigeLevel ? getPrestigeColor(user.prestigeLevel) : 'text-gray-500'
 	);

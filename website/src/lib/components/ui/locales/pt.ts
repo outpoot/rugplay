@@ -311,7 +311,9 @@ export default {
 				currentProfit: 'Lucro Atual:',
 				nextTile: 'Próximo Ladrilho',
 				cashOut: 'Sacar',
-				currentMultiplier: 'Multiplicador Atual:'
+				autoCashout: 'Resgate automático em {{time}}s',
+				currentMultiplier: 'Multiplicador Atual:',
+				errors: ['Falhou em revelar o ladrilho', 'Falhou em resgatar', 'Falhou em começar um jogo']
 			},
 			dice: {
 				title: 'Dado',

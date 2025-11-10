@@ -93,16 +93,23 @@
 				throw new Error(result.message || 'Trade failed');
 			}
 
-			toast.success(`${type === 'BUY' ? 'Bought' : 'Sold'} successfully!`, {
+			toast.success($_(`coin.trade.${type === 'BUY' ? 'buy' : 'sell'}.done.0`), {
 				description:
 					type === 'BUY'
-						? `Purchased ${result.coinsBought.toFixed(6)} ${coin.symbol} for $${result.totalCost.toFixed(6)}`
-						: `Sold ${result.coinsSold.toFixed(6)} ${coin.symbol} for $${result.totalReceived.toFixed(6)}`
+						? $_(`coin.trade.buy.done.1`)
+								.replace('{{amount}}', result.coinsBought.toFixed(6))
+								.replace('{{coin}}', coin.symbol)
+								.replace('{{amount.2}}', result.totalCost.toFixed(6))
+						: $_(`coin.trade.sell.done.1`)
+								.replace('{{amount}}', result.coinsSold.toFixed(6))
+								.replace('{{coin}}', coin.symbol)
+								.replace('{{amount.2}}', result.totalReceived.toFixed(2))
 			});
 
 			onSuccess?.();
 			handleClose();
 		} catch (e) {
+			console.error(e);
 			toast.error('Trade failed', {
 				description: (e as Error).message
 			});

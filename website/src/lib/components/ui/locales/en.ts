@@ -231,7 +231,8 @@ export default {
 			buy: {
 				rec: "{{coin}} You'll get:",
 				title: 'Buy {{coin}}',
-				spentAmount: 'Amount to spend ($)'
+				spentAmount: 'Amount to spend ($)',
+				done: ['Bought successfully!', 'Purchared {{amount}} {{coin}} for ${{amount.2}}']
 			},
 			curPrice: 'Current price: ${{price}} per {{coin}}',
 			estimation: 'AMM estimation - includes slippage from pool impact',
@@ -240,7 +241,8 @@ export default {
 				title: 'Sell {{coin}}',
 				amount: 'Amount ({{coin}})',
 				available: 'Available: {{amount}} {{coin}}',
-				maxSellable: 'Max sellable: {{amount}} {{coin}} (pool limit)'
+				maxSellable: 'Max sellable: {{amount}} {{coin}} (pool limit)',
+				done: ['Sold successfully!', 'Sold {{amount}} {{coin}} for ${{amount.2}}']
 			},
 			title: 'Trade {{coin}}',
 			youOwn: 'You own: {{amount}} {{coin}}'

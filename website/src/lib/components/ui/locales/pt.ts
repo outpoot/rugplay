@@ -233,7 +233,8 @@ export default {
 			buy: {
 				rec: '{{coin}} Você receberá:',
 				title: 'Comprar {{coin}}',
-				spentAmount: 'Valor a ser gasto ($)'
+				spentAmount: 'Valor a ser gasto ($)',
+				done: ['Comprou com sucesso!', 'Comprou {{amount}} {{coin}} por ${{amount.2}}']
 			},
 			curPrice: 'Preço atual: ${{price}} por {{coin}}',
 			estimation: 'Estimativa AMM - inclui slippage pelo impacto no pool',
@@ -242,7 +243,8 @@ export default {
 				title: 'Vender {{coin}}',
 				amount: 'Quantidade ({{coin}})',
 				available: 'Disponível: {{amount}} {{coin}}',
-				maxSellable: 'Máximo vendável: {{amount}} {{coin}} (limite do pool)'
+				maxSellable: 'Máximo vendável: {{amount}} {{coin}} (limite do pool)',
+				done: ['Venda bem sucedida!', 'Vendeu {{amount}} {{coin}} por ${{amount.2}}']
 			},
 			title: 'Negociar {{coin}}',
 			youOwn: 'Você possui: {{amount}} {{coin}}'

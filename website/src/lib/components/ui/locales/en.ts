@@ -223,7 +223,9 @@ export default {
 		priceChart: 'Price Chart ({{time}})',
 		topHolders: {
 			noHolders: 'No holders',
-			title: 'Top Holders'
+			noFound: ['No holders found', "This coin doesn't have any holders yet."],
+			title: 'Top Holders',
+			description: 'This list is limited to the top 50 holders.'
 		},
 		totalLiquidity: 'Total Liquidity',
 		trade: {

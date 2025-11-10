@@ -225,7 +225,9 @@ export default {
 		priceChart: 'Gráfico de Preço ({{time}})',
 		topHolders: {
 			noHolders: 'Sem detentores',
-			title: 'Principais Detentores'
+			noFound: ['Nenhum detentor encontrado', 'Esta moeda ainda não possui nenhum detentor.'],
+			title: 'Principais Detentores',
+			description: 'Essa lista se limita aos 50 principais detentores.'
 		},
 		totalLiquidity: 'Liquidez Total',
 		trade: {

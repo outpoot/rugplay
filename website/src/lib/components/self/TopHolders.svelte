@@ -75,13 +75,13 @@
 	let holdersColumns = $derived([
 		{
 			key: 'rank',
-			label: 'Rank',
+			label: $_('base.rank'),
 			class: 'w-[10%] min-w-[60px]',
 			render: (value: any) => `#${value}`
 		},
 		{
 			key: 'user',
-			label: 'User',
+			label: $_('base.user'),
 			class: 'w-[35%] min-w-[150px]',
 			render: (value: any, row: any) => ({
 				component: 'user',
@@ -92,7 +92,7 @@
 		},
 		{
 			key: 'quantity',
-			label: 'Quantity',
+			label: $_('base.quantity'),
 			class: 'w-[20%] min-w-[100px] font-mono',
 			sortable: false,
 			render: (value: any) => formatQuantity(value)
@@ -110,7 +110,7 @@
 		},
 		{
 			key: 'liquidationValue',
-			label: 'Value',
+			label: $_('portfolio.value'),
 			class: 'w-[23%] min-w-[90px] font-mono font-medium',
 			sortable: true,
 			defaultSort: 'desc' as const,
@@ -197,9 +197,9 @@
 		<Dialog.Header class="flex-shrink-0">
 			<Dialog.Title class="flex items-center gap-2">
 				<Users class="h-5 w-5" />
-				{$_('coin.topHolders')} (*{holdersData?.coinSymbol})
+				{$_('coin.topHolders.title')} (*{holdersData?.coinSymbol})
 			</Dialog.Title>
-			<Dialog.Description>This list is limited to the top 50 holders.</Dialog.Description>
+			<Dialog.Description>{$_('coin.topHolders.description')}</Dialog.Description>
 		</Dialog.Header>
 
 		<div class="min-h-0 flex-1">
@@ -211,8 +211,8 @@
 							data={holdersData.holders}
 							onRowClick={(holder) => goto(`/user/${holder.username}`)}
 							enableUserPreview={true}
-							emptyTitle="No holders found"
-							emptyDescription="This coin doesn't have any holders yet."
+							emptyTitle={$_('coin.topHolders.noFound.0')}
+							emptyDescription={$_('coin.topHolders.noFound.1')}
 						/>
 					</div>
 				</ScrollArea>
@@ -220,8 +220,8 @@
 				<div class="flex h-full items-center justify-center py-12 text-center">
 					<div>
 						<Users class="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-						<h3 class="mb-2 text-lg font-semibold">No holders found</h3>
-						<p class="text-muted-foreground">This coin doesn't have any holders yet.</p>
+						<h3 class="mb-2 text-lg font-semibold">{$_('coin.topHolders.noFound.0')}</h3>
+						<p class="text-muted-foreground">{$_('coin.topHolders.noFound.1')}</p>
 					</div>
 				</div>
 			{/if}

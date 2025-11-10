@@ -187,7 +187,7 @@
 		} catch (error) {
 			console.error('Slots error:', error);
 			toast.error('Bet failed', {
-				description: error instanceof Error ? error.message : $_("error.unknown")
+				description: error instanceof Error ? error.message : $_('error.unknown')
 			});
 			isSpinning = false;
 		}

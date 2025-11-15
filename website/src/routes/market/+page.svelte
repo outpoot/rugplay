@@ -16,25 +16,25 @@
 	import { page } from '$app/stores';
 	import { Search, RefreshCw, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { formatPrice, formatMarketCap, debounce, formatRelativeTime } from '$lib/utils';
-	import { MediaQuery } from 'svelte/reactivity';
 	import type { CoinData, FilterOption, VolatilityBadge, MarketResponse } from '$lib/types/market';
 
 	let { data } = $props();
 
-	let coins = $state<CoinData[]>([]);
-	let totalCount = $state(0);
-	let loading = $state(true);
-	let searchQuery = $state(data.filters.searchQuery);
-	let sortBy = $state(data.filters.sortBy);
-	let sortOrder = $state(data.filters.sortOrder);
-	let priceFilter = $state(data.filters.priceFilter);
-	let changeFilter = $state(data.filters.changeFilter);
-	let showFilterPopover = $state(false);
-	let currentPage = $state(data.filters.page);
+	let coins: CoinData[] = [];
+	let totalCount = 0;
+	let loading = true;
+	let searchQuery: string = data?.filters?.searchQuery ?? '';
+	let sortBy: string = data?.filters?.sortBy ?? 'marketCap';
+	let sortOrder: string = data?.filters?.sortOrder ?? 'desc';
+	let priceFilter: string = data?.filters?.priceFilter ?? 'all';
+	let changeFilter: string = data?.filters?.changeFilter ?? 'all';
+	let showFilterPopover = false;
+	let currentPage: number = data?.filters?.page ?? 1;
 
-	const isDesktop = new MediaQuery('(min-width: 768px)');
-	let perPage = $derived(isDesktop.current ? 12 : 9);
-	let siblingCount = $derived(isDesktop.current ? 1 : 0);
+	let isDesktop = false;
+	let perPage = 12;
+	let siblingCount = 1;
+
 	const priceFilterOptions: FilterOption[] = [
 		{ value: 'all', label: 'All prices' },
 		{ value: 'under1', label: 'Under $1' },
@@ -56,72 +56,24 @@
 		{ value: 'asc', label: 'Low to High' }
 	];
 
-	const debouncedSearch = debounce(performSearch, 300);
-	let previousSearchQueryForEffect = $state(data.filters.searchQuery);
-
-	onMount(() => {
-		fetchMarketData();
-	});
-
-	function updateURL() {
-		const url = new URL($page.url);
-
-		if (searchQuery) {
-			url.searchParams.set('search', searchQuery);
-		} else {
-			url.searchParams.delete('search');
-		}
-
-		if (sortBy !== 'marketCap') {
-			url.searchParams.set('sortBy', sortBy);
-		} else {
-			url.searchParams.delete('sortBy');
-		}
-
-		if (sortOrder !== 'desc') {
-			url.searchParams.set('sortOrder', sortOrder);
-		} else {
-			url.searchParams.delete('sortOrder');
-		}
-
-		if (priceFilter !== 'all') {
-			url.searchParams.set('priceFilter', priceFilter);
-		} else {
-			url.searchParams.delete('priceFilter');
-		}
-
-		if (changeFilter !== 'all') {
-			url.searchParams.set('changeFilter', changeFilter);
-		} else {
-			url.searchParams.delete('changeFilter');
-		}
-
-		if (currentPage !== 1) {
-			url.searchParams.set('page', currentPage.toString());
-		} else {
-			url.searchParams.delete('page');
-		}
-
-		goto(url.toString(), { noScroll: true, replaceState: true });
-	}
 	async function fetchMarketData() {
 		loading = true;
 		try {
 			const params = new URLSearchParams({
-				search: searchQuery,
+				search: searchQuery ?? '',
 				sortBy,
 				sortOrder,
 				priceFilter,
 				changeFilter,
-				page: currentPage.toString(),
-				limit: perPage.toString()
+				page: String(currentPage),
+				limit: String(perPage)
 			});
 
 			const response = await fetch(`/api/market?${params}`);
 			if (response.ok) {
 				const result: MarketResponse = await response.json();
-				coins = result.coins;
-				totalCount = result.total;
+				coins = result.coins || [];
+				totalCount = result.total || 0;
 			} else {
 				toast.error('Failed to load market data');
 			}
@@ -135,11 +87,74 @@
 
 	function performSearch() {
 		currentPage = 1;
+		updateURL();
 		fetchMarketData();
+	}
+
+	const debouncedSearch = debounce(() => performSearch(), 300);
+	let previousSearchQueryForEffect = data?.filters?.searchQuery ?? '';
+
+	onMount(() => {
+		const mq = window.matchMedia('(min-width: 768px)');
+		const applyMq = () => {
+			isDesktop = mq.matches;
+			perPage = isDesktop ? 12 : 9;
+			siblingCount = isDesktop ? 1 : 0;
+		};
+		applyMq();
+		if (mq.addEventListener) {
+			mq.addEventListener('change', applyMq);
+		} else {
+			(mq as any).addListener(applyMq);
+		}
+		fetchMarketData();
+		return () => {
+			if (mq.removeEventListener) {
+				mq.removeEventListener('change', applyMq);
+			} else {
+				(mq as any).removeListener(applyMq);
+			}
+		};
+	});
+
+	function updateURL() {
+		const url = new URL($page.url);
+		if (searchQuery) {
+			url.searchParams.set('search', searchQuery);
+		} else {
+			url.searchParams.delete('search');
+		}
+		if (sortBy !== 'marketCap') {
+			url.searchParams.set('sortBy', sortBy);
+		} else {
+			url.searchParams.delete('sortBy');
+		}
+		if (sortOrder !== 'desc') {
+			url.searchParams.set('sortOrder', sortOrder);
+		} else {
+			url.searchParams.delete('sortOrder');
+		}
+		if (priceFilter !== 'all') {
+			url.searchParams.set('priceFilter', priceFilter);
+		} else {
+			url.searchParams.delete('priceFilter');
+		}
+		if (changeFilter !== 'all') {
+			url.searchParams.set('changeFilter', changeFilter);
+		} else {
+			url.searchParams.delete('changeFilter');
+		}
+		if (currentPage !== 1) {
+			url.searchParams.set('page', String(currentPage));
+		} else {
+			url.searchParams.delete('page');
+		}
+		goto(url.toString(), { noScroll: true, replaceState: true });
 	}
 
 	function updateSearchUrl() {
 		updateURL();
+		fetchMarketData();
 	}
 
 	function handleSearchKeydown(event: KeyboardEvent) {
@@ -148,12 +163,10 @@
 		}
 	}
 
-	$effect(() => {
-		if (searchQuery !== previousSearchQueryForEffect) {
-			debouncedSearch();
-			previousSearchQueryForEffect = searchQuery;
-		}
-	});
+	$: if (searchQuery !== previousSearchQueryForEffect) {
+		debouncedSearch();
+		previousSearchQueryForEffect = searchQuery;
+	}
 
 	function handleSortChange(newSortBy: string) {
 		if (sortBy === newSortBy) {
@@ -192,7 +205,6 @@
 		priceFilter = 'all';
 		changeFilter = 'all';
 		currentPage = 1;
-
 		goto('/market', { noScroll: true, replaceState: true });
 		fetchMarketData();
 		showFilterPopover = false;
@@ -204,6 +216,7 @@
 		fetchMarketData();
 		showFilterPopover = false;
 	}
+
 	function getVolatilityBadge(change: number): VolatilityBadge | null {
 		const absChange = Math.abs(change);
 		if (absChange > 50) return { text: '🚀 WILD', variant: 'default' as const };
@@ -212,17 +225,16 @@
 		return null;
 	}
 
-	let hasActiveFilters = $derived(
-		searchQuery !== '' ||
-			priceFilter !== 'all' ||
-			changeFilter !== 'all' ||
-			sortBy !== 'marketCap' ||
-			sortOrder !== 'desc'
-	);
+	$: hasActiveFilters =
+		(Boolean(searchQuery) && searchQuery.trim() !== '') ||
+		priceFilter !== 'all' ||
+		changeFilter !== 'all' ||
+		sortBy !== 'marketCap' ||
+		sortOrder !== 'desc';
 
-	let totalPages = $derived(Math.ceil(totalCount / perPage));
-	let startIndex = $derived((currentPage - 1) * perPage + 1);
-	let endIndex = $derived(Math.min(currentPage * perPage, totalCount));
+	$: totalPages = Math.max(1, Math.ceil(totalCount / perPage));
+	$: startIndex = totalCount === 0 ? 0 : (currentPage - 1) * perPage + 1;
+	$: endIndex = Math.min(currentPage * perPage, totalCount);
 
 	function handlePageChange(page: number) {
 		currentPage = page;
@@ -230,15 +242,12 @@
 		fetchMarketData();
 	}
 
-	let currentPriceFilterLabel = $derived(
-		priceFilterOptions.find((option) => option.value === priceFilter)?.label || 'All prices'
-	);
-	let currentChangeFilterLabel = $derived(
-		changeFilterOptions.find((option) => option.value === changeFilter)?.label || 'All changes'
-	);
-	let currentSortOrderLabel = $derived(
-		sortOrderOptions.find((option) => option.value === sortOrder)?.label || 'High to Low'
-	);
+	$: currentPriceFilterLabel =
+		priceFilterOptions.find((option) => option.value === priceFilter)?.label || 'All prices';
+	$: currentChangeFilterLabel =
+		changeFilterOptions.find((option) => option.value === changeFilter)?.label || 'All changes';
+	$: currentSortOrderLabel =
+		sortOrderOptions.find((option) => option.value === sortOrder)?.label || 'High to Low';
 </script>
 
 <SEO
@@ -396,7 +405,6 @@
 		</div>
 	</header>
 
-	<!-- Pagination Info -->
 	{#if !loading && totalCount > 0}
 		<div class="mb-4 flex items-center justify-between">
 			<div class="text-muted-foreground text-sm">
@@ -410,7 +418,6 @@
 		</div>
 	{/if}
 
-	<!-- Market Grid -->
 	{#if loading}
 		<MarketSkeleton />
 	{:else if coins.length === 0}
@@ -433,9 +440,9 @@
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-			{#each coins as coin, index}
+			{#each coins as coin (coin.id)}
 				{@const volatilityBadge = getVolatilityBadge(coin.change24h)}
-				{@const globalIndex = (currentPage - 1) * perPage + index + 1}
+				{@const globalIndex = (currentPage - 1) * perPage + @index + 1}
 				<Card.Root
 					class="group cursor-pointer gap-1 transition-all duration-200 hover:shadow-lg"
 					onclick={() => goto(`/coin/${coin.symbol}`)}
@@ -457,7 +464,6 @@
 
 					<Card.Content>
 						<div class="space-y-3">
-							<!-- Price -->
 							<div>
 								<div class="font-mono text-2xl font-bold">
 									${formatPrice(coin.currentPrice)}
@@ -474,7 +480,6 @@
 								</div>
 							</div>
 
-							<!-- Stats -->
 							<div class="space-y-2 text-sm">
 								<div class="flex justify-between">
 									<span class="text-muted-foreground">Market Cap</span>
@@ -495,7 +500,6 @@
 			{/each}
 		</div>
 
-		<!-- Pagination -->
 		{#if totalPages > 1}
 			<div class="mt-8 flex justify-center">
 				<Pagination.Root

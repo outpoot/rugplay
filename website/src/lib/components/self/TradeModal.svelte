@@ -24,50 +24,64 @@
 
 	let amount = $state('');
 	let loading = $state(false);
+	let confirmHighImpact = $state(false);
 
-	let numericAmount = $derived(parseFloat(amount) || 0);
-	let currentPrice = $derived(coin.currentPrice || 0);
+	let numericAmount = $derived(Number.parseFloat(amount) || 0);
+	let currentPrice = $derived(Number(coin?.currentPrice) || 0);
 
 	let maxSellableAmount = $derived(
 		type === 'SELL' && coin
-			? Math.min(userHolding, Math.floor(Number(coin.poolCoinAmount) * 0.995))
+			? Math.max(0, Math.min(userHolding, Math.floor(Number(coin.poolCoinAmount) * 0.995)))
 			: userHolding
 	);
-	let estimatedResult = $derived(calculateEstimate(numericAmount, type, currentPrice));
-	let hasValidAmount = $derived(numericAmount > 0);
-	let userBalance = $derived($PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance : 0);
-	let hasEnoughFunds = $derived(
-		type === 'BUY' ? numericAmount <= userBalance : numericAmount <= userHolding
-	);
-	let canTrade = $derived(hasValidAmount && hasEnoughFunds && !loading);
 
 	function calculateEstimate(amount: number, tradeType: 'BUY' | 'SELL', price: number) {
-		if (!amount || !price || !coin) return { result: 0 };
+		if (!amount || !price || !coin) return { result: 0, effectivePrice: 0, priceImpactPercent: 0, total: 0 };
 
 		const poolCoin = Number(coin.poolCoinAmount);
 		const poolBase = Number(coin.poolBaseCurrencyAmount);
 
-		if (poolCoin <= 0 || poolBase <= 0) return { result: 0 };
+		if (poolCoin <= 0 || poolBase <= 0) return { result: 0, effectivePrice: 0, priceImpactPercent: 0, total: 0 };
 
 		const k = poolCoin * poolBase;
+		const poolPrice = poolBase / poolCoin;
 
 		if (tradeType === 'BUY') {
-			// AMM formula: how many coins for spending 'amount' dollars
-			const newPoolBase = poolBase + amount;
+			const spend = amount;
+			const newPoolBase = poolBase + spend;
 			const newPoolCoin = k / newPoolBase;
-			return { result: poolCoin - newPoolCoin };
+			const coinsReceived = poolCoin - newPoolCoin;
+			if (coinsReceived <= 0) return { result: 0, effectivePrice: 0, priceImpactPercent: 0, total: 0 };
+			const effectivePrice = spend / coinsReceived;
+			const priceImpactPercent = ((effectivePrice - poolPrice) / poolPrice) * 100;
+			return { result: coinsReceived, effectivePrice, priceImpactPercent, total: spend };
 		} else {
-			// AMM formula: how many dollars for selling 'amount' coins
-			const newPoolCoin = poolCoin + amount;
+			const sellCoins = amount;
+			const newPoolCoin = poolCoin + sellCoins;
 			const newPoolBase = k / newPoolCoin;
-			return { result: poolBase - newPoolBase };
+			const baseReceived = poolBase - newPoolBase;
+			if (baseReceived <= 0 || sellCoins <= 0) return { result: 0, effectivePrice: 0, priceImpactPercent: 0, total: 0 };
+			const effectivePrice = baseReceived / sellCoins;
+			const priceImpactPercent = ((effectivePrice - poolPrice) / poolPrice) * 100;
+			return { result: baseReceived, effectivePrice, priceImpactPercent, total: baseReceived };
 		}
 	}
+
+	let estimatedResult = $derived(calculateEstimate(numericAmount, type, currentPrice));
+	let hasValidAmount = $derived(numericAmount > 0);
+	let userBalance = $derived($PORTFOLIO_SUMMARY ? Number($PORTFOLIO_SUMMARY.baseCurrencyBalance) : 0);
+	let hasEnoughFunds = $derived(
+		type === 'BUY' ? numericAmount <= userBalance && numericAmount > 0 : numericAmount <= userHolding && numericAmount > 0
+	);
+
+	let requireConfirmation = $derived(Math.abs(Number(estimatedResult.priceImpactPercent ?? 0)) > 20);
+	let canTrade = $derived(hasValidAmount && hasEnoughFunds && !loading && (!requireConfirmation || confirmHighImpact));
 
 	function handleClose() {
 		open = false;
 		amount = '';
 		loading = false;
+		confirmHighImpact = false;
 	}
 
 	async function handleTrade() {
@@ -107,6 +121,7 @@
 			});
 		} finally {
 			loading = false;
+			confirmHighImpact = false;
 		}
 	}
 
@@ -114,7 +129,6 @@
 		if (type === 'SELL') {
 			amount = maxSellableAmount.toString();
 		} else if ($PORTFOLIO_SUMMARY) {
-			// For BUY, max is user's balance
 			amount = userBalance.toString();
 		}
 	}
@@ -133,12 +147,11 @@
 				{/if}
 			</Dialog.Title>
 			<Dialog.Description>
-				Current price: ${coin.currentPrice.toFixed(6)} per {coin.symbol}
+				Current price: ${Number(coin.currentPrice).toFixed(6)} per {coin.symbol}
 			</Dialog.Description>
 		</Dialog.Header>
 
 		<div class="space-y-4">
-			<!-- Amount Input -->
 			<div class="space-y-2">
 				<Label for="amount">
 					{type === 'BUY' ? 'Amount to spend ($)' : `Amount (${coin.symbol})`}
@@ -152,13 +165,13 @@
 						bind:value={amount}
 						placeholder="0.00"
 						class="flex-1"
+						aria-label={type === 'BUY' ? 'Amount to spend in dollars' : `Amount of ${coin.symbol} to sell`}
 					/>
-					<Button variant="outline" size="sm" onclick={setMaxAmount}>Max</Button>
+					<Button variant="outline" size="sm" onclick={setMaxAmount} aria-label="Set max amount">Max</Button>
 				</div>
 				{#if type === 'SELL'}
 					<p class="text-muted-foreground text-xs">
-						Available: {userHolding.toFixed(6)}
-						{coin.symbol}
+						Available: {userHolding.toFixed(6)}{coin.symbol}
 						{#if maxSellableAmount < userHolding}
 							<br />Max sellable: {maxSellableAmount.toFixed(0)} {coin.symbol} (pool limit)
 						{/if}
@@ -170,7 +183,6 @@
 				{/if}
 			</div>
 
-			<!-- Estimated Cost/Return with explicit fees -->
 			{#if hasValidAmount}
 				<div class="bg-muted/50 rounded-lg p-3">
 					<div class="flex items-center justify-between">
@@ -179,9 +191,25 @@
 						</span>
 						<span class="font-bold">
 							{type === 'BUY'
-								? `~${estimatedResult.result.toFixed(6)} ${coin.symbol}`
-								: `~$${estimatedResult.result.toFixed(6)}`}
+								? `~${Number(estimatedResult.result).toFixed(6)} ${coin.symbol}`
+								: `~$${Number(estimatedResult.result).toFixed(6)}`}
 						</span>
+					</div>
+					<div class="mt-2 flex items-center gap-3 text-xs">
+						<div class="flex items-center gap-1">
+							<span class="text-muted-foreground">Effective price:</span>
+							<span class="font-mono">{Number(estimatedResult.effectivePrice || 0).toFixed(6)}</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span class="text-muted-foreground">Impact:</span>
+							<span class="font-mono">{Number(estimatedResult.priceImpactPercent || 0).toFixed(2)}%</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span class="text-muted-foreground">Total:</span>
+							<span class="font-mono">
+								{type === 'BUY' ? `$${Number(estimatedResult.total || 0).toFixed(6)}` : `$${Number(estimatedResult.total || 0).toFixed(6)}`}
+							</span>
+						</div>
 					</div>
 					<p class="text-muted-foreground mt-1 text-xs">
 						AMM estimation - includes slippage from pool impact
@@ -194,6 +222,13 @@
 					{type === 'BUY' ? 'Insufficient funds' : 'Insufficient coins'}
 				</Badge>
 			{/if}
+
+			{#if requireConfirmation}
+				<div class="flex items-center gap-2 text-sm">
+					<input id="confirm-high-impact" type="checkbox" bind:checked={confirmHighImpact} />
+					<label for="confirm-high-impact">I understand this trade has high price impact ({Number(estimatedResult.priceImpactPercent).toFixed(2)}%)</label>
+				</div>
+			{/if}
 		</div>
 
 		<Dialog.Footer class="flex gap-2">
@@ -202,6 +237,7 @@
 				onclick={handleTrade}
 				disabled={!canTrade}
 				variant={type === 'BUY' ? 'default' : 'destructive'}
+				aria-disabled={!canTrade}
 			>
 				{#if loading}
 					<Loader2 class="h-4 w-4 animate-spin" />

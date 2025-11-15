@@ -24,7 +24,7 @@ type WebSocketData = {
 
 const coinSockets = new Map<string, Set<ServerWebSocket<WebSocketData>>>();
 const userSockets = new Map<string, Set<ServerWebSocket<WebSocketData>>>();
-const pingIntervals = new WeakMap<ServerWebSocket<WebSocketData>, NodeJS.Timeout>();
+const pingIntervals = new WeakMap<ServerWebSocket<WebSocketData>, number>();
 
 redis.on('error', (err) => console.error('Redis Client Error', err));
 
@@ -48,7 +48,7 @@ redis.on('pmessage', (pattern, channel, msg) => {
 			const sockets = coinSockets.get(coinSymbol);
 			if (sockets) {
 				for (const ws of sockets) {
-					if (ws.readyState === WebSocket.OPEN) {
+					if (ws.readyState === 1) {
 						ws.send(msg);
 					}
 				}
@@ -66,7 +66,7 @@ redis.on('pmessage', (pattern, channel, msg) => {
 				});
 
 				for (const ws of sockets) {
-					if (ws.readyState === WebSocket.OPEN) {
+					if (ws.readyState === 1) {
 						ws.send(priceMessage);
 					}
 				}
@@ -77,7 +77,7 @@ redis.on('pmessage', (pattern, channel, msg) => {
 			console.log(`Received notification for user ${userId}:`, msg);
 			if (sockets) {
 				for (const ws of sockets) {
-					if (ws.readyState === WebSocket.OPEN) {
+					if (ws.readyState === 1) {
 						ws.send(msg);
 					}
 				}
@@ -97,7 +97,7 @@ redis.on('message', (channel, msg) => {
 
 			for (const [, sockets] of coinSockets.entries()) {
 				for (const ws of sockets) {
-					if (ws.readyState === WebSocket.OPEN) {
+					if (ws.readyState === 1) {
 						ws.send(tradeMessage);
 					}
 				}
@@ -124,7 +124,7 @@ redis.on('message', (channel, msg) => {
 			}
 
 			for (const ws of allSockets) {
-				if (ws.readyState === WebSocket.OPEN) {
+				if (ws.readyState === 1) {
 					ws.send(eventMessage);
 				}
 			}

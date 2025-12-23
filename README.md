@@ -192,4 +192,4 @@ Before you begin, make sure you have the following installed:
 This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International** License (**CC BY-NC 4.0**). See the [LICENSE](LICENSE) file for details.
 
 ## Thank you
-Thanks to `furstxd` for contributing to **Rugplay** with a [pull request](https://github.com/outpoot/rugplay/pull/168).
+Thank you to [furstxd](https://github.com/furstxd) for contributing to **Rugplay** with a [pull request](https://github.com/outpoot/rugplay/pull/168).

@@ -5,7 +5,7 @@ import { coin, userPortfolio, user, transaction, priceHistory } from '$lib/serve
 import { eq, and, gte } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { createNotification } from '$lib/server/notification';
-import { calculate24hMetrics, executeSellTrade } from '$lib/server/amm';
+import { calculate24hMetrics, executeSellTrade, AMMBuy } from '$lib/server/amm';
 
 export async function POST({ params, request }) {
     const session = await auth.api.getSession({
@@ -103,10 +103,11 @@ export async function POST({ params, request }) {
             const k = poolCoinAmount * poolBaseCurrencyAmount;
             const newPoolBaseCurrency = poolBaseCurrencyAmount + amount;
             const newPoolCoin = k / newPoolBaseCurrency;
-            const coinsBought = poolCoinAmount - newPoolCoin;
+            newPrice = newPoolBaseCurrency / newPoolCoin;
+
+            const coinsBought = AMMBuy(poolCoinAmount, poolBaseCurrencyAmount, amount);
 
             totalCost = amount;
-            newPrice = newPoolBaseCurrency / newPoolCoin;
             priceImpact = ((newPrice - currentPrice) / currentPrice) * 100;
 
             if (userBalance < totalCost) {

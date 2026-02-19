@@ -1,6 +1,7 @@
 import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
+import { AMMSell } from '$lib/server/amm';
 import { user, userPortfolio, coin } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 
@@ -21,7 +22,8 @@ export async function GET({ request }) {
 
         db.select({
             quantity: userPortfolio.quantity,
-            currentPrice: coin.currentPrice
+            poolCoinAmount: coin.poolCoinAmount,
+            poolBaseCurrencyAmount: coin.poolBaseCurrencyAmount
         })
             .from(userPortfolio)
             .innerJoin(coin, eq(userPortfolio.coinId, coin.id))
@@ -36,8 +38,12 @@ export async function GET({ request }) {
 
     for (const holding of holdings) {
         const quantity = Number(holding.quantity);
-        const price = Number(holding.currentPrice);
-        totalCoinValue += quantity * price;
+        const poolCoinAmount = Number(holding.poolCoinAmount);
+        const poolBaseCurrencyAmount = Number(holding.poolBaseCurrencyAmount);
+
+        const baseCurrencyReceived = AMMSell(poolCoinAmount, poolBaseCurrencyAmount, quantity);
+
+        totalCoinValue += baseCurrencyReceived;
     }
 
     const baseCurrencyBalance = Number(userData[0].baseCurrencyBalance);

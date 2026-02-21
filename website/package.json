@@ -71,5 +71,8 @@
 	"optionalDependencies": {
 		"@rollup/rollup-linux-x64-gnu": "*",
 		"lightningcss-linux-x64-gnu": "*"
+	},
+	"overrides": {
+		"@better-auth/utils": "$@better-auth/utils"
 	}
 }

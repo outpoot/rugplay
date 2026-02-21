@@ -1,5 +1,4 @@
 import OpenAI from 'openai';
-import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { OPENROUTER_API_KEY } from '$env/static/private';
 import { db } from './db';
@@ -281,30 +280,23 @@ Provide your response in the specified JSON format with a precise ISO 8601 datet
 `;
 
     try {
-        const completion = await openai.chat.completions.parse({
+        const completion = await openai.chat.completions.create({
             model: MODELS.STANDARD,
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.1,
-            response_format: zodResponseFormat(QuestionValidationSchema, "question_validation"),
+            response_format: { type: 'json_object' },
         });
 
-        const result = completion.choices[0].message;
-
-        if (result.refusal) {
-            return {
-                isValid: false,
-                requiresWebSearch: false,
-                reason: 'Request was refused by AI safety measures'
-            };
+        const content = completion.choices[0].message.content;
+        if (!content) {
+            throw new Error('No response content from AI');
         }
 
-        if (!result.parsed) {
-            throw new Error('No parsed response from AI');
-        }
+        const parsed = QuestionValidationSchema.parse(JSON.parse(content));
 
         return {
-            ...result.parsed,
-            suggestedResolutionDate: new Date(result.parsed.suggestedResolutionDate)
+            ...parsed,
+            suggestedResolutionDate: new Date(parsed.suggestedResolutionDate)
         };
     } catch (error) {
         console.error('Question validation error:', error);
@@ -367,28 +359,19 @@ Provide your response in the specified JSON format.
 `;
 
     try {
-        const completion = await openai.chat.completions.parse({
+        const completion = await openai.chat.completions.create({
             model,
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.1,
-            response_format: zodResponseFormat(QuestionResolutionSchema, "question_resolution"),
+            response_format: { type: 'json_object' },
         });
 
-        const result = completion.choices[0].message;
-
-        if (result.refusal) {
-            return {
-                resolution: false,
-                confidence: 0,
-                reasoning: 'Request was refused by AI safety measures'
-            };
+        const content = completion.choices[0].message.content;
+        if (!content) {
+            throw new Error('No response content from AI');
         }
 
-        if (!result.parsed) {
-            throw new Error('No parsed response from AI');
-        }
-
-        return result.parsed;
+        return QuestionResolutionSchema.parse(JSON.parse(content));
     } catch (error) {
         console.error('Question resolution error:', error);
         return {

@@ -195,7 +195,12 @@ async function checkAchievement(
 				.from(transaction)
 				.where(and(eq(transaction.userId, userId), sql`${transaction.type} IN ('BUY', 'SELL')`));
 			if (Number(tradeCount.cnt) === 0) return false;
-			return (ctx.newBalance ?? Infinity) < 1;
+			let balance = ctx.newBalance;
+			if (balance === undefined) {
+				const [u] = await db.select({ balance: user.baseCurrencyBalance }).from(user).where(eq(user.id, userId));
+				balance = u ? Number(u.balance) : Infinity;
+			}
+			return balance < 1;
 		}
 
 		// COIN CREATION

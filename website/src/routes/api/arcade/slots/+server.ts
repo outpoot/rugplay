@@ -116,7 +116,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
         await publishArcadeActivity(userId, result.won ? result.payout : result.amountWagered, result.won, 'slots', 3500);
 
-        await checkAndAwardAchievements(userId, ['arcade'], { arcadeWon: result.won, arcadeWager: result.amountWagered, slotsWinType: result.winType });
+        await checkAndAwardAchievements(userId, ['arcade', 'wealth'], { arcadeWon: result.won, arcadeWager: result.amountWagered, slotsWinType: result.winType });
 
         return json(result);
     } catch (e) {

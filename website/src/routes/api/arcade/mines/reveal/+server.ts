@@ -92,7 +92,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				return balance;
 			});
 
-			await checkAndAwardAchievements(userId, ['arcade'], {
+			await checkAndAwardAchievements(userId, ['arcade', 'wealth'], {
 				arcadeWon: false,
 				arcadeWager: game.betAmount
 			});
@@ -166,7 +166,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				return balance;
 			});
 
-			await checkAndAwardAchievements(userId, ['arcade'], {
+			await checkAndAwardAchievements(userId, ['arcade', 'wealth'], {
 				arcadeWon: true,
 				arcadeWager: game.betAmount
 			});

@@ -64,7 +64,8 @@
 		"sharp": "^0.34.2",
 		"svelte-apexcharts": "^1.0.2",
 		"svelte-confetti": "^2.3.1",
-		"svelte-lightweight-charts": "^2.2.0"
+		"svelte-lightweight-charts": "^2.2.0",
+		"zod": "^4.3.6"
 	},
 	"optionalDependencies": {
 		"@rollup/rollup-linux-x64-gnu": "*",

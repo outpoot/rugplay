@@ -54,7 +54,8 @@ export async function POST({ params, request }) {
             creatorId: coin.creatorId,
             tradingUnlocksAt: coin.tradingUnlocksAt,
             isLocked: coin.isLocked,
-            change24h: coin.change24h
+            change24h: coin.change24h,
+            createdAt: coin.createdAt
         }).from(coin).where(eq(coin.symbol, normalizedSymbol)).for('update').limit(1);
 
         if (!coinData) {
@@ -341,9 +342,11 @@ export async function POST({ params, request }) {
             checkAndAwardAchievements(userId, ['trading', 'wealth', 'creation', 'special'], {
                 tradeType: 'SELL',
                 tradeAmount: totalCost,
+                coinChange24h: metrics.change24h,
                 newBalance: userBalance + totalCost,
                 newPrice,
-                oldPrice: currentPrice
+                oldPrice: currentPrice,
+                coinCreatedAt: coinData.createdAt
             });
 
             return json({

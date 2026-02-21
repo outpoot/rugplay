@@ -78,7 +78,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 	{ id: 'create_5', name: 'Serial Minter', description: 'Create 5 coins', icon: 'blue_crystal.png', difficulty: 'medium', cashReward: 5000, gemReward: 25, category: 'creation', targetValue: 5 },
 	{ id: 'create_25', name: 'Coin Factory', description: 'Create 25 coins', icon: 'yellow_crystal.png', difficulty: 'hard', cashReward: 25000, gemReward: 100, category: 'creation', targetValue: 25 },
 	{ id: 'moon_100x', name: 'To The Moon', description: 'Have a coin you created reach $1 (1,000,000x its starting price)', icon: 'rocket.png', difficulty: 'legendary', cashReward: 50000, gemReward: 150, category: 'creation' },
-	{ id: 'rug_pull', name: 'Rug Lord', description: "Crash a coin's price by 90%+ in a single sell", icon: 'sword.png', difficulty: 'hard', cashReward: 10000, gemReward: 50, category: 'creation' },
+	{ id: 'rug_pull', name: 'Rug Lord', description: 'Crash a coin\'s 24h change to -90% in under 5 seconds', icon: 'sword.png', difficulty: 'hard', cashReward: 10000, gemReward: 50, category: 'creation' },
 
 	// ARCADE (8)
 	{ id: 'first_arcade', name: 'Feeling Lucky', description: 'Play your first arcade game', icon: 'dice.png', difficulty: 'easy', cashReward: 1000, gemReward: 5, category: 'arcade' },

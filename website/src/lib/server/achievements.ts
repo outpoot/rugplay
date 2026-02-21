@@ -1,5 +1,15 @@
 import { db } from './db';
-import { user, userAchievement, transaction, coin, userPortfolio, comment, predictionQuestion, predictionBet, userInventory } from './db/schema';
+import {
+	user,
+	userAchievement,
+	transaction,
+	coin,
+	userPortfolio,
+	comment,
+	predictionQuestion,
+	predictionBet,
+	userInventory
+} from './db/schema';
 import { eq, and, sql, count, gte, gt, ne } from 'drizzle-orm';
 import { ACHIEVEMENTS_MAP, ACHIEVEMENTS } from '$lib/data/achievements';
 import type { AchievementDef } from '$lib/data/achievements';
@@ -13,6 +23,7 @@ export interface AchievementContext {
 	newBalance?: number; // balance after action
 	newPrice?: number; // price after trade
 	oldPrice?: number; // price before trade
+	coinCreatedAt?: Date; // when the coin was created
 
 	// Arcade context
 	arcadeWon?: boolean;
@@ -67,9 +78,7 @@ export async function checkAndAwardAchievements(
 }
 
 function getCandidatesForCategory(category: string, owned: Set<string>): AchievementDef[] {
-	return Object.values(ACHIEVEMENTS_MAP).filter(
-		(a) => a.category === category && !owned.has(a.id)
-	);
+	return Object.values(ACHIEVEMENTS_MAP).filter((a) => a.category === category && !owned.has(a.id));
 }
 
 async function checkCandidates(
@@ -103,7 +112,11 @@ async function checkAchievement(
 		case 'trades_50':
 		case 'trades_500':
 		case 'trades_5000': {
-			const thresholds: Record<string, number> = { trades_50: 50, trades_500: 500, trades_5000: 5000 };
+			const thresholds: Record<string, number> = {
+				trades_50: 50,
+				trades_500: 500,
+				trades_5000: 5000
+			};
 			const [result] = await db
 				.select({ cnt: count() })
 				.from(transaction)
@@ -132,7 +145,9 @@ async function checkAchievement(
 
 		case 'volume_10m': {
 			const [result] = await db
-				.select({ total: sql<string>`COALESCE(SUM(CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC)), 0)` })
+				.select({
+					total: sql<string>`COALESCE(SUM(CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC)), 0)`
+				})
 				.from(transaction)
 				.where(and(eq(transaction.userId, userId), sql`${transaction.type} IN ('BUY', 'SELL')`));
 			return Number(result.total) >= 10000000;
@@ -140,23 +155,38 @@ async function checkAchievement(
 
 		case 'diamond_hands': {
 			const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-			const [result] = await db
-				.select({ cnt: count() })
-				.from(userPortfolio)
-				.where(
-					and(
-						eq(userPortfolio.userId, userId),
-						gt(userPortfolio.quantity, '0'),
-						sql`EXISTS (
-							SELECT 1 FROM "transaction" t
-							WHERE t.user_id = ${userId}
-							AND t.coin_id = ${userPortfolio.coinId}
-							AND t.type = 'BUY'
-							AND t.timestamp <= ${thirtyDaysAgo}
-						)`
+			const result = await db.execute(sql`
+				WITH running AS (
+					SELECT t.coin_id, t.timestamp, t.type,
+						SUM(CASE WHEN t.type = 'BUY' THEN t.quantity::numeric
+								 WHEN t.type = 'SELL' THEN -t.quantity::numeric
+								 ELSE 0 END)
+						OVER (PARTITION BY t.coin_id ORDER BY t.timestamp) AS bal
+					FROM "transaction" t
+					WHERE t.user_id = ${userId}
+					AND t.type IN ('BUY', 'SELL')
+					AND t.coin_id IN (
+						SELECT coin_id FROM "user_portfolio"
+						WHERE user_id = ${userId} AND quantity::numeric > 0
 					)
-				);
-			return Number(result.cnt) > 0;
+				),
+				last_zero AS (
+					SELECT coin_id, MAX(timestamp) AS zero_time
+					FROM running WHERE bal <= 0
+					GROUP BY coin_id
+				),
+				hold_start AS (
+					SELECT r.coin_id, MIN(r.timestamp) AS start_time
+					FROM running r
+					LEFT JOIN last_zero lz ON r.coin_id = lz.coin_id
+					WHERE r.type = 'BUY'
+					AND r.timestamp > COALESCE(lz.zero_time, '1970-01-01'::timestamptz)
+					GROUP BY r.coin_id
+				)
+				SELECT COUNT(*) AS cnt FROM hold_start
+				WHERE start_time <= ${thirtyDaysAgo}
+			`);
+			return Number(result[0]?.cnt ?? 0) > 0;
 		}
 
 		// WEALTH
@@ -168,7 +198,7 @@ async function checkAchievement(
 				portfolio_1k: 1000,
 				portfolio_100k: 100000,
 				portfolio_1m: 1000000,
-				portfolio_1b: 1000000000,
+				portfolio_1b: 1000000000
 			};
 			const [userData] = await db
 				.select({ balance: user.baseCurrencyBalance })
@@ -179,7 +209,7 @@ async function checkAchievement(
 
 			const [holdings] = await db
 				.select({
-					value: sql<string>`COALESCE(SUM(CAST(${userPortfolio.quantity} AS NUMERIC) * CAST(${coin.currentPrice} AS NUMERIC)), 0)`,
+					value: sql<string>`COALESCE(SUM(CAST(${userPortfolio.quantity} AS NUMERIC) * CAST(${coin.currentPrice} AS NUMERIC)), 0)`
 				})
 				.from(userPortfolio)
 				.leftJoin(coin, eq(userPortfolio.coinId, coin.id))
@@ -197,7 +227,10 @@ async function checkAchievement(
 			if (Number(tradeCount.cnt) === 0) return false;
 			let balance = ctx.newBalance;
 			if (balance === undefined) {
-				const [u] = await db.select({ balance: user.baseCurrencyBalance }).from(user).where(eq(user.id, userId));
+				const [u] = await db
+					.select({ balance: user.baseCurrencyBalance })
+					.from(user)
+					.where(eq(user.id, userId));
 				balance = u ? Number(u.balance) : Infinity;
 			}
 			return balance < 1;
@@ -221,18 +254,23 @@ async function checkAchievement(
 			const [result] = await db
 				.select({ cnt: count() })
 				.from(coin)
-				.where(
-					and(
-						eq(coin.creatorId, userId),
-						gte(coin.currentPrice, targetPrice.toString())
-					)
-				);
+				.where(and(eq(coin.creatorId, userId), gte(coin.currentPrice, targetPrice.toString())));
 			return Number(result.cnt) > 0;
 		}
 
-		case 'rug_pull':
-			if (ctx.tradeType !== 'SELL' || !ctx.oldPrice || !ctx.newPrice) return false;
-			return ctx.newPrice <= ctx.oldPrice * 0.1;
+		case 'rug_pull': {
+			if (
+				ctx.tradeType !== 'SELL' ||
+				!ctx.coinCreatedAt ||
+				!ctx.oldPrice ||
+				!ctx.newPrice ||
+				ctx.coinChange24h === undefined
+			)
+				return false;
+			const timeSinceCreation = Date.now() - ctx.coinCreatedAt.getTime();
+			const sellPriceDrop = (ctx.oldPrice - ctx.newPrice) / ctx.oldPrice;
+			return sellPriceDrop >= 0.5 && ctx.coinChange24h <= -90 && timeSinceCreation <= 5000;
+		}
 
 		// ARCADE
 		case 'first_arcade':
@@ -328,12 +366,7 @@ async function checkAchievement(
 			const [result] = await db
 				.select({ cnt: count() })
 				.from(predictionBet)
-				.where(
-					and(
-						eq(predictionBet.userId, userId),
-						gt(predictionBet.actualWinnings, '0')
-					)
-				);
+				.where(and(eq(predictionBet.userId, userId), gt(predictionBet.actualWinnings, '0')));
 			return Number(result.cnt) >= threshold;
 		}
 
@@ -354,17 +387,16 @@ async function checkAchievement(
 					netExtraction: sql<string>`
 						SUM(CASE WHEN ${transaction.type} = 'SELL' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END) -
 						SUM(CASE WHEN ${transaction.type} = 'BUY' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END)
-					`,
+					`
 				})
 				.from(transaction)
 				.where(
-					and(
-						gte(transaction.timestamp, oneDayAgo),
-						sql`${transaction.type} IN ('BUY', 'SELL')`
-					)
+					and(gte(transaction.timestamp, oneDayAgo), sql`${transaction.type} IN ('BUY', 'SELL')`)
 				)
 				.groupBy(transaction.userId)
-				.orderBy(sql`SUM(CASE WHEN ${transaction.type} = 'SELL' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END) - SUM(CASE WHEN ${transaction.type} = 'BUY' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END) DESC`)
+				.orderBy(
+					sql`SUM(CASE WHEN ${transaction.type} = 'SELL' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END) - SUM(CASE WHEN ${transaction.type} = 'BUY' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END) DESC`
+				)
 				.limit(1);
 
 			if (topRugpullers.length === 0) return false;
@@ -374,7 +406,7 @@ async function checkAchievement(
 		case 'transfers_10_users': {
 			const [result] = await db
 				.select({
-					cnt: sql<string>`COUNT(DISTINCT ${transaction.recipientUserId})`,
+					cnt: sql<string>`COUNT(DISTINCT ${transaction.recipientUserId})`
 				})
 				.from(transaction)
 				.where(and(eq(transaction.userId, userId), eq(transaction.type, 'TRANSFER_OUT')));
@@ -384,7 +416,7 @@ async function checkAchievement(
 		case 'transfer_500k': {
 			const [result] = await db
 				.select({
-					total: sql<string>`COALESCE(SUM(CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC)), 0)`,
+					total: sql<string>`COALESCE(SUM(CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC)), 0)`
 				})
 				.from(transaction)
 				.where(and(eq(transaction.userId, userId), eq(transaction.type, 'TRANSFER_OUT')));
@@ -460,7 +492,10 @@ async function awardAchievement(userId: number, achievementId: string): Promise<
 		return false;
 	}
 }
-export async function claimAchievement(userId: number, achievementId: string): Promise<{ cashReward: number; gemReward: number } | null> {
+export async function claimAchievement(
+	userId: number,
+	achievementId: string
+): Promise<{ cashReward: number; gemReward: number } | null> {
 	const def = ACHIEVEMENTS_MAP[achievementId];
 	if (!def) return null;
 
@@ -485,7 +520,7 @@ export async function claimAchievement(userId: number, achievementId: string): P
 				.set({
 					baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${def.cashReward}`,
 					gems: sql`${user.gems} + ${def.gemReward}`,
-					updatedAt: sql`NOW()`,
+					updatedAt: sql`NOW()`
 				})
 				.where(eq(user.id, userId));
 
@@ -497,18 +532,15 @@ export async function claimAchievement(userId: number, achievementId: string): P
 	}
 }
 
-export async function claimAllAchievements(userId: number): Promise<{ cashReward: number; gemReward: number; count: number }> {
+export async function claimAllAchievements(
+	userId: number
+): Promise<{ cashReward: number; gemReward: number; count: number }> {
 	try {
 		return await db.transaction(async (tx) => {
 			const unclaimed = await tx
 				.select({ achievementId: userAchievement.achievementId })
 				.from(userAchievement)
-				.where(
-					and(
-						eq(userAchievement.userId, userId),
-						eq(userAchievement.claimed, false)
-					)
-				)
+				.where(and(eq(userAchievement.userId, userId), eq(userAchievement.claimed, false)))
 				.for('update');
 
 			if (unclaimed.length === 0) return { cashReward: 0, gemReward: 0, count: 0 };
@@ -527,19 +559,14 @@ export async function claimAllAchievements(userId: number): Promise<{ cashReward
 			await tx
 				.update(userAchievement)
 				.set({ claimed: true })
-				.where(
-					and(
-						eq(userAchievement.userId, userId),
-						eq(userAchievement.claimed, false)
-					)
-				);
+				.where(and(eq(userAchievement.userId, userId), eq(userAchievement.claimed, false)));
 
 			await tx
 				.update(user)
 				.set({
 					baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${totalCash}`,
 					gems: sql`${user.gems} + ${totalGems}`,
-					updatedAt: sql`NOW()`,
+					updatedAt: sql`NOW()`
 				})
 				.where(eq(user.id, userId));
 
@@ -565,7 +592,7 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 				loginStreak: user.loginStreak,
 				totalRewardsClaimed: user.totalRewardsClaimed,
 				prestigeLevel: user.prestigeLevel,
-				cratesOpened: user.cratesOpened,
+				cratesOpened: user.cratesOpened
 			})
 			.from(user)
 			.where(eq(user.id, userId))
@@ -597,7 +624,9 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 		progress['trades_5000'] = trades;
 
 		const [volumeResult] = await db
-			.select({ total: sql<string>`COALESCE(SUM(CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC)), 0)` })
+			.select({
+				total: sql<string>`COALESCE(SUM(CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC)), 0)`
+			})
 			.from(transaction)
 			.where(and(eq(transaction.userId, userId), sql`${transaction.type} IN ('BUY', 'SELL')`));
 		progress['volume_10m'] = Number(volumeResult?.total ?? 0);
@@ -645,7 +674,9 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 		progress['transfers_10_users'] = Number(transferUsers?.cnt ?? 0);
 
 		const [transferTotal] = await db
-			.select({ total: sql<string>`COALESCE(SUM(CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC)), 0)` })
+			.select({
+				total: sql<string>`COALESCE(SUM(CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC)), 0)`
+			})
 			.from(transaction)
 			.where(and(eq(transaction.userId, userId), eq(transaction.type, 'TRANSFER_OUT')));
 		progress['transfer_500k'] = Number(transferTotal?.total ?? 0);

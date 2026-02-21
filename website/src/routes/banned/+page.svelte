@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import * as Card from '$lib/components/ui/card';
-	import { AlertTriangle } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { Alert02Icon } from '@hugeicons/core-free-icons';
 
 	let reason = $derived($page.url.searchParams.get('reason') || 'none');
 </script>
@@ -12,7 +13,7 @@
 			<div
 				class="bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
 			>
-				<AlertTriangle class="text-primary h-8 w-8" />
+				<HugeiconsIcon icon={Alert02Icon} class="text-primary h-8 w-8" />
 			</div>
 			<Card.Title class="text-primary text-2xl">Account Suspended</Card.Title>
 		</Card.Header>

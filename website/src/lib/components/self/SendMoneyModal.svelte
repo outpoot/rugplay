@@ -5,7 +5,13 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Send, DollarSign, Coins, Loader2 } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		DollarCircleIcon,
+		Coins01Icon,
+		Loading03Icon,
+		SentIcon
+	} from '@hugeicons/core-free-icons';
 	import { PORTFOLIO_DATA } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
 
@@ -180,7 +186,7 @@
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
-				<Send class="h-5 w-5" />
+				<HugeiconsIcon icon={SentIcon} class="h-5 w-5" />
 				Send
 			</Dialog.Title>
 			<Dialog.Description>Send cash or coins to another user</Dialog.Description>
@@ -210,13 +216,13 @@
 						<Select.Group>
 							<Select.Item value="CASH" label="Cash ($)">
 								<div class="flex items-center gap-2">
-									<DollarSign class="h-4 w-4" />
+									<HugeiconsIcon icon={DollarCircleIcon} class="h-4 w-4" />
 									Cash ($)
 								</div>
 							</Select.Item>
 							<Select.Item value="COIN" label="Coins" disabled={coinHoldings.length === 0}>
 								<div class="flex items-center gap-2">
-									<Coins class="h-4 w-4" />
+									<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
 									Coins
 								</div>
 							</Select.Item>
@@ -265,7 +271,7 @@
 						placeholder="0.00"
 						class="flex-1"
 					/>
-					<Button variant="outline" size="sm" onclick={setMaxAmount}>Max</Button>
+					<Button variant="outline" size="icon" class="w-14" onclick={setMaxAmount}>Max</Button>
 				</div>
 				<div class="flex justify-between text-xs">
 					<p class="text-muted-foreground">
@@ -331,10 +337,10 @@
 			<Button variant="outline" onclick={handleClose} disabled={loading}>Cancel</Button>
 			<Button onclick={handleSend} disabled={!canSend}>
 				{#if loading}
-					<Loader2 class="h-4 w-4 animate-spin" />
+					<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
 					Sending...
 				{:else}
-					<Send class="h-4 w-4" />
+					<HugeiconsIcon icon={SentIcon} class="h-4 w-4" />
 					Send
 				{/if}
 			</Button>

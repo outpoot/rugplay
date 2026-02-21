@@ -154,7 +154,7 @@
 		const animationDuration = 1500;
 
 		try {
-			const response = await fetch('/api/gambling/dice', {
+			const response = await fetch('/api/arcade/dice', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

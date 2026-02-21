@@ -114,7 +114,7 @@ export async function resolveExpiredQuestions() {
                             const { userId, amount } = notifData;
 
                             const title = 'Prediction skipped 🥀';
-                            const message = `You received a full refund of ${formatValue(amount)} for "${question.question}". We recommend betting on more reliable predictions!`;
+                            const message = `You received a full refund of ${formatValue(amount)} for "${question.question}". We recommend predicting on more reliable questions!`;
 
                             await createNotification(
                                 userId.toString(),

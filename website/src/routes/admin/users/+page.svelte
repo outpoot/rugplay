@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as Card from '$lib/components/ui/card';
-	import * as Table from '$lib/components/ui/table';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import { Badge } from '$lib/components/ui/badge';
 	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { Hammer, UserCheck, Ban } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { LegalHammerIcon, UserCheck01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 	import { toast } from 'svelte-sonner';
 
 	interface BannedUser {
@@ -105,11 +104,11 @@
 	<Card.Root>
 		<Card.Header class="flex flex-row items-center justify-between">
 			<Card.Title class="flex items-center gap-2">
-				<Hammer class="h-5 w-5" />
+				<HugeiconsIcon icon={LegalHammerIcon} class="h-5 w-5" />
 				Banned Users ({bannedUsers.length})
 			</Card.Title>
 			<Button onclick={openBanDialog}>
-				<Ban class="h-4 w-4" />
+				<HugeiconsIcon icon={Cancel01Icon} class="h-4 w-4" />
 				Ban User
 			</Button>
 		</Card.Header>
@@ -148,7 +147,7 @@
 								onclick={() => unbanUser(user.id)}
 								disabled={actionLoading}
 							>
-								<UserCheck class="h-4 w-4" />
+								<HugeiconsIcon icon={UserCheck01Icon} class="h-4 w-4" />
 								Unban
 							</Button>
 						</div>

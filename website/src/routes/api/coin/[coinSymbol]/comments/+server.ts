@@ -5,6 +5,7 @@ import { comment, coin, user, commentLike } from '$lib/server/db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { isNameAppropriate } from '$lib/server/moderation';
+import { checkAndAwardAchievements } from '$lib/server/achievements';
 
 export async function GET({ params, request }) {
     const session = await auth.api.getSession({
@@ -36,6 +37,7 @@ export async function GET({ params, request }) {
                 userName: user.name,
                 userUsername: user.username,
                 userImage: user.image,
+                userNameColor: user.nameColor,
                 isLikedByUser: session?.user ?
                     sql<boolean>`EXISTS(SELECT 1 FROM ${commentLike} WHERE ${commentLike.userId} = ${session.user.id} AND ${commentLike.commentId} = ${comment.id})` :
                     sql<boolean>`FALSE`
@@ -112,6 +114,7 @@ export async function POST({ request, params }) {
                 userName: user.name,
                 userUsername: user.username,
                 userImage: user.image,
+                userNameColor: user.nameColor,
                 isLikedByUser: sql<boolean>`FALSE`
             })
             .from(comment)
@@ -126,6 +129,8 @@ export async function POST({ request, params }) {
                 data: commentWithUser
             })
         );
+
+        checkAndAwardAchievements(userId, ['social']);
 
         return json({ comment: commentWithUser });
     } catch (e) {

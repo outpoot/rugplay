@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 export const transactionTypeEnum = pgEnum('transaction_type', ['BUY', 'SELL', 'TRANSFER_IN', 'TRANSFER_OUT']);
 export const predictionMarketEnum = pgEnum('prediction_market_status', ['ACTIVE', 'RESOLVED', 'CANCELLED']);
 export const notificationTypeEnum = pgEnum('notification_type', ['HOPIUM', 'SYSTEM', 'TRANSFER', 'RUG_PULL']);
+export const shopItemTypeEnum = pgEnum('shop_item_type', ['namecolor']);
 
 export const user = pgTable("user", {
 	id: serial("id").primaryKey(),
@@ -33,15 +34,26 @@ export const user = pgTable("user", {
 	}).notNull().default("0.00000000"),
 	loginStreak: integer("login_streak").notNull().default(0),
 	prestigeLevel: integer("prestige_level").default(0),
-	gamblingLosses: decimal("gambling_losses", {
+	arcadeLosses: decimal("gambling_losses", {
 		precision: 20,
 		scale: 8,
 	}).notNull().default("0.00000000"),
-	gamblingWins: decimal("gambling_wins", {
+	arcadeWins: decimal("gambling_wins", {
 		precision: 20,
 		scale: 8,
 	}).notNull().default("0.00000000"),
+	totalArcadeGamesPlayed: integer("total_arcade_games_played").notNull().default(0),
+	arcadeWinStreak: integer("arcade_win_streak").notNull().default(0),
+	arcadeBestWinStreak: integer("arcade_best_win_streak").notNull().default(0),
+	totalArcadeWagered: decimal("total_arcade_wagered", {
+		precision: 20,
+		scale: 8,
+	}).notNull().default("0.00000000"),
+	cratesOpened: integer("crates_opened").notNull().default(0),
 	halloweenBadge2025: boolean("halloween_badge_2025").default(false),
+	gems: integer("gems").notNull().default(0),
+	nameColor: text("name_color"),
+	founderBadge: boolean("founder_badge").notNull().default(false),
 }, (table) => {
 	return {
 		usernameIdx: index("user_username_idx").on(table.username),
@@ -312,4 +324,38 @@ export const apikey = pgTable("apikey", {
 	metadata: text('metadata')
 }, (table) => ({
 	userIdx: index("idx_apikey_user").on(table.userId)
+}));
+
+export const gemTransactions = pgTable("gem_transactions", {
+	id: serial("id").primaryKey(),
+	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	polarOrderId: varchar("polar_order_id", { length: 100 }).notNull().unique(),
+	gemsAmount: integer("gems_amount").notNull(),
+	usdAmount: integer("usd_amount").notNull(), // in cents
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+	userIdIdx: index("gem_transactions_user_id_idx").on(table.userId),
+}));
+
+export const userInventory = pgTable("user_inventory", {
+	id: serial("id").primaryKey(),
+	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	itemType: shopItemTypeEnum("item_type").notNull(),
+	itemKey: varchar("item_key", { length: 100 }).notNull(),
+	purchasedAt: timestamp("purchased_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+	userItemUnique: unique("user_inventory_unique").on(table.userId, table.itemType, table.itemKey),
+	userIdIdx: index("user_inventory_user_id_idx").on(table.userId),
+}));
+
+export const userAchievement = pgTable("user_achievement", {
+	id: serial("id").primaryKey(),
+	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	achievementId: varchar("achievement_id", { length: 50 }).notNull(),
+	unlockedAt: timestamp("unlocked_at", { withTimezone: true }).notNull().defaultNow(),
+	claimed: boolean("claimed").notNull().default(false),
+}, (table) => ({
+	userAchievementUnique: unique("user_achievement_unique").on(table.userId, table.achievementId),
+	userIdIdx: index("user_achievement_user_id_idx").on(table.userId),
+	achievementIdIdx: index("user_achievement_achievement_id_idx").on(table.achievementId),
 }));

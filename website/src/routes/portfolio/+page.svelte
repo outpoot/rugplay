@@ -7,7 +7,15 @@
 	import { formatPrice, formatValue, formatQuantity, formatDate } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { TrendingUp, DollarSign, Wallet, Receipt, Send } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		TradeUpIcon,
+		DollarCircleIcon,
+		Wallet01Icon,
+		ReceiptDollarIcon,
+		Invoice03Icon,
+		SentIcon
+	} from '@hugeicons/core-free-icons';
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { PORTFOLIO_DATA, fetchPortfolioData } from '$lib/stores/portfolio-data';
@@ -258,7 +266,7 @@
 		{#if $USER_DATA}
 			<div class="flex gap-2">
 				<Button onclick={() => (sendMoneyModalOpen = true)}>
-					<Send class="h-4 w-4" />
+					<HugeiconsIcon icon={SentIcon} class="h-4 w-4" />
 					Send Money
 				</Button>
 			</div>
@@ -292,7 +300,7 @@
 				<Card.Root class="text-success gap-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
-							<Wallet class="h-4 w-4" />
+							<HugeiconsIcon icon={Wallet01Icon} class="h-4 w-4" />
 							Total
 						</Card.Title>
 					</Card.Header>
@@ -305,7 +313,7 @@
 				<Card.Root class="gap-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
-							<DollarSign class="h-4 w-4" />
+							<HugeiconsIcon icon={DollarCircleIcon} class="h-4 w-4" />
 							Cash Balance
 						</Card.Title>
 					</Card.Header>
@@ -325,7 +333,7 @@
 				<Card.Root class="gap-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
-							<TrendingUp class="h-4 w-4" />
+							<HugeiconsIcon icon={TradeUpIcon} class="h-4 w-4" />
 							Coin Holdings
 						</Card.Title>
 					</Card.Header>
@@ -345,7 +353,7 @@
 						<div
 							class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
 						>
-							<Wallet class="text-muted-foreground h-8 w-8" />
+							<HugeiconsIcon icon={Wallet01Icon} class="text-muted-foreground h-8 w-8" />
 						</div>
 						<h3 class="mb-2 text-lg font-semibold">No coin holdings</h3>
 						<p class="text-muted-foreground mb-6">
@@ -379,7 +387,7 @@
 					<div class="flex items-center justify-between">
 						<div>
 							<Card.Title class="flex items-center gap-2">
-								<Receipt class="h-5 w-5" />
+								<HugeiconsIcon icon={ReceiptDollarIcon} class="h-5 w-5" />
 								Recent Transactions
 							</Card.Title>
 							<Card.Description>Your latest trading activity</Card.Description>
@@ -396,7 +404,7 @@
 						columns={transactionsColumns}
 						data={transactions}
 						onRowClick={(tx) => !tx.isTransfer && goto(`/coin/${tx.coin.symbol}`)}
-						emptyIcon={Receipt}
+						emptyIcon={Invoice03Icon}
 						emptyTitle="No transactions yet"
 						emptyDescription="You haven't made any trades yet. Start by buying or selling coins."
 					/>

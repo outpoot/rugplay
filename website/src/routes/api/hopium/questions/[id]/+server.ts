@@ -33,6 +33,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
                 creatorName: user.name,
                 creatorUsername: user.username,
                 creatorImage: user.image,
+                creatorNameColor: user.nameColor,
             })
             .from(predictionQuestion)
             .leftJoin(user, eq(predictionQuestion.creatorId, user.id))
@@ -58,6 +59,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
                 userName: user.name,
                 userUsername: user.username,
                 userImage: user.image,
+                userNameColor: user.nameColor,
             })
             .from(predictionBet)
             .leftJoin(user, eq(predictionBet.userId, user.id))
@@ -177,6 +179,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
                 name: questionData.creatorName,
                 username: questionData.creatorUsername,
                 image: questionData.creatorImage,
+                nameColor: questionData.creatorNameColor,
             },
             userBets,
             recentBets: recentBets.map(bet => ({
@@ -189,6 +192,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
                     name: bet.userName,
                     username: bet.userUsername,
                     image: bet.userImage,
+                    nameColor: bet.userNameColor,
                 }
             }))
         };

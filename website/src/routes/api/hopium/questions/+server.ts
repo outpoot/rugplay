@@ -61,6 +61,7 @@ export const GET: RequestHandler = async ({ url, request }) => {
                 creatorName: user.name,
                 creatorUsername: user.username,
                 creatorImage: user.image,
+                creatorNameColor: user.nameColor,
             })
                 .from(predictionQuestion)
                 .leftJoin(user, eq(predictionQuestion.creatorId, user.id))
@@ -126,6 +127,7 @@ export const GET: RequestHandler = async ({ url, request }) => {
                     name: q.creatorName,
                     username: q.creatorUsername,
                     image: q.creatorImage,
+                    nameColor: q.creatorNameColor,
                 },
                 userBets
             };

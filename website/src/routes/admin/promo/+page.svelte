@@ -13,7 +13,16 @@
 	import { Alert, AlertDescription } from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { Plus, Ticket, Users, Calendar, XCircle, Loader2, CheckIcon } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		Add01Icon,
+		Ticket01Icon,
+		UserGroupIcon,
+		Calendar01Icon,
+		CancelCircleIcon,
+		Loading03Icon,
+		Tick01Icon
+	} from '@hugeicons/core-free-icons';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { formatDate, getExpirationDate } from '$lib/utils';
 	import type { PromoCode } from '$lib/types/promo-code';
@@ -133,7 +142,7 @@
 {:else}
 	<div class="container mx-auto space-y-4 p-4">
 		<div class="flex items-center gap-2">
-			<Ticket class="h-5 w-5" />
+			<HugeiconsIcon icon={Ticket01Icon} class="h-5 w-5" />
 			<h1 class="text-2xl font-bold">Promo Codes</h1>
 		</div>
 
@@ -142,7 +151,7 @@
 			<Card>
 				<CardHeader class="pb-3">
 					<CardTitle class="flex items-center gap-2 text-lg">
-						<Plus class="h-4 w-4" />
+						<HugeiconsIcon icon={Add01Icon} class="h-4 w-4" />
 						Create
 					</CardTitle>
 					<CardDescription class="text-sm">
@@ -218,9 +227,9 @@
 								class={createSuccess ? 'text-success' : ''}
 							>
 								{#if createSuccess}
-									<CheckIcon class="h-4 w-4 text-green-600" />
+									<HugeiconsIcon icon={Tick01Icon} class="h-4 w-4 text-green-600" />
 								{:else}
-									<XCircle class="h-4 w-4" />
+									<HugeiconsIcon icon={CancelCircleIcon} class="h-4 w-4" />
 								{/if}
 								<AlertDescription class={createSuccess ? 'text-green-800 dark:text-green-200' : ''}>
 									{createMessage}
@@ -238,10 +247,10 @@
 							size="sm"
 						>
 							{#if isCreating}
-								<Loader2 class="h-3 w-3 animate-spin" />
+								<HugeiconsIcon icon={Loading03Icon} class="h-3 w-3 animate-spin" />
 								Creating...
 							{:else}
-								<Plus class="h-3 w-3" />
+								<HugeiconsIcon icon={Add01Icon} class="h-3 w-3" />
 								Create Code
 							{/if}
 						</Button>
@@ -272,7 +281,7 @@
 							{/each}
 						{:else if promoCodes.length === 0}
 							<div class="text-muted-foreground py-6 text-center">
-								<Ticket class="mx-auto mb-2 h-8 w-8 opacity-50" />
+								<HugeiconsIcon icon={Ticket01Icon} class="mx-auto mb-2 h-8 w-8 opacity-50" />
 								<p class="text-sm">No codes created yet.</p>
 							</div>
 						{:else}
@@ -290,21 +299,21 @@
 									<div class="grid grid-cols-2 gap-3 text-xs">
 										<span>${promo.rewardAmount}</span>
 										<div class="flex items-center gap-1">
-											<Users class="h-3 w-3" />
+											<HugeiconsIcon icon={UserGroupIcon} class="h-3 w-3" />
 											<span>{promo.usedCount || 0}{promo.maxUses ? `/${promo.maxUses}` : ''}</span>
 										</div>
 										<div class="flex items-center gap-1">
-											<Calendar class="h-3 w-3" />
+											<HugeiconsIcon icon={Calendar01Icon} class="h-3 w-3" />
 											<span>{formatDate(promo.createdAt)}</span>
 										</div>
 										{#if promo.expiresAt}
 											<div class="flex items-center gap-1">
-												<Calendar class="h-3 w-3" />
+												<HugeiconsIcon icon={Calendar01Icon} class="h-3 w-3" />
 												<span>Exp: {formatDate(promo.expiresAt)}</span>
 											</div>
 										{:else}
 											<div class="flex items-center gap-1">
-												<Calendar class="h-3 w-3" />
+												<HugeiconsIcon icon={Calendar01Icon} class="h-3 w-3" />
 												<span>No expiry</span>
 											</div>
 										{/if}

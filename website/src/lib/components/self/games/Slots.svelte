@@ -114,7 +114,7 @@
 		reelPositions = reelPositions.map((pos, i) => pos + spinStartOffsets[i]);
 
 		try {
-			const response = await fetch('/api/gambling/slots', {
+			const response = await fetch('/api/arcade/slots', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

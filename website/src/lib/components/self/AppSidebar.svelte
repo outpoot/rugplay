@@ -4,37 +4,42 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		Moon,
-		Sun,
-		Home,
-		Store,
-		BriefcaseBusiness,
-		Coins,
-		ChevronsUpDownIcon,
-		LogOutIcon,
-		Wallet,
-		Trophy,
-		Activity,
-		TrendingUp,
-		TrendingDown,
-		User,
-		Settings,
-		Gift,
-		Shield,
-		Ticket,
-		PiggyBank,
-		ChartColumn,
-		TrendingUpDown,
-		Scale,
-		ShieldCheck,
-		Hammer,
-		BookOpen,
-		Info,
-		Bell,
-		Crown,
-		Key
-	} from 'lucide-svelte';
+		Moon01Icon,
+		Sun01Icon,
+		Home03Icon,
+		Store01Icon,
+		Briefcase01Icon,
+		Coins02Icon,
+		ArrowUpDownIcon,
+		Logout01Icon,
+		Wallet01Icon,
+		ChampionIcon,
+		Activity01Icon,
+		TradeUpIcon,
+		TradeDownIcon,
+		UserIcon,
+		Settings01Icon,
+		GiftIcon,
+		Shield01Icon,
+		Ticket01Icon,
+		PiggyBankIcon,
+		Analytics01Icon,
+		JusticeScale01Icon,
+		ShieldUserIcon,
+		LegalHammerIcon,
+		BookOpen01Icon,
+		InformationCircleIcon,
+		Notification01Icon,
+		CrownIcon,
+		Key01Icon,
+		Joystick04Icon,
+		ShoppingBasket01Icon,
+		GemIcon,
+		Award05Icon,
+		ArrowDown01Icon
+	} from '@hugeicons/core-free-icons';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { USER_DATA } from '$lib/stores/user-data';
@@ -50,20 +55,24 @@
 	import { liveTradesStore, isLoadingTrades } from '$lib/stores/websocket';
 	import { onMount } from 'svelte';
 	import { UNREAD_COUNT, fetchNotifications } from '$lib/stores/notifications';
-	import { GAMBLING_STATS, fetchGamblingStats } from '$lib/stores/gambling-stats';
+	import { NEW_ACHIEVEMENTS_COUNT } from '$lib/stores/achievements';
+	import { ARCADE_STATS, fetchArcadeStats } from '$lib/stores/arcade-stats';
+	import { GEMS_BALANCE, fetchGemsBalance } from '$lib/stores/gems';
 
 	const data = {
 		navMain: [
-			{ title: 'Home', url: '/', icon: Home },
-			{ title: 'Market', url: '/market', icon: Store },
-			{ title: 'Hopium', url: '/hopium', icon: TrendingUpDown },
-			{ title: 'Gambling', url: '/gambling', icon: PiggyBank },
-			{ title: 'Leaderboard', url: '/leaderboard', icon: Trophy },
-			{ title: 'Portfolio', url: '/portfolio', icon: BriefcaseBusiness },
-			{ title: 'Treemap', url: '/treemap', icon: ChartColumn },
-			{ title: 'Create coin', url: '/coin/create', icon: Coins },
-			{ title: 'Notifications', url: '/notifications', icon: Bell },
-			{ title: 'About', url: '/about', icon: Info }
+			{ title: 'Home', url: '/', icon: Home03Icon },
+			{ title: 'Market', url: '/market', icon: Store01Icon },
+			{ title: 'Hopium', url: '/hopium', icon: ArrowUpDownIcon },
+			{ title: 'Arcade', url: '/arcade', icon: Joystick04Icon },
+			{ title: 'Leaderboard', url: '/leaderboard', icon: ChampionIcon },
+			{ title: 'Shop', url: '/shop', icon: ShoppingBasket01Icon },
+			{ title: 'Achievements', url: '/achievements', icon: Award05Icon },
+			{ title: 'Portfolio', url: '/portfolio', icon: Briefcase01Icon },
+			{ title: 'Treemap', url: '/treemap', icon: Analytics01Icon },
+			{ title: 'Create coin', url: '/coin/create', icon: Coins02Icon },
+			{ title: 'Notifications', url: '/notifications', icon: Notification01Icon },
+			{ title: 'About', url: '/about', icon: InformationCircleIcon }
 		]
 	};
 	type MenuButtonProps = HTMLAttributes<HTMLAnchorElement | HTMLButtonElement>;
@@ -77,10 +86,15 @@
 		if ($USER_DATA) {
 			fetchPortfolioSummary();
 			fetchNotifications();
-			fetchGamblingStats();
+			fetchArcadeStats();
+			fetchGemsBalance();
+			fetch('/api/achievements/unclaimed')
+				.then((r) => r.json())
+				.then((d) => NEW_ACHIEVEMENTS_COUNT.set(d.count))
+				.catch(() => {});
 		} else {
 			PORTFOLIO_SUMMARY.set(null);
-			GAMBLING_STATS.set(null);
+			ARCADE_STATS.set(null);
 		}
 	});
 
@@ -196,13 +210,18 @@
 									<a
 										href={item.url || '/'}
 										onclick={() => handleNavClick(item.title)}
-										class={`${props.class} ${item.title === 'Notifications' && !$USER_DATA ? 'pointer-events-none opacity-50' : ''}`}
+										class={`${props.class} h-7! ${item.title === 'Notifications' && !$USER_DATA ? 'pointer-events-none opacity-50' : ''}`}
 									>
-										<item.icon />
+										<HugeiconsIcon icon={item.icon} />
 										<span>{item.title}</span>
 										{#if item.title === 'Notifications' && $UNREAD_COUNT > 0 && $USER_DATA}
 											<Sidebar.MenuBadge class="bg-primary text-primary-foreground">
 												{$UNREAD_COUNT > 99 ? '99+' : $UNREAD_COUNT}
+											</Sidebar.MenuBadge>
+										{/if}
+										{#if item.title === 'Achievements' && $NEW_ACHIEVEMENTS_COUNT > 0 && $USER_DATA}
+											<Sidebar.MenuBadge class="bg-yellow-500 text-black">
+												{$NEW_ACHIEVEMENTS_COUNT > 99 ? '99+' : $NEW_ACHIEVEMENTS_COUNT}
 											</Sidebar.MenuBadge>
 										{/if}
 									</a>
@@ -235,7 +254,7 @@
 		<Sidebar.Group>
 			<Sidebar.GroupLabel class="flex items-center justify-between">
 				<div class="flex items-center gap-2">
-					<Activity class="h-4 w-4" />
+					<HugeiconsIcon icon={Activity01Icon} class="h-4 w-4" />
 					<span>Live Trades</span>
 				</div>
 				<button
@@ -272,7 +291,7 @@
 							>
 								<div class="flex items-center gap-1">
 									{#if trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT'}
-										<Activity class="h-3 w-3 text-blue-500" />
+										<HugeiconsIcon icon={Activity01Icon} class="h-3 w-3 text-blue-500" />
 										<Badge
 											variant="outline"
 											class="h-4 border-blue-500 px-1 py-0 text-[10px] text-blue-500"
@@ -280,7 +299,7 @@
 											{trade.type === 'TRANSFER_IN' ? 'REC' : 'SENT'}
 										</Badge>
 									{:else if trade.type === 'BUY'}
-										<TrendingUp class="h-3 w-3 text-green-500" />
+										<HugeiconsIcon icon={TradeUpIcon} class="h-3 w-3 text-green-500" />
 										<Badge
 											variant="outline"
 											class="h-4 border-green-500 px-1 py-0 text-[10px] text-green-500"
@@ -288,7 +307,7 @@
 											BUY
 										</Badge>
 									{:else}
-										<TrendingDown class="h-3 w-3 text-red-500" />
+										<HugeiconsIcon icon={TradeDownIcon} class="h-3 w-3 text-red-500" />
 										<Badge
 											variant="outline"
 											class="h-4 border-red-500 px-1 py-0 text-[10px] text-red-500"
@@ -350,7 +369,7 @@
 						{:else}
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-2">
-									<Wallet class="text-muted-foreground h-4 w-4" />
+									<HugeiconsIcon icon={Wallet01Icon} class="text-muted-foreground h-4 w-4" />
 									<span class="text-sm font-medium">Total Value</span>
 								</div>
 								<Badge variant="secondary" class="font-mono">
@@ -360,15 +379,21 @@
 							<div class="text-muted-foreground space-y-1 text-xs">
 								<div class="flex justify-between">
 									<span>Cash:</span>
-									<span class="font-mono"
+									<span class="font-mono" style="color: #00ff0d"
 										>${formatCurrency($PORTFOLIO_SUMMARY.baseCurrencyBalance)}</span
 									>
 								</div>
 								<div class="flex justify-between">
 									<span>Coins:</span>
-									<span class="font-mono">${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}</span
+									<span class="font-mono" style="color: #00ff0d">${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}</span
 									>
 								</div>
+								{#if $GEMS_BALANCE !== null}
+									<div class="flex justify-between">
+										<span>Gems:</span>
+										<span class="font-mono" style="color: #ca00ff"><HugeiconsIcon icon={GemIcon} size={14} strokeWidth={2} style="display: inline; vertical-align: middle; color: #ca00ff" /> {$GEMS_BALANCE.toLocaleString()}</span>
+									</div>
+								{/if}
 							</div>
 						{/if}
 					</div>
@@ -397,7 +422,7 @@
 										<span class="truncate font-medium">{$USER_DATA.name}</span>
 										<span class="truncate text-xs">@{$USER_DATA.username}</span>
 									</div>
-									<ChevronsUpDownIcon class="ml-auto size-4" />
+									<HugeiconsIcon icon={ArrowDown01Icon} class="ml-auto size-4" />
 								</Sidebar.MenuButton>
 							{/snippet}
 						</DropdownMenu.Trigger>
@@ -424,15 +449,15 @@
 							<!-- Profile & Settings Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAccountClick}>
-									<User />
+									<HugeiconsIcon icon={UserIcon} />
 									Account
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleSettingsClick}>
-									<Settings />
+									<HugeiconsIcon icon={Settings01Icon} />
 									Settings
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handlePrestigeClick}>
-									<Crown />
+									<HugeiconsIcon icon={CrownIcon} />
 									Prestige
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
@@ -442,7 +467,7 @@
 							<!-- Features Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAPIClick}>
-									<Key />
+									<HugeiconsIcon icon={Key01Icon} />
 									API
 								</DropdownMenu.Item>
 								<DropdownMenu.Item
@@ -451,19 +476,19 @@
 										setOpenMobile(false);
 									}}
 								>
-									<Gift />
+									<HugeiconsIcon icon={GiftIcon} />
 									Promo code
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleUserManualClick}>
-									<BookOpen />
+									<HugeiconsIcon icon={BookOpen01Icon} />
 									User Manual
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleModeToggle}>
 									{#if mode.current === 'light'}
-										<Moon />
+										<HugeiconsIcon icon={Moon01Icon} />
 										Dark Mode
 									{:else}
-										<Sun />
+										<HugeiconsIcon icon={Sun01Icon} />
 										Light Mode
 									{/if}
 								</DropdownMenu.Item>
@@ -477,21 +502,21 @@
 										onclick={handleAdminClick}
 										class="text-primary hover:text-primary!"
 									>
-										<Shield class="text-primary" />
+										<HugeiconsIcon icon={Shield01Icon} class="text-primary" />
 										Admin Panel
 									</DropdownMenu.Item>
 									<DropdownMenu.Item
 										onclick={handleUserManagementClick}
 										class="text-primary hover:text-primary!"
 									>
-										<Hammer class="text-primary" />
+										<HugeiconsIcon icon={LegalHammerIcon} class="text-primary" />
 										User Management
 									</DropdownMenu.Item>
 									<DropdownMenu.Item
 										onclick={handlePromoCodesClick}
 										class="text-primary hover:text-primary!"
 									>
-										<Ticket class="text-primary" />
+										<HugeiconsIcon icon={Ticket01Icon} class="text-primary" />
 										Manage codes
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>
@@ -502,11 +527,11 @@
 							<!-- Legal Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleTermsClick}>
-									<Scale />
+									<HugeiconsIcon icon={JusticeScale01Icon} />
 									Terms of Service
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handlePrivacyClick}>
-									<ShieldCheck />
+									<HugeiconsIcon icon={ShieldUserIcon} />
 									Privacy Policy
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
@@ -522,7 +547,7 @@
 									});
 								}}
 							>
-								<LogOutIcon />
+								<HugeiconsIcon icon={Logout01Icon} />
 								Log out
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
@@ -537,7 +562,7 @@
 					<Sidebar.MenuButton>
 						{#snippet child({ props }: { props: MenuButtonProps })}
 							<a href="/legal/terms" onclick={handleTermsClick} class={`${props.class}`}>
-								<Scale />
+								<HugeiconsIcon icon={JusticeScale01Icon} />
 								<span>Terms of Service</span>
 							</a>
 						{/snippet}
@@ -547,7 +572,7 @@
 					<Sidebar.MenuButton>
 						{#snippet child({ props }: { props: MenuButtonProps })}
 							<a href="/legal/privacy" onclick={handlePrivacyClick} class={`${props.class}`}>
-								<ShieldCheck />
+								<HugeiconsIcon icon={ShieldUserIcon} />
 								<span>Privacy Policy</span>
 							</a>
 						{/snippet}

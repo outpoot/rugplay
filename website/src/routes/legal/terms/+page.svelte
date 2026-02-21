@@ -1,29 +1,28 @@
 <script lang="ts">
 	import { Separator } from '$lib/components/ui/separator';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { JusticeScale01Icon, Alert02Icon, TradeDownIcon } from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
-	import Scale from 'lucide-svelte/icons/scale';
-	import AlertTriangle from 'lucide-svelte/icons/alert-triangle';
-	import TrendingDown from 'lucide-svelte/icons/trending-down';
 	import { goto } from '$app/navigation';
 	import SEO from '$lib/components/self/SEO.svelte';
 
-	const LAST_UPDATED = 'May 29, 2025';
+	const LAST_UPDATED = 'February 21, 2026';
 	const CONTACT_EMAIL = 'contact@outpoot.com';
-	const MINIMUM_AGE = 18;
+	const MINIMUM_AGE = 13;
 </script>
 
 <SEO 
 	title="Terms of Service - Rugplay"
-	description="Terms of Service for Rugplay - cryptocurrency trading simulation game. Learn about virtual currency, rug pull mechanics, gambling features, and platform rules."
+	description="Terms of Service for Rugplay - cryptocurrency trading simulation game. Learn about virtual currency, rug pull mechanics, arcade features, and platform rules."
 	keywords="terms of service, legal terms, simulation game rules, virtual currency terms, rug pull simulation"
 />
 
 <div class="container mx-auto max-w-4xl py-10">
 	<Card.Root class="p-6">
 		<div class="mb-8 flex items-center gap-3">
-			<Scale class="text-primary h-10 w-10" />
+			<HugeiconsIcon icon={JusticeScale01Icon} class="text-primary h-10 w-10" />
 			<div>
 				<h1 class="text-4xl font-bold">Terms of Service</h1>
 				<p class="text-muted-foreground">
@@ -33,7 +32,7 @@
 		</div>
 
 		<Alert.Root class="mb-6">
-			<TrendingDown class="h-4 w-4" />
+			<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4" />
 			<Alert.Title>Virtual Currency Simulation Only</Alert.Title>
 			<Alert.Description>
 				Rugplay uses only virtual currency (*BUSS or "$") with no real monetary value. All trading,
@@ -74,7 +73,7 @@
 					</ul>
 
 					<Alert.Root class="mt-4">
-						<AlertTriangle class="h-4 w-4" />
+						<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 						<Alert.Title>No Real Financial Value</Alert.Title>
 						<Alert.Description>
 							All currency on Rugplay (*BUSS, "$", and created coins) is virtual and has no
@@ -91,12 +90,11 @@
 					<div>
 						<h3 class="mb-2 text-lg font-medium">3.1 Age Requirements</h3>
 						<p class="mb-3">
-							You must be at least {MINIMUM_AGE} years old to use Rugplay due to the presence of gambling-style
-							features (coinflip and slots), even though they use only virtual currency.
+							You must be at least {MINIMUM_AGE} years old to use Rugplay.
 						</p>
 						<p class="text-muted-foreground text-sm">
-							While our platform uses virtual currency with no real-world value, we maintain an 18+
-							age requirement to ensure responsible engagement with simulated gambling mechanics.
+							Our platform uses virtual currency with no real-world value. All features are
+							designed for educational and entertainment purposes.
 						</p>
 					</div>
 
@@ -129,7 +127,7 @@
 				</h2>
 
 				<Alert.Root class="mb-4">
-					<TrendingDown class="h-4 w-4" />
+					<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4" />
 					<Alert.Title>Rug Pull Risk Simulation</Alert.Title>
 					<Alert.Description>
 						Rugplay deliberately simulates rug pull scenarios where coin creators or large holders
@@ -299,46 +297,48 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">7. Gambling Features (Coinflip and Slots)</h2>
+				<h2 class="mb-4 text-2xl font-semibold">7. Arcade Games</h2>
 
 				<Alert.Root class="mb-4">
-					<TrendingDown class="h-4 w-4" />
-					<Alert.Title>Simulated Gambling Only</Alert.Title>
+					<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4" />
+					<Alert.Title>Virtual Arcade Entertainment</Alert.Title>
 					<Alert.Description>
-						All gambling features use virtual currency (*BUSS) with no real-world value. These are
-						entertainment simulations, not real gambling.
+						All arcade features use virtual currency (*BUSS) with no real-world value. These are
+						entertainment simulations, not real-money games.
 					</Alert.Description>
 				</Alert.Root>
 
 				<div class="space-y-4">
 					<div>
-						<h3 class="mb-2 text-lg font-medium">7.1 Virtual Gambling Games</h3>
-						<p class="mb-3">Rugplay includes simulated gambling features:</p>
+						<h3 class="mb-2 text-lg font-medium">7.1 Virtual Arcade Games</h3>
+						<p class="mb-3">Rugplay includes virtual arcade entertainment features:</p>
 						<ul class="ml-6 list-disc space-y-2">
-							<li><strong>Coinflip:</strong> Binary outcome betting with virtual currency</li>
+							<li><strong>Coinflip:</strong> Binary outcome game with virtual currency</li>
 							<li>
-								<strong>Slots:</strong> Multi-reel slot machine simulation with various themes
+								<strong>Slots:</strong> Multi-reel themed game with various visual themes
 							</li>
-							<li>Other gambling-style games that may be added in the future</li>
+							<li><strong>Mines:</strong> Tile-based risk game with progressive multipliers</li>
+							<li><strong>Dice:</strong> Number prediction game with virtual stakes</li>
+							<li>Other arcade-style games that may be added in the future</li>
 						</ul>
 					</div>
 
 					<div>
 						<h3 class="mb-2 text-lg font-medium">7.2 Themed Content and Past Projects</h3>
 						<p class="mb-3">
-							Our gambling features may include themes and references to past projects, including:
+							Our arcade features may include themes and references to past projects, including:
 						</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Visual themes, characters, or concepts from previous games or projects</li>
-							<li>Branded slot machine themes featuring past project assets</li>
+							<li>Branded themes featuring past project assets</li>
 							<li>Easter eggs and references to creator's portfolio</li>
 							<li>Nostalgic elements for entertainment purposes</li>
 						</ul>
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">7.3 Gambling Disclaimers</h3>
-						<p class="mb-3">By using gambling features, you acknowledge:</p>
+						<h3 class="mb-2 text-lg font-medium">7.3 Arcade Disclaimers</h3>
+						<p class="mb-3">By using arcade features, you acknowledge:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>
 								All outcomes are determined by cryptographically secure pseudorandom number
@@ -348,30 +348,17 @@
 							<li>Virtual losses have no real-world financial impact</li>
 							<li>Features are for entertainment and educational purposes only</li>
 							<li>Source code for random number generation is available for review</li>
-							<li>These features are not regulated gambling services</li>
+							<li>These features are not regulated services of any kind</li>
 						</ul>
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">7.4 Age Verification for Gambling Features</h3>
-						<p class="mb-3">
-							By using gambling features (coinflip, slots), you confirm that you are at least 18
-							years old in your jurisdiction. This applies even though:
-						</p>
-						<ul class="ml-6 list-disc space-y-2">
-							<li>All currency is virtual with no real-world value</li>
-							<li>No real money gambling is involved</li>
-							<li>Features are for educational and entertainment purposes only</li>
-						</ul>
-					</div>
-
-					<div>
-						<h3 class="mb-2 text-lg font-medium">7.5 Responsible Gaming</h3>
+						<h3 class="mb-2 text-lg font-medium">7.4 Responsible Play</h3>
 						<p class="mb-3">While using virtual currency, we encourage responsible usage:</p>
 						<ul class="ml-6 list-disc space-y-2">
-							<li>Set personal limits on time spent using gambling features</li>
+							<li>Set personal limits on time spent using arcade features</li>
 							<li>Remember that consistent winning is not guaranteed</li>
-							<li>Take breaks if gambling features become less enjoyable</li>
+							<li>Take breaks if arcade features become less enjoyable</li>
 							<li>Focus on the educational aspects of risk and probability</li>
 						</ul>
 					</div>
@@ -379,10 +366,57 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">8. Platform Availability and Modifications</h2>
+				<h2 class="mb-4 text-2xl font-semibold">8. Gem Purchases and Payments</h2>
 				<div class="space-y-4">
 					<div>
-						<h3 class="mb-2 text-lg font-medium">8.1 Service Availability</h3>
+						<h3 class="mb-2 text-lg font-medium">8.1 Gem Currency</h3>
+						<p class="mb-3">
+							Gems are an in-platform currency that can be purchased with real money and used exclusively to acquire cosmetic items (such as name colors) through the Shop. Gems:
+						</p>
+						<ul class="ml-6 list-disc space-y-2">
+							<li>Have no real-world monetary value outside the Platform</li>
+							<li>Cannot be exchanged, transferred, or cashed out for real money</li>
+							<li>Are non-refundable once purchased</li>
+							<li>May only be used for cosmetic items within the Platform</li>
+							<li>Do not affect gameplay, virtual trading balances, or provide competitive advantages</li>
+						</ul>
+					</div>
+
+					<div>
+						<h3 class="mb-2 text-lg font-medium">8.2 Payment Processing via Polar.sh</h3>
+						<p class="mb-3">
+							All Gem purchases are processed by our third-party payment provider, <a href="https://polar.sh" target="_blank" rel="noopener noreferrer" class="text-primary underline">Polar.sh</a>. By making a purchase, you agree to:
+						</p>
+						<ul class="ml-6 list-disc space-y-2">
+							<li>Polar.sh's <a href="https://polar.sh/legal/terms" target="_blank" rel="noopener noreferrer" class="text-primary underline">Terms of Service</a> and <a href="https://polar.sh/legal/privacy" target="_blank" rel="noopener noreferrer" class="text-primary underline">Privacy Policy</a></li>
+							<li>Providing accurate billing and payment information to Polar.sh</li>
+							<li>Being charged the displayed amount at the time of purchase</li>
+						</ul>
+						<p class="text-muted-foreground mt-2 text-sm">
+							We do not store your payment card details. All payment information is handled directly by Polar.sh.
+						</p>
+					</div>
+
+					<div>
+						<h3 class="mb-2 text-lg font-medium">8.3 Refund Policy</h3>
+						<p class="mb-3">
+							All Gem purchases are final and non-refundable. Since Gems are digital goods delivered immediately upon purchase:
+						</p>
+						<ul class="ml-6 list-disc space-y-2">
+							<li>No refunds will be issued for purchased Gems</li>
+							<li>No refunds will be issued for cosmetic items obtained using Gems</li>
+							<li>If your account is terminated for Terms violations, purchased Gems are forfeited</li>
+							<li>For billing issues or unauthorized charges, contact us at <a href="mailto:{CONTACT_EMAIL}" class="text-primary underline">{CONTACT_EMAIL}</a></li>
+						</ul>
+					</div>
+				</div>
+			</Card.Content>
+
+			<Card.Content>
+				<h2 class="mb-4 text-2xl font-semibold">9. Platform Availability and Modifications</h2>
+				<div class="space-y-4">
+					<div>
+						<h3 class="mb-2 text-lg font-medium">9.1 Service Availability</h3>
 						<p>We strive to maintain platform availability but do not guarantee:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Uninterrupted access or error-free operation</li>
@@ -393,7 +427,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">8.2 Platform Modifications</h3>
+						<h3 class="mb-2 text-lg font-medium">9.2 Platform Modifications</h3>
 						<p>We reserve the right to:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Modify features, functionality, or user interface</li>
@@ -406,10 +440,10 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">9. Disclaimers and Limitation of Liability</h2>
+				<h2 class="mb-4 text-2xl font-semibold">10. Disclaimers and Limitation of Liability</h2>
 
 				<Alert.Root class="mb-4">
-					<AlertTriangle class="h-4 w-4" />
+					<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 					<Alert.Title>Important Legal Disclaimers</Alert.Title>
 					<Alert.Description>
 						Rugplay is provided "as is" without warranties. We are not liable for virtual losses,
@@ -419,7 +453,7 @@
 
 				<div class="space-y-4">
 					<div>
-						<h3 class="mb-2 text-lg font-medium">9.1 No Warranties</h3>
+						<h3 class="mb-2 text-lg font-medium">10.1 No Warranties</h3>
 						<p class="mb-3">
 							THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND,
 							INCLUDING:
@@ -433,7 +467,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">9.2 Limitation of Liability</h3>
+						<h3 class="mb-2 text-lg font-medium">10.2 Limitation of Liability</h3>
 						<p class="mb-3">TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE ARE NOT LIABLE FOR:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>
@@ -447,7 +481,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">9.3 Educational Purpose</h3>
+						<h3 class="mb-2 text-lg font-medium">10.3 Educational Purpose</h3>
 						<p>Rugplay is designed for educational and entertainment purposes. It is not:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Financial advice or investment guidance</li>
@@ -460,10 +494,10 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">10. Account Termination</h2>
+				<h2 class="mb-4 text-2xl font-semibold">11. Account Termination</h2>
 				<div class="space-y-4">
 					<div>
-						<h3 class="mb-2 text-lg font-medium">10.1 Voluntary Termination</h3>
+						<h3 class="mb-2 text-lg font-medium">11.1 Voluntary Termination</h3>
 						<p>
 							You may delete your account at any time through platform settings. Account deletion:
 						</p>
@@ -476,7 +510,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">10.2 Platform Termination</h3>
+						<h3 class="mb-2 text-lg font-medium">11.2 Platform Termination</h3>
 						<p>We may suspend or terminate accounts for:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Violation of these Terms</li>
@@ -487,11 +521,11 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">10.3 Effect of Termination</h3>
+						<h3 class="mb-2 text-lg font-medium">11.3 Effect of Termination</h3>
 						<p>Upon termination:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Your access to the Platform is immediately revoked</li>
-							<li>All virtual currency and portfolio holdings are forfeited</li>
+							<li>All virtual currency, portfolio holdings, and purchased Gems are forfeited</li>
 							<li>These Terms remain in effect for applicable provisions</li>
 							<li>No compensation is provided for lost virtual assets</li>
 						</ul>
@@ -500,22 +534,22 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">11. Intellectual Property</h2>
+				<h2 class="mb-4 text-2xl font-semibold">12. Intellectual Property</h2>
 				<div class="space-y-4">
 					<div>
-						<h3 class="mb-2 text-lg font-medium">11.1 Platform Ownership</h3>
+						<h3 class="mb-2 text-lg font-medium">12.1 Platform Ownership</h3>
 						<p>Rugplay and all related intellectual property are owned by us, including:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Software, code, algorithms, and technical systems</li>
 							<li>Trademarks, logos, and branding</li>
 							<li>Platform design, user interface, and user experience</li>
 							<li>Trading mechanics and simulation algorithms</li>
-							<li>Gambling game mechanics, themes, and visual assets</li>
+							<li>Arcade game mechanics, themes, and visual assets</li>
 						</ul>
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">11.2 Past Project Assets and Themes</h3>
+						<h3 class="mb-2 text-lg font-medium">12.2 Past Project Assets and Themes</h3>
 						<p class="mb-3">
 							Rugplay incorporates intellectual property from creator's past projects, including:
 						</p>
@@ -531,7 +565,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">11.3 User Content</h3>
+						<h3 class="mb-2 text-lg font-medium">12.3 User Content</h3>
 						<p>For content you create (comments, coin descriptions), you:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Retain ownership of your original content</li>
@@ -544,7 +578,7 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">12. Privacy and Data</h2>
+				<h2 class="mb-4 text-2xl font-semibold">13. Privacy and Data</h2>
 				<p class="mb-4">
 					Your privacy is important to us. Our data collection and processing practices are detailed
 					in our Privacy Policy, which is incorporated into these Terms by reference.
@@ -556,10 +590,10 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">13. Miscellaneous</h2>
+				<h2 class="mb-4 text-2xl font-semibold">14. Miscellaneous</h2>
 				<div class="space-y-4">
 					<div>
-						<h3 class="mb-2 text-lg font-medium">13.1 Entire Agreement</h3>
+						<h3 class="mb-2 text-lg font-medium">14.1 Entire Agreement</h3>
 						<p>
 							These Terms, along with our Privacy Policy, constitute the entire agreement between
 							you and Rugplay regarding use of the Platform.
@@ -567,7 +601,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">13.2 Severability</h3>
+						<h3 class="mb-2 text-lg font-medium">14.2 Severability</h3>
 						<p>
 							If any provision of these Terms is found unenforceable, the remaining provisions will
 							continue in full force and effect.
@@ -575,7 +609,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">13.3 Updates to Terms</h3>
+						<h3 class="mb-2 text-lg font-medium">14.3 Updates to Terms</h3>
 						<p>
 							We may update these Terms periodically. Material changes will be communicated via
 							email and platform notifications. Continued use after changes constitutes acceptance.
@@ -583,7 +617,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">13.4 Contact Information</h3>
+						<h3 class="mb-2 text-lg font-medium">14.4 Contact Information</h3>
 						<p>
 							For questions about these Terms, contact us at:
 							<a href="mailto:{CONTACT_EMAIL}" class="text-primary underline">{CONTACT_EMAIL}</a>

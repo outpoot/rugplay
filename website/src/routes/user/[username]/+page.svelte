@@ -5,26 +5,27 @@
 	import { Button } from '$lib/components/ui/button';
 	import DataTable from '$lib/components/self/DataTable.svelte';
 	import ProfileBadges from '$lib/components/self/ProfileBadges.svelte';
+	import UserName from '$lib/components/self/UserName.svelte';
 	import ProfileSkeleton from '$lib/components/self/skeletons/ProfileSkeleton.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { getPublicUrl, formatPrice, formatValue, formatQuantity, formatDate } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		Calendar,
-		Wallet,
-		TrendingUp,
-		TrendingDown,
-		Coins,
-		Receipt,
-		Activity,
-		DollarSign,
-		PiggyBank,
-		TrendingUpDown,
-		Percent
-	} from 'lucide-svelte';
+		Calendar01Icon,
+		Wallet01Icon,
+		TradeUpIcon,
+		TradeDownIcon,
+		Coins01Icon,
+		Activity01Icon,
+		PercentIcon,
+		Invoice03Icon,
+		Award05Icon
+	} from '@hugeicons/core-free-icons';
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 
 	let { data } = $props();
 	let username = $derived(data.username);
@@ -32,8 +33,14 @@
 	let profileData = $state(data.profileData);
 	let recentTransactions = $state(data.recentTransactions);
 	let loading = $state(false);
+	let userAchievements = $state<any[]>([]);
 
 	let previousUsername = $state<string | null>(null);
+
+	$effect(() => {
+		profileData = data.profileData;
+		recentTransactions = data.recentTransactions;
+	});
 
 	let isOwnProfile = $derived(
 		$USER_DATA && profileData?.profile && $USER_DATA.username === profileData.profile.username
@@ -41,7 +48,8 @@
 
 	onMount(async () => {
 		previousUsername = username;
-		
+		fetchAchievements();
+
 		if (isOwnProfile) {
 			await fetchTransactions();
 		}
@@ -49,13 +57,9 @@
 
 	$effect(() => {
 		if (username && previousUsername && username !== previousUsername) {
-			loading = true;
-			profileData = null;
-			recentTransactions = [];
-
-			fetchProfileData().then(() => {
-				previousUsername = username;
-			});
+			userAchievements = [];
+			fetchAchievements();
+			previousUsername = username;
 		}
 	});
 
@@ -93,6 +97,18 @@
 			}
 		} catch (e) {
 			console.error('Failed to fetch transactions:', e);
+		}
+	}
+
+	async function fetchAchievements() {
+		try {
+			const res = await fetch(`/api/user/${username}/achievements`);
+			if (res.ok) {
+				const data = await res.json();
+				userAchievements = data.achievements || [];
+			}
+		} catch {
+			// silent fail
 		}
 	}
 
@@ -151,17 +167,17 @@
 
 	let totalTradingVolume24h = $derived(buyVolume24h + sellVolume24h);
 
-	// Gambling stats
-	let gamblingWins = $derived(
-		profileData?.profile?.gamblingWins ? Number(profileData.profile.gamblingWins) : 0
+	// Arcade stats
+	let arcadeWins = $derived(
+		profileData?.profile?.arcadeWins ? Number(profileData.profile.arcadeWins) : 0
 	);
-	let gamblingLosses = $derived(
-		profileData?.profile?.gamblingLosses ? Number(profileData.profile.gamblingLosses) : 0
+	let arcadeLosses = $derived(
+		profileData?.profile?.arcadeLosses ? Number(profileData.profile.arcadeLosses) : 0
 	);
-	let totalGambled = $derived(gamblingWins + gamblingLosses);
-	let netProfit = $derived(gamblingWins - gamblingLosses);
+	let totalPlayed = $derived(arcadeWins + arcadeLosses);
+	let netProfit = $derived(arcadeWins - arcadeLosses);
 	let winRate = $derived(
-		totalGambled > 0 ? ((gamblingWins / totalGambled) * 100).toFixed(1) : '0.0'
+		totalPlayed > 0 ? ((arcadeWins / totalPlayed) * 100).toFixed(1) : '0.0'
 	);
 
 	const createdCoinsColumns = [
@@ -409,7 +425,7 @@
 					<div class="min-w-0 flex-1">
 						<div class="mb-3">
 							<div class="mb-1 flex flex-wrap items-center gap-2">
-								<h1 class="text-2xl font-bold sm:text-3xl">{profileData.profile.name}</h1>
+								<h1 class="text-2xl font-bold sm:text-3xl"><UserName name={profileData.profile.name} nameColor={profileData.profile.nameColor} /></h1>
 
 								<!-- Badges -->
 								<ProfileBadges user={profileData.profile} />
@@ -424,7 +440,7 @@
 						{/if}
 
 						<div class="text-muted-foreground flex items-center gap-2 text-sm">
-							<Calendar class="h-4 w-4" />
+							<HugeiconsIcon icon={Calendar01Icon} class="h-4 w-4" />
 							<span>Joined {memberSince}</span>
 						</div>
 					</div>
@@ -439,7 +455,7 @@
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
 						<div class="text-muted-foreground text-sm font-medium">Total Portfolio</div>
-						<Wallet class="text-muted-foreground h-4 w-4" />
+						<HugeiconsIcon icon={Wallet01Icon} class="text-muted-foreground h-4 w-4" />
 					</div>
 					<div class="mt-1 text-2xl font-bold">
 						{formatValue(totalPortfolioValue)}
@@ -501,7 +517,7 @@
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
 						<div class="text-foreground text-sm font-medium">Buy Activity</div>
-						<TrendingUp class="text-success h-4 w-4" />
+						<HugeiconsIcon icon={TradeUpIcon} class="text-success h-4 w-4" />
 					</div>
 					<div class="mt-1">
 						<div class="text-success text-2xl font-bold">
@@ -523,7 +539,7 @@
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
 						<div class="text-foreground text-sm font-medium">Sell Activity</div>
-						<TrendingDown class="h-4 w-4 text-red-600" />
+						<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4 text-red-600" />
 					</div>
 					<div class="mt-1">
 						<div class="text-2xl font-bold text-red-600">
@@ -573,19 +589,19 @@
 			</Card.Root>
 		</div>
 
-		<!-- Gambling Stats -->
+		<!-- Arcade Stats -->
 		<div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
 			<!-- Total Wins -->
 			<Card.Root class="py-0">
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
 						<div class="text-foreground text-sm font-medium">Total Wins</div>
-						<TrendingUp class="text-success h-4 w-4" />
+						<HugeiconsIcon icon={TradeUpIcon} class="text-success h-4 w-4" />
 					</div>
 					<div class="text-success mt-1 text-2xl font-bold">
-						{formatValue(gamblingWins)}
+						{formatValue(arcadeWins)}
 					</div>
-					<div class="text-muted-foreground text-xs">Total gambling winnings</div>
+					<div class="text-muted-foreground text-xs">Total arcade winnings</div>
 				</Card.Content>
 			</Card.Root>
 
@@ -594,12 +610,12 @@
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
 						<div class="text-foreground text-sm font-medium">Total Losses</div>
-						<TrendingDown class="h-4 w-4 text-red-600" />
+						<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4 text-red-600" />
 					</div>
 					<div class="mt-1 text-2xl font-bold text-red-600">
-						{formatValue(gamblingLosses)}
+						{formatValue(arcadeLosses)}
 					</div>
-					<div class="text-muted-foreground text-xs">Total gambling losses</div>
+					<div class="text-muted-foreground text-xs">Total arcade losses</div>
 				</Card.Content>
 			</Card.Root>
 
@@ -608,7 +624,7 @@
 				<Card.Content class="p-4">
 					<div class="flex items-center justify-between">
 						<div class="text-muted-foreground text-sm font-medium">Win Rate</div>
-						<Percent class="text-muted-foreground h-4 w-4" />
+						<HugeiconsIcon icon={PercentIcon} class="text-muted-foreground h-4 w-4" />
 					</div>
 					<div class="mt-1 text-2xl font-bold">
 						{winRate}%
@@ -637,12 +653,54 @@
 			</Card.Root>
 		</div>
 
+		<!-- Achievements -->
+		{#if userAchievements.length > 0}
+			<Card.Root class="mb-6">
+				<Card.Header class="pb-3">
+					<div class="flex items-center justify-between">
+						<Card.Title class="flex items-center gap-2">
+							<HugeiconsIcon icon={Award05Icon} class="h-5 w-5 text-yellow-500" />
+							Achievements ({userAchievements.filter((a) => a.unlocked).length}/{userAchievements.length})
+						</Card.Title>
+						<Button variant="outline" size="sm" onclick={() => goto('/achievements')}>
+							View All
+						</Button>
+					</div>
+				</Card.Header>
+				<Card.Content>
+					<div class="flex flex-wrap gap-2">
+						{#each userAchievements as achievement}
+							<Tooltip.Root>
+								<Tooltip.Trigger>
+									<img
+										src="/achievements/{achievement.icon}"
+										alt={achievement.name}
+										class="h-8 w-8 cursor-pointer transition-all {achievement.unlocked ? 'hover:scale-110' : 'brightness-[0.3] grayscale'}"
+									/>
+								</Tooltip.Trigger>
+								<Tooltip.Content
+									class="bg-secondary text-secondary-foreground ring-border ring-1"
+									arrowClasses="bg-secondary"
+								>
+									<p class="font-semibold">{achievement.name}</p>
+									<p class="text-muted-foreground text-xs">{achievement.description}</p>
+									{#if !achievement.unlocked}
+										<p class="mt-1 text-xs text-yellow-500">Locked</p>
+									{/if}
+								</Tooltip.Content>
+							</Tooltip.Root>
+						{/each}
+					</div>
+				</Card.Content>
+			</Card.Root>
+		{/if}
+
 		<!-- Created Coins -->
 		{#if hasCreatedCoins}
 			<Card.Root class="mb-6">
 				<Card.Header class="pb-3">
 					<Card.Title class="flex items-center gap-2">
-						<Coins class="h-5 w-5" />
+						<HugeiconsIcon icon={Coins01Icon} class="h-5 w-5" />
 						Created Coins ({profileData.createdCoins.length})
 					</Card.Title>
 					<Card.Description>Coins launched by {profileData.profile.name}</Card.Description>
@@ -661,7 +719,7 @@
 		<Card.Root>
 			<Card.Header class="pb-3">
 				<Card.Title class="flex items-center gap-2">
-					<Activity class="h-5 w-5" />
+					<HugeiconsIcon icon={Activity01Icon} class="h-5 w-5" />
 					Recent Trading Activity
 				</Card.Title>
 				<Card.Description>Latest transactions by {profileData.profile.name}</Card.Description>
@@ -670,7 +728,7 @@
 				<DataTable
 					columns={transactionsColumns}
 					data={recentTransactions}
-					emptyIcon={Receipt}
+					emptyIcon={Invoice03Icon}
 					emptyTitle="No recent activity"
 					emptyDescription="This user hasn't made any trades yet."
 				/>

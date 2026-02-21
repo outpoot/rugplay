@@ -1,8 +1,8 @@
 <script>
 	import { scale } from 'svelte/transition';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { Tick01Icon, Copy01Icon } from '@hugeicons/core-free-icons';
 	import { Button } from '../ui/button';
-	import Check from 'lucide-svelte/icons/check';
-	import Copy from 'lucide-svelte/icons/copy';
 
 	const { text = '', displayOnly = false } = $props();
 	let isSuccess = $state(false);
@@ -35,11 +35,11 @@
 		>
 			{#if isSuccess}
 				<div in:scale|fade={{ duration: 150 }}>
-					<Check class="h-4 w-4" />
+					<HugeiconsIcon icon={Tick01Icon} class="h-4 w-4" />
 				</div>
 			{:else}
 				<div in:scale|fade={{ duration: 150 }}>
-					<Copy class="h-4 w-4" />
+					<HugeiconsIcon icon={Copy01Icon} class="h-4 w-4" />
 				</div>
 			{/if}
 		</Button>

@@ -1,12 +1,14 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import * as Table from '$lib/components/ui/table';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import { Badge } from '$lib/components/ui/badge';
 	import CoinIcon from './CoinIcon.svelte';
 	import UserProfilePreview from './UserProfilePreview.svelte';
+	import UserName from './UserName.svelte';
 	import { getPublicUrl } from '$lib/utils';
-	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { ArrowUp01Icon, ArrowDown01Icon, ArrowUpDownIcon } from '@hugeicons/core-free-icons';
 
 	interface Column {
 		key: string;
@@ -37,11 +39,16 @@
 		enableUserPreview?: boolean;
 	} = $props();
 
-	const defaultSortColumn = columns.find((col) => col.defaultSort);
-	let sortColumn = $state<string | null>(defaultSortColumn?.key || null);
-	let sortDirection = $state<'asc' | 'desc'>(
-		defaultSortColumn?.defaultSort === 'asc' ? 'asc' : 'desc'
-	);
+	const defaultSortColumn = $derived(columns.find((col) => col.defaultSort));
+	let sortColumn = $state<string | null>(null);
+	let sortDirection = $state<'asc' | 'desc'>('desc');
+
+	$effect(() => {
+		if (sortColumn === null && defaultSortColumn) {
+			sortColumn = defaultSortColumn.key;
+			sortDirection = defaultSortColumn.defaultSort === 'asc' ? 'asc' : 'desc';
+		}
+	});
 
 	let sortedData = $derived.by(() => {
 		if (!sortColumn) return data;
@@ -120,7 +127,9 @@
 					type: 'user',
 					image: rendered.image,
 					name: rendered.name,
-					username: rendered.username
+					username: rendered.username,
+					nameColor: rendered.nameColor,
+					founderBadge: rendered.founderBadge
 				};
 			}
 			if (typeof rendered === 'string') {
@@ -155,12 +164,12 @@
 								{column.label}
 								{#if sortColumn === column.key}
 									{#if sortDirection === 'asc'}
-										<ArrowUp class="text-primary h-4 w-4" />
+										<HugeiconsIcon icon={ArrowUp01Icon} class="text-primary h-4 w-4" />
 									{:else}
-										<ArrowDown class="text-primary h-4 w-4" />
+										<HugeiconsIcon icon={ArrowDown01Icon} class="text-primary h-4 w-4" />
 									{/if}
 								{:else}
-									<ArrowUpDown class="h-4 w-4 opacity-50" />
+									<HugeiconsIcon icon={ArrowUpDownIcon} class="h-4 w-4 opacity-50" />
 								{/if}
 							</button>
 						{:else}
@@ -182,9 +191,9 @@
 							{#if cellData.type === 'badge'}
 								<Badge variant={cellData.variant} class={cellData.class}>
 									{#if cellData.icon === 'arrow-up'}
-										<ArrowUp class="mr-1 h-3 w-3" />
+										<HugeiconsIcon icon={ArrowUp01Icon} class="mr-1 h-3 w-3" />
 									{:else if cellData.icon === 'arrow-down'}
-										<ArrowDown class="mr-1 h-3 w-3" />
+										<HugeiconsIcon icon={ArrowDown01Icon} class="mr-1 h-3 w-3" />
 									{/if}
 									{cellData.text}
 								</Badge>
@@ -198,7 +207,7 @@
 									<div
 										class={`${cellData.color} flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium`}
 									>
-										<cellData.icon class="h-3.5 w-3.5" />
+										<HugeiconsIcon icon={cellData.icon} class="h-3.5 w-3.5" />
 									</div>
 									<span class="text-sm font-medium">#{cellData.number}</span>
 								</div>
@@ -214,7 +223,7 @@
 													</Avatar.Fallback>
 												</Avatar.Root>
 												<div class="flex flex-col items-start">
-													<span class="text-sm font-medium">{cellData.name}</span>
+													<UserName name={cellData.name} nameColor={cellData.nameColor} founderBadge={cellData.founderBadge} class="text-sm font-medium" />
 													<span class="text-muted-foreground text-xs">@{cellData.username}</span>
 												</div>
 											</div>
@@ -232,7 +241,7 @@
 											>
 										</Avatar.Root>
 										<div class="flex flex-col items-start">
-											<span class="text-sm font-medium">{cellData.name}</span>
+											<UserName name={cellData.name} nameColor={cellData.nameColor} founderBadge={cellData.founderBadge} class="text-sm font-medium" />
 											<span class="text-muted-foreground text-xs">@{cellData.username}</span>
 										</div>
 									</div>

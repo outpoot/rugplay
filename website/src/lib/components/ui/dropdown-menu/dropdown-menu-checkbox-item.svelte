@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { Tick01Icon, MinusSignIcon } from '@hugeicons/core-free-icons';
 	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-	import CheckIcon from "@lucide/svelte/icons/check";
-	import MinusIcon from "@lucide/svelte/icons/minus";
 	import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
 	import type { Snippet } from "svelte";
 
@@ -31,9 +31,9 @@
 	{#snippet children({ checked, indeterminate })}
 		<span class="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
 			{#if indeterminate}
-				<MinusIcon class="size-4" />
+				<HugeiconsIcon icon={MinusSignIcon} class="size-4" />
 			{:else}
-				<CheckIcon class={cn("size-4", !checked && "text-transparent")} />
+				<HugeiconsIcon icon={Tick01Icon} class={cn("size-4", !checked && "text-transparent")} />
 			{/if}
 		</span>
 		{@render childrenProp?.()}

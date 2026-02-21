@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { user, predictionQuestion, predictionBet } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
+import { checkAndAwardAchievements } from '$lib/server/achievements';
 
 export const POST: RequestHandler = async ({ params, request }) => {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -19,7 +20,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
     const userId = Number(session.user.id);
 
     try {
-        return await db.transaction(async (tx) => {
+        const result = await db.transaction(async (tx) => {
             // Check question exists and is active
             const [questionData] = await tx
                 .select({
@@ -112,6 +113,10 @@ export const POST: RequestHandler = async ({ params, request }) => {
                 newBalance: Number(userData.baseCurrencyBalance) - amount
             });
         });
+
+        checkAndAwardAchievements(userId, ['hopium']);
+
+        return result;
     } catch (e) {
         console.error('Betting error:', e);
         return json({ error: (e as Error).message }, { status: 400 });

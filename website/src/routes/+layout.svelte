@@ -7,7 +7,7 @@
 	import AppSidebar from '$lib/components/self/AppSidebar.svelte';
 
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { ModeWatcher } from 'mode-watcher';
 	import { page } from '$app/state';
@@ -18,8 +18,7 @@
 		children: any;
 	}>();
 
-	USER_DATA.set(data?.userSession ?? null);
-
+	untrack(() => USER_DATA.set(data?.userSession ?? null));
 	$effect(() => {
 		USER_DATA.set(data?.userSession ?? null);
 	});
@@ -90,12 +89,13 @@
 			'/admin/promo': 'Promo Codes',
 			'/transactions': 'Transactions',
 			'/hopium': 'Hopium',
-			'/gambling': 'Gambling',
+			'/arcade': 'Arcade',
 			'/live': 'Live Trades',
 			'/treemap': 'Treemap',
 			'/about': 'About',
 			'/legal/privacy': 'Privacy Policy',
 			'/legal/terms': 'Terms of Service',
+			'/shop': 'Shop',
 		};
 
 		// Handle dynamic routes

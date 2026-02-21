@@ -6,7 +6,13 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert';
 	import { Separator } from '$lib/components/ui/separator';
-	import { Info, Loader2, Coins, ImagePlus } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		InformationCircleIcon,
+		Loading03Icon,
+		Coins01Icon,
+		ImageAdd01Icon
+	} from '@hugeicons/core-free-icons';
 	import { PORTFOLIO_SUMMARY, fetchPortfolioData } from '$lib/stores/portfolio-data';
 	import { onMount } from 'svelte';
 	import { CREATION_FEE, INITIAL_LIQUIDITY, TOTAL_COST } from '$lib/data/constants';
@@ -165,7 +171,7 @@
 												<img src={iconPreview} alt="Preview" class="h-full w-full object-cover" />
 											{:else}
 												<div class="flex h-full items-center justify-center">
-													<ImagePlus class="text-muted-foreground h-8 w-8" />
+													<HugeiconsIcon icon={ImageAdd01Icon} class="text-muted-foreground h-8 w-8" />
 												</div>
 											{/if}
 										</div>
@@ -230,7 +236,7 @@
 
 							<!-- Fair Launch Info -->
 							<Alert variant="default" class="bg-muted/50">
-								<Info class="h-4 w-4" />
+								<HugeiconsIcon icon={InformationCircleIcon} class="h-4 w-4" />
 								<AlertDescription class="space-y-2">
 									<p class="font-medium">Fair Launch Settings</p>
 									<div class="text-muted-foreground space-y-1 text-sm">
@@ -249,10 +255,10 @@
 							<!-- Submit Button -->
 							<Button type="submit" disabled={!canSubmit} class="w-full" size="lg">
 								{#if isSubmitting}
-									<Loader2 class="h-4 w-4 animate-spin" />
+									<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
 									Creating...
 								{:else}
-									<Coins class="h-4 w-4" />
+									<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
 									Create Coin (${TOTAL_COST.toFixed(2)})
 								{/if}
 							</Button>

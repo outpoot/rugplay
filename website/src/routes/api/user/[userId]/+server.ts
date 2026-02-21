@@ -27,8 +27,9 @@ export async function GET({ params }) {
                 loginStreak: true,
                 prestigeLevel: true,
                 halloweenBadge2025: true,
-                gamblingWins: true,
-                gamblingLosses: true,
+                arcadeWins: true,
+                arcadeLosses: true,
+                nameColor: true,
             }
         });
 

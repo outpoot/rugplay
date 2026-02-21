@@ -1,5 +1,6 @@
 <script lang="ts">
-	import CheckIcon from "@lucide/svelte/icons/check";
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { Tick01Icon } from '@hugeicons/core-free-icons';
 	import { Select as SelectPrimitive } from "bits-ui";
 	import { cn, type WithoutChild } from "$lib/utils.js";
 
@@ -26,7 +27,7 @@
 	{#snippet children({ selected, highlighted })}
 		<span class="absolute right-2 flex size-3.5 items-center justify-center">
 			{#if selected}
-				<CheckIcon class="size-4" />
+				<HugeiconsIcon icon={Tick01Icon} class="size-4" />
 			{/if}
 		</span>
 		{#if childrenProp}

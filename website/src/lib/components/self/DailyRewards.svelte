@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Gift, Clock, Loader2, CheckIcon, Star } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		GiftIcon,
+		Clock01Icon,
+		Loading03Icon,
+		Tick01Icon,
+		StarIcon
+	} from '@hugeicons/core-free-icons';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
@@ -146,16 +153,16 @@
 	variant={claimState === 'success' ? 'secondary' : rewardStatus?.canClaim ? 'default' : 'outline'}
 >
 	{#if !rewardStatus || claimState === 'loading'}
-		<Loader2 class="h-4 w-4 animate-spin" />
+		<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
 		<span>{!rewardStatus ? 'Loading...' : 'Claiming...'}</span>
 	{:else if claimState === 'success'}
-		<CheckIcon class="h-4 w-4" />
+		<HugeiconsIcon icon={Tick01Icon} class="h-4 w-4" />
 		<span>Claimed!</span>
 	{:else if rewardStatus.canClaim}
-		<Gift class="h-4 w-4" />
+		<HugeiconsIcon icon={GiftIcon} class="h-4 w-4" />
 		<span>Claim ${formatCurrency(rewardStatus.rewardAmount)}</span>
 	{:else}
-		<Clock class="h-4 w-4" />
+		<HugeiconsIcon icon={Clock01Icon} class="h-4 w-4" />
 		<span>Next in {formatTimeRemaining(rewardStatus.timeRemaining)}</span>
 	{/if}
 </Button>

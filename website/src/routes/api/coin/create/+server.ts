@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { uploadCoinIcon } from '$lib/server/s3';
 import { CREATION_FEE, FIXED_SUPPLY, STARTING_PRICE, INITIAL_LIQUIDITY, TOTAL_COST, MAX_FILE_SIZE } from '$lib/data/constants';
 import { isNameAppropriate } from '$lib/server/moderation';
+import { checkAndAwardAchievements } from '$lib/server/achievements';
 
 async function validateInputs(name: string, symbol: string, iconFile: File | null) {
     if (!name || name.length < 2 || name.length > 255) {
@@ -141,6 +142,8 @@ export async function POST({ request }) {
             // coin is still created successfully, just without icon
         }
     }
+
+    checkAndAwardAchievements(userId, ['creation']);
 
     return json({
         success: true,

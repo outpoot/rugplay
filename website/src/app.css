@@ -127,3 +127,26 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Animated name colors */
+@keyframes rainbow-text-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes diamond-shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-rainbow-text {
+  background-size: 200% auto;
+  animation: rainbow-text-shift 3s linear infinite;
+}
+
+.animate-diamond-shimmer {
+  background-size: 200% auto;
+  animation: diamond-shimmer 4s ease-in-out infinite;
+}

@@ -9,23 +9,24 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import { Separator } from '$lib/components/ui/separator';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
+	import UserName from '$lib/components/self/UserName.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		Loader2,
-		Calculator,
-		History,
-		ChartColumn,
-		MessageCircleQuestion,
-		CheckIcon,
-		XIcon
-	} from 'lucide-svelte';
+		Loading03Icon,
+		Calculator01Icon,
+		TransactionHistoryIcon,
+		ChartColumnIcon,
+		MessageQuestionIcon,
+		Tick01Icon,
+		Cancel01Icon
+	} from '@hugeicons/core-free-icons';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { PORTFOLIO_SUMMARY, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import { formatDateWithYear, getPublicUrl, formatTimeUntil } from '$lib/utils';
 	import { createChart, ColorType, type IChartApi, LineSeries } from 'lightweight-charts';
-	import type { PredictionQuestion } from '$lib/types/prediction';
 	import HopiumQuestionSkeleton from '$lib/components/self/skeletons/HopiumQuestionSkeleton.svelte';
 
 	const { data } = $props();
@@ -40,6 +41,11 @@
 
 	let userBalance = $derived($PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance : 0);
 	let questionId = $derived(data.questionId);
+
+	$effect(() => {
+		question = data.question;
+		probabilityData = data.probabilityData;
+	});
 
 	// Chart related
 	let chartContainer = $state<HTMLDivElement>();
@@ -76,7 +82,7 @@
 
 	async function placeBet() {
 		if (!question || !customBetAmount || Number(customBetAmount) <= 0) {
-			toast.error('Please enter a valid bet amount');
+			toast.error('Please enter a valid amount');
 			return;
 		}
 
@@ -94,13 +100,13 @@
 			const result = await response.json();
 			if (response.ok) {
 				toast.success(
-					`Bet placed! Potential winnings: $${result.bet.potentialWinnings.toFixed(2)}`
+					`Prediction placed! Potential winnings: $${result.bet.potentialWinnings.toFixed(2)}`
 				);
 				customBetAmount = '';
 				fetchQuestion();
 				fetchPortfolioSummary();
 			} else {
-				toast.error(result.error || 'Failed to place bet');
+				toast.error(result.error || 'Failed to place prediction');
 			}
 		} catch (e) {
 			toast.error('Network error');
@@ -201,9 +207,9 @@
 		? `${question.question} - Hopium - Rugplay`
 		: 'Loading Question - Hopium - Rugplay'}
 	description={question
-		? `Bet on "${question.question}" in Rugplay's AI-powered prediction market. Current odds: ${question.yesPercentage.toFixed(1)}% YES, ${question.noPercentage.toFixed(1)}% NO. Total volume: $${question.totalAmount.toFixed(2)}.`
+		? `Predict "${question.question}" in Rugplay's AI-powered prediction market. Current odds: ${question.yesPercentage.toFixed(1)}% YES, ${question.noPercentage.toFixed(1)}% NO. Total volume: $${question.totalAmount.toFixed(2)}.`
 		: 'AI-powered prediction market question in the Rugplay simulation game.'}
-	keywords="AI prediction market question, virtual betting, cryptocurrency prediction game, yes no betting, forecasting simulation"
+	keywords="AI prediction market question, virtual prediction, cryptocurrency prediction game, yes no prediction, forecasting simulation"
 />
 
 <div class="container mx-auto max-w-7xl p-6">
@@ -221,7 +227,7 @@
 	{:else}
 		<div class="flex items-center gap-3">
 			<div class="bg-muted rounded-lg p-4">
-				<MessageCircleQuestion class="h-14 w-14" />
+				<HugeiconsIcon icon={MessageQuestionIcon} class="h-14 w-14" />
 			</div>
 			<div class="flex-1">
 				<h1 class="text-2xl font-semibold break-all">{question.question}</h1>
@@ -236,16 +242,16 @@
 				{#if question.status === 'RESOLVED'}
 					<Badge variant="destructive" class={question.aiResolution ? 'bg-success/80!' : ''}>
 						{#if question.aiResolution}
-							<CheckIcon class="h-4 w-4" />
+							<HugeiconsIcon icon={Tick01Icon} class="h-4 w-4" />
 							RESOLVED: YES
 						{:else}
-							<XIcon class="h-4 w-4" />
+							<HugeiconsIcon icon={Cancel01Icon} class="h-4 w-4" />
 							RESOLVED: NO
 						{/if}
 					</Badge>
 				{:else if question.status === 'CANCELLED'}
 					<Badge variant="outline" class="text-muted-foreground border-muted-foreground">
-						<XIcon class="h-4 w-4" />
+						<HugeiconsIcon icon={Cancel01Icon} class="h-4 w-4" />
 						SKIP
 					</Badge>
 				{/if}
@@ -267,7 +273,7 @@
 						/>
 						<Avatar.Fallback>{question.creator.username.charAt(0)}</Avatar.Fallback>
 					</Avatar.Root>
-					<span>{question.creator.name} (@{question.creator.username})</span>
+					<span><UserName name={question.creator.name} nameColor={question.creator.nameColor} /> (@{question.creator.username})</span>
 				</HoverCard.Trigger>
 				<HoverCard.Content class="w-80" side="bottom" sideOffset={3}>
 					<UserProfilePreview userId={question.creator.id} />
@@ -284,7 +290,7 @@
 						<Card.Header>
 							<div class="flex items-center justify-between">
 								<Card.Title class="flex items-center gap-3 text-xl font-bold">
-									<ChartColumn class="h-6 w-6" />
+									<HugeiconsIcon icon={ChartColumnIcon} class="h-6 w-6" />
 									Chart
 								</Card.Title>
 
@@ -302,8 +308,8 @@
 									class="border-muted flex h-[400px] items-center justify-center rounded-lg border-2 border-dashed"
 								>
 									<div class="text-center">
-										<ChartColumn class="text-muted-foreground mx-auto mb-3 h-12 w-12" />
-										<p class="text-muted-foreground text-sm">Chart will appear after first bet</p>
+										<HugeiconsIcon icon={ChartColumnIcon} class="text-muted-foreground mx-auto mb-3 h-12 w-12" />
+										<p class="text-muted-foreground text-sm">Chart will appear after first prediction</p>
 									</div>
 								</div>
 							{:else}
@@ -318,7 +324,7 @@
 					<!-- Trading Card -->
 					<Card.Root>
 						<Card.Header>
-							<Card.Title>Place Bet</Card.Title>
+							<Card.Title>Make Prediction</Card.Title>
 						</Card.Header>
 						<Card.Content class="space-y-6">
 							<!-- YES/NO Buttons -->
@@ -427,8 +433,8 @@
 								onclick={placeBet}
 							>
 								{#if placingBet}
-									<Loader2 class="h-4 w-4 animate-spin" />
-									Placing Bet...
+									<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
+									Placing Prediction...
 								{:else}
 									Pay ${Number(customBetAmount || 0).toFixed(2)}
 								{/if}
@@ -439,11 +445,11 @@
 					{#if !$USER_DATA}
 						<Card.Root class="shadow-sm">
 							<Card.Header>
-								<Card.Title class="text-lg font-bold">Start Betting</Card.Title>
+								<Card.Title class="text-lg font-bold">Start Predicting</Card.Title>
 							</Card.Header>
 							<Card.Content class="pb-6">
 								<div class="py-6 text-center">
-									<p class="text-muted-foreground mb-4 text-sm">Sign in to place bets</p>
+									<p class="text-muted-foreground mb-4 text-sm">Sign in to make predictions</p>
 									<Button size="lg" onclick={() => goto('/')}>Sign In</Button>
 								</div>
 							</Card.Content>
@@ -460,7 +466,7 @@
 						<Card.Header>
 							<Card.Title class="flex items-center gap-3 text-lg font-bold">
 								<div class="bg-muted rounded-full p-2">
-									<Calculator class="h-5 w-5" />
+									<HugeiconsIcon icon={Calculator01Icon} class="h-5 w-5" />
 								</div>
 								Your Position
 							</Card.Title>
@@ -470,7 +476,7 @@
 								{#if question.userBets.yesAmount > 0}
 									<div class="flex items-center justify-between">
 										<div>
-											<div class="text-sm font-medium text-green-600">YES Bet</div>
+											<div class="text-sm font-medium text-green-600">YES Stake</div>
 											<div class="text-muted-foreground text-xs">
 												Payout: ${estimatedYesPayout.toFixed(2)}
 											</div>
@@ -483,7 +489,7 @@
 								{#if question.userBets.noAmount > 0}
 									<div class="flex items-center justify-between">
 										<div>
-											<div class="text-sm font-medium text-red-600">NO Bet</div>
+											<div class="text-sm font-medium text-red-600">NO Stake</div>
 											<div class="text-muted-foreground text-xs">
 												Payout: ${estimatedNoPayout.toFixed(2)}
 											</div>
@@ -508,14 +514,14 @@
 						<Card.Header>
 							<Card.Title>
 								<div class="inline-flex items-center gap-2">
-									<Calculator class="h-5 w-5" />
-									Place Your Bet
+									<HugeiconsIcon icon={Calculator01Icon} class="h-5 w-5" />
+									Place Your Prediction
 								</div>
 							</Card.Title>
 						</Card.Header>
 						<Card.Content>
 							{#if question.status === 'ACTIVE'}
-								<p class="text-muted-foreground mb-6 text-sm">You haven't placed any bets yet</p>
+								<p class="text-muted-foreground mb-6 text-sm">You haven't made any predictions yet</p>
 							{:else}
 								<div class="py-6 text-center">
 									<p class="text-muted-foreground text-sm">This question has been resolved</p>
@@ -530,7 +536,7 @@
 					<Card.Header>
 						<Card.Title class="flex items-center gap-3 text-lg font-bold">
 							<div class="bg-muted rounded-full p-2">
-								<ChartColumn class="h-5 w-5" />
+								<HugeiconsIcon icon={ChartColumnIcon} class="h-5 w-5" />
 							</div>
 							Market Stats
 						</Card.Title>
@@ -543,7 +549,7 @@
 							</span>
 						</div>
 						<div class="flex justify-between">
-							<span class="text-muted-foreground text-sm">Total Bets:</span>
+							<span class="text-muted-foreground text-sm">Total Predictions:</span>
 							<span class="font-mono text-sm">
 								{question.recentBets?.length || 0}
 							</span>
@@ -572,7 +578,7 @@
 					<Card.Header>
 						<Card.Title class="flex items-center gap-3 text-xl font-bold">
 							<div class="bg-muted rounded-full p-2">
-								<History class="h-6 w-6" />
+								<HugeiconsIcon icon={TransactionHistoryIcon} class="h-6 w-6" />
 							</div>
 							Recent Activity
 						</Card.Title>
@@ -602,7 +608,7 @@
 														</Avatar.Root>
 														<div>
 															<div class="font-semibold hover:underline">
-																{bet.user?.name || 'Deleted User'}
+																<UserName name={bet.user?.name || 'Deleted User'} nameColor={bet.user?.nameColor} />
 															</div>
 															<div class="text-muted-foreground text-sm">
 																@{bet.user?.username || 'deleted_user'}

@@ -6,6 +6,7 @@ import { eq, and, gte } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { createNotification } from '$lib/server/notification';
 import { calculate24hMetrics, executeSellTrade } from '$lib/server/amm';
+import { checkAndAwardAchievements } from '$lib/server/achievements';
 
 export async function POST({ params, request }) {
     const session = await auth.api.getSession({
@@ -52,7 +53,8 @@ export async function POST({ params, request }) {
             isListed: coin.isListed,
             creatorId: coin.creatorId,
             tradingUnlocksAt: coin.tradingUnlocksAt,
-            isLocked: coin.isLocked
+            isLocked: coin.isLocked,
+            change24h: coin.change24h
         }).from(coin).where(eq(coin.symbol, normalizedSymbol)).for('update').limit(1);
 
         if (!coinData) {
@@ -217,6 +219,15 @@ export async function POST({ params, request }) {
                 }));
             }
 
+            checkAndAwardAchievements(userId, ['trading', 'wealth', 'special'], {
+                tradeType: 'BUY',
+                tradeAmount: totalCost,
+                coinChange24h: Number(coinData.change24h || 0),
+                newBalance: userBalance - totalCost,
+                newPrice,
+                oldPrice: currentPrice
+            });
+
             return json({
                 success: true,
                 type: 'BUY',
@@ -326,6 +337,14 @@ export async function POST({ params, request }) {
                     data: tradeData
                 }));
             }
+
+            checkAndAwardAchievements(userId, ['trading', 'wealth', 'creation', 'special'], {
+                tradeType: 'SELL',
+                tradeAmount: totalCost,
+                newBalance: userBalance + totalCost,
+                newPrice,
+                oldPrice: currentPrice
+            });
 
             return json({
                 success: true,

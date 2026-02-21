@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		BookOpen,
-		Github,
-		Youtube,
-		Twitter,
-		User,
-		Coins,
-		TrendingUp,
-		Shield
-	} from 'lucide-svelte';
+		BookOpen01Icon,
+		GithubIcon,
+		YoutubeIcon,
+		TwitterIcon,
+		UserIcon,
+		Coins01Icon,
+		TradeUpIcon,
+		DiscordIcon
+	} from '@hugeicons/core-free-icons';
 	import UserManualModal from '$lib/components/self/UserManualModal.svelte';
 
 	let showUserManual = $state(false);
@@ -41,7 +42,7 @@
 		</p>
 		<div class="flex flex-wrap justify-center gap-4">
 			<Button onclick={handleManual} size="lg">
-				<BookOpen class="h-4 w-4" />
+				<HugeiconsIcon icon={BookOpen01Icon} class="h-4 w-4" />
 				User Manual
 			</Button>
 		</div>
@@ -51,7 +52,7 @@
 		<Card>
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
-					<Coins class="text-primary h-5 w-5" />
+					<HugeiconsIcon icon={Coins01Icon} class="text-primary h-5 w-5" />
 					About Rugplay
 				</CardTitle>
 			</CardHeader>
@@ -76,7 +77,7 @@
 		<Card>
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
-					<TrendingUp class="text-primary h-5 w-5" />
+					<HugeiconsIcon icon={TradeUpIcon} class="text-primary h-5 w-5" />
 					Features
 				</CardTitle>
 			</CardHeader>
@@ -96,11 +97,11 @@
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>⚖️</span>
-						<span>Bet on questions (similar to Polymarket)</span>
+						<span>Predict on questions (similar to Polymarket)</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>🎲</span>
-						<span>Gamble it all</span>
+						<span>Play arcade games</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<span>📊</span>
@@ -117,7 +118,7 @@
 		<Card>
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
-					<User class="text-primary h-5 w-5" />
+					<HugeiconsIcon icon={UserIcon} class="text-primary h-5 w-5" />
 					Credits
 				</CardTitle>
 			</CardHeader>
@@ -132,7 +133,7 @@
 							target="_blank"
 							rel="noopener"
 						>
-							<Youtube class="h-4 w-4" />
+							<HugeiconsIcon icon={YoutubeIcon} class="h-4 w-4" />
 							YouTube
 						</Button>
 						<Button
@@ -142,7 +143,7 @@
 							target="_blank"
 							rel="noopener"
 						>
-							<Twitter class="h-4 w-4" />
+							<HugeiconsIcon icon={TwitterIcon} class="h-4 w-4" />
 							Twitter
 						</Button>
 						<Button
@@ -152,7 +153,7 @@
 							target="_blank"
 							rel="noopener"
 						>
-							<Github class="h-4 w-4" />
+							<HugeiconsIcon icon={GithubIcon} class="h-4 w-4" />
 							GitHub
 						</Button>
 						<Button
@@ -162,10 +163,13 @@
 							target="_blank"
 							rel="noopener"
 						>
-							<Shield class="h-4 w-4" />
+							<HugeiconsIcon icon={DiscordIcon} class="h-4 w-4" />
 							Discord
 						</Button>
 					</div>
+					<p class="text-muted-foreground text-sm">Achievement icons by <a href="https://twitter.com/gvesster" target="_blank" rel="noopener" class="text-primary underline">gvstr</a></p>
+					<p class="text-muted-foreground text-sm">Chest animations by <a href="https://admurin.itch.io/" target="_blank" rel="noopener" class="text-primary underline">admurin</a></p>
+					<p class="text-muted-foreground text-sm">Halloween badge by <a href="https://www.flaticon.com/authors/smalllikeart" target="_blank" rel="noopener" class="text-primary underline">smalllikeart</a></p>
 				</div>
 			</CardContent>
 		</Card>

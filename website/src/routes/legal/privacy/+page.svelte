@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { Separator } from '$lib/components/ui/separator';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { ShieldUserIcon, Alert02Icon } from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
-	import ShieldCheck from 'lucide-svelte/icons/shield-check';
-	import AlertTriangle from 'lucide-svelte/icons/alert-triangle';
 	import { goto } from '$app/navigation';
 	import SEO from '$lib/components/self/SEO.svelte';
 
-	const LAST_UPDATED = 'May 29, 2025';
+	const LAST_UPDATED = 'February 21, 2026';
 	const CONTACT_EMAIL = 'contact@outpoot.com';
 </script>
 
@@ -21,7 +21,7 @@
 <div class="container mx-auto max-w-4xl py-10">
 	<Card.Root class="p-6">
 		<div class="mb-8 flex items-center gap-3">
-			<ShieldCheck class="text-primary h-10 w-10" />
+			<HugeiconsIcon icon={ShieldUserIcon} class="text-primary h-10 w-10" />
 			<div>
 				<h1 class="text-4xl font-bold">Privacy Policy</h1>
 				<p class="text-muted-foreground">
@@ -31,7 +31,7 @@
 		</div>
 
 		<Alert.Root class="mb-6">
-			<AlertTriangle class="h-4 w-4" />
+			<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 			<Alert.Title>Important Notice About Account Deletion</Alert.Title>
 			<Alert.Description>
 				When you delete your account, all personal information is permanently removed, but some
@@ -85,7 +85,22 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">2.3 Platform Activity</h3>
+						<h3 class="mb-2 text-lg font-medium">2.3 Payment Information (via Polar.sh)</h3>
+						<p class="mb-2">
+							When you purchase Gems, payments are processed by our third-party payment provider, <a href="https://polar.sh" target="_blank" rel="noopener noreferrer" class="text-primary underline">Polar.sh</a>. We do not directly collect or store your payment card details. Polar.sh may collect:
+						</p>
+						<ul class="ml-6 list-disc space-y-2">
+							<li>Payment card or payment method details (handled entirely by Polar.sh)</li>
+							<li>Billing name and email address</li>
+							<li>Transaction amounts and purchase history</li>
+						</ul>
+						<p class="text-muted-foreground mt-2 text-sm">
+							We receive only your email address, transaction confirmation, and product identifiers from Polar.sh to fulfill your Gem purchases. For details on how Polar.sh handles your payment data, please review <a href="https://polar.sh/legal/privacy" target="_blank" rel="noopener noreferrer" class="text-primary underline">Polar.sh's Privacy Policy</a>.
+						</p>
+					</div>
+
+					<div>
+						<h3 class="mb-2 text-lg font-medium">2.4 Platform Activity</h3>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Comments and posts on coin pages</li>
 							<li>Likes and interactions with content</li>
@@ -142,7 +157,7 @@
 				</h2>
 
 				<Alert.Root class="mb-4">
-					<AlertTriangle class="h-4 w-4" />
+					<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 					<Alert.Title>14-Day Deletion Process</Alert.Title>
 					<Alert.Description>
 						Account deletion is scheduled 14 days after your request. During this period, your
@@ -334,6 +349,9 @@
 					<li>
 						With service providers who assist in platform operations (under strict data processing
 						agreements)
+					</li>
+					<li>
+						<strong>Polar.sh (Payment Processor):</strong> When you purchase Gems, we share your user ID and email address with Polar.sh to process the transaction. Polar.sh acts as an independent data controller for payment data. See <a href="https://polar.sh/legal/privacy" target="_blank" rel="noopener noreferrer" class="text-primary underline">Polar.sh's Privacy Policy</a> for details.
 					</li>
 				</ul>
 			</Card.Content>

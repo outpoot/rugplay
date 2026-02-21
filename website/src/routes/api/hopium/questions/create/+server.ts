@@ -6,6 +6,7 @@ import { eq, and, gte, count } from 'drizzle-orm';
 import { validateQuestion } from '$lib/server/ai';
 import { isNameAppropriate } from '$lib/server/moderation';
 import type { RequestHandler } from './$types';
+import { checkAndAwardAchievements } from '$lib/server/achievements';
 
 const MIN_BALANCE_REQUIRED = 100000; // $100k
 const MAX_QUESTIONS_PER_HOUR = 2;
@@ -31,7 +32,7 @@ export const POST: RequestHandler = async ({ request }) => {
     const now = new Date();
 
     try {
-        return await db.transaction(async (tx) => {
+        const result = await db.transaction(async (tx) => {
             // Check user balance
             const [userData] = await tx
                 .select({ baseCurrencyBalance: user.baseCurrencyBalance })
@@ -107,6 +108,10 @@ export const POST: RequestHandler = async ({ request }) => {
                 }
             });
         });
+
+        checkAndAwardAchievements(userId, ['hopium']);
+
+        return result;
     } catch (e) {
         console.error('Question creation error:', e);
         return json({ error: (e as Error).message }, { status: 400 });

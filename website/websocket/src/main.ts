@@ -34,7 +34,7 @@ redis.on('connect', () => {
 		else console.log(`Successfully psubscribed to patterns. Active psubscriptions: ${count}`);
 	});
 
-	redis.subscribe('trades:all', 'trades:large', 'gambling:activity', (err, count) => {
+	redis.subscribe('trades:all', 'trades:large', 'arcade:activity', (err, count) => {
 		if (err) console.error("Failed to subscribe to channels", err);
 		else console.log(`Successfully subscribed to channels. Active subscriptions: ${count}`);
 	});
@@ -102,10 +102,10 @@ redis.on('message', (channel, msg) => {
 					}
 				}
 			}
-		} else if (channel === 'gambling:activity') {
+		} else if (channel === 'arcade:activity') {
 			const eventData = JSON.parse(msg);
 			const eventMessage = JSON.stringify({
-				type: 'gambling_activity',
+				type: 'arcade_activity',
 				...eventData
 			});
 

@@ -18,6 +18,7 @@ export interface PredictionQuestion {
 		name: string;
 		username: string;
 		image: string;
+		nameColor?: string | null;
 	};
 	userBets?: {
 		yesAmount: number;
@@ -37,6 +38,7 @@ export interface PredictionQuestion {
 			name?: string;
 			username?: string;
 			image?: string;
+			nameColor?: string | null;
 		};
 	}>;
 }

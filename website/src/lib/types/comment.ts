@@ -8,6 +8,7 @@ export interface Comment {
     userName: string;
     userUsername: string;
     userImage: string | null;
+    userNameColor: string | null;
     isLikedByUser: boolean;
 
     userBio: string | null;

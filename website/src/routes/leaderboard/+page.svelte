@@ -7,25 +7,25 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		TrendingDown,
-		Crown,
-		Skull,
-		Target,
-		RefreshCw,
-		Trophy,
-		Search,
-		SearchX,
-		X,
-		Wallet,
-		Calendar
-	} from 'lucide-svelte';
+		TradeDownIcon,
+		CrownIcon,
+		SkullIcon,
+		Target01Icon,
+		Refresh01Icon,
+		Award01Icon,
+		Search01Icon,
+		Cancel01Icon,
+		Wallet01Icon,
+		Calendar01Icon
+	} from '@hugeicons/core-free-icons';
 	import { formatValue, getPublicUrl } from '$lib/utils';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import LeaderboardSearchSkeleton from '$lib/components/self/skeletons/LeaderboardSearchSkeleton.svelte';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import ProfileBadges from '$lib/components/self/ProfileBadges.svelte';
+	import UserName from '$lib/components/self/UserName.svelte';
 
 	let searchOffset = $state(0);
 	let searchQuery = $state('');
@@ -84,13 +84,13 @@
 	function getRankIcon(index: number) {
 		switch (index) {
 			case 0:
-				return { icon: Crown, color: 'text-yellow-500' };
+				return { icon: CrownIcon, color: 'text-yellow-500' };
 			case 1:
-				return { icon: Trophy, color: 'text-gray-400' };
+				return { icon: Award01Icon, color: 'text-gray-400' };
 			case 2:
-				return { icon: Trophy, color: 'text-orange-600' };
+				return { icon: Award01Icon, color: 'text-orange-600' };
 			default:
-				return { icon: Target, color: 'text-muted-foreground' };
+				return { icon: Target01Icon, color: 'text-muted-foreground' };
 		}
 	}
 
@@ -109,7 +109,9 @@
 				component: 'user',
 				image: row.image,
 				name: row.name,
-				username: row.username
+				username: row.username,
+				nameColor: row.nameColor,
+				founderBadge: row.founderBadge
 			})
 		}
 	];
@@ -135,7 +137,9 @@
 				component: 'user',
 				image: row.image,
 				name: row.name,
-				username: row.username
+				username: row.username,
+				nameColor: row.nameColor,
+				founderBadge: row.founderBadge
 			})
 		},
 		{
@@ -167,7 +171,9 @@
 				component: 'user',
 				image: row.image,
 				name: row.name,
-				username: row.username
+				username: row.username,
+				nameColor: row.nameColor,
+				founderBadge: row.founderBadge
 			})
 		},
 		{
@@ -199,7 +205,9 @@
 				component: 'user',
 				image: row.image,
 				name: row.name,
-				username: row.username
+				username: row.username,
+				nameColor: row.nameColor,
+				founderBadge: row.founderBadge
 			})
 		},
 		{
@@ -231,7 +239,9 @@
 				component: 'user',
 				image: row.image,
 				name: row.name,
-				username: row.username
+				username: row.username,
+				nameColor: row.nameColor,
+				founderBadge: row.founderBadge
 			})
 		},
 		{
@@ -271,7 +281,7 @@
 			</div>
 			<div class="flex items-center gap-4">
 				<div class="relative flex flex-grow items-center">
-					<Search size={16} class="pointer-events-none absolute left-3"></Search>
+					<HugeiconsIcon icon={Search01Icon} size={16} class="pointer-events-none absolute left-3"></HugeiconsIcon>
 					<Input
 						type="text"
 						placeholder="Search by username..."
@@ -291,7 +301,7 @@
 						disabled={loading}
 						class="w-fit"
 					>
-						<X class="h-4 w-4" />
+						<HugeiconsIcon icon={Cancel01Icon} class="h-4 w-4" />
 					</Button>
 				{/if}
 				<Button
@@ -300,7 +310,7 @@
 					disabled={loading}
 					class="w-fit"
 				>
-					<RefreshCw class="h-4 w-4" />
+					<HugeiconsIcon icon={Refresh01Icon} class="h-4 w-4" />
 				</Button>
 			</div>
 		</div>
@@ -340,7 +350,7 @@
 											<div class="flex flex-grow flex-col">
 												<div class="flex items-center gap-2">
 													<h4 class="max-w-[150px] truncate text-sm font-semibold sm:max-w-[200px]">
-														{user.name}
+															<UserName name={user.name} nameColor={user.nameColor} />
 													</h4>
 													<ProfileBadges {user} showId={true} size="sm" />
 												</div>
@@ -348,7 +358,7 @@
 												<div class="mt-2 flex flex-col gap-1">
 													<div class="flex items-center justify-between">
 														<span class="text-muted-foreground flex items-center gap-2 text-xs">
-															<Wallet class="h-3 w-3" />
+															<HugeiconsIcon icon={Wallet01Icon} class="h-3 w-3" />
 															Portfolio
 														</span>
 														<span class="font-mono text-sm font-medium">
@@ -358,7 +368,7 @@
 
 													<div class="flex items-center justify-between">
 														<span class="text-muted-foreground flex items-center gap-2 text-xs">
-															<Wallet class="h-3 w-3" />
+															<HugeiconsIcon icon={Wallet01Icon} class="h-3 w-3" />
 															Cash
 														</span>
 														<span class="text-success font-mono text-sm font-medium">
@@ -367,7 +377,7 @@
 													</div>
 												</div>
 												<div class="mt-2 flex items-center gap-2">
-													<Calendar class="text-muted-foreground h-4 w-4" />
+													<HugeiconsIcon icon={Calendar01Icon} class="text-muted-foreground h-4 w-4" />
 													<p class="text-muted-foreground text-xs">
 														Joined {new Date(user.createdAt).toLocaleDateString('en-US', {
 															year: 'numeric',
@@ -429,7 +439,7 @@
 				<Card.Root class="overflow-hidden">
 					<Card.Header class="pb-3 md:pb-4">
 						<Card.Title class="flex items-center gap-2 text-lg text-red-600 md:text-xl">
-							<Skull class="h-5 w-5 md:h-6 md:w-6" />
+							<HugeiconsIcon icon={SkullIcon} class="h-5 w-5 md:h-6 md:w-6" />
 							<span class="truncate">Top Rugpullers (24h)</span>
 						</Card.Title>
 						<Card.Description class="text-xs md:text-sm">
@@ -451,7 +461,7 @@
 				<Card.Root class="overflow-hidden">
 					<Card.Header class="pb-3 md:pb-4">
 						<Card.Title class="flex items-center gap-2 text-lg text-orange-600 md:text-xl">
-							<TrendingDown class="h-5 w-5 md:h-6 md:w-6" />
+							<HugeiconsIcon icon={TradeDownIcon} class="h-5 w-5 md:h-6 md:w-6" />
 							<span class="truncate">Biggest Losses (24h)</span>
 						</Card.Title>
 						<Card.Description class="text-xs md:text-sm"
@@ -473,7 +483,7 @@
 				<Card.Root class="overflow-hidden">
 					<Card.Header class="pb-3 md:pb-4">
 						<Card.Title class="flex items-center gap-2 text-lg text-green-600 md:text-xl">
-							<Crown class="h-5 w-5 md:h-6 md:w-6" />
+							<HugeiconsIcon icon={CrownIcon} class="h-5 w-5 md:h-6 md:w-6" />
 							<span class="truncate">Top Cash Holders</span>
 						</Card.Title>
 						<Card.Description class="text-xs md:text-sm"
@@ -495,7 +505,7 @@
 				<Card.Root class="overflow-hidden">
 					<Card.Header class="pb-3 md:pb-4">
 						<Card.Title class="flex items-center gap-2 text-lg text-cyan-600 md:text-xl">
-							<Trophy class="h-5 w-5 md:h-6 md:w-6" />
+							<HugeiconsIcon icon={Award01Icon} class="h-5 w-5 md:h-6 md:w-6" />
 							<span class="truncate">Highest Portfolio Values</span>
 						</Card.Title>
 						<Card.Description class="text-xs md:text-sm"

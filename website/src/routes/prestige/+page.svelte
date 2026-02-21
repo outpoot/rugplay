@@ -7,7 +7,13 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import { AlertTriangle, Crown, Loader2, Star } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		ArrowRight01Icon,
+		Alert02Icon,
+		Loading03Icon,
+		StarIcon
+	} from '@hugeicons/core-free-icons';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { USER_DATA } from '$lib/stores/user-data';
@@ -15,8 +21,7 @@
 	import SEO from '$lib/components/self/SEO.svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import ProfileBadges from '$lib/components/self/ProfileBadges.svelte';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import PrestigeSkeleton from '$lib/components/self/skeletons/PrestigeSkeleton.svelte';
+		import PrestigeSkeleton from '$lib/components/self/skeletons/PrestigeSkeleton.svelte';
 
 	let isPrestiging = $state(false);
 	let error = $state('');
@@ -129,7 +134,7 @@
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
-				<AlertTriangle class="text-destructive h-5 w-5" />
+				<HugeiconsIcon icon={Alert02Icon} class="text-destructive h-5 w-5" />
 				Confirm
 			</Dialog.Title>
 			<Dialog.Description>
@@ -139,7 +144,7 @@
 
 		<div class="space-y-4">
 			<Alert variant="destructive">
-				<AlertTriangle class="h-4 w-4" />
+				<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 				<AlertDescription>
 					<strong>You will lose:</strong>
 					<ul class="mt-2 list-disc space-y-1 pl-4">
@@ -174,7 +179,7 @@
 			<Button variant="ghost" onclick={closeConfirmDialog}>Cancel</Button>
 			<Button onclick={handlePrestige} disabled={!canConfirmPrestige || isPrestiging}>
 				{#if isPrestiging}
-					<Loader2 class="h-4 w-4 animate-spin" />
+					<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
 					Advancing...
 				{:else}
 					Proceed
@@ -188,7 +193,7 @@
 	<header class="mb-8">
 		<div class="text-center">
 			<div class="mb-2 flex items-center justify-center gap-3">
-				<Star class="h-8 w-8 text-yellow-500" />
+				<HugeiconsIcon icon={StarIcon} class="h-8 w-8 text-yellow-500" />
 				<h1 class="text-3xl font-bold">Prestige</h1>
 			</div>
 			<p class="text-muted-foreground mb-6">Reset your progress to advance your trading status</p>
@@ -264,7 +269,7 @@
 					<Card.Root class="flex flex-1 flex-col gap-1">
 						<Card.Header>
 							<Card.Title class="flex items-center gap-2">
-								<Star class="h-5 w-5" />
+								<HugeiconsIcon icon={StarIcon} class="h-5 w-5" />
 								Progress
 							</Card.Title>
 						</Card.Header>
@@ -316,7 +321,7 @@
 								<Label>Tip: sell coin holdings</Label>
 							{:else}
 								<Alert variant="destructive">
-									<AlertTriangle class="h-4 w-4" />
+									<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 									<AlertDescription>Prestiging is permanent and cannot be undone!</AlertDescription>
 								</Alert>
 							{/if}
@@ -330,7 +335,7 @@
 								variant={canAfford ? 'default' : 'secondary'}
 							>
 								{#if isPrestiging}
-									<Loader2 class="h-4 w-4 animate-spin" />
+									<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
 									Advancing to {prestigeName}...
 								{:else if !canAfford}
 									Need {formatValue(amountNeeded)} more to prestige
@@ -344,7 +349,7 @@
 					<!-- Max Prestige Card -->
 					<Card.Root class="flex flex-1 flex-col gap-1">
 						<Card.Content class="py-16 text-center">
-							<Star class="mx-auto mb-6 h-20 w-20 text-yellow-500" />
+							<HugeiconsIcon icon={StarIcon} class="mx-auto mb-6 h-20 w-20 text-yellow-500" />
 							<h3 class="mb-3 text-2xl font-bold">You're a star!</h3>
 							<p class="text-muted-foreground">
 								You have reached the highest prestige level available.
@@ -356,7 +361,7 @@
 				<!-- Error Messages -->
 				{#if error}
 					<Alert class="mt-6">
-						<AlertTriangle class="h-4 w-4" />
+						<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 						<AlertDescription class="text-red-600">
 							❌ {error}
 						</AlertDescription>
@@ -387,14 +392,7 @@
 										<div class="flex min-w-0 items-center gap-2">
 											<h4 class="truncate text-sm font-medium">{userData.name}</h4>
 											<ProfileBadges
-												user={{
-													...userData,
-													id: parseInt(userData.id),
-													prestigeLevel: currentPrestige,
-													createdAt: new Date(),
-													totalPortfolioValue: totalValue,
-													loginStreak: 0
-												}}
+												user={{...userData, id: parseInt(userData.id), prestigeLevel: currentPrestige, createdAt: new Date(), totalPortfolioValue: totalValue, loginStreak: 0, halloweenBadge2025: false, arcadeWins: 0, arcadeLosses: 0} as any}
 												showId={false}
 												size="sm"
 											/>
@@ -420,14 +418,7 @@
 										<div class="flex min-w-0 items-center gap-2">
 											<h4 class="truncate text-sm font-medium">{userData.name}</h4>
 											<ProfileBadges
-												user={{
-													...userData,
-													id: parseInt(userData.id),
-													prestigeLevel: nextPrestige,
-													createdAt: new Date(),
-													totalPortfolioValue: totalValue,
-													loginStreak: 0
-												}}
+												user={{...userData, id: parseInt(userData.id), prestigeLevel: nextPrestige, createdAt: new Date(), totalPortfolioValue: totalValue, loginStreak: 0, halloweenBadge2025: false, arcadeWins: 0, arcadeLosses: 0} as any}
 												showId={false}
 												size="sm"
 											/>
@@ -457,9 +448,9 @@
 							>
 								<div class="flex items-center gap-2">
 									{#if isAchieved}
-										<Star class="h-4 w-4 text-yellow-500" />
+										<HugeiconsIcon icon={StarIcon} class="h-4 w-4 text-yellow-500" />
 									{:else if isCurrentNext}
-										<ChevronRight class="h-4 w-4 text-blue-500" />
+										<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4 text-blue-500" />
 									{:else}
 										<div class="h-4 w-4"></div>
 									{/if}

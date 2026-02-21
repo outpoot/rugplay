@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { PUBLIC_WEBSOCKET_URL } from '$env/static/public';
 import { NOTIFICATIONS, UNREAD_COUNT } from './notifications';
+import { NEW_ACHIEVEMENTS_COUNT } from './achievements';
 import { USER_DATA } from './user-data';
 import { toast } from 'svelte-sonner';
 import { goto } from '$app/navigation';
@@ -30,7 +31,7 @@ export interface PriceUpdate {
     poolBaseCurrencyAmount?: number;
 }
 
-export interface GamblingActivity {
+export interface ArcadeActivity {
     username: string;
     userImage?: string;
     userId: string;
@@ -58,12 +59,12 @@ export const isConnectedStore = writable<boolean>(false);
 export const isLoadingTrades = writable<boolean>(false);
 export const priceUpdatesStore = writable<Record<string, PriceUpdate>>({});
 
-function createGamblingActivityStore() {
-    const STORAGE_KEY = 'gambling_activities';
+function createArcadeActivityStore() {
+    const STORAGE_KEY = 'arcade_activities';
     const MAX_ACTIVITIES = 50;
 
     // Load from localStorage on init
-    let initialActivities: GamblingActivity[] = [];
+    let initialActivities: ArcadeActivity[] = [];
     if (typeof window !== 'undefined') {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
@@ -71,16 +72,16 @@ function createGamblingActivityStore() {
                 initialActivities = JSON.parse(stored);
             }
         } catch (e) {
-            console.error('Failed to load gambling activities from storage:', e);
+            console.error('Failed to load arcade activities from storage:', e);
         }
     }
 
-    const { subscribe, update, set } = writable<GamblingActivity[]>(initialActivities);
+    const { subscribe, update, set } = writable<ArcadeActivity[]>(initialActivities);
 
     return {
         subscribe,
         set,
-        addActivity: (activity: GamblingActivity) => {
+        addActivity: (activity: ArcadeActivity) => {
             update(activities => {
                 // Check for duplicates
                 const isDuplicate = activities.some(a =>
@@ -100,7 +101,7 @@ function createGamblingActivityStore() {
                     try {
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(newActivities));
                     } catch (e) {
-                        console.error('Failed to save gambling activities to storage:', e);
+                        console.error('Failed to save arcade activities to storage:', e);
                     }
                 }
 
@@ -110,7 +111,7 @@ function createGamblingActivityStore() {
     };
 }
 
-export const gamblingActivityStore = createGamblingActivityStore();
+export const arcadeActivityStore = createArcadeActivityStore();
 
 let hasLoadedInitialTrades = false;
 
@@ -232,19 +233,19 @@ function handlePriceUpdateMessage(message: any): void {
     }
 }
 
-function handleGamblingActivityMessage(message: any): void {
-    if (message.gamblingActivity) {
-        const gamblingActivity: GamblingActivity = {
-            username: message.gamblingActivity.username,
-            userImage: message.gamblingActivity.userImage,
-            userId: message.gamblingActivity.userId,
-            game: message.gamblingActivity.game,
-            amount: message.gamblingActivity.amount,
-            won: message.gamblingActivity.won,
-            timestamp: message.gamblingActivity.timestamp || Date.now()
+function handleArcadeActivityMessage(message: any): void {
+    if (message.arcadeActivity) {
+        const arcadeActivity: ArcadeActivity = {
+            username: message.arcadeActivity.username,
+            userImage: message.arcadeActivity.userImage,
+            userId: message.arcadeActivity.userId,
+            game: message.arcadeActivity.game,
+            amount: message.arcadeActivity.amount,
+            won: message.arcadeActivity.won,
+            timestamp: message.arcadeActivity.timestamp || Date.now()
         };
 
-        gamblingActivityStore.addActivity(gamblingActivity);
+        arcadeActivityStore.addActivity(arcadeActivity);
     }
 }
 
@@ -262,8 +263,8 @@ function handleWebSocketMessage(event: MessageEvent): void {
                 handlePriceUpdateMessage(message);
                 break;
 
-            case 'gambling_activity':
-                handleGamblingActivityMessage(message);
+            case 'arcade_activity':
+                handleArcadeActivityMessage(message);
                 break;
 
             case 'ping':
@@ -290,16 +291,30 @@ function handleWebSocketMessage(event: MessageEvent): void {
                 NOTIFICATIONS.update(notifications => [notification, ...notifications]);
                 UNREAD_COUNT.update(count => count + 1);
 
-                toast.success(message.title, {
-                    description: message.message,
-                    action: {
-                        label: 'View',
-                        onClick: () => {
-                            goto('/notifications');
-                        }
-                    },
-                    duration: 5000
-                });
+                if (message.achievementIcon) {
+                    NEW_ACHIEVEMENTS_COUNT.increment();
+                    toast.success(message.title, {
+                        description: message.message,
+                        action: {
+                            label: 'View',
+                            onClick: () => {
+                                goto('/achievements');
+                            }
+                        },
+                        duration: 6000
+                    });
+                } else {
+                    toast.success(message.title, {
+                        description: message.message,
+                        action: {
+                            label: 'View',
+                            onClick: () => {
+                                goto('/notifications');
+                            }
+                        },
+                        duration: 5000
+                    });
+                }
                 break;
 
             default:

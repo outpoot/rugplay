@@ -10,8 +10,8 @@ Rugplay is a realistic cryptocurrency trading simulator that lets you experience
 - 🪙 Create coins
 - 🟢 Buy coins
 - 🔴 Sell coins
-- ⚖️ Bet on questions (similar to Polymarket)
-- 🎲 Gamble it all
+- ⚖️ Predict on questions (similar to Polymarket)
+- 🎲 Play arcade games
 - 📊 View a Treemap graph of the entire market
 - 🏆 Compete on leaderboards
 
@@ -113,6 +113,14 @@ Before you begin, make sure you have the following installed:
    AWS_SECRET_ACCESS_KEY=your_aws_secret_key
    AWS_REGION=us-east-1
 
+   # --- Optional: Polar.sh (for gem purchases / payments) ---
+   POLAR_ACCESS_TOKEN=your_polar_access_token           # API token from Polar.sh dashboard
+   POLAR_WEBHOOK_SECRET=your_polar_webhook_secret       # Webhook secret from Polar.sh
+   PUBLIC_POLAR_PRODUCT_GEMS_500=your_product_id_500    # Polar product ID for 500 gems
+   PUBLIC_POLAR_PRODUCT_GEMS_1300=your_product_id_1300  # Polar product ID for 1300 gems
+   PUBLIC_POLAR_PRODUCT_GEMS_2800=your_product_id_2800  # Polar product ID for 2800 gems
+   PUBLIC_POLAR_PRODUCT_GEMS_8000=your_product_id_8000  # Polar product ID for 8000 gems
+
    # --- Optional: OpenRouter (for AI features) ---
    OPENROUTER_API_KEY=your_openrouter_api_key
    ```
@@ -121,6 +129,7 @@ Before you begin, make sure you have the following installed:
    - For production, change `PUBLIC_BETTER_AUTH_URL` to `http://localhost:3002` or your deployed domain.
    - The `DATABASE_URL` should match your Postgres Docker container settings.
    - The `REDIS_URL` should match your Redis Docker container settings.
+   - Polar.sh variables are optional and only needed for the gem shop (in-app purchases). Get your access token and product IDs from the [Polar.sh dashboard](https://polar.sh).
    - AWS and OpenRouter variables are optional and only needed for advanced features.
 
 6. **Install Dependencies**

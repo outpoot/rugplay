@@ -8,9 +8,17 @@
 	import TradeModal from '$lib/components/self/TradeModal.svelte';
 	import CommentSection from '$lib/components/self/CommentSection.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
+	import UserName from '$lib/components/self/UserName.svelte';
 	import CoinSkeleton from '$lib/components/self/skeletons/CoinSkeleton.svelte';
 	import TopHolders from '$lib/components/self/TopHolders.svelte';
-	import { TrendingUp, TrendingDown, DollarSign, Coins, ChartColumn } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		TradeUpIcon,
+		TradeDownIcon,
+		MoneyBag02Icon,
+		Coins01Icon,
+		Analytics01Icon
+	} from '@hugeicons/core-free-icons';
 	import {
 		createChart,
 		ColorType,
@@ -35,6 +43,9 @@
 	let loading = $state(false);
 	let chartData = $state(data.chartData);
 	let volumeData = $state(data.volumeData);
+	let oldestTimestamp = $state<number | null>(data.oldestTimestamp ?? null);
+	let isLoadingHistory = $state(false);
+	let noMoreHistory = $state(false);
 	let userHolding = $state(0);
 	let buyModalOpen = $state(false);
 	let sellModalOpen = $state(false);
@@ -55,6 +66,15 @@
 		{ value: '1d', label: '1 day' }
 	];
 
+	$effect(() => {
+		coin = data.coin;
+		chartData = data.chartData;
+		volumeData = data.volumeData;
+		oldestTimestamp = data.oldestTimestamp ?? null;
+		noMoreHistory = false;
+		selectedTimeframe = data.timeframe || '1m';
+	});
+
 	onMount(async () => {
 		await loadUserHolding();
 
@@ -74,20 +94,11 @@
 
 	$effect(() => {
 		if (coinSymbol && previousCoinSymbol && coinSymbol !== previousCoinSymbol) {
-			loading = true;
-			coin = null;
-			chartData = [];
-			volumeData = [];
-			userHolding = 0;
-
 			websocketController.unsubscribeFromPriceUpdates(previousCoinSymbol.toUpperCase());
-
-			loadCoinData().then(() => {
-				loadUserHolding();
-				websocketController.setCoin(coinSymbol.toUpperCase());
-				websocketController.subscribeToPriceUpdates(coinSymbol.toUpperCase(), handlePriceUpdate);
-				previousCoinSymbol = coinSymbol;
-			});
+			websocketController.setCoin(coinSymbol.toUpperCase());
+			websocketController.subscribeToPriceUpdates(coinSymbol.toUpperCase(), handlePriceUpdate);
+			loadUserHolding();
+			previousCoinSymbol = coinSymbol;
 		}
 	});
 
@@ -140,6 +151,8 @@
 			coin = result.coin;
 			chartData = result.candlestickData || [];
 			volumeData = result.volumeData || [];
+			oldestTimestamp = result.oldestTimestamp ?? null;
+			noMoreHistory = false;
 		} catch (e) {
 			console.error('Failed to fetch coin data:', e);
 			toast.error('Failed to load coin data');
@@ -241,6 +254,79 @@
 		loading = false;
 	}
 
+	async function loadOlderChartData() {
+		if (isLoadingHistory || noMoreHistory || !oldestTimestamp || !candlestickSeries || !chart) return;
+
+		isLoadingHistory = true;
+		try {
+			const response = await fetch(
+				`/api/coin/${coinSymbol}/chart-history?timeframe=${selectedTimeframe}&before=${oldestTimestamp}`
+			);
+
+			if (!response.ok) return;
+
+			const result = await response.json();
+
+			if (result.noMoreData || result.candlestickData.length === 0) {
+				noMoreHistory = true;
+				return;
+			}
+
+			const newCandlestick: any[] = result.candlestickData;
+			const newVolume: any[] = result.volumeData;
+
+			// Filter out any duplicates based on time
+			const existingTimes = new Set(chartData.map((c: any) => c.time));
+			const uniqueNewCandles = newCandlestick.filter((c) => !existingTimes.has(c.time));
+
+			if (uniqueNewCandles.length === 0) {
+				noMoreHistory = true;
+				return;
+			}
+
+			const existingVolumeTimes = new Set(volumeData.map((v: any) => v.time));
+			const uniqueNewVolume = newVolume.filter((v) => !existingVolumeTimes.has(v.time));
+
+			// Save current scroll position before modifying data
+			const currentRange = chart.timeScale().getVisibleLogicalRange();
+			const addedCount = uniqueNewCandles.length;
+
+			// Prepend older data
+			chartData = [...uniqueNewCandles, ...chartData];
+			volumeData = [...uniqueNewVolume, ...volumeData];
+			oldestTimestamp = result.oldestTimestamp ?? oldestTimestamp;
+
+			// Process and set all data on chart
+			const processedChartData = chartData.map((candle: any) => {
+				if (candle.open === candle.close) {
+					const basePrice = candle.open;
+					const variation = basePrice * 0.001;
+					return {
+						...candle,
+						high: Math.max(candle.high, basePrice + variation),
+						low: Math.min(candle.low, basePrice - variation)
+					};
+				}
+				return candle;
+			});
+
+			candlestickSeries.setData(processedChartData);
+			volumeSeries.setData(generateVolumeData(chartData, volumeData));
+
+			// Restore scroll position, shifted by the number of prepended candles
+			if (currentRange) {
+				chart.timeScale().setVisibleLogicalRange({
+					from: currentRange.from + addedCount,
+					to: currentRange.to + addedCount
+				});
+			}
+		} catch (e) {
+			console.error('Failed to load older chart data:', e);
+		} finally {
+			isLoadingHistory = false;
+		}
+	}
+
 	let currentTimeframeLabel = $derived(
 		timeframeOptions.find((option) => option.value === selectedTimeframe)?.label || '1 minute'
 	);
@@ -340,7 +426,17 @@
 			volumeSeries.priceScale().applyOptions({ borderColor: '#71649C' });
 			chart.timeScale().applyOptions({ borderColor: '#71649C' });
 
+			const timeScale = chart.timeScale();
+			const handleVisibleRangeChange = () => {
+				const logicalRange = timeScale.getVisibleLogicalRange();
+				if (logicalRange && logicalRange.from < 5) {
+					loadOlderChartData();
+				}
+			};
+			timeScale.subscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
+
 			return () => {
+				timeScale.unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
 				window.removeEventListener('resize', handleResize);
 				if (chart) {
 					chart.remove();
@@ -486,9 +582,9 @@
 					</div>
 					<div class="flex items-center gap-2">
 						{#if coin.change24h >= 0}
-							<TrendingUp class="h-4 w-4 text-green-500" />
+							<HugeiconsIcon icon={TradeUpIcon} class="h-4 w-4 text-green-500" />
 						{:else}
-							<TrendingDown class="h-4 w-4 text-red-500" />
+							<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4 text-red-500" />
 						{/if}
 						<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="text-sm">
 							{coin.change24h >= 0 ? '+' : ''}{Number(coin.change24h).toFixed(2)}%
@@ -512,7 +608,7 @@
 								<Avatar.Fallback>{coin.creatorName.charAt(0)}</Avatar.Fallback>
 							</Avatar.Root>
 							<span class="block truncate font-medium"
-								>{coin.creatorName} (@{coin.creatorUsername})</span
+							><UserName name={coin.creatorName} nameColor={coin.creatorNameColor} /> (@{coin.creatorUsername})</span
 							>
 						</HoverCard.Trigger>
 						<HoverCard.Content class="w-80" side="bottom" sideOffset={3}>
@@ -532,7 +628,7 @@
 						<Card.Header class="pb-4">
 							<div class="flex items-center justify-between">
 								<Card.Title class="flex items-center gap-2">
-									<ChartColumn class="h-5 w-5" />
+									<HugeiconsIcon icon={Analytics01Icon} class="h-5 w-5" />
 									Price Chart ({selectedTimeframe})
 								</Card.Title>
 								<div class="w-24">
@@ -602,7 +698,7 @@
 										onclick={() => (buyModalOpen = true)}
 										disabled={!coin.isListed || !canTrade}
 									>
-										<TrendingUp class="h-4 w-4" />
+										<HugeiconsIcon icon={TradeUpIcon} class="h-4 w-4" />
 										Buy {coin.symbol}
 									</Button>
 									<Button
@@ -612,7 +708,7 @@
 										onclick={() => (sellModalOpen = true)}
 										disabled={!coin.isListed || userHolding <= 0 || !canTrade}
 									>
-										<TrendingDown class="h-4 w-4" />
+										<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4" />
 										Sell {coin.symbol}
 									</Button>
 								</div>
@@ -674,7 +770,7 @@
 				<Card.Root class="gap-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
-							<DollarSign class="h-4 w-4" />
+							<HugeiconsIcon icon={MoneyBag02Icon} class="h-4 w-4" />
 							Market Cap
 						</Card.Title>
 					</Card.Header>
@@ -689,7 +785,7 @@
 				<Card.Root class="gap-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
-							<ChartColumn class="h-4 w-4" />
+							<HugeiconsIcon icon={Analytics01Icon} class="h-4 w-4" />
 							24h Volume
 						</Card.Title>
 					</Card.Header>
@@ -704,7 +800,7 @@
 				<Card.Root class="gap-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
-							<Coins class="h-4 w-4" />
+							<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
 							Circulating Supply
 						</Card.Title>
 					</Card.Header>
@@ -727,9 +823,9 @@
 					<Card.Content>
 						<div class="flex items-center gap-2">
 							{#if coin.change24h >= 0}
-								<TrendingUp class="h-4 w-4 text-green-500" />
+								<HugeiconsIcon icon={TradeUpIcon} class="h-4 w-4 text-green-500" />
 							{:else}
-								<TrendingDown class="h-4 w-4 text-red-500" />
+								<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4 text-red-500" />
 							{/if}
 							<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="text-sm">
 								{coin.change24h >= 0 ? '+' : ''}{Number(coin.change24h).toFixed(2)}%

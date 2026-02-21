@@ -131,7 +131,10 @@ export const handle: Handle = async ({ event, resolve }) => {
                     baseCurrencyBalance: user.baseCurrencyBalance,
                     bio: user.bio,
                     volumeMaster: user.volumeMaster,
-                    volumeMuted: user.volumeMuted
+                    volumeMuted: user.volumeMuted,
+                    nameColor: user.nameColor,
+                    founderBadge: user.founderBadge,
+                    prestigeLevel: user.prestigeLevel
                 })
                 .from(user)
                 .where(eq(user.id, Number(userId)))
@@ -164,7 +167,10 @@ export const handle: Handle = async ({ event, resolve }) => {
                     baseCurrencyBalance: parseFloat(userRecord.baseCurrencyBalance || '0'),
                     bio: userRecord.bio || '',
                     volumeMaster: parseFloat(userRecord.volumeMaster || '0.7'),
-                    volumeMuted: userRecord.volumeMuted || false
+                    volumeMuted: userRecord.volumeMuted || false,
+                    nameColor: userRecord.nameColor ?? null,
+                    founderBadge: userRecord.founderBadge ?? false,
+                    prestigeLevel: userRecord.prestigeLevel ?? 0
                 };
 
                 const cacheTTL = userRecord.isAdmin ? CACHE_TTL * 2 : CACHE_TTL;

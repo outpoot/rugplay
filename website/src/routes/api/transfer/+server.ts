@@ -5,6 +5,7 @@ import { user, userPortfolio, coin, transaction } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
 import { formatValue } from '$lib/utils';
+import { checkAndAwardAchievements } from '$lib/server/achievements';
 import type { RequestHandler } from './$types';
 
 interface TransferRequest {
@@ -134,6 +135,8 @@ export const POST: RequestHandler = async ({ request }) => {
                         `/user/${senderData.id}`
                     );
                 })();
+
+                checkAndAwardAchievements(senderId, ['social']);
 
                 return json({
                     success: true,
@@ -268,6 +271,8 @@ export const POST: RequestHandler = async ({ request }) => {
                         `/coin/${normalizedSymbol}`
                     );
                 })();
+
+                checkAndAwardAchievements(senderId, ['social']);
 
                 return json({
                     success: true,

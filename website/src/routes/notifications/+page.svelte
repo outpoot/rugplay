@@ -5,7 +5,14 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import NotificationsSkeleton from '$lib/components/self/skeletons/NotificationsSkeleton.svelte';
-	import { Bell, Target, Settings, TrendingUp, AlertTriangle } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		Notification01Icon,
+		Settings01Icon,
+		TradeUpIcon,
+		Alert02Icon,
+		Target03Icon
+	} from '@hugeicons/core-free-icons';
 	import { onMount } from 'svelte';
 	import {
 		NOTIFICATIONS,
@@ -44,15 +51,15 @@
 	function getNotificationIcon(type: string) {
 		switch (type) {
 			case 'HOPIUM':
-				return Target;
+				return Target03Icon;
 			case 'TRANSFER':
-				return TrendingUp;
+				return TradeUpIcon;
 			case 'RUG_PULL':
-				return AlertTriangle;
+				return Alert02Icon;
 			case 'SYSTEM':
-				return Settings;
+				return Settings01Icon;
 			default:
-				return Bell;
+				return Notification01Icon;
 		}
 	}
 
@@ -108,7 +115,7 @@
 					<div
 						class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
 					>
-						<Bell class="text-muted-foreground h-8 w-8" />
+						<HugeiconsIcon icon={Notification01Icon} class="text-muted-foreground h-8 w-8" />
 					</div>
 					<h3 class="mb-2 text-lg font-semibold">Please sign in</h3>
 					<p class="text-muted-foreground">You need to be signed in to view notifications</p>
@@ -120,7 +127,7 @@
 					<div
 						class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
 					>
-						<Bell class="text-muted-foreground h-8 w-8" />
+						<HugeiconsIcon icon={Notification01Icon} class="text-muted-foreground h-8 w-8" />
 					</div>
 					<h3 class="mb-2 text-lg font-semibold">No notifications yet</h3>
 					<p class="text-muted-foreground">You'll see updates about your activities here</p>
@@ -137,7 +144,7 @@
 										notification.type
 									)}"
 								>
-									<IconComponent class="h-4 w-4" />
+									<HugeiconsIcon icon={IconComponent} class="h-4 w-4" />
 								</div>
 								<div class="min-w-0 flex-1">
 									<div class="mb-1 flex items-center gap-2">

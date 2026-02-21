@@ -4,7 +4,8 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import ProfileBadges from './ProfileBadges.svelte';
 	import { getPublicUrl, formatValue } from '$lib/utils';
-	import { Calendar, Wallet } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { Calendar01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 	import type { UserProfileData } from '$lib/types/user-profile';
 
 	let { userId, showBio = true }: { userId: number, showBio?: boolean } = $props();
@@ -101,7 +102,7 @@
 					<div class="space-y-1 pt-2">
 						<div class="flex items-center justify-between">
 							<span class="text-muted-foreground flex items-center gap-1 text-xs">
-								<Wallet class="h-3 w-3" />
+								<HugeiconsIcon icon={Wallet01Icon} class="h-3 w-3" />
 								Portfolio
 							</span>
 							<span class="font-mono text-sm font-medium">
@@ -111,7 +112,7 @@
 
 						<div class="flex items-center justify-between">
 							<span class="text-muted-foreground flex items-center gap-1 text-xs">
-								<Wallet class="h-3 w-3" />
+								<HugeiconsIcon icon={Wallet01Icon} class="h-3 w-3" />
 								Cash
 							</span>
 							<span class="text-success font-mono text-sm font-medium">
@@ -122,7 +123,7 @@
 				{/if}
 
 				<div class="flex items-center pt-2">
-					<Calendar class="mr-2 h-4 w-4 opacity-70" />
+					<HugeiconsIcon icon={Calendar01Icon} class="mr-2 h-4 w-4 opacity-70" />
 					<span class="text-muted-foreground text-xs">
 						Joined {new Date(profile.createdAt).toLocaleDateString('en-US', {
 							year: 'numeric',

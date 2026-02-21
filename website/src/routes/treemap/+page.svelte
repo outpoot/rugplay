@@ -6,11 +6,18 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Activity, ChartColumn, Maximize, Minimize } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		Activity01Icon,
+		Analytics01Icon,
+		ChartColumnIcon,
+		FullScreenIcon,
+	} from '@hugeicons/core-free-icons';
 	import { formatValue } from '$lib/utils';
 	import { allTradesStore } from '$lib/stores/websocket';
 	import { Button } from '$lib/components/ui/button';
 	import SEO from '$lib/components/self/SEO.svelte';
+	import { goto } from '$app/navigation';
 
 	interface CoinData {
 		symbol: string;
@@ -58,6 +65,14 @@
 				enabled: true,
 				easing: 'easeinout',
 				speed: 200
+			},
+			events: {
+				dataPointSelection: (_event: any, _chartContext: any, config: any) => {
+					const coin = coins[config.dataPointIndex];
+					if (coin) {
+						goto(`/coin/${coin.symbol}`);
+					}
+				}
 			}
 		},
 		dataLabels: {
@@ -207,7 +222,7 @@
 		<div class="mb-6">
 			<div class="mb-2 flex items-center justify-between">
 				<div class="flex items-center gap-3">
-					<ChartColumn class="h-6 w-6" />
+					<HugeiconsIcon icon={Analytics01Icon} class="h-6 w-6" />
 					<h1 class="text-2xl font-bold">Market Treemap</h1>
 				</div>
 				<div class="flex items-center gap-2">
@@ -220,19 +235,19 @@
 							: 'border-red-500 text-red-500'}
 					>
 						{#if isLiveUpdatesEnabled}
-							<Activity class="h-4 w-4" />
+							<HugeiconsIcon icon={Activity01Icon} class="h-4 w-4" />
 							Live
 						{:else}
-							<Activity class="h-4 w-4" />
+							<HugeiconsIcon icon={Activity01Icon} class="h-4 w-4" />
 							Paused
 						{/if}
 					</Button>
 					<Button variant="outline" size="sm" onclick={toggleFullscreen}>
 						{#if isFullscreen}
-							<Minimize class="h-4 w-4" />
+							<HugeiconsIcon icon={FullScreenIcon} class="h-4 w-4" />
 							Exit Fullscreen
 						{:else}
-							<Maximize class="h-4 w-4" />
+							<HugeiconsIcon icon={FullScreenIcon} class="h-4 w-4" />
 							Fullscreen
 						{/if}
 					</Button>
@@ -268,7 +283,7 @@
 			<Card.Root>
 				<Card.Content class="p-8 text-center">
 					<div class="text-muted-foreground mb-4">
-						<ChartColumn class="mx-auto mb-2 h-12 w-12 opacity-50" />
+						<HugeiconsIcon icon={ChartColumnIcon} class="mx-auto mb-2 h-12 w-12 opacity-50" />
 						<p class="text-lg font-medium">Failed to load treemap</p>
 						<p class="text-sm">{error}</p>
 					</div>
@@ -279,7 +294,7 @@
 			<Card.Root>
 				<Card.Content class="p-8 text-center">
 					<div class="text-muted-foreground">
-						<ChartColumn class="mx-auto mb-2 h-12 w-12 opacity-50" />
+						<HugeiconsIcon icon={ChartColumnIcon} class="mx-auto mb-2 h-12 w-12 opacity-50" />
 						<p class="text-lg font-medium">No coins available</p>
 						<p class="text-sm">Create some coins to see the treemap visualization.</p>
 					</div>
@@ -350,5 +365,9 @@
 
 	:global(.fullscreen-mode) {
 		z-index: 9999;
+	}
+
+	:global(.apexcharts-treemap-rect) {
+		cursor: pointer;
 	}
 </style>

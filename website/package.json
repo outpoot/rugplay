@@ -17,7 +17,6 @@
 	},
 	"devDependencies": {
 		"@internationalized/date": "^3.8.1",
-		"@lucide/svelte": "^0.482.0",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/adapter-node": "^5.2.12",
 		"@sveltejs/kit": "^2.0.0",
@@ -45,6 +44,10 @@
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.815.0",
 		"@aws-sdk/s3-request-presigner": "^3.815.0",
+		"@hugeicons/core-free-icons": "^3.1.1",
+		"@hugeicons/svelte": "^1.1.1",
+		"@polar-sh/checkout": "^0.2.0",
+		"@polar-sh/sveltekit": "^0.7.3",
 		"@tailwindcss/postcss": "^4.1.7",
 		"@tailwindcss/typography": "^0.5.16",
 		"@visx/scale": "^3.12.0",
@@ -54,7 +57,6 @@
 		"drizzle-orm": "^0.33.0",
 		"express": "^5.1.0",
 		"lightweight-charts": "^5.0.7",
-		"lucide-svelte": "^0.511.0",
 		"mode-watcher": "^1.0.7",
 		"openai": "^4.103.0",
 		"postgres": "^3.4.4",

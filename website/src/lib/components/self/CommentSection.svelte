@@ -5,13 +5,20 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { MessageCircle, Send, Loader2, Heart } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		Message01Icon,
+		SentIcon,
+		Loading03Icon,
+		FavouriteIcon
+	} from '@hugeicons/core-free-icons';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { formatTimeAgo, getPublicUrl } from '$lib/utils';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
+	import UserName from '$lib/components/self/UserName.svelte';
 	import { websocketController } from '$lib/stores/websocket';
 
 	const { coinSymbol } = $props<{ coinSymbol: string }>();
@@ -178,7 +185,7 @@
 <Card.Root>
 	<Card.Header>
 		<Card.Title class="flex items-center gap-2">
-			<MessageCircle class="h-5 w-5" />
+			<HugeiconsIcon icon={Message01Icon} class="h-5 w-5" />
 			Comments ({comments.length})
 		</Card.Title>
 	</Card.Header>
@@ -207,10 +214,10 @@
 					</span>
 					<Button onclick={submitComment} disabled={!newComment.trim() || isSubmitting} size="sm">
 						{#if isSubmitting}
-							<Loader2 class="h-4 w-4 animate-spin" />
+							<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
 							Posting...
 						{:else}
-							<Send class="h-4 w-4" />
+							<HugeiconsIcon icon={SentIcon} class="h-4 w-4" />
 							Post
 						{/if}
 					</Button>
@@ -226,7 +233,7 @@
 		<!-- Comments List -->
 		{#if isLoading}
 			<div class="text-center">
-				<Loader2 class="mx-auto h-6 w-6 animate-spin" />
+				<HugeiconsIcon icon={Loading03Icon} class="mx-auto h-6 w-6 animate-spin" />
 			</div>
 		{:else if comments.length === 0}
 			<div class="text-center">
@@ -257,7 +264,7 @@
 											class="min-w-0 max-w-[120px] flex-shrink cursor-pointer text-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 sm:max-w-[180px] sm:text-base"
 											onclick={() => goto(`/user/${comment.userUsername}`)}
 										>
-											<span class="block truncate">{comment.userName}</span>
+											<span class="block truncate"><UserName name={comment.userName} nameColor={comment.userNameColor} /></span>
 										</HoverCard.Trigger>
 										<HoverCard.Content class="w-80" side="top" sideOffset={3}>
 											<UserProfilePreview userId={comment.userId} />
@@ -302,7 +309,7 @@
 										? 'text-red-500 hover:text-red-600'
 										: 'text-muted-foreground hover:text-foreground'}"
 								>
-									<Heart class="h-4 w-4 {comment.isLikedByUser ? 'fill-current' : ''}" />
+									<HugeiconsIcon icon={FavouriteIcon} class="h-4 w-4 {comment.isLikedByUser ? 'fill-current' : ''}" />
 									{#if comment.likesCount > 0}
 										<span class="text-xs">{comment.likesCount}</span>
 									{/if}

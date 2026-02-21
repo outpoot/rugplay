@@ -10,6 +10,7 @@ export async function createNotification(
     title: string,
     message: string,
     link?: string,
+    extras?: Record<string, unknown>,
 ): Promise<void> {
     await db.insert(notifications).values({
         userId: parseInt(userId),
@@ -29,7 +30,8 @@ export async function createNotification(
             notificationType: type,
             title,
             message,
-            link
+            link,
+            ...extras
         };
 
         await redis.publish(channel, JSON.stringify(payload));

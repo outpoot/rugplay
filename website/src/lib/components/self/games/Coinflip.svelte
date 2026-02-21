@@ -235,7 +235,7 @@
 		activeSoundTimeouts = [];
 
 		try {
-			const response = await fetch('/api/gambling/coinflip', {
+			const response = await fetch('/api/arcade/coinflip', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

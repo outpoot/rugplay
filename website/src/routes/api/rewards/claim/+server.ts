@@ -3,10 +3,13 @@ import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
+import { checkAndAwardAchievements } from '$lib/server/achievements';
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 const THIRTY_SIX_HOURS_MS = 36 * 60 * 60 * 1000;
+const DAILY_GEM_BONUS = 10;
 
 const REWARD_TIERS = [
     1200,   // Day 1
@@ -54,13 +57,17 @@ function getPrestigeMultiplier(prestigeLevel: number): number {
     return PRESTIGE_MULTIPLIERS[prestigeLevel as keyof typeof PRESTIGE_MULTIPLIERS] || 1.0;
 }
 
+const STREAK_GRACE_HOURS = 24;
+
 function calculateStreak(lastClaim: Date | null, currentStreak: number): number {
     if (!lastClaim) return 1;
 
     const timeSinceLastClaim = Date.now() - lastClaim.getTime();
+    const graceMs = STREAK_GRACE_HOURS * 60 * 60 * 1000;
+    const effectiveMaxWindow = THIRTY_SIX_HOURS_MS + graceMs;
 
     // reset streak if more than 36 hours
-    if (timeSinceLastClaim > THIRTY_SIX_HOURS_MS) return 1;
+    if (timeSinceLastClaim > effectiveMaxWindow) return 1;
 
     // only increment if within valid window (12-36 hours)
     if (timeSinceLastClaim >= TWELVE_HOURS_MS) return currentStreak + 1;
@@ -92,7 +99,8 @@ export const POST: RequestHandler = async ({ request }) => {
             lastRewardClaim: user.lastRewardClaim,
             totalRewardsClaimed: user.totalRewardsClaimed,
             loginStreak: user.loginStreak,
-            prestigeLevel: user.prestigeLevel
+            prestigeLevel: user.prestigeLevel,
+            gems: user.gems
         })
             .from(user)
             .where(eq(user.id, userId))
@@ -129,9 +137,12 @@ export const POST: RequestHandler = async ({ request }) => {
                 baseCurrencyBalance: newBalance.toFixed(8),
                 lastRewardClaim: now,
                 totalRewardsClaimed: newTotalRewards.toFixed(8),
-                loginStreak: newStreak
+                loginStreak: newStreak,
+                gems: sql`${user.gems} + ${DAILY_GEM_BONUS}`
             })
             .where(eq(user.id, currentUser.id));
+
+        checkAndAwardAchievements(userId, ['streaks'], { newStreak, totalRewardsClaimed: newTotalRewards });
 
         return json({
             success: true,
@@ -139,6 +150,7 @@ export const POST: RequestHandler = async ({ request }) => {
             baseReward: reward.base,
             prestigeBonus: reward.prestigeBonus,
             prestigeLevel: currentUser.prestigeLevel || 0,
+            gemsAwarded: DAILY_GEM_BONUS,
             newBalance,
             totalRewardsClaimed: newTotalRewards,
             loginStreak: newStreak,

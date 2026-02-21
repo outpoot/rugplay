@@ -1,8 +1,20 @@
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { coin, user, priceHistory, transaction } from '$lib/server/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, gte, lt } from 'drizzle-orm';
 import { timeToLocal } from '$lib/utils';
+
+function getInitialWindowHours(timeframe: string): number {
+    switch (timeframe) {
+        case '1m': return 24;
+        case '5m': return 24;
+        case '15m': return 72;
+        case '1h': return 168;     // 7 days
+        case '4h': return 720;     // 30 days
+        case '1d': return 2160;    // 90 days
+        default: return 24;
+    }
+}
 
 function aggregatePriceHistory(priceData: any[], intervalMinutes: number = 60) {
     if (priceData.length === 0) return [];
@@ -135,6 +147,7 @@ export async function GET({ params, url }) {
                 creatorUsername: user.username,
                 creatorBio: user.bio,
                 creatorImage: user.image,
+                creatorNameColor: user.nameColor,
                 tradingUnlocksAt: coin.tradingUnlocksAt,
                 isLocked: coin.isLocked
             })
@@ -147,10 +160,16 @@ export async function GET({ params, url }) {
             throw error(404, 'Coin not found');
         }
 
+        const windowHours = getInitialWindowHours(timeframe);
+        const sinceDate = new Date(Date.now() - windowHours * 60 * 60 * 1000);
+
         const [rawPriceHistory, rawTransactions] = await Promise.all([
             db.select({ price: priceHistory.price, timestamp: priceHistory.timestamp })
                 .from(priceHistory)
-                .where(eq(priceHistory.coinId, coinData.id))
+                .where(and(
+                    eq(priceHistory.coinId, coinData.id),
+                    gte(priceHistory.timestamp, sinceDate)
+                ))
                 .orderBy(desc(priceHistory.timestamp))
                 .limit(5000),
 
@@ -159,7 +178,10 @@ export async function GET({ params, url }) {
                 timestamp: transaction.timestamp
             })
                 .from(transaction)
-                .where(eq(transaction.coinId, coinData.id))
+                .where(and(
+                    eq(transaction.coinId, coinData.id),
+                    gte(transaction.timestamp, sinceDate)
+                ))
                 .orderBy(desc(transaction.timestamp))
                 .limit(5000)
         ]);
@@ -177,6 +199,8 @@ export async function GET({ params, url }) {
         const candlestickData = aggregatePriceHistory(priceData, intervalMinutes);
         const volumeData = aggregateVolumeData(transactionData, intervalMinutes);
 
+        const oldestTimestamp = candlestickData.length > 0 ? candlestickData[0].time : null;
+
         return json({
             coin: {
                 ...coinData,
@@ -193,7 +217,8 @@ export async function GET({ params, url }) {
             },
             candlestickData,
             volumeData,
-            timeframe
+            timeframe,
+            oldestTimestamp
         });
     } catch (e) {
         if (e && typeof e === 'object' && 'status' in e) {

@@ -107,7 +107,7 @@
 		lastClickedTile = index;
 
 		try {
-			const response = await fetch('/api/gambling/mines/reveal', {
+			const response = await fetch('/api/arcade/mines/reveal', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ sessionToken, tileIndex: index })
@@ -150,7 +150,7 @@
 		if (!isPlaying || !sessionToken) return;
 
 		try {
-			const response = await fetch('/api/gambling/mines/cashout', {
+			const response = await fetch('/api/arcade/mines/cashout', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ sessionToken })
@@ -186,7 +186,7 @@
 		balance -= betAmount;
 		onBalanceUpdate?.(balance);
 		try {
-			const response = await fetch('/api/gambling/mines/start', {
+			const response = await fetch('/api/arcade/mines/start', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ betAmount, mineCount })

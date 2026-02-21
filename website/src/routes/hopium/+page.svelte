@@ -8,19 +8,21 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
+	import UserName from '$lib/components/self/UserName.svelte';
 	import HopiumSkeleton from '$lib/components/self/skeletons/HopiumSkeleton.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		TrendingUp,
-		TrendingDown,
-		Plus,
-		Clock,
-		Sparkles,
-		Globe,
-		Loader2,
-		CheckIcon,
-		XIcon
-	} from 'lucide-svelte';
+		TradeUpIcon,
+		TradeDownIcon,
+		Add01Icon,
+		Clock01Icon,
+		SparklesIcon,
+		Globe02Icon,
+		Loading03Icon,
+		Tick01Icon,
+		Cancel01Icon
+	} from '@hugeicons/core-free-icons';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { PORTFOLIO_SUMMARY, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
@@ -130,8 +132,8 @@
 
 <SEO
 	title="Hopium - Rugplay"
-	description="AI-powered prediction markets in the Rugplay simulation game. Create yes/no questions, bet on outcomes with virtual currency, and test your forecasting skills."
-	keywords="AI prediction markets game, virtual betting simulation, cryptocurrency prediction game, forecasting game, virtual currency betting"
+	description="AI-powered prediction markets in the Rugplay simulation game. Create yes/no questions, predict outcomes with virtual currency, and test your forecasting skills."
+	keywords="AI prediction markets game, virtual prediction simulation, cryptocurrency prediction game, forecasting game, virtual currency predictions"
 />
 
 <!-- Create Question Dialog -->
@@ -139,7 +141,7 @@
 	<Dialog.Content class="sm:max-w-lg">
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
-				<Sparkles class="h-5 w-5" />
+				<HugeiconsIcon icon={SparklesIcon} class="h-5 w-5" />
 				Create
 			</Dialog.Title>
 			<Dialog.Description>Create a yes/no question that will be resolved by AI.</Dialog.Description>
@@ -165,7 +167,7 @@
 			<Button variant="outline" onclick={() => (showCreateDialog = false)}>Cancel</Button>
 			<Button onclick={createQuestion} disabled={creatingQuestion || !newQuestion.trim()}>
 				{#if creatingQuestion}
-					<Loader2 class="h-4 w-4 animate-spin" />
+					<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
 					Processing...
 				{:else}
 					Publish
@@ -179,11 +181,11 @@
 	<header class="mb-8">
 		<div class="text-center">
 			<h1 class="mb-2 flex items-center justify-center gap-2 text-3xl font-bold">
-				<Sparkles class="h-8 w-8 text-purple-500" />
+				<HugeiconsIcon icon={SparklesIcon} class="h-8 w-8 text-purple-500" />
 				Hopium
 			</h1>
 			<p class="text-muted-foreground mb-6">
-				AI-powered prediction markets. Create questions and bet on outcomes.
+				AI-powered prediction markets. Create questions and predict outcomes.
 			</p>
 		</div>
 	</header>
@@ -207,7 +209,7 @@
 			</div>
 			{#if $USER_DATA}
 				<Button onclick={handleCreateQuestion}>
-					<Plus class="h-4 w-4" />
+					<HugeiconsIcon icon={Add01Icon} class="h-4 w-4" />
 					Ask
 				</Button>
 			{/if}
@@ -246,16 +248,16 @@
 													: ''}"
 											>
 												{#if question.aiResolution}
-													<CheckIcon class="h-3 w-3" />
+													<HugeiconsIcon icon={Tick01Icon} class="h-3 w-3" />
 													YES
 												{:else}
-													<XIcon class="h-3 w-3" />
+													<HugeiconsIcon icon={Cancel01Icon} class="h-3 w-3" />
 													NO
 												{/if}
 											</Badge>
 										{:else if question.status === 'CANCELLED'}
 											<Badge variant="outline" class="flex flex-shrink-0 items-center gap-1 text-muted-foreground border-muted-foreground">
-												<XIcon class="h-3 w-3" />
+												<HugeiconsIcon icon={Cancel01Icon} class="h-3 w-3" />
 												SKIP
 											</Badge>
 										{/if}
@@ -294,7 +296,7 @@
 
 								<div class="text-muted-foreground flex items-center gap-2 text-sm">
 									<div class="flex items-center gap-1">
-										<Clock class="h-3 w-3" />
+										<HugeiconsIcon icon={Clock01Icon} class="h-3 w-3" />
 										{#if question.status === 'ACTIVE'}
 											{formatTimeUntil(question.resolutionDate).startsWith('Ended') ? 'Resolving' : `${formatTimeUntil(question.resolutionDate)} remaining`}
 										{:else}
@@ -307,7 +309,7 @@
 									</div>
 									{#if question.requiresWebSearch}
 										<span>•</span>
-										<Globe class="h-3 w-3 text-blue-500" />
+										<HugeiconsIcon icon={Globe02Icon} class="h-3 w-3 text-blue-500" />
 									{/if}
 								</div>
 
@@ -326,7 +328,7 @@
 														>{question.creator.name.charAt(0)}</Avatar.Fallback
 													>
 												</Avatar.Root>
-												<span class="text-muted-foreground">@{question.creator.username}</span>
+											<span class="text-muted-foreground"><UserName name={question.creator.name} nameColor={question.creator.nameColor} /></span>
 											</button>
 										</HoverCard.Trigger>
 										<HoverCard.Content class="w-80">
@@ -338,10 +340,10 @@
 								<!-- User's bet amounts if they have any -->
 								{#if question.userBets && (question.userBets.yesAmount > 0 || question.userBets.noAmount > 0)}
 									<div class="text-muted-foreground flex items-center gap-4 text-sm">
-										<span>Your bets:</span>
+										<span>Your stakes:</span>
 										{#if question.userBets.yesAmount > 0}
 											<div class="flex items-center gap-1">
-												<TrendingUp class="h-3 w-3 text-green-600" />
+												<HugeiconsIcon icon={TradeUpIcon} class="h-3 w-3 text-green-600" />
 												<span class="text-green-600"
 													>YES: ${question.userBets.yesAmount.toFixed(2)}</span
 												>
@@ -349,7 +351,7 @@
 										{/if}
 										{#if question.userBets.noAmount > 0}
 											<div class="flex items-center gap-1">
-												<TrendingDown class="h-3 w-3 text-red-600" />
+												<HugeiconsIcon icon={TradeDownIcon} class="h-3 w-3 text-red-600" />
 												<span class="text-red-600"
 													>NO: ${question.userBets.noAmount.toFixed(2)}</span
 												>

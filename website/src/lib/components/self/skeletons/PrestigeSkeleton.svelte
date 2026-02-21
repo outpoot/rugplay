@@ -2,7 +2,8 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import { Star } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { StarIcon } from '@hugeicons/core-free-icons';
 </script>
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -37,7 +38,7 @@
 		<Card.Root class="flex flex-1 flex-col gap-1">
 			<Card.Header>
 				<Card.Title class="flex items-center gap-2">
-					<Star class="h-5 w-5" />
+					<HugeiconsIcon icon={StarIcon} class="h-5 w-5" />
 					Progress
 				</Card.Title>
 			</Card.Header>

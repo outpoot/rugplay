@@ -2,15 +2,13 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import * as HoverCard from '$lib/components/ui/hover-card';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { Users } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { UserGroupIcon } from '@hugeicons/core-free-icons';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { getPublicUrl, formatQuantity, formatValue } from '$lib/utils';
-	import UserProfilePreview from './UserProfilePreview.svelte';
 	import DataTable from './DataTable.svelte';
 	import HoldersSkeleton from './skeletons/HoldersSkeleton.svelte';
 
@@ -133,7 +131,7 @@
             <HoldersSkeleton />
 		{:else if !holdersData || holdersData.holders.length === 0}
 			<div class="py-4 text-center">
-				<Users class="text-muted-foreground mx-auto mb-2 h-8 w-8" />
+				<HugeiconsIcon icon={UserGroupIcon} class="text-muted-foreground mx-auto mb-2 h-8 w-8" />
 				<p class="text-muted-foreground text-sm">No holders found</p>
 			</div>
 		{:else}
@@ -196,7 +194,7 @@
 	>
 		<Dialog.Header class="flex-shrink-0">
 			<Dialog.Title class="flex items-center gap-2">
-				<Users class="h-5 w-5" />
+				<HugeiconsIcon icon={UserGroupIcon} class="h-5 w-5" />
 				Top Holders (*{holdersData?.coinSymbol})
 			</Dialog.Title>
 			<Dialog.Description>This list is limited to the top 50 holders.</Dialog.Description>
@@ -219,7 +217,7 @@
 			{:else}
 				<div class="flex h-full items-center justify-center py-12 text-center">
 					<div>
-						<Users class="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+						<HugeiconsIcon icon={UserGroupIcon} class="text-muted-foreground mx-auto mb-4 h-12 w-12" />
 						<h3 class="mb-2 text-lg font-semibold">No holders found</h3>
 						<p class="text-muted-foreground">This coin doesn't have any holders yet.</p>
 					</div>

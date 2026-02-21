@@ -13,13 +13,15 @@ async function getLeaderboardData() {
                 username: user.username,
                 name: user.name,
                 image: user.image,
+                nameColor: user.nameColor,
+                founderBadge: user.founderBadge,
                 totalSold: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'SELL' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END), 0)`,
                 totalBought: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'BUY' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END), 0)`
             })
             .from(transaction)
             .innerJoin(user, eq(transaction.userId, user.id))
             .where(gte(transaction.timestamp, twentyFourHoursAgo))
-            .groupBy(user.id, user.username, user.name, user.image)
+            .groupBy(user.id, user.username, user.name, user.image, user.nameColor, user.founderBadge)
             .orderBy(desc(sql`SUM(CASE WHEN ${transaction.type} = 'SELL' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END) - SUM(CASE WHEN ${transaction.type} = 'BUY' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END)`))
             .limit(10);
 
@@ -29,6 +31,8 @@ async function getLeaderboardData() {
                 username: user.username,
                 name: user.name,
                 image: user.image,
+                nameColor: user.nameColor,
+                founderBadge: user.founderBadge,
                 type: transaction.type,
                 coinId: transaction.coinId,
                 totalAmount: sql<number>`CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC)`,
@@ -46,6 +50,8 @@ async function getLeaderboardData() {
                     username: tx.username,
                     name: tx.name,
                     image: tx.image,
+                    nameColor: tx.nameColor,
+                    founderBadge: tx.founderBadge,
                     totalBought: 0,
                     totalSold: 0,
                     coinHoldings: new Map()
@@ -115,13 +121,15 @@ async function getLeaderboardData() {
                 username: user.username,
                 name: user.name,
                 image: user.image,
+                nameColor: user.nameColor,
+                founderBadge: user.founderBadge,
                 baseCurrencyBalance: user.baseCurrencyBalance,
                 coinValue: sql<number>`COALESCE(SUM(CAST(${userPortfolio.quantity} AS NUMERIC) * CAST(${coin.currentPrice} AS NUMERIC)), 0)`
             })
                 .from(user)
                 .leftJoin(userPortfolio, eq(userPortfolio.userId, user.id))
                 .leftJoin(coin, eq(coin.id, userPortfolio.coinId))
-                .groupBy(user.id, user.username, user.name, user.image, user.baseCurrencyBalance)
+                .groupBy(user.id, user.username, user.name, user.image, user.nameColor, user.founderBadge, user.baseCurrencyBalance)
                 .orderBy(desc(sql`CAST(${user.baseCurrencyBalance} AS NUMERIC)`))
                 .limit(10),
 
@@ -130,13 +138,15 @@ async function getLeaderboardData() {
                 username: user.username,
                 name: user.name,
                 image: user.image,
+                nameColor: user.nameColor,
+                founderBadge: user.founderBadge,
                 baseCurrencyBalance: user.baseCurrencyBalance,
                 coinValue: sql<number>`COALESCE(SUM(CAST(${userPortfolio.quantity} AS NUMERIC) * CAST(${coin.currentPrice} AS NUMERIC)), 0)`
             })
                 .from(user)
                 .leftJoin(userPortfolio, eq(userPortfolio.userId, user.id))
                 .leftJoin(coin, eq(coin.id, userPortfolio.coinId))
-                .groupBy(user.id, user.username, user.name, user.image, user.baseCurrencyBalance)
+                .groupBy(user.id, user.username, user.name, user.image, user.nameColor, user.founderBadge, user.baseCurrencyBalance)
                 .orderBy(desc(sql`CAST(${user.baseCurrencyBalance} AS NUMERIC) + COALESCE(SUM(CAST(${userPortfolio.quantity} AS NUMERIC) * CAST(${coin.currentPrice} AS NUMERIC)), 0)`))
                 .limit(10)
         ]);
@@ -191,6 +201,8 @@ async function getSearchedUsers(query: string, limit = 9, offset = 0) {
             name: user.name,
             username: user.username,
             image: user.image,
+            nameColor: user.nameColor,
+            founderBadge: user.founderBadge,
             bio: user.bio,
             baseCurrencyBalance: user.baseCurrencyBalance,
             coinValue: sql<number>`COALESCE(SUM(CAST(${userPortfolio.quantity} AS NUMERIC) * CAST(${coin.currentPrice} AS NUMERIC)), 0)`,
@@ -199,7 +211,7 @@ async function getSearchedUsers(query: string, limit = 9, offset = 0) {
         }).from(user)
             .leftJoin(userPortfolio, eq(userPortfolio.userId, user.id))
             .leftJoin(coin, eq(coin.id, userPortfolio.coinId))
-            .groupBy(user.id, user.name, user.username, user.image, user.bio, user.baseCurrencyBalance)
+            .groupBy(user.id, user.name, user.username, user.image, user.nameColor, user.founderBadge, user.bio, user.baseCurrencyBalance)
             .where(ilike(user.username, `%${query}%`))
             .orderBy(desc(user.username))
             .limit(limit)

@@ -17,6 +17,8 @@ export type User = {
     volumeMaster: number;
     volumeMuted: boolean;
 
+    nameColor: string | null;
+    founderBadge: boolean;
     prestigeLevel: number;
 } | null;
 

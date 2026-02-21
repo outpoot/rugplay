@@ -10,7 +10,14 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Slider } from '$lib/components/ui/slider';
 	import { onMount, onDestroy } from 'svelte';
-	import { CheckIcon, Volume2Icon, VolumeXIcon, DownloadIcon, Trash2Icon } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		Tick01Icon,
+		VolumeHighIcon,
+		VolumeMute01Icon,
+		Download01Icon,
+		Delete01Icon
+	} from '@hugeicons/core-free-icons';
 	import { toast } from 'svelte-sonner';
 	import { MAX_FILE_SIZE } from '$lib/data/constants';
 	import { volumeSettings } from '$lib/stores/volume-settings';
@@ -375,7 +382,7 @@
 									<span class="text-muted-foreground text-sm">Checking…</span>
 								{:else if username !== initialUsername}
 									{#if usernameAvailable}
-										<CheckIcon class="text-success" />
+										<HugeiconsIcon icon={Tick01Icon} class="text-success" />
 									{:else}
 										<span class="text-destructive text-sm">Taken</span>
 									{/if}
@@ -411,9 +418,9 @@
 						<div class="flex items-center gap-2">
 							<Button variant="ghost" size="sm" onclick={toggleMute} class="h-8 w-8 p-0">
 								{#if isMuted}
-									<VolumeXIcon class="h-4 w-4" />
+									<HugeiconsIcon icon={VolumeMute01Icon} class="h-4 w-4" />
 								{:else}
-									<Volume2Icon class="h-4 w-4" />
+									<HugeiconsIcon icon={VolumeHighIcon} class="h-4 w-4" />
 								{/if}
 							</Button>
 							<span class="text-muted-foreground w-10 text-right text-sm"
@@ -470,7 +477,7 @@
 							disabled={isDownloading}
 							class="ml-4"
 						>
-							<DownloadIcon class="h-4 w-4" />
+							<HugeiconsIcon icon={Download01Icon} class="h-4 w-4" />
 							{isDownloading ? 'Downloading...' : 'Download Data'}
 						</Button>
 					</div>
@@ -491,7 +498,7 @@
 							onclick={() => (deleteDialogOpen = true)}
 							class="ml-4"
 						>
-							<Trash2Icon class="h-4 w-4" />
+							<HugeiconsIcon icon={Delete01Icon} class="h-4 w-4" />
 							Delete Account
 						</Button>
 					</div>

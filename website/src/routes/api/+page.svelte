@@ -4,13 +4,8 @@
 	import { Progress } from '$lib/components/ui/progress';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert';
 	import * as Collapsible from '$lib/components/ui/collapsible';
-
-	import Key from 'lucide-svelte/icons/key';
-	import Activity from 'lucide-svelte/icons/activity';
-	import AlertTriangle from 'lucide-svelte/icons/alert-triangle';
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
-	import ChevronRight from 'lucide-svelte/icons/chevron-right';
-
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { Key01Icon, Activity01Icon, Alert02Icon, ArrowDown01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
 	import { toast } from 'svelte-sonner';
 	import Codeblock from '$lib/components/self/Codeblock.svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
@@ -93,7 +88,7 @@
 	{#if !$USER_DATA}
 		<Card>
 			<CardContent class="flex flex-col items-center justify-center py-12">
-				<Key class="text-muted-foreground mb-4 h-12 w-12" />
+				<HugeiconsIcon icon={Key01Icon} class="text-muted-foreground mb-4 h-12 w-12" />
 				<h3 class="mb-2 text-lg font-semibold">Sign in required</h3>
 				<p class="text-muted-foreground mb-4 text-center">
 					Sign in to get your free API key.
@@ -106,7 +101,7 @@
 		<Card>
 			<CardHeader>
 				<CardTitle class="flex items-center gap-2">
-					<Activity class="h-5 w-5" />
+					<HugeiconsIcon icon={Activity01Icon} class="h-5 w-5" />
 					Today's Usage
 				</CardTitle>
 			</CardHeader>
@@ -136,7 +131,7 @@
 					</div>
 					{#if apiKeyId}
 						<Button variant="outline" onclick={regenerateKey} disabled={loading}>
-							<Key class="h-4 w-4" />
+							<HugeiconsIcon icon={Key01Icon} class="h-4 w-4" />
 							Regenerate
 						</Button>
 					{/if}
@@ -147,7 +142,7 @@
 					<div class="space-y-4">
 						<Codeblock text={apiKey} />
 						<Alert>
-							<AlertTriangle class="h-4 w-4" />
+							<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 							<AlertDescription>
 								This is the only time your full API key will be shown. If you lose it, you'll need
 								to create a new one.
@@ -164,7 +159,7 @@
 					</div>
 				{:else}
 					<Button onclick={createKey} disabled={loading}>
-						<Key class="h-4 w-4" />
+						<HugeiconsIcon icon={Key01Icon} class="h-4 w-4" />
 						Create API Key
 					</Button>
 				{/if}
@@ -182,9 +177,9 @@
 					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
 						<h3 class="text-lg font-semibold">Authentication</h3>
 						{#if authOpen}
-							<ChevronDown class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
 						{:else}
-							<ChevronRight class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-3 p-4">
@@ -206,9 +201,9 @@
 							<p class="text-muted-foreground text-sm">GET /api/v1/top</p>
 						</div>
 						{#if topCoinsOpen}
-							<ChevronDown class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
 						{:else}
-							<ChevronRight class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-3 p-4">
@@ -249,9 +244,9 @@
 							<p class="text-muted-foreground text-sm">GET /api/v1/market</p>
 						</div>
 						{#if marketDataOpen}
-							<ChevronDown class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
 						{:else}
-							<ChevronRight class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-3 p-4">
@@ -312,9 +307,9 @@
 							<p class="text-muted-foreground text-sm">GET /api/v1/coin/&lbrace;symbol&rbrace;</p>
 						</div>
 						{#if coinDetailsOpen}
-							<ChevronDown class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
 						{:else}
-							<ChevronRight class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-3 p-4">
@@ -390,9 +385,9 @@
 							<p class="text-muted-foreground text-sm">GET /api/v1/holders/&lbrace;symbol&rbrace;</p>
 						</div>
 						{#if holdersOpen}
-							<ChevronDown class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
 						{:else}
-							<ChevronRight class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-3 p-4">
@@ -451,9 +446,9 @@
 							<p class="text-muted-foreground text-sm">GET /api/v1/hopium</p>
 						</div>
 						{#if hopiumOpen}
-							<ChevronDown class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
 						{:else}
-							<ChevronRight class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-3 p-4">
@@ -521,9 +516,9 @@
 							<p class="text-muted-foreground text-sm">GET /api/v1/hopium/&lbrace;question_id&rbrace;</p>
 						</div>
 						{#if hopiumDetailsOpen}
-							<ChevronDown class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
 						{:else}
-							<ChevronRight class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-3 p-4">
@@ -604,9 +599,9 @@
 					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
 						<h3 class="text-lg font-semibold">Rate Limiting</h3>
 						{#if rateLimitingOpen}
-							<ChevronDown class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
 						{:else}
-							<ChevronRight class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="p-4">
@@ -626,9 +621,9 @@
 					<Collapsible.Trigger class="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50">
 						<h3 class="text-lg font-semibold">Error Responses</h3>
 						{#if errorResponsesOpen}
-							<ChevronDown class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
 						{:else}
-							<ChevronRight class="h-4 w-4" />
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 						{/if}
 					</Collapsible.Trigger>
 					<Collapsible.Content class="space-y-2 p-4">

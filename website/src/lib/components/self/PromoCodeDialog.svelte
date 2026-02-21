@@ -4,7 +4,13 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Alert, AlertDescription } from '$lib/components/ui/alert';
-	import { Gift, XCircle, Loader2, CheckIcon } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		GiftIcon,
+		CancelCircleIcon,
+		Loading03Icon,
+		Tick01Icon
+	} from '@hugeicons/core-free-icons';
 
 	let { open = $bindable() } = $props();
 
@@ -72,7 +78,7 @@
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
-				<Gift class="h-5 w-5" />
+				<HugeiconsIcon icon={GiftIcon} class="h-5 w-5" />
 				Promo Code
 			</Dialog.Title>
 			<Dialog.Description>
@@ -99,9 +105,9 @@
 					class={isSuccess ? 'text-success' : ''}
 				>
 					{#if isSuccess}
-						<CheckIcon class="h-4 w-4" />
+						<HugeiconsIcon icon={Tick01Icon} class="h-4 w-4" />
 					{:else}
-						<XCircle class="h-4 w-4" />
+						<HugeiconsIcon icon={CancelCircleIcon} class="h-4 w-4" />
 					{/if}
 					<AlertDescription>
 						{message}
@@ -120,7 +126,7 @@
 				</Button>
 				<Button type="submit" disabled={!promoCode.trim() || isVerifying}>
 					{#if isVerifying}
-						<Loader2 class="h-4 w-4 animate-spin" />
+						<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
 						Verifying...
 					{:else}
 						Redeem Code

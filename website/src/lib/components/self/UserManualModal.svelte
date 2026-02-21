@@ -2,18 +2,19 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		ChevronLeft,
-		ChevronRight,
-		BookOpen,
-		Coins,
-		TrendingUp,
-		TrendingDown,
-		Dice1,
-		Target,
-		BarChart3,
-		Trophy
-	} from 'lucide-svelte';
+		ArrowLeft01Icon,
+		ArrowRight01Icon,
+		BookOpen01Icon,
+		Coins01Icon,
+		TradeUpIcon,
+		TradeDownIcon,
+		DiceFaces01Icon,
+		Target01Icon,
+		BarChartIcon,
+		Award01Icon
+	} from '@hugeicons/core-free-icons';
 
 	let { open = $bindable(false) } = $props<{
 		open?: boolean;
@@ -32,8 +33,8 @@
 			id: 1,
 			title: 'Welcome to Rugplay!',
 			description:
-				'Rugplay is a cryptocurrency trading simulator where you can practice trading without real financial risk. Start with virtual money, create coins, bet on prediction markets, and most importantly, rugpull!',
-			icon: BookOpen,
+				'Rugplay is a cryptocurrency trading simulator where you can practice trading without real financial risk. Start with virtual money, create coins, make predictions on markets, and most importantly, rugpull!',
+			icon: BookOpen01Icon,
 			image: '/tips/cover.avif'
 		},
 		{
@@ -41,7 +42,7 @@
 			title: 'Creating Your First Coin',
 			description:
 				'Click "Create coin" in the sidebar to launch your own cryptocurrency. Choose a unique name, symbol, and upload an icon. Each coin starts at $0.000001',
-			icon: Coins,
+			icon: Coins01Icon,
             image: '/tips/coin.avif'
 		},
 		{
@@ -49,7 +50,7 @@
 			title: 'Understanding Liquidity Pools',
 			description:
 				'Each coin has a "liquidity pool," with your coin and base currency ($). Prices are determined by the ratio between these amounts. When you buy, the price goes up; when you sell, it goes down.',
-			icon: BarChart3,
+			icon: BarChartIcon,
 			image: '/tips/liquidity-pools.avif'
 		},
 		{
@@ -57,7 +58,7 @@
 			title: 'AMM - Automated Market Maker',
 			description:
 				'Rugplay uses an AMM system where prices are calculated automatically based on supply and demand. The more you buy, the higher the price goes. The more you sell, the lower it drops. Large trades create "slippage" - the price change during your trade.',
-			icon: BarChart3,
+			icon: BarChartIcon,
 			image: '/tips/amm.avif'
 		},
 		{
@@ -65,7 +66,7 @@
 			title: 'Buying Coins',
 			description:
 				'Navigate to any coin page and click "Buy". Enter the amount you want to spend. The AMM (Automated Market Maker) will show you exactly how many coins you\'ll receive, including slippage.',
-			icon: TrendingUp,
+			icon: TradeUpIcon,
             image: '/tips/buying.avif'
 		},
 		{
@@ -73,7 +74,7 @@
 			title: 'Selling Coins',
 			description:
 				'On a coin page, click "Sell" and enter how many coins you want to sell. You can see your holdings in your Portfolio. Remember: selling large amounts can significantly impact the price!',
-			icon: TrendingDown,
+			icon: TradeDownIcon,
             image: '/tips/selling.avif'
 		},
 		{
@@ -81,7 +82,7 @@
 			title: 'What is a "Rug Pull"?',
 			description:
 				'A "rug pull" happens when large holders (including coin creators) sell their holdings all at once, crashing the price.',
-			icon: Target,
+			icon: Target01Icon,
             image: '/tips/rugpull.avif'
 		},
 		{
@@ -89,7 +90,7 @@
 			title: 'Portfolio Management',
 			description:
 				'Check your Portfolio page to see all your holdings, their current values, and recent transactions. Track your performance and see which investments are doing well.',
-			icon: BarChart3,
+			icon: BarChartIcon,
             image: '/tips/portfolio.avif',
 		},
 		{
@@ -97,23 +98,23 @@
 			title: 'Market Overview',
 			description:
 				'The Market page shows all available coins sorted by market cap, volume, and price changes. Use this to discover trending coins and investment opportunities.',
-			icon: Trophy,
+			icon: Award01Icon,
             image: '/tips/market.avif'
 		},
 		{
 			id: 10,
 			title: 'Hopium - Prediction Markets',
 			description:
-				'Hopium lets you bet on yes/no questions about the future. AI automatically resolves questions based on real-world data. Test your prediction skills and earn from correct forecasts. Hold $100,000 in cash to create your own Hopium question :)',
-			icon: Target,
+'Hopium lets you predict on yes/no questions about the future. AI automatically resolves questions based on real-world data. Test your prediction skills and earn from correct forecasts. Hold $100,000 in cash to create your own Hopium question :)',
+			icon: Target01Icon,
             image: '/tips/hopium.avif'
 		},
 		{
 			id: 11,
-			title: 'Gambling Games',
+			title: 'Arcade Games',
 			description:
-				'Visit the Gambling section for high-risk, high-reward games. Remember: these are pure chance games. Only gamble what you can afford to lose, even in this simulation!',
-			icon: Dice1,
+				'Visit the Arcade section for high-risk, high-reward games. Remember: these are pure chance games. Only play with what you can afford to lose, even in this simulation!',
+			icon: DiceFaces01Icon,
             image: '/tips/gambling.avif'
 		},
 		{
@@ -121,7 +122,7 @@
 			title: 'Live Trades Feed',
 			description:
 				'Watch the Live Trades page to see real-time trading activity across all coins. This helps you spot trending coins and understand market sentiment. The sidebar shows $1,000+ trades, while the main feed displays every transaction.',
-			icon: BarChart3,
+			icon: BarChartIcon,
             image: '/tips/live.avif'
 		},
 		{
@@ -129,7 +130,7 @@
 			title: 'Treemap Visualization',
 			description:
 				'The Treemap page shows a visual representation of the entire market. Larger squares represent higher market caps, and colors show price performance.',
-			icon: BarChart3,
+			icon: BarChartIcon,
             image: '/tips/treemap.avif'
 		},
 		{
@@ -137,7 +138,7 @@
 			title: 'Leaderboards',
 			description:
 				'Compete with other users on the Leaderboard. Climb the ranks by making smart investment decisions!',
-			icon: Trophy,
+			icon: Award01Icon,
             image: '/tips/leaderboard.avif'
 		},
 		{
@@ -145,7 +146,7 @@
 			title: 'Daily Rewards',
 			description:
 				'Log in daily to claim free money! Your login streak increases your daily bonus. Consistent players get more virtual cash to invest.',
-			icon: Coins,
+			icon: Coins01Icon,
             image: '/tips/daily.avif'
 		},
 		{
@@ -153,7 +154,7 @@
 			title: 'Concluding',
 			description:
 				"Start small, diversify your holdings, and don't invest everything in one coin. Watch for coins with diversified holders to avoid absolute rug pulls. People get smart!",
-			icon: TrendingUp,
+			icon: TradeUpIcon,
             image: '/tips/ender.avif'
 		}
 	];
@@ -185,7 +186,7 @@
 			<div class="space-y-4">
 				<div class="flex items-center gap-3">
 					<div class="bg-muted rounded-lg p-3">
-						<currentTip.icon class="h-8 w-8" />
+						<HugeiconsIcon icon={currentTip.icon} class="h-8 w-8" />
 					</div>
 					<h3 class="text-xl font-semibold">{currentTip.title}</h3>
 				</div>
@@ -224,7 +225,7 @@
 				disabled={currentPage === 0}
 				class="flex items-center gap-2"
 			>
-				<ChevronLeft class="h-4 w-4" />
+				<HugeiconsIcon icon={ArrowLeft01Icon} class="h-4 w-4" />
 				Previous
 			</Button>
 
@@ -241,7 +242,7 @@
 				class="flex items-center gap-2"
 			>
 				Next
-				<ChevronRight class="h-4 w-4" />
+				<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 			</Button>
 		</div>
 	</Dialog.Content>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
 
 	interface Props {
 		icon: any;
@@ -18,7 +19,7 @@
 			{#if isImagePath}
 				<img src={Icon} alt={text} class="h-4 w-4" />
 			{:else}
-				<Icon class="h-4 w-4" />
+				<HugeiconsIcon icon={Icon} class="h-4 w-4" />
 			{/if}
 		</div>
 	</Tooltip.Trigger>

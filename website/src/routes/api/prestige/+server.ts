@@ -6,6 +6,7 @@ import { eq, sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { formatValue, getPrestigeCost, getPrestigeName } from '$lib/utils';
 import { executeSellTrade } from '$lib/server/amm';
+import { checkAndAwardAchievements } from '$lib/server/achievements';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -119,6 +120,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             message: `Congratulations! You have successfully reached ${prestigeName}. Your portfolio has been reset, daily reward cooldown has been cleared, and you can now start fresh with your new prestige badge and enhanced daily rewards.`,
             link: `/user/${userId}`
         });
+
+        checkAndAwardAchievements(userId, ['prestige'], { newPrestigeLevel: nextPrestige });
 
         return json({
             success: true,

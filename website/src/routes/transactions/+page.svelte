@@ -13,14 +13,16 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		Search,
-		RefreshCw,
-		SlidersHorizontal,
-		ChevronLeft,
-		ChevronRight,
-		Receipt
-	} from 'lucide-svelte';
+		Search01Icon,
+		Refresh01Icon,
+		SlidersHorizontalIcon,
+		ArrowLeft01Icon,
+		ArrowRight01Icon,
+		ReceiptDollarIcon,
+		Invoice03Icon
+	} from '@hugeicons/core-free-icons';
 	import { formatPrice, formatValue, formatQuantity, formatDate, debounce } from '$lib/utils';
 	import { MediaQuery } from 'svelte/reactivity';
 
@@ -344,7 +346,7 @@
 
 			<div class="mx-auto flex max-w-2xl items-center justify-center gap-2">
 				<div class="relative flex-1">
-					<Search class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+					<HugeiconsIcon icon={Search01Icon} class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 					<Input
 						bind:value={searchQuery}
 						placeholder="Search by coin name or symbol..."
@@ -357,7 +359,7 @@
 				<Popover.Root bind:open={showFilterPopover}>
 					<Popover.Trigger>
 						<Button variant="outline" size="default" class="flex items-center gap-2">
-							<SlidersHorizontal class="h-4 w-4" />
+							<HugeiconsIcon icon={SlidersHorizontalIcon} class="h-4 w-4" />
 							Filters
 							{#if hasActiveFilters}
 								<Badge variant="secondary" class="h-5 w-5 rounded-full p-0 text-xs">•</Badge>
@@ -455,7 +457,7 @@
 				</Popover.Root>
 
 				<Button variant="outline" size="default" onclick={fetchTransactions} disabled={loading}>
-					<RefreshCw class="h-4 w-4" />
+					<HugeiconsIcon icon={Refresh01Icon} class="h-4 w-4" />
 				</Button>
 			</div>
 		</div>
@@ -479,7 +481,7 @@
 	<Card.Root>
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2">
-				<Receipt class="h-5 w-5" />
+				<HugeiconsIcon icon={ReceiptDollarIcon} class="h-5 w-5" />
 				History
 			</Card.Title>
 			<Card.Description>Complete record of your trading activity and transfers</Card.Description>
@@ -500,7 +502,7 @@
 							goto(`/coin/${tx.coin.symbol}`);
 						}
 					}}
-					emptyIcon={Receipt}
+					emptyIcon={Invoice03Icon}
 					emptyTitle="No transactions found"
 					emptyDescription={hasActiveFilters
 						? 'No transactions match your current filters. Try adjusting your search criteria.'
@@ -524,7 +526,7 @@
 					<Pagination.Content>
 						<Pagination.Item>
 							<Pagination.PrevButton>
-								<ChevronLeft class="h-4 w-4" />
+								<HugeiconsIcon icon={ArrowLeft01Icon} class="h-4 w-4" />
 								<span class="hidden sm:block">Previous</span>
 							</Pagination.PrevButton>
 						</Pagination.Item>
@@ -544,7 +546,7 @@
 						<Pagination.Item>
 							<Pagination.NextButton>
 								<span class="hidden sm:block">Next</span>
-								<ChevronRight class="h-4 w-4" />
+								<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 							</Pagination.NextButton>
 						</Pagination.Item>
 					</Pagination.Content>

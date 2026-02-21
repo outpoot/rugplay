@@ -1,7 +1,12 @@
 <script lang="ts">
 	import type { UserProfile } from '$lib/types/user-profile';
 	import SilentBadge from './SilentBadge.svelte';
-	import { Hash, Hammer, Flame, Star } from 'lucide-svelte';
+	import {
+		HashtagIcon,
+		KnightShieldIcon,
+		Fire02Icon,
+		StarIcon,
+	} from '@hugeicons/core-free-icons';
 	import { getPrestigeName, getPrestigeColor } from '$lib/utils';
 
 	let {
@@ -21,20 +26,20 @@
 
 <div class="flex items-center gap-1">
 	{#if showId}
-		<SilentBadge icon={Hash} class="text-muted-foreground {badgeClass}" text="#{user.id} to join" />
+		<SilentBadge icon={HashtagIcon} class="text-muted-foreground {badgeClass}" text="#{user.id} to join" />
 	{/if}
 	{#if prestigeName}
-		<SilentBadge icon={Star} text={prestigeName} class="{prestigeColor} {badgeClass}" />
+		<SilentBadge icon={StarIcon} text={prestigeName} class="{prestigeColor} {badgeClass}" />
 	{/if}
 	{#if user.loginStreak && user.loginStreak > 1}
 		<SilentBadge
-			icon={Flame}
+			icon={Fire02Icon}
 			text="{user.loginStreak} day streak"
 			class="text-orange-500 {badgeClass}"
 		/>
 	{/if}
 	{#if user.isAdmin}
-		<SilentBadge icon={Hammer} text="Admin" class="text-primary {badgeClass}" />
+		<SilentBadge icon={KnightShieldIcon} text="Admin" class="text-primary {badgeClass}" />
 	{/if}
 	{#if user.halloweenBadge2025}
 		<SilentBadge icon="/pumpkin.png" text="Halloween 2025" class="text-primary {badgeClass}" />

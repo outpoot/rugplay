@@ -4,7 +4,8 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Badge } from '$lib/components/ui/badge';
-	import { TrendingUp, TrendingDown, Loader2 } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { TradeUpIcon, TradeDownIcon, Loading03Icon } from '@hugeicons/core-free-icons';
 	import { PORTFOLIO_SUMMARY } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
 
@@ -125,10 +126,10 @@
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				{#if type === 'BUY'}
-					<TrendingUp class="h-5 w-5 text-green-500" />
+					<HugeiconsIcon icon={TradeUpIcon} class="h-5 w-5 text-green-500" />
 					Buy {coin.symbol}
 				{:else}
-					<TrendingDown class="h-5 w-5 text-red-500" />
+					<HugeiconsIcon icon={TradeDownIcon} class="h-5 w-5 text-red-500" />
 					Sell {coin.symbol}
 				{/if}
 			</Dialog.Title>
@@ -204,7 +205,7 @@
 				variant={type === 'BUY' ? 'default' : 'destructive'}
 			>
 				{#if loading}
-					<Loader2 class="h-4 w-4 animate-spin" />
+					<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
 					Processing...
 				{:else}
 					{type === 'BUY' ? 'Buy' : 'Sell'} {coin.symbol}

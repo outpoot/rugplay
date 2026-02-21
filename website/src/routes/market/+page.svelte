@@ -14,7 +14,14 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Search, RefreshCw, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import {
+		Search01Icon,
+		Refresh01Icon,
+		SlidersHorizontalIcon,
+		ArrowLeft01Icon,
+		ArrowRight01Icon
+	} from '@hugeicons/core-free-icons';
 	import { formatPrice, formatMarketCap, debounce, formatRelativeTime } from '$lib/utils';
 	import { MediaQuery } from 'svelte/reactivity';
 	import type { CoinData, FilterOption, VolatilityBadge, MarketResponse } from '$lib/types/market';
@@ -58,6 +65,16 @@
 
 	const debouncedSearch = debounce(performSearch, 300);
 	let previousSearchQueryForEffect = $state(data.filters.searchQuery);
+
+	$effect(() => {
+		searchQuery = data.filters.searchQuery;
+		sortBy = data.filters.sortBy;
+		sortOrder = data.filters.sortOrder;
+		priceFilter = data.filters.priceFilter;
+		changeFilter = data.filters.changeFilter;
+		currentPage = data.filters.page;
+		previousSearchQueryForEffect = data.filters.searchQuery;
+	});
 
 	onMount(() => {
 		fetchMarketData();
@@ -257,7 +274,7 @@
 
 			<div class="mx-auto flex max-w-2xl items-center justify-center gap-2">
 				<div class="relative flex-1">
-					<Search class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+					<HugeiconsIcon icon={Search01Icon} class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 					<Input
 						bind:value={searchQuery}
 						placeholder="Search coins by name or symbol..."
@@ -270,7 +287,7 @@
 				<Popover.Root bind:open={showFilterPopover}>
 					<Popover.Trigger>
 						<Button variant="outline" size="default" class="flex items-center gap-2">
-							<SlidersHorizontal class="h-4 w-4" />
+							<HugeiconsIcon icon={SlidersHorizontalIcon} class="h-4 w-4" />
 							Filters
 							{#if hasActiveFilters}
 								<Badge variant="secondary" class="h-5 w-5 rounded-full p-0 text-xs">•</Badge>
@@ -390,7 +407,7 @@
 				</Popover.Root>
 
 				<Button variant="outline" size="default" onclick={fetchMarketData} disabled={loading}>
-					<RefreshCw class="h-4 w-4" />
+					<HugeiconsIcon icon={Refresh01Icon} class="h-4 w-4" />
 				</Button>
 			</div>
 		</div>
@@ -509,7 +526,7 @@
 						<Pagination.Content>
 							<Pagination.Item>
 								<Pagination.PrevButton>
-									<ChevronLeft class="h-4 w-4" />
+									<HugeiconsIcon icon={ArrowLeft01Icon} class="h-4 w-4" />
 									<span class="hidden sm:block">Previous</span>
 								</Pagination.PrevButton>
 							</Pagination.Item>
@@ -529,7 +546,7 @@
 							<Pagination.Item>
 								<Pagination.NextButton>
 									<span class="hidden sm:block">Next</span>
-									<ChevronRight class="h-4 w-4" />
+									<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
 								</Pagination.NextButton>
 							</Pagination.Item>
 						</Pagination.Content>

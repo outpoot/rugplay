@@ -21,7 +21,8 @@ export async function load({ params, url, fetch }) {
             coin: result.coin,
             chartData: result.candlestickData || [],
             volumeData: result.volumeData || [],
-            timeframe
+            timeframe,
+            oldestTimestamp: result.oldestTimestamp || null
         };
     } catch (e) {
         console.error('Failed to fetch coin data:', e);

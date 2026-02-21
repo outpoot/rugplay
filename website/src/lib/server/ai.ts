@@ -281,7 +281,7 @@ Provide your response in the specified JSON format with a precise ISO 8601 datet
 `;
 
     try {
-        const completion = await openai.beta.chat.completions.parse({
+        const completion = await openai.chat.completions.parse({
             model: MODELS.STANDARD,
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.1,
@@ -367,7 +367,7 @@ Provide your response in the specified JSON format.
 `;
 
     try {
-        const completion = await openai.beta.chat.completions.parse({
+        const completion = await openai.chat.completions.parse({
             model,
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.1,

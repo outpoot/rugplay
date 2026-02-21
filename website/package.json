@@ -58,7 +58,7 @@
 		"express": "^5.1.0",
 		"lightweight-charts": "^5.0.7",
 		"mode-watcher": "^1.0.7",
-		"openai": "^4.103.0",
+		"openai": "^6.22.0",
 		"postgres": "^3.4.4",
 		"redis": "^5.1.0",
 		"sharp": "^0.34.2",

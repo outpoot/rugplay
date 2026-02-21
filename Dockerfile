@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1
-ARG NODE_VERSION=20
+ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-slim AS base-node
 WORKDIR /app
 ENV NODE_ENV="production"
@@ -20,7 +20,7 @@ FROM base-node AS build-main
 COPY website/package.json website/package-lock.json* ./
 
 # Install dependencies with platform-specific binaries
-RUN npm install --include=dev --platform=linux --arch=x64
+RUN npm ci --include=dev --platform=linux --arch=x64
 
 # Copy the rest of the application
 COPY website/. .

@@ -447,12 +447,12 @@
 	});
 
 	function formatPrice(price: number): string {
-		if (price >= 1e18) return `$${(price / 1e18).toFixed(2)}Qi`;
-		if (price >= 1e15) return `$${(price / 1e15).toFixed(2)}Qa`;
-		if (price >= 1e12) return `$${(price / 1e12).toFixed(2)}T`;
-		if (price >= 1e9) return `$${(price / 1e9).toFixed(2)}B`;
-		if (price >= 1e6) return `$${(price / 1e6).toFixed(2)}M`;
-		if (price >= 1e3) return `$${(price / 1e3).toFixed(2)}K`;
+		if (price >= 1e18) return `${(price / 1e18).toFixed(2)}Qi`;
+		if (price >= 1e15) return `${(price / 1e15).toFixed(2)}Qa`;
+		if (price >= 1e12) return `${(price / 1e12).toFixed(2)}T`;
+		if (price >= 1e9) return `${(price / 1e9).toFixed(2)}B`;
+		if (price >= 1e6) return `${(price / 1e6).toFixed(2)}M`;
+		if (price >= 1e3) return `${(price / 1e3).toFixed(2)}K`;
 		if (price < 0.000001) {
 			return price.toFixed(8);
 		} else if (price < 0.01) {

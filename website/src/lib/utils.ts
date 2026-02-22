@@ -47,13 +47,13 @@ export function debounce(func: (...args: any[]) => void, wait: number) {
 }
 
 export function formatPrice(price: number): string {
-    if (typeof price !== 'number' || isNaN(price)) return '$0.00';
-    if (price >= 1e18) return `$${(price / 1e18).toFixed(2)}Qi`;
-    if (price >= 1e15) return `$${(price / 1e15).toFixed(2)}Qa`;
-    if (price >= 1e12) return `$${(price / 1e12).toFixed(2)}T`;
-    if (price >= 1e9) return `$${(price / 1e9).toFixed(2)}B`;
-    if (price >= 1e6) return `$${(price / 1e6).toFixed(2)}M`;
-    if (price >= 1e3) return `$${(price / 1e3).toFixed(2)}K`;
+    if (typeof price !== 'number' || isNaN(price)) return '0.00';
+    if (price >= 1e18) return `${(price / 1e18).toFixed(2)}Qi`;
+    if (price >= 1e15) return `${(price / 1e15).toFixed(2)}Qa`;
+    if (price >= 1e12) return `${(price / 1e12).toFixed(2)}T`;
+    if (price >= 1e9) return `${(price / 1e9).toFixed(2)}B`;
+    if (price >= 1e6) return `${(price / 1e6).toFixed(2)}M`;
+    if (price >= 1e3) return `${(price / 1e3).toFixed(2)}K`;
     if (price < 0.01) {
         return price.toFixed(6);
     } else if (price < 1) {

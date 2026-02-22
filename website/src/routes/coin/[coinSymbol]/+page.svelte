@@ -447,6 +447,12 @@
 	});
 
 	function formatPrice(price: number): string {
+		if (price >= 1e18) return `$${(price / 1e18).toFixed(2)}Qi`;
+		if (price >= 1e15) return `$${(price / 1e15).toFixed(2)}Qa`;
+		if (price >= 1e12) return `$${(price / 1e12).toFixed(2)}T`;
+		if (price >= 1e9) return `$${(price / 1e9).toFixed(2)}B`;
+		if (price >= 1e6) return `$${(price / 1e6).toFixed(2)}M`;
+		if (price >= 1e3) return `$${(price / 1e3).toFixed(2)}K`;
 		if (price < 0.000001) {
 			return price.toFixed(8);
 		} else if (price < 0.01) {
@@ -461,6 +467,10 @@
 	function formatMarketCap(value: number): string {
 		const num = Number(value);
 		if (isNaN(num)) return '$0.00';
+		if (num >= 1e21) return `$${(num / 1e21).toFixed(2)}Sx`;
+		if (num >= 1e18) return `$${(num / 1e18).toFixed(2)}Qi`;
+		if (num >= 1e15) return `$${(num / 1e15).toFixed(2)}Qa`;
+		if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
 		if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
 		if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
 		if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
@@ -470,6 +480,10 @@
 	function formatSupply(value: number): string {
 		const num = Number(value);
 		if (isNaN(num)) return '0';
+		if (num >= 1e21) return `${(num / 1e21).toFixed(2)}Sx`;
+		if (num >= 1e18) return `${(num / 1e18).toFixed(2)}Qi`;
+		if (num >= 1e15) return `${(num / 1e15).toFixed(2)}Qa`;
+		if (num >= 1e12) return `${(num / 1e12).toFixed(2)}T`;
 		if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
 		if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
 		if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;

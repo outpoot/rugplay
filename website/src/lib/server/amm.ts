@@ -20,7 +20,8 @@ export async function calculate24hMetrics(coinId: number, currentPrice: number) 
     if (priceData) {
         const priceFrom24hAgo = Number(priceData.price);
         if (priceFrom24hAgo > 0) {
-            change24h = ((currentPrice - priceFrom24hAgo) / priceFrom24hAgo) * 100;
+            const raw = ((currentPrice - priceFrom24hAgo) / priceFrom24hAgo) * 100;
+            change24h = Math.max(-9999999, Math.min(9999999, raw));
         }
     }
 

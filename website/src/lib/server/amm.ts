@@ -87,14 +87,18 @@ export async function executeSellTrade(
 
     const metrics = await calculate24hMetrics(coinData.id, newPrice);
 
+    const MAX_STORABLE = 1e38;
+    const safeMarketCap = Math.min(Number(coinData.circulatingSupply) * newPrice, MAX_STORABLE);
+    const safeVolume = Math.min(metrics.volume24h, MAX_STORABLE);
+
     await tx.update(coin)
         .set({
             currentPrice: newPrice.toString(),
-            marketCap: (Number(coinData.circulatingSupply) * newPrice).toString(),
+            marketCap: safeMarketCap.toString(),
             poolCoinAmount: newPoolCoin.toString(),
             poolBaseCurrencyAmount: newPoolBaseCurrency.toString(),
             change24h: metrics.change24h.toString(),
-            volume24h: metrics.volume24h.toString(),
+            volume24h: safeVolume.toString(),
             updatedAt: new Date()
         })
         .where(eq(coin.id, coinData.id));

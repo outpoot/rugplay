@@ -109,8 +109,8 @@ export const coin = pgTable("coin", {
 	initialSupply: decimal("initial_supply", { precision: 30, scale: 8 }).notNull(),
 	circulatingSupply: decimal("circulating_supply", { precision: 30, scale: 8 }).notNull(),
 	currentPrice: decimal("current_price", { precision: 30, scale: 8 }).notNull(), // Price in base currency
-	marketCap: decimal("market_cap", { precision: 30, scale: 2 }).notNull(),
-	volume24h: decimal("volume_24h", { precision: 30, scale: 2 }).default("0.00"),
+	marketCap: decimal("market_cap", { precision: 42, scale: 2 }).notNull(),
+	volume24h: decimal("volume_24h", { precision: 42, scale: 2 }).default("0.00"),
 	change24h: decimal("change_24h", { precision: 14, scale: 4 }).default("0.0000"), // Percentage, capped at ±9,999,999.9999
 	poolCoinAmount: decimal("pool_coin_amount", { precision: 30, scale: 8 }).notNull().default("0.00000000"),
 	poolBaseCurrencyAmount: decimal("pool_base_currency_amount", { precision: 30, scale: 8, }).notNull().default("0.00000000"),

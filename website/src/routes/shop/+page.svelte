@@ -754,7 +754,11 @@
 				</div>
 			{/each}
 		</div>
-		<p class="text-muted-foreground mt-6 text-center text-xs">
+		<p class="text-muted-foreground mt-4 text-center text-sm">
+			<HugeiconsIcon icon={InformationCircleIcon} class="inline h-4 w-4 align-text-bottom" />
+			Spend $4.99 or more on Gems to <span class="text-foreground font-semibold">permanently remove all ads</span> from Rugplay.
+		</p>
+		<p class="text-muted-foreground mt-2 text-center text-xs">
 			Gems have no real-world monetary value and are non-refundable. Purchases are for cosmetic items only.
 		</p>
 	</section>

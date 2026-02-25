@@ -168,7 +168,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			await checkAndAwardAchievements(userId, ['arcade', 'wealth'], {
 				arcadeWon: true,
-				arcadeWager: game.betAmount
+				arcadeWager: game.betAmount,
+				minesTilesRevealed: game.revealedTiles.length,
+				minesCount: game.mineCount
 			});
 
 			return json({

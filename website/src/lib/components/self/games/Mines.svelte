@@ -131,11 +131,18 @@
 				clickedSafeTiles = [...clickedSafeTiles, index];
 				currentMultiplier = result.currentMultiplier;
 				hasRevealedTile = true;
-				startAutoCashoutTimer();
 				if (result.status === 'won') {
+					resetAutoCashoutTimer();
+					balance = result.newBalance;
+					onBalanceUpdate?.(result.newBalance);
+					if (result.payout > betAmount) showConfetti(confetti);
 					showSchoolPrideCannons(confetti);
-					showConfetti(confetti);
-					await cashOut();
+					playSound('win');
+					isPlaying = false;
+					hasRevealedTile = false;
+					minePositions = [];
+				} else {
+					startAutoCashoutTimer();
 				}
 			}
 		} catch (error) {

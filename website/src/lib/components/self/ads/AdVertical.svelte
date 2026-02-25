@@ -62,7 +62,7 @@
 	>
 		<ins
 			class="adsbygoogle"
-			style="display:block"
+			style="display:block;width:100%"
 			data-ad-client="ca-pub-7420543404967748"
 			data-ad-slot="3983623093"
 			data-ad-format="auto"

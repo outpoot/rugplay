@@ -57,13 +57,13 @@
 {#if !dev && !hideAds}
 	<div
 		bind:this={adContainer}
-		class="ad-container my-4 flex items-center justify-center overflow-hidden"
+		class="ad-container my-4 overflow-hidden"
 		style="max-height: 250px; {adFailed ? 'min-height: 0; height: 0;' : 'min-height: 90px;'}"
 		aria-label="Advertisement"
 	>
 		<ins
 			class="adsbygoogle"
-			style="display:block"
+			style="display:block;width:100%"
 			data-ad-client="ca-pub-7420543404967748"
 			data-ad-slot="1273699274"
 			data-ad-format="auto"

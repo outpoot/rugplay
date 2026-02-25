@@ -114,21 +114,18 @@
 		return titleMap[routeId] || 'Rugplay';
 	}
 
-	const hideAds = $derived($USER_DATA?.hideAds);
+	let adScriptLoaded = false;
 
 	$effect(() => {
-		if (dev) return;
-		if (hideAds) return;
+		const shouldHide = $USER_DATA?.hideAds;
+		if (dev || shouldHide || adScriptLoaded) return;
 
+		adScriptLoaded = true;
 		const script = document.createElement('script');
 		script.async = true;
 		script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7420543404967748';
 		script.crossOrigin = 'anonymous';
 		document.head.appendChild(script);
-
-		return () => {
-			script.remove();
-		};
 	});
 </script>
 

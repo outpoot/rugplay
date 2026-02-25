@@ -5,7 +5,7 @@
 
 	let adContainer = $state<HTMLElement>();
 	let adPushed = $state(false);
-	let adLoaded = $state(false);
+	let adFailed = $state(false);
 
 	const hideAds = $derived($USER_DATA?.hideAds);
 
@@ -15,17 +15,16 @@
 		if (ins) {
 			const status = ins.getAttribute('data-ad-status');
 			if (status === 'filled') {
-				adLoaded = true;
+				adFailed = false;
 				return;
 			}
 			if (status === 'unfilled') {
-				adLoaded = false;
+				adFailed = true;
 				return;
 			}
 		}
-		// Check if the ad has any visible content (iframe or img)
 		const hasContent = adContainer.querySelector('iframe, img') !== null;
-		adLoaded = hasContent;
+		if (hasContent) adFailed = false;
 	}
 
 	onMount(() => {
@@ -59,7 +58,7 @@
 	<div
 		bind:this={adContainer}
 		class="ad-container my-4 flex items-center justify-center overflow-hidden"
-		style="max-height: 250px; {adPushed && !adLoaded ? 'min-height: 0; height: 0;' : 'min-height: 90px;'}"
+		style="max-height: 250px; {adFailed ? 'min-height: 0; height: 0;' : 'min-height: 90px;'}"
 		aria-label="Advertisement"
 	>
 		<ins

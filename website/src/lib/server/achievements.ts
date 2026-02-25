@@ -292,21 +292,9 @@ async function checkAchievement(
 		}
 
 		case 'rug_pull': {
-			if (
-				ctx.tradeType !== 'SELL' ||
-				!ctx.oldPrice ||
-				!ctx.newPrice ||
-				ctx.coinChange24h === undefined
-			)
-				return false;
-
-			// Find the user's first investment (BUY) in this coin to determine timing
-			const firstInvestmentTime = ctx.firstInvestmentAt?.getTime();
-			if (!firstInvestmentTime) return false;
-
-			const timeSinceFirstInvestment = Date.now() - firstInvestmentTime;
+			if (ctx.tradeType !== 'SELL' || !ctx.oldPrice || !ctx.newPrice) return false;
 			const sellPriceDrop = (ctx.oldPrice - ctx.newPrice) / ctx.oldPrice;
-			return sellPriceDrop >= 0.5 && ctx.coinChange24h <= -90 && timeSinceFirstInvestment <= 5000;
+			return sellPriceDrop >= 0.5;
 		}
 
 		// ARCADE

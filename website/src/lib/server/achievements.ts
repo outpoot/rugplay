@@ -376,6 +376,9 @@ async function checkAchievement(
 			return Number(userData?.wins ?? 0) >= 1000000;
 		}
 
+		case 'risk_biscuit':
+			return ctx.arcadeWon === true && (ctx.arcadeWager ?? 0) >= 25000;
+
 		case 'arcade_losses_1m': {
 			const [userData] = await db
 				.select({ losses: user.arcadeLosses })
@@ -525,16 +528,6 @@ async function checkAchievement(
 			if (ctx.tradeType !== 'BUY' || !ctx.tradeAmount || ctx.newBalance === undefined) return false;
 			const preTradeBalance = ctx.newBalance + ctx.tradeAmount;
 			return preTradeBalance > 0 && ctx.tradeAmount / preTradeBalance >= 0.95;
-		}
-
-		case 'risk_biscuit': {
-			if (ctx.tradeType !== 'BUY' || !ctx.tradeAmount || ctx.newBalance === undefined) return false;
-			const preBalance = ctx.newBalance + ctx.tradeAmount;
-			const isAllIn = preBalance > 0 && ctx.tradeAmount / preBalance >= 0.95;
-			const isHighEnough = ctx.tradeAmount >= 25000;
-			// "win" means the price went up after their buy
-			const didWin = ctx.newPrice !== undefined && ctx.oldPrice !== undefined && ctx.newPrice > ctx.oldPrice;
-			return isAllIn && isHighEnough && didWin;
 		}
 
 		case 'account_6mo': {

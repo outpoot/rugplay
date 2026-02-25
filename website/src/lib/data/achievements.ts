@@ -66,7 +66,6 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 	{ id: 'volume_10m', name: 'Volume King', description: 'Accumulate $10,000,000 in total trading volume', icon: 'crown.png', difficulty: 'legendary', cashReward: 50000, gemReward: 150, category: 'trading', targetValue: 10000000 },
 	{ id: 'diamond_hands', name: 'Diamond Hands', description: 'Hold a single coin for 30+ days', icon: 'gold_diamond.png', difficulty: 'hard', cashReward: 15000, gemReward: 75, category: 'trading' },
 	{ id: 'true_dedication', name: 'True dedication', description: 'Invest $1,000+ in a coin 14 days in a row without ever selling', icon: 'heart.png', difficulty: 'hard', cashReward: 20000, gemReward: 50, category: 'trading', targetValue: 14 },
-	{ id: 'risk_biscuit', name: 'Risk it for the biscuit', description: 'Go all in on a coin with at least $25,000 and the price goes up', icon: 'warning.png', difficulty: 'medium', cashReward: 5000, gemReward: 25, category: 'trading' },
 
 	// WEALTH (5)
 	{ id: 'portfolio_1k', name: 'First Comma', description: 'Reach $1,000 total portfolio value', icon: 'green_cash.png', difficulty: 'easy', cashReward: 1000, gemReward: 5, category: 'wealth' },
@@ -93,6 +92,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 	{ id: 'win_streak_5', name: 'Lucky Streak', description: 'Win 5 arcade games in a row', icon: 'torch_yellow.png', difficulty: 'hard', cashReward: 15000, gemReward: 75, category: 'arcade', targetValue: 5 },
 	{ id: 'arcade_wins_500k', name: 'Professional Gambler', description: 'Win $500,000+ total in the arcade', icon: 'trophy.png', difficulty: 'legendary', cashReward: 50000, gemReward: 150, category: 'arcade', targetValue: 500000 },
 	{ id: 'arcade_wins_1m', name: 'All I do is Win', description: 'Make $1,000,000 winnings with arcade games', icon: 'fire.png', difficulty: 'legendary', cashReward: 100000, gemReward: 225, category: 'arcade', targetValue: 1000000 },
+	{ id: 'risk_biscuit', name: 'Risk it for the biscuit', description: 'Go all in with at least $25,000 and win', icon: 'warning.png', difficulty: 'hard', cashReward: 10000, gemReward: 50, category: 'arcade', targetValue: 25000 },
 	{ id: 'arcade_losses_1m', name: 'All I do is Lose', description: 'Lose $1,000,000 within arcade games', icon: 'x.png', difficulty: 'legendary', cashReward: 100000, gemReward: 225, category: 'arcade', targetValue: 1000000 },
 
 	// DAILY REWARDS & STREAKS (5)

@@ -12,6 +12,7 @@ export interface UserProfile {
 
 	prestigeLevel: number | null;
 	halloweenBadge2025: boolean;
+	founderBadge: boolean;
 
 	arcadeWins: number;
 	arcadeLosses: number;

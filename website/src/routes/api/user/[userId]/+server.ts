@@ -30,6 +30,7 @@ export async function GET({ params }) {
                 arcadeWins: true,
                 arcadeLosses: true,
                 nameColor: true,
+                founderBadge: true,
             }
         });
 

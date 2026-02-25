@@ -2,7 +2,7 @@ import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { coin, userPortfolio, user, transaction, priceHistory } from '$lib/server/db/schema';
-import { eq, and, gte } from 'drizzle-orm';
+import { eq, and, gte, asc } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { createNotification } from '$lib/server/notification';
 import { calculate24hMetrics, executeSellTrade } from '$lib/server/amm';
@@ -350,7 +350,8 @@ export async function POST({ params, request }) {
                 newBalance: userBalance + totalCost,
                 newPrice,
                 oldPrice: currentPrice,
-                coinCreatedAt: coinData.createdAt
+                coinCreatedAt: coinData.createdAt,
+                firstInvestmentAt: await getFirstBuyTimestamp(userId, coinData.id)
             });
 
             return json({
@@ -364,4 +365,24 @@ export async function POST({ params, request }) {
             });
         }
     });
+}
+
+async function getFirstBuyTimestamp(userId: number, coinId: number): Promise<Date | undefined> {
+    try {
+        const [firstBuy] = await db
+            .select({ timestamp: transaction.timestamp })
+            .from(transaction)
+            .where(
+                and(
+                    eq(transaction.userId, userId),
+                    eq(transaction.coinId, coinId),
+                    eq(transaction.type, 'BUY')
+                )
+            )
+            .orderBy(asc(transaction.timestamp))
+            .limit(1);
+        return firstBuy?.timestamp ?? undefined;
+    } catch {
+        return undefined;
+    }
 }

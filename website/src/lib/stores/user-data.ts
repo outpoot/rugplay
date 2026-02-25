@@ -20,6 +20,8 @@ export type User = {
     nameColor: string | null;
     founderBadge: boolean;
     prestigeLevel: number;
+    disableMentions: boolean;
+    hideAds: boolean;
 } | null;
 
-export const USER_DATA = writable<User>(undefined);
+export const USER_DATA = writable<User>(null);

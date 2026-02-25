@@ -6,6 +6,7 @@
 		KnightShieldIcon,
 		Fire02Icon,
 		StarIcon,
+		Rocket01Icon,
 	} from '@hugeicons/core-free-icons';
 	import { getPrestigeName, getPrestigeColor } from '$lib/utils';
 
@@ -40,6 +41,9 @@
 	{/if}
 	{#if user.isAdmin}
 		<SilentBadge icon={KnightShieldIcon} text="Admin" class="text-primary {badgeClass}" />
+	{/if}
+	{#if user.founderBadge}
+		<SilentBadge icon={Rocket01Icon} text="Supporter" class="text-cyan-400 {badgeClass}" />
 	{/if}
 	{#if user.halloweenBadge2025}
 		<SilentBadge icon="/pumpkin.png" text="Halloween 2025" class="text-primary {badgeClass}" />

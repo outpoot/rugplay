@@ -73,18 +73,21 @@ export const POST = Webhooks({
 				.onConflictDoNothing({ target: gemTransactions.polarOrderId })
 				.returning({ id: gemTransactions.id });
 
-			if (inserted.length === 0) return;
-
-			const isFirstPurchase = existingUser.gems === 0;
+			if (inserted.length === 0) {
+				console.log(`[Polar Webhook] Duplicate order skipped: ${polarOrderId} for user ${userId}`);
+				return;
+			}
 
 			await tx
 				.update(user)
 				.set({
 					gems: sql`${user.gems} + ${gemsAmount}`,
-					...(isFirstPurchase ? { founderBadge: true } : {}),
+					founderBadge: true,
 					updatedAt: new Date(),
 				})
 				.where(eq(user.id, userId));
+
+			console.log(`[Polar Webhook] Credited ${gemsAmount} gems ($${(usdAmount / 100).toFixed(2)}) to user ${userId}, founderBadge set. Order: ${polarOrderId}`);
 		});
 	},
 });

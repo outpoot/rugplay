@@ -2,10 +2,11 @@ import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { comment, coin, user, commentLike } from '$lib/server/db/schema';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { isNameAppropriate } from '$lib/server/moderation';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
+import { createNotification } from '$lib/server/notification';
 
 export async function GET({ params, request }) {
     const session = await auth.api.getSession({
@@ -131,6 +132,37 @@ export async function POST({ request, params }) {
         );
 
         checkAndAwardAchievements(userId, ['social']);
+
+        // Detect @mentions and send notifications
+        try {
+            const mentionRegex = /@([a-zA-Z0-9_]{3,30})\b/g;
+            const mentions = [...content.matchAll(mentionRegex)].map(m => m[1].toLowerCase());
+            const uniqueMentions = [...new Set(mentions)];
+
+            if (uniqueMentions.length > 0) {
+                const mentionedUsers = await db
+                    .select({ id: user.id, username: user.username, disableMentions: user.disableMentions })
+                    .from(user)
+                    .where(inArray(user.username, uniqueMentions));
+
+                const senderName = commentWithUser.userName || commentWithUser.userUsername;
+
+                for (const mentioned of mentionedUsers) {
+                    if (mentioned.id === userId) continue; // Don't notify yourself
+                    if (mentioned.disableMentions) continue;
+
+                    createNotification(
+                        mentioned.id.toString(),
+                        'MENTION',
+                        `${senderName} mentioned you`,
+                        `"${content.trim().slice(0, 100)}${content.trim().length > 100 ? '...' : ''}"`,
+                        `/coin/${normalizedSymbol}`
+                    );
+                }
+            }
+        } catch (mentionErr) {
+            console.error('Failed to process mentions:', mentionErr);
+        }
 
         return json({ comment: commentWithUser });
     } catch (e) {

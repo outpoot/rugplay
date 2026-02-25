@@ -6,6 +6,7 @@ import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { MAX_FILE_SIZE } from '$lib/data/constants';
 import { isNameAppropriate } from '$lib/server/moderation';
+import { checkAndAwardAchievements } from '$lib/server/achievements';
 
 async function validateInputs(name: string, bio: string, username: string, avatarFile: File | null) {
     if (!name || !name.trim()) {
@@ -102,6 +103,10 @@ export async function POST({ request }) {
     await db.update(user)
         .set(updates)
         .where(eq(user.id, Number(session.user.id)));
+
+    if (bio && bio.trim().length > 0) {
+        checkAndAwardAchievements(Number(session.user.id), ['social']);
+    }
 
     return json({ success: true });
 }

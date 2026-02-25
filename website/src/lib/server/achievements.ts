@@ -24,12 +24,14 @@ export interface AchievementContext {
 	newPrice?: number; // price after trade
 	oldPrice?: number; // price before trade
 	coinCreatedAt?: Date; // when the coin was created
+	firstInvestmentAt?: Date; // when the user first invested in the coin
 
 	// Arcade context
 	arcadeWon?: boolean;
 	arcadeWager?: number;
 	slotsWinType?: string; // '3 OF A KIND' etc
 	minesTilesRevealed?: number; // for mines cashout
+	minesCount?: number; // number of mines in the game
 
 	// Streak context
 	newStreak?: number;
@@ -189,6 +191,37 @@ async function checkAchievement(
 			return Number(result[0]?.cnt ?? 0) > 0;
 		}
 
+		case 'true_dedication': {
+			// Check if user has bought at least $1000 worth of any single coin on each of the last 14 consecutive days with no sells
+			const result = await db.execute(sql`
+				WITH daily_buys AS (
+					SELECT t.coin_id, DATE(t.timestamp) AS buy_date,
+						SUM(CAST(t.total_base_currency_amount AS NUMERIC)) AS daily_amount
+					FROM "transaction" t
+					WHERE t.user_id = ${userId} AND t.type = 'BUY'
+					GROUP BY t.coin_id, DATE(t.timestamp)
+					HAVING SUM(CAST(t.total_base_currency_amount AS NUMERIC)) >= 1000
+				),
+				has_sells AS (
+					SELECT DISTINCT t.coin_id
+					FROM "transaction" t
+					WHERE t.user_id = ${userId} AND t.type = 'SELL'
+					AND t.timestamp >= NOW() - INTERVAL '14 days'
+				),
+				eligible_coins AS (
+					SELECT db.coin_id
+					FROM daily_buys db
+					LEFT JOIN has_sells hs ON db.coin_id = hs.coin_id
+					WHERE hs.coin_id IS NULL
+					AND db.buy_date >= CURRENT_DATE - INTERVAL '13 days'
+					GROUP BY db.coin_id
+					HAVING COUNT(DISTINCT db.buy_date) >= 14
+				)
+				SELECT COUNT(*) AS cnt FROM eligible_coins
+			`);
+			return Number(result[0]?.cnt ?? 0) > 0;
+		}
+
 		// WEALTH
 		case 'portfolio_1k':
 		case 'portfolio_100k':
@@ -261,15 +294,19 @@ async function checkAchievement(
 		case 'rug_pull': {
 			if (
 				ctx.tradeType !== 'SELL' ||
-				!ctx.coinCreatedAt ||
 				!ctx.oldPrice ||
 				!ctx.newPrice ||
 				ctx.coinChange24h === undefined
 			)
 				return false;
-			const timeSinceCreation = Date.now() - ctx.coinCreatedAt.getTime();
+
+			// Find the user's first investment (BUY) in this coin to determine timing
+			const firstInvestmentTime = ctx.firstInvestmentAt?.getTime();
+			if (!firstInvestmentTime) return false;
+
+			const timeSinceFirstInvestment = Date.now() - firstInvestmentTime;
 			const sellPriceDrop = (ctx.oldPrice - ctx.newPrice) / ctx.oldPrice;
-			return sellPriceDrop >= 0.5 && ctx.coinChange24h <= -90 && timeSinceCreation <= 5000;
+			return sellPriceDrop >= 0.5 && ctx.coinChange24h <= -90 && timeSinceFirstInvestment <= 5000;
 		}
 
 		// ARCADE
@@ -281,6 +318,9 @@ async function checkAchievement(
 
 		case 'mines_15':
 			return (ctx.minesTilesRevealed ?? 0) >= 15;
+
+		case 'mines_24':
+			return ctx.arcadeWon === true && (ctx.minesCount ?? 0) >= 24;
 
 		case 'arcade_100': {
 			const [userData] = await db
@@ -325,6 +365,24 @@ async function checkAchievement(
 				.where(eq(user.id, userId))
 				.limit(1);
 			return Number(userData?.wins ?? 0) >= 500000;
+		}
+
+		case 'arcade_wins_1m': {
+			const [userData] = await db
+				.select({ wins: user.arcadeWins })
+				.from(user)
+				.where(eq(user.id, userId))
+				.limit(1);
+			return Number(userData?.wins ?? 0) >= 1000000;
+		}
+
+		case 'arcade_losses_1m': {
+			const [userData] = await db
+				.select({ losses: user.arcadeLosses })
+				.from(user)
+				.where(eq(user.id, userId))
+				.limit(1);
+			return Number(userData?.losses ?? 0) >= 1000000;
 		}
 
 		// STREAKS
@@ -379,6 +437,14 @@ async function checkAchievement(
 			return Number(result.cnt) >= 25;
 		}
 
+		case 'comments_50': {
+			const [result] = await db
+				.select({ cnt: count() })
+				.from(comment)
+				.where(and(eq(comment.userId, userId), eq(comment.isDeleted, false)));
+			return Number(result.cnt) >= 50;
+		}
+
 		case 'top_rugpuller': {
 			const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 			const topRugpullers = await db
@@ -423,6 +489,19 @@ async function checkAchievement(
 			return Number(result.total) >= 500000;
 		}
 
+		case 'received_from_15': {
+			const [result] = await db
+				.select({
+					cnt: sql<string>`COUNT(DISTINCT ${transaction.senderUserId})`
+				})
+				.from(transaction)
+				.where(and(eq(transaction.userId, userId), eq(transaction.type, 'TRANSFER_IN')));
+			return Number(result.cnt) >= 15;
+		}
+
+		case 'update_bio':
+			return true; // triggered when bio is updated
+
 		// SHOP
 		case 'own_10_colors': {
 			const [result] = await db
@@ -446,6 +525,16 @@ async function checkAchievement(
 			if (ctx.tradeType !== 'BUY' || !ctx.tradeAmount || ctx.newBalance === undefined) return false;
 			const preTradeBalance = ctx.newBalance + ctx.tradeAmount;
 			return preTradeBalance > 0 && ctx.tradeAmount / preTradeBalance >= 0.95;
+		}
+
+		case 'risk_biscuit': {
+			if (ctx.tradeType !== 'BUY' || !ctx.tradeAmount || ctx.newBalance === undefined) return false;
+			const preBalance = ctx.newBalance + ctx.tradeAmount;
+			const isAllIn = preBalance > 0 && ctx.tradeAmount / preBalance >= 0.95;
+			const isHighEnough = ctx.tradeAmount >= 25000;
+			// "win" means the price went up after their buy
+			const didWin = ctx.newPrice !== undefined && ctx.oldPrice !== undefined && ctx.newPrice > ctx.oldPrice;
+			return isAllIn && isHighEnough && didWin;
 		}
 
 		case 'account_6mo': {
@@ -603,6 +692,8 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 			progress['arcade_wager_100k'] = Number(userData.totalArcadeWagered ?? 0);
 			progress['arcade_losses_50k'] = Number(userData.arcadeLosses ?? 0);
 			progress['arcade_wins_500k'] = Number(userData.arcadeWins ?? 0);
+			progress['arcade_wins_1m'] = Number(userData.arcadeWins ?? 0);
+			progress['arcade_losses_1m'] = Number(userData.arcadeLosses ?? 0);
 			progress['win_streak_5'] = userData.arcadeBestWinStreak ?? 0;
 			progress['streak_7'] = userData.loginStreak ?? 0;
 			progress['streak_14'] = userData.loginStreak ?? 0;
@@ -666,6 +757,7 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 			.from(comment)
 			.where(and(eq(comment.userId, userId), eq(comment.isDeleted, false)));
 		progress['comments_25'] = Number(commentCount?.cnt ?? 0);
+		progress['comments_50'] = Number(commentCount?.cnt ?? 0);
 
 		const [transferUsers] = await db
 			.select({ cnt: sql<string>`COUNT(DISTINCT ${transaction.recipientUserId})` })
@@ -680,6 +772,12 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 			.from(transaction)
 			.where(and(eq(transaction.userId, userId), eq(transaction.type, 'TRANSFER_OUT')));
 		progress['transfer_500k'] = Number(transferTotal?.total ?? 0);
+
+		const [receivedFromUsers] = await db
+			.select({ cnt: sql<string>`COUNT(DISTINCT ${transaction.senderUserId})` })
+			.from(transaction)
+			.where(and(eq(transaction.userId, userId), eq(transaction.type, 'TRANSFER_IN')));
+		progress['received_from_15'] = Number(receivedFromUsers?.cnt ?? 0);
 
 		const [colorCount] = await db
 			.select({ cnt: count() })

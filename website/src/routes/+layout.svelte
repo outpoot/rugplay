@@ -12,6 +12,8 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { page } from '$app/state';
 	import { websocketController } from '$lib/stores/websocket';
+	import { dev } from '$app/environment';
+	import { RenderScan } from 'svelte-render-scan';
 
 	let { data, children } = $props<{
 		data: { userSession?: any };
@@ -111,8 +113,26 @@
 
 		return titleMap[routeId] || 'Rugplay';
 	}
+
+	const hideAds = $derived($USER_DATA?.hideAds);
+
+	$effect(() => {
+		if (dev) return;
+		if (hideAds) return;
+
+		const script = document.createElement('script');
+		script.async = true;
+		script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7420543404967748';
+		script.crossOrigin = 'anonymous';
+		document.head.appendChild(script);
+
+		return () => {
+			script.remove();
+		};
+	});
 </script>
 
+<!-- <RenderScan /> -->
 <ModeWatcher />
 <Toaster richColors={true} />
 

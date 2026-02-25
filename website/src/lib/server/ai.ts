@@ -15,8 +15,8 @@ const openai = new OpenAI({
 });
 
 const MODELS = {
-    STANDARD: 'google/gemini-2.0-flash-lite-001',
-    WEB_SEARCH: 'google/gemini-2.0-flash-lite-001:online'
+    STANDARD: 'google/gemini-2.0-flash-001',
+    WEB_SEARCH: 'google/gemini-2.0-flash-001:online'
 } as const;
 
 const VALIDATION_CRITERIA = `
@@ -282,12 +282,15 @@ Provide your response in the specified JSON format with a precise ISO 8601 datet
     try {
         const completion = await openai.chat.completions.create({
             model: MODELS.STANDARD,
-            messages: [{ role: 'user', content: prompt }],
+            messages: [
+                { role: 'system', content: 'You are a prediction market validator for Rugplay, a crypto trading simulation platform. Always respond with valid JSON matching the requested schema.' },
+                { role: 'user', content: prompt }
+            ],
             temperature: 0.1,
             response_format: { type: 'json_object' },
         });
 
-        const content = completion.choices[0].message.content;
+        const content = completion.choices[0]?.message?.content;
         if (!content) {
             throw new Error('No response content from AI');
         }
@@ -335,13 +338,17 @@ Question: "${question}"
 Current Rugplay Platform Data:
 ${rugplayData}
 
+Current timestamp: ${new Date().toISOString()}
+
 Instructions:
 1. Provide a definitive YES or NO answer based on current factual information
 2. Give your confidence level (0-100) in this resolution
 3. Provide clear reasoning for your decision with specific data references
 4. For coin-specific questions that mention non-existent coins, answer NO (the coin doesn't exist, so it can't reach any price)
-5. For coin-specific questions about existing coins, reference actual market data from Rugplay
-6. For external events, use web search if enabled
+5. For coin-specific questions about existing coins, carefully compare the actual market data against what the question asks
+6. For price target questions: compare the CURRENT PRICE in the data against the target. If the current price already meets/exceeds the target, answer YES with high confidence
+7. For external/real-world events, use web search if enabled
+8. The resolution date has PASSED - you are resolving this question after the deadline
 
 Context about Rugplay:
 - Cryptocurrency trading simulation platform with fake money (*BUSS)
@@ -349,24 +356,25 @@ Context about Rugplay:
 - Features AMM liquidity pools, rug pull mechanics, and real market dynamics
 - Users can create meme coins and trade with simulated currency
 - Platform tracks real market metrics like price, volume, market cap
+- Starting price for all coins is $0.000001
 - Non-existent coins cannot reach any price targets
+- All data provided above is CURRENT and REAL platform data, not estimates
 
-Examples of how to handle non-existent coins:
-- Question: "Will *NONEXISTENT reach $1?" → Answer: NO (95% confidence) - "The coin *NONEXISTENT does not exist on the Rugplay platform"
-- Question: "Will *REALCOIN go from $0.001 to $1 in 1 hour?" → Answer: YES (100% confidence) - "According to the Rugplay data, it has."
-
-Provide your response in the specified JSON format.
+Respond with JSON: { "resolution": boolean, "confidence": number (0-100), "reasoning": string }
 `;
 
     try {
         const completion = await openai.chat.completions.create({
             model,
-            messages: [{ role: 'user', content: prompt }],
+            messages: [
+                { role: 'system', content: 'You are a prediction market resolver for Rugplay, a crypto trading simulation platform. Analyze the provided data carefully and resolve the question with a definitive YES or NO. Always respond with valid JSON matching the requested schema. Base your decision on factual data provided, not speculation.' },
+                { role: 'user', content: prompt }
+            ],
             temperature: 0.1,
             response_format: { type: 'json_object' },
         });
 
-        const content = completion.choices[0].message.content;
+        const content = completion.choices[0]?.message?.content;
         if (!content) {
             throw new Error('No response content from AI');
         }

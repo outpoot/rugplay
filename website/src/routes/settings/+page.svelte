@@ -9,6 +9,7 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as Card from '$lib/components/ui/card';
 	import { Slider } from '$lib/components/ui/slider';
+	import { Switch } from '$lib/components/ui/switch';
 	import { onMount, onDestroy } from 'svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -16,7 +17,8 @@
 		VolumeHighIcon,
 		VolumeMute01Icon,
 		Download01Icon,
-		Delete01Icon
+		Delete01Icon,
+		Notification03Icon
 	} from '@hugeicons/core-free-icons';
 	import { toast } from 'svelte-sonner';
 	import { MAX_FILE_SIZE } from '$lib/data/constants';
@@ -57,6 +59,7 @@
 	let deleteConfirmationText = $state('');
 	let isDeleting = $state(false);
 	let isDownloading = $state(false);
+	let disableMentions = $state($USER_DATA?.disableMentions || false);
 
 	function beforeUnloadHandler(e: BeforeUnloadEvent) {
 		if (isDirty) {
@@ -180,6 +183,24 @@
 
 	async function saveVolumeToServer(settings: { master: number; muted: boolean }) {
 		debouncedSaveVolume(settings);
+	}
+
+	async function toggleDisableMentions() {
+		disableMentions = !disableMentions;
+		try {
+			const response = await fetch('/api/settings/mentions', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ disableMentions })
+			});
+			if (!response.ok) {
+				disableMentions = !disableMentions;
+				toast.error('Failed to update mention settings');
+			}
+		} catch {
+			disableMentions = !disableMentions;
+			toast.error('Failed to update mention settings');
+		}
 	}
 
 	function handleMasterVolumeChange(value: number) {
@@ -451,6 +472,24 @@
 					<p class="text-muted-foreground text-xs">
 						Controls all game sounds including effects and background audio
 					</p>
+				</div>
+			</Card.Content>
+		</Card.Root>
+
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>Notification Settings</Card.Title>
+				<Card.Description>Control how you receive notifications</Card.Description>
+			</Card.Header>
+			<Card.Content class="space-y-4">
+				<div class="flex items-center justify-between rounded-lg border p-4">
+					<div class="space-y-1">
+						<h4 class="text-sm font-medium">Mentions</h4>
+						<p class="text-muted-foreground text-xs">
+							Receive notifications when someone @mentions you in comments
+						</p>
+					</div>
+					<Switch checked={!disableMentions} onCheckedChange={toggleDisableMentions} />
 				</div>
 			</Card.Content>
 		</Card.Root>

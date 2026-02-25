@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 
 export const transactionTypeEnum = pgEnum('transaction_type', ['BUY', 'SELL', 'TRANSFER_IN', 'TRANSFER_OUT']);
 export const predictionMarketEnum = pgEnum('prediction_market_status', ['ACTIVE', 'RESOLVED', 'CANCELLED']);
-export const notificationTypeEnum = pgEnum('notification_type', ['HOPIUM', 'SYSTEM', 'TRANSFER', 'RUG_PULL']);
+export const notificationTypeEnum = pgEnum('notification_type', ['HOPIUM', 'SYSTEM', 'TRANSFER', 'RUG_PULL', 'MENTION']);
 export const shopItemTypeEnum = pgEnum('shop_item_type', ['namecolor']);
 
 export const user = pgTable("user", {
@@ -54,6 +54,7 @@ export const user = pgTable("user", {
 	gems: integer("gems").notNull().default(0),
 	nameColor: text("name_color"),
 	founderBadge: boolean("founder_badge").notNull().default(false),
+	disableMentions: boolean("disable_mentions").notNull().default(false),
 }, (table) => {
 	return {
 		usernameIdx: index("user_username_idx").on(table.username),

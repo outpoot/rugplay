@@ -161,9 +161,9 @@ export async function GET({ params, url }) {
         }
 
         const windowHours = getInitialWindowHours(timeframe);
-        const sinceDate = new Date(Date.now() - windowHours * 60 * 60 * 1000);
+        let sinceDate = new Date(Date.now() - windowHours * 60 * 60 * 1000);
 
-        const [rawPriceHistory, rawTransactions] = await Promise.all([
+        let [rawPriceHistory, rawTransactions] = await Promise.all([
             db.select({ price: priceHistory.price, timestamp: priceHistory.timestamp })
                 .from(priceHistory)
                 .where(and(
@@ -185,6 +185,44 @@ export async function GET({ params, url }) {
                 .orderBy(desc(transaction.timestamp))
                 .limit(5000)
         ]);
+
+        // If no data in this window, find the last day with activity and load that instead
+        if (rawPriceHistory.length === 0) {
+            const [latestPrice] = await db
+                .select({ timestamp: priceHistory.timestamp })
+                .from(priceHistory)
+                .where(eq(priceHistory.coinId, coinData.id))
+                .orderBy(desc(priceHistory.timestamp))
+                .limit(1);
+
+            if (latestPrice) {
+                const latestTime = new Date(latestPrice.timestamp);
+                sinceDate = new Date(latestTime.getTime() - windowHours * 60 * 60 * 1000);
+
+                [rawPriceHistory, rawTransactions] = await Promise.all([
+                    db.select({ price: priceHistory.price, timestamp: priceHistory.timestamp })
+                        .from(priceHistory)
+                        .where(and(
+                            eq(priceHistory.coinId, coinData.id),
+                            gte(priceHistory.timestamp, sinceDate)
+                        ))
+                        .orderBy(desc(priceHistory.timestamp))
+                        .limit(5000),
+
+                    db.select({
+                        totalBaseCurrencyAmount: transaction.totalBaseCurrencyAmount,
+                        timestamp: transaction.timestamp
+                    })
+                        .from(transaction)
+                        .where(and(
+                            eq(transaction.coinId, coinData.id),
+                            gte(transaction.timestamp, sinceDate)
+                        ))
+                        .orderBy(desc(transaction.timestamp))
+                        .limit(5000)
+                ]);
+            }
+        }
 
         const priceData = rawPriceHistory.map(p => ({
             price: Number(p.price),

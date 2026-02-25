@@ -30,7 +30,7 @@ export async function resolveExpiredQuestions() {
             try {
                 console.log(`Resolving question: ${question.question}`);
 
-                const rugplayData = await getRugplayData();
+                const rugplayData = await getRugplayData(question.question);
                 const resolution = await resolveQuestion(
                     question.question,
                     question.requiresWebSearch,

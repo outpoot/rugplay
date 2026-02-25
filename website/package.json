@@ -16,7 +16,7 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
-		"@internationalized/date": "^3.8.1",
+		"@internationalized/date": "^3.10.0",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/adapter-node": "^5.2.12",
 		"@sveltejs/kit": "^2.0.0",
@@ -24,7 +24,7 @@
 		"@types/canvas-confetti": "^1.9.0",
 		"@types/node": "^22.15.21",
 		"autoprefixer": "^10.4.20",
-		"bits-ui": "^2.5.0",
+		"bits-ui": "^2.14.4",
 		"clsx": "^2.1.1",
 		"drizzle-kit": "^0.31.4",
 		"prettier": "^3.3.2",
@@ -32,6 +32,7 @@
 		"prettier-plugin-tailwindcss": "^0.6.11",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
+		"svelte-render-scan": "^1.1.0",
 		"svelte-sonner": "^1.0.2",
 		"tailwind-merge": "^3.0.2",
 		"tailwind-variants": "^0.2.1",

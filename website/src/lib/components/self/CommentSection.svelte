@@ -175,6 +175,24 @@
 		return lines.slice(0, MAX_LINES_PREVIEW).join('\n');
 	}
 
+	function parseMentions(text: string): Array<{ type: 'text'; value: string } | { type: 'mention'; username: string }> {
+		const parts: Array<{ type: 'text'; value: string } | { type: 'mention'; username: string }> = [];
+		const regex = /@([a-zA-Z0-9_]{3,30})\b/g;
+		let lastIndex = 0;
+		let match;
+		while ((match = regex.exec(text)) !== null) {
+			if (match.index > lastIndex) {
+				parts.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+			}
+			parts.push({ type: 'mention', username: match[1] });
+			lastIndex = regex.lastIndex;
+		}
+		if (lastIndex < text.length) {
+			parts.push({ type: 'text', value: text.slice(lastIndex) });
+		}
+		return parts;
+	}
+
 	$effect(() => {
 		loadComments();
 	});
@@ -287,7 +305,13 @@
 										class="whitespace-pre-wrap break-words text-sm leading-relaxed"
 										style="word-break: break-word; overflow-wrap: break-word;"
 									>
-										{displayContent}
+										{#each parseMentions(displayContent) as part}
+											{#if part.type === 'mention'}
+												<a href="/user/{part.username}" class="text-primary hover:underline font-medium">@{part.username}</a>
+											{:else}
+												{part.value}
+											{/if}
+										{/each}
 									</p>
 
 									{#if shouldTruncate}

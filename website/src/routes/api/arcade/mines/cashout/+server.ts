@@ -56,21 +56,31 @@ export const POST: RequestHandler = async ({ request }) => {
                 .limit(1);
 
             const currentBalance = Number(userData.baseCurrencyBalance);
+            const isAbort = game.revealedTiles.length === 0;
             let payout: number;
             let newBalance: number;
 
-            // If no tiles revealed, treat as abort and return full bet.
-            if (game.revealedTiles.length === 0) {
+            if (isAbort) {
                 payout = game.betAmount;
                 newBalance = Math.round((currentBalance + payout) * 100000000) / 100000000;
-            } else {
-                payout = game.betAmount * game.currentMultiplier;
-                const roundedPayout = Math.round(payout * 100000000) / 100000000;
-                newBalance = Math.round((currentBalance + roundedPayout) * 100000000) / 100000000;
+
+                await tx
+                    .update(user)
+                    .set({
+                        baseCurrencyBalance: newBalance.toFixed(8),
+                        updatedAt: new Date()
+                    })
+                    .where(eq(user.id, userId));
+
+                return { newBalance, payout, amountWagered: game.betAmount, isAbort, minePositions: game.minePositions };
             }
 
+            payout = game.betAmount * game.currentMultiplier;
+            const roundedPayout = Math.round(payout * 100000000) / 100000000;
+            newBalance = Math.round((currentBalance + roundedPayout) * 100000000) / 100000000;
+
             // Calculate arcade stats
-            const netResult = payout - game.betAmount;
+            const netResult = Math.round((roundedPayout - game.betAmount) * 100000000) / 100000000;
             const isWin = netResult > 0;
 
             const updateData: any = {
@@ -98,17 +108,22 @@ export const POST: RequestHandler = async ({ request }) => {
 
             return {
                 newBalance,
-                payout,
+                payout: roundedPayout,
                 amountWagered: game.betAmount,
-                isAbort: game.revealedTiles.length === 0,
+                isAbort,
                 minePositions: game.minePositions
             };
         });
 
-        const won = !result.isAbort && result.payout > result.amountWagered;
-        await publishArcadeActivity(userId, won ? result.payout : result.amountWagered, won, 'mines', 1000);
-
-        await checkAndAwardAchievements(userId, ['arcade'], { arcadeWon: won, arcadeWager: result.amountWagered, minesTilesRevealed: game.revealedTiles.length });
+        if (!result.isAbort) {
+            try {
+                const won = result.payout > result.amountWagered;
+                await publishArcadeActivity(userId, won ? result.payout : result.amountWagered, won, 'mines', 1000);
+                await checkAndAwardAchievements(userId, ['arcade'], { arcadeWon: won, arcadeWager: result.amountWagered, minesTilesRevealed: game.revealedTiles.length, minesCount: game.mineCount });
+            } catch (sideEffectError) {
+                console.error('Mines cashout side-effect error:', sideEffectError);
+            }
+        }
 
         return json(result);
     } catch (e) {

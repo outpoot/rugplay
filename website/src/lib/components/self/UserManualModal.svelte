@@ -115,7 +115,7 @@
 			description:
 				'Visit the Arcade section for high-risk, high-reward games. Remember: these are pure chance games. Only play with what you can afford to lose, even in this simulation!',
 			icon: DiceFaces01Icon,
-            image: '/tips/gambling.avif'
+            image: '/tips/arcade.avif'
 		},
 		{
 			id: 12,

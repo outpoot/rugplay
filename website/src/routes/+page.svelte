@@ -11,6 +11,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
+	import AdLong from '$lib/components/self/ads/AdLong.svelte';
 
 	let shouldSignIn = $state(false);
 	let coins = $state<any[]>([]);
@@ -138,6 +139,8 @@
 				</a>
 			{/each}
 		</div>
+
+		<AdLong />
 
 		<div class="mt-12">
 			<h2 class="mb-4 text-2xl font-bold">Market Overview</h2>

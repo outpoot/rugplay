@@ -30,6 +30,7 @@
 	import { formatDateWithYear, formatTimeUntil, formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import type { PredictionQuestion } from '$lib/types/prediction';
+	import AdLong from '$lib/components/self/ads/AdLong.svelte';
 
 	let questions = $state<PredictionQuestion[]>([]);
 	let loading = $state(true);
@@ -228,13 +229,13 @@
 				<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 					{#each questions as question}
 						<Card.Root
-							class="bg-card hover:bg-card/90 flex cursor-pointer flex-col transition-colors"
+							class="bg-card hover:bg-card/90 flex cursor-pointer flex-col overflow-hidden transition-colors"
 							onclick={() => goto(`/hopium/${question.id}`)}
 						>
 							<Card.Header class="pb-4">
 								<div class="flex items-start justify-between gap-3">
-									<div class="flex-1">
-										<h3 class="break-words text-lg font-medium">
+									<div class="min-w-0 flex-1">
+										<h3 class="break-all text-lg font-medium">
 											{question.question}
 										</h3>
 									</div>
@@ -294,7 +295,7 @@
 									</div>
 								</div>
 
-								<div class="text-muted-foreground flex items-center gap-2 text-sm">
+								<div class="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
 									<div class="flex items-center gap-1">
 										<HugeiconsIcon icon={Clock01Icon} class="h-3 w-3" />
 										{#if question.status === 'ACTIVE'}
@@ -363,6 +364,8 @@
 						</Card.Root>
 					{/each}
 				</div>
+
+				<AdLong />
 			{/if}
 		</div>
 	</div>

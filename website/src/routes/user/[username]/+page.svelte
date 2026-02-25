@@ -26,6 +26,7 @@
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import * as Tooltip from '$lib/components/ui/tooltip';
+	import AdLong from '$lib/components/self/ads/AdLong.svelte';
 
 	let { data } = $props();
 	let username = $derived(data.username);
@@ -694,6 +695,8 @@
 				</Card.Content>
 			</Card.Root>
 		{/if}
+
+		<AdLong />
 
 		<!-- Created Coins -->
 		{#if hasCreatedCoins}

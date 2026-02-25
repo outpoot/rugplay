@@ -36,6 +36,7 @@
 	import { websocketController, type PriceUpdate, isConnectedStore } from '$lib/stores/websocket';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
+	import AdSquare from '$lib/components/self/ads/AdSquare.svelte';
 
 	const { data } = $props();
 	let coinSymbol = $derived(data.coinSymbol);
@@ -848,6 +849,8 @@
 					</Card.Content>
 				</Card.Root>
 			</div>
+
+			<AdSquare />
 
 			<!-- Comments Section -->
 			<CommentSection {coinSymbol} />

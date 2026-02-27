@@ -86,7 +86,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 	{ id: 'slots_jackpot', name: 'Jackpot!', description: 'Hit a 3-of-a-kind on slots', icon: 'luckyblock.png', difficulty: 'medium', cashReward: 5000, gemReward: 25, category: 'arcade' },
 	{ id: 'mines_15', name: 'Minesweeper Pro', description: 'Reveal 15+ safe tiles in a single mines game and cash out', icon: 'clover.png', difficulty: 'hard', cashReward: 10000, gemReward: 50, category: 'arcade' },
 	{ id: 'mines_24', name: 'Minesweeper God', description: 'Win with 24 mines enabled', icon: 'skull.png', difficulty: 'hard', cashReward: 15000, gemReward: 50, category: 'arcade' },
-	{ id: 'mines_21', name: 'Cloud 9', description: 'Reveal all 21 safe tiles with 3 mines and cash out', icon: 'cloud.png', difficulty: 'legendary', cashReward: 50000, gemReward: 150, category: 'arcade' },
+	{ id: 'mines_21', name: 'Cloud 9', description: 'Reveal all 22 safe tiles with 3 mines and cash out', icon: 'cloud.png', difficulty: 'legendary', cashReward: 50000, gemReward: 150, category: 'arcade' },
 	{ id: 'arcade_100', name: 'Degen', description: 'Play 100 arcade games', icon: 'target.png', difficulty: 'medium', cashReward: 5000, gemReward: 25, category: 'arcade', targetValue: 100 },
 	{ id: 'arcade_wager_100k', name: 'High Roller', description: 'Wager $100,000+ total across arcade games', icon: 'purple_diamond.png', difficulty: 'hard', cashReward: 15000, gemReward: 50, category: 'arcade', targetValue: 100000 },
 	{ id: 'arcade_losses_50k', name: 'House Always Wins', description: 'Lose $50,000+ total in the arcade', icon: 'red_diamond.png', difficulty: 'medium', cashReward: 5000, gemReward: 25, category: 'arcade', targetValue: 50000 },

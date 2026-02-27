@@ -311,7 +311,7 @@ async function checkAchievement(
 			return ctx.arcadeWon === true && (ctx.minesCount ?? 0) >= 24;
 
 		case 'mines_21':
-			return ctx.arcadeWon === true && (ctx.minesTilesRevealed ?? 0) >= 21 && (ctx.minesCount ?? 0) === 3;
+			return ctx.arcadeWon === true && (ctx.minesTilesRevealed ?? 0) >= 22 && (ctx.minesCount ?? 0) === 3;
 
 		case 'arcade_100': {
 			const [userData] = await db

@@ -18,8 +18,11 @@
 		VolumeMute01Icon,
 		Download01Icon,
 		Delete01Icon,
-		Notification03Icon
+		Notification03Icon,
+		ArrowLeft01Icon,
+		ArrowRight01Icon
 	} from '@hugeicons/core-free-icons';
+	import * as Pagination from '$lib/components/ui/pagination';
 	import { toast } from 'svelte-sonner';
 	import { MAX_FILE_SIZE } from '$lib/data/constants';
 	import { volumeSettings } from '$lib/stores/volume-settings';
@@ -61,6 +64,47 @@
 	let isDownloading = $state(false);
 	let disableMentions = $state($USER_DATA?.disableMentions || false);
 
+	// Blocked users state
+	let blockedUsers = $state<Array<{ id: number; blockedId: number; username: string; name: string; image: string | null; createdAt: string }>>([]);
+	let blockedLoading = $state(false);
+	let unblockingUser = $state<string | null>(null);
+	let blockedPage = $state(1);
+	const blockedPerPage = 10;
+	let blockedTotalPages = $derived(Math.ceil(blockedUsers.length / blockedPerPage));
+	let paginatedBlocked = $derived(blockedUsers.slice((blockedPage - 1) * blockedPerPage, blockedPage * blockedPerPage));
+
+	async function loadBlockedUsers() {
+		blockedLoading = true;
+		try {
+			const res = await fetch('/api/settings/blocked');
+			if (res.ok) {
+				const data = await res.json();
+				blockedUsers = data.blocks ?? [];
+			} else {
+				toast.error('Failed to load blocked users');
+			}
+		} catch {
+			toast.error('Failed to load blocked users');
+		}
+		blockedLoading = false;
+	}
+
+	async function unblockUser(username: string) {
+		unblockingUser = username;
+		try {
+			const res = await fetch(`/api/user/${username}/block`, { method: 'DELETE' });
+			if (res.ok) {
+				blockedUsers = blockedUsers.filter(b => b.username !== username);
+				toast.success(`Unblocked @${username}`);
+			} else {
+				toast.error('Failed to unblock user');
+			}
+		} catch {
+			toast.error('Failed to unblock user');
+		}
+		unblockingUser = null;
+	}
+
 	function beforeUnloadHandler(e: BeforeUnloadEvent) {
 		if (isDirty) {
 			e.preventDefault();
@@ -71,6 +115,7 @@
 		window.addEventListener('beforeunload', beforeUnloadHandler);
 		volumeSettings.setMaster($USER_DATA?.volumeMaster || 0);
 		volumeSettings.setMuted($USER_DATA?.volumeMuted || false);
+		loadBlockedUsers();
 	});
 
 	onDestroy(() => {
@@ -491,6 +536,75 @@
 					</div>
 					<Switch checked={!disableMentions} onCheckedChange={toggleDisableMentions} />
 				</div>
+			</Card.Content>
+		</Card.Root>
+
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>Blocked Users</Card.Title>
+				<Card.Description>Users you've blocked won't appear in comments and can't send you notifications</Card.Description>
+			</Card.Header>
+			<Card.Content class="space-y-2">
+				{#if blockedLoading}
+					<p class="text-muted-foreground text-sm">Loading...</p>
+				{:else if blockedUsers.length === 0}
+					<p class="text-muted-foreground text-sm">You haven't blocked anyone.</p>
+				{:else}
+					{#each paginatedBlocked as blocked}
+						<div class="flex items-center justify-between rounded-lg border p-3">
+							<div class="flex items-center gap-3">
+								<a href="/user/{blocked.username}" class="font-medium hover:underline">@{blocked.username}</a>
+							</div>
+							<Button
+								variant="outline"
+								size="sm"
+								onclick={() => unblockUser(blocked.username)}
+								disabled={unblockingUser === blocked.username}
+							>
+								{unblockingUser === blocked.username ? 'Unblocking...' : 'Unblock'}
+							</Button>
+						</div>
+					{/each}
+					{#if blockedTotalPages > 1}
+						<div class="mt-4 flex justify-center">
+							<Pagination.Root
+								count={blockedUsers.length}
+								perPage={blockedPerPage}
+								siblingCount={1}
+								page={blockedPage}
+								onPageChange={(page) => { blockedPage = page; }}
+							>
+								{#snippet children({ pages, currentPage: paginationCurrentPage })}
+									<Pagination.Content>
+										<Pagination.Item>
+											<Pagination.PrevButton>
+												<HugeiconsIcon icon={ArrowLeft01Icon} class="h-4 w-4" />
+											</Pagination.PrevButton>
+										</Pagination.Item>
+										{#each pages as page (page.key)}
+											{#if page.type === 'ellipsis'}
+												<Pagination.Item>
+													<Pagination.Ellipsis />
+												</Pagination.Item>
+											{:else}
+												<Pagination.Item>
+													<Pagination.Link {page} isActive={paginationCurrentPage === page.value}>
+														{page.value}
+													</Pagination.Link>
+												</Pagination.Item>
+											{/if}
+										{/each}
+										<Pagination.Item>
+											<Pagination.NextButton>
+												<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
+											</Pagination.NextButton>
+										</Pagination.Item>
+									</Pagination.Content>
+								{/snippet}
+							</Pagination.Root>
+						</div>
+					{/if}
+				{/if}
 			</Card.Content>
 		</Card.Root>
 

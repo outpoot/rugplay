@@ -21,12 +21,32 @@ function rollCrate(rewards: CrateRewardTier[]): { tierIndex: number } {
 	return { tierIndex: 0 };
 }
 
-function randomColorByRarity(rarity: Rarity, ownedKeys: string[]): string | null {
-	const pool = NAME_COLOR_CATALOG.filter(
-		(c) => c.rarity === rarity && !ownedKeys.includes(c.key),
-	);
-	if (pool.length === 0) return null;
-	return pool[Math.floor(Math.random() * pool.length)].key;
+function randomColorByRarity(
+	rarity: Rarity,
+	ownedKeys: string[]
+): { key: string; actualRarity: Rarity } | null {
+	// Try the requested rarity first
+	const pool = NAME_COLOR_CATALOG.filter((c) => c.rarity === rarity && !ownedKeys.includes(c.key));
+	if (pool.length > 0) {
+		return { key: pool[Math.floor(Math.random() * pool.length)].key, actualRarity: rarity };
+	}
+
+	// If all colors of the target rarity are owned, try other rarities (epic > rare > legendary > uncommon)
+	const fallbackOrder: Rarity[] = ['epic', 'rare', 'legendary', 'uncommon'];
+	for (const fallbackRarity of fallbackOrder) {
+		if (fallbackRarity === rarity) continue;
+		const fallbackPool = NAME_COLOR_CATALOG.filter(
+			(c) => c.rarity === fallbackRarity && !ownedKeys.includes(c.key)
+		);
+		if (fallbackPool.length > 0) {
+			return {
+				key: fallbackPool[Math.floor(Math.random() * fallbackPool.length)].key,
+				actualRarity: fallbackRarity
+			};
+		}
+	}
+
+	return null;
 }
 
 function randomInRange(min: number, max: number): number {
@@ -49,18 +69,23 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const result = await db.transaction(async (tx) => {
 		const [userData] = await tx
-			.select({ gems: user.gems, baseCurrencyBalance: user.baseCurrencyBalance, cratesOpened: user.cratesOpened })
+			.select({
+				gems: user.gems,
+				baseCurrencyBalance: user.baseCurrencyBalance,
+				cratesOpened: user.cratesOpened
+			})
 			.from(user)
 			.where(eq(user.id, userId))
 			.for('update')
 			.limit(1);
 
 		if (!userData) throw new Error('User not found');
-		if (userData.gems < lootboxTier.cost) return { error: `Not enough Gems. Need ${lootboxTier.cost} Gems to open.` };
+		if (userData.gems < lootboxTier.cost)
+			return { error: `Not enough Gems. Need ${lootboxTier.cost} Gems to open.` };
 
 		const ownedItems = await tx.query.userInventory.findMany({
 			where: and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')),
-			columns: { itemKey: true },
+			columns: { itemKey: true }
 		});
 		const ownedKeys = ownedItems.map((i) => i.itemKey);
 
@@ -69,7 +94,11 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		await tx
 			.update(user)
-			.set({ gems: sql`${user.gems} - ${lootboxTier.cost}`, cratesOpened: sql`${user.cratesOpened} + 1`, updatedAt: new Date() })
+			.set({
+				gems: sql`${user.gems} - ${lootboxTier.cost}`,
+				cratesOpened: sql`${user.cratesOpened} + 1`,
+				updatedAt: new Date()
+			})
 			.where(eq(user.id, userId));
 
 		if (reward.type === 'buss') {
@@ -78,22 +107,22 @@ export const POST: RequestHandler = async ({ request }) => {
 				.update(user)
 				.set({
 					baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${bussAmount}`,
-					updatedAt: new Date(),
+					updatedAt: new Date()
 				})
 				.where(eq(user.id, userId));
 			return {
 				reward: { type: 'buss' as const, bussAmount },
-				newGems: userData.gems - lootboxTier.cost,
+				newGems: userData.gems - lootboxTier.cost
 			};
 		}
 
-		const colorKey = randomColorByRarity(reward.rarity!, ownedKeys);
+		const colorResult = randomColorByRarity(reward.rarity!, ownedKeys);
 		const bussConsolation = reward.min;
 
-		if (colorKey) {
+		if (colorResult) {
 			await tx
 				.insert(userInventory)
-				.values({ userId, itemType: 'namecolor', itemKey: colorKey })
+				.values({ userId, itemType: 'namecolor', itemKey: colorResult.key })
 				.onConflictDoNothing();
 		}
 
@@ -101,21 +130,21 @@ export const POST: RequestHandler = async ({ request }) => {
 			.update(user)
 			.set({
 				baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${bussConsolation}`,
-				updatedAt: new Date(),
+				updatedAt: new Date()
 			})
 			.where(eq(user.id, userId));
 
-		const colorItem = NAME_COLOR_CATALOG.find((c) => c.key === colorKey);
+		const colorItem = NAME_COLOR_CATALOG.find((c) => c.key === colorResult?.key);
 		return {
 			reward: {
 				type: 'color' as const,
-				colorKey: colorKey ?? null,
+				colorKey: colorResult?.key ?? null,
 				colorLabel: colorItem?.label ?? null,
-				colorRarity: reward.rarity,
+				colorRarity: colorResult?.actualRarity ?? reward.rarity,
 				bussAmount: bussConsolation,
-				alreadyOwned: !colorKey,
+				alreadyOwned: !colorResult
 			},
-			newGems: userData.gems - lootboxTier.cost,
+			newGems: userData.gems - lootboxTier.cost
 		};
 	});
 

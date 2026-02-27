@@ -359,3 +359,15 @@ export const userAchievement = pgTable("user_achievement", {
 	userIdIdx: index("user_achievement_user_id_idx").on(table.userId),
 	achievementIdIdx: index("user_achievement_achievement_id_idx").on(table.achievementId),
 }));
+
+export const userBlock = pgTable("user_block", {
+	id: serial("id").primaryKey(),
+	blockerId: integer("blocker_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	blockedId: integer("blocked_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+	blockerBlockedUnique: unique("user_block_unique").on(table.blockerId, table.blockedId),
+	blockerIdIdx: index("user_block_blocker_id_idx").on(table.blockerId),
+	blockedIdIdx: index("user_block_blocked_id_idx").on(table.blockedId),
+	noSelfBlock: check("no_self_block", sql`blocker_id != blocked_id`),
+}));

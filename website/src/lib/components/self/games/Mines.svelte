@@ -47,6 +47,7 @@
 	let isAutoCashout = $state(false);
 	let lastClickedTile = $state<number | null>(null);
 	let clickedSafeTiles = $state<number[]>([]);
+	let revealing = $state(false);
 
 	let canBet = $derived(
 		betAmount > 0 && betAmount <= balance && betAmount <= MAX_BET_AMOUNT && !isPlaying
@@ -103,8 +104,9 @@
 	}
 
 	async function handleTileClick(index: number) {
-		if (!isPlaying || revealedTiles.includes(index) || !sessionToken) return;
+		if (!isPlaying || revealedTiles.includes(index) || !sessionToken || revealing) return;
 		lastClickedTile = index;
+		revealing = true;
 
 		try {
 			const response = await fetch('/api/arcade/mines/reveal', {
@@ -119,9 +121,10 @@
 			const result = await response.json();
 			if (result.hitMine) {
 				playSound('lose');
-				revealedTiles = [...revealedTiles, index];
 				minePositions = result.minePositions;
+				revealedTiles = Array.from({ length: TOTAL_TILES }, (_, i) => i);
 				isPlaying = false;
+				sessionToken = null;
 				resetAutoCashoutTimer();
 				balance = result.newBalance;
 				onBalanceUpdate?.(result.newBalance);
@@ -139,8 +142,12 @@
 					showSchoolPrideCannons(confetti);
 					playSound('win');
 					isPlaying = false;
+					sessionToken = null;
 					hasRevealedTile = false;
-					minePositions = [];
+					if (result.minePositions) {
+						minePositions = result.minePositions;
+						revealedTiles = Array.from({ length: TOTAL_TILES }, (_, i) => i);
+					}
 				} else {
 					startAutoCashoutTimer();
 				}
@@ -150,11 +157,14 @@
 			toast.error('Failed to reveal tile', {
 				description: error instanceof Error ? error.message : 'Unknown error occurred'
 			});
+		} finally {
+			revealing = false;
 		}
 	}
 
 	async function cashOut() {
-		if (!isPlaying || !sessionToken) return;
+		if (!isPlaying || !sessionToken || revealing) return;
+		revealing = true;
 
 		try {
 			const response = await fetch('/api/arcade/mines/cashout', {
@@ -175,15 +185,21 @@
 			if (result.payout > betAmount) showConfetti(confetti);
 			playSound(result.isAbort ? 'flip' : 'win');
 			isPlaying = false;
+			sessionToken = null;
 			hasRevealedTile = false;
 			isAutoCashout = false;
 			resetAutoCashoutTimer();
-			minePositions = [];
+			if (result.minePositions) {
+				minePositions = result.minePositions;
+				revealedTiles = Array.from({ length: TOTAL_TILES }, (_, i) => i);
+			}
 		} catch (error) {
 			console.error('Cashout error:', error);
 			toast.error('Failed to cash out', {
 				description: error instanceof Error ? error.message : 'Unknown error occurred'
 			});
+		} finally {
+			revealing = false;
 		}
 	}
 

@@ -45,7 +45,6 @@
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.815.0",
 		"@aws-sdk/s3-request-presigner": "^3.815.0",
-		"@better-auth/utils": "^0.3.0",
 		"@hugeicons/core-free-icons": "^3.1.1",
 		"@hugeicons/svelte": "^1.1.1",
 		"@polar-sh/checkout": "^0.2.0",
@@ -72,8 +71,5 @@
 	"optionalDependencies": {
 		"@rollup/rollup-linux-x64-gnu": "*",
 		"lightningcss-linux-x64-gnu": "*"
-	},
-	"overrides": {
-		"@better-auth/utils": "$@better-auth/utils"
 	}
 }

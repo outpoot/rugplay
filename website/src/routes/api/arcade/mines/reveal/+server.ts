@@ -178,7 +178,8 @@ export const POST: RequestHandler = async ({ request }) => {
 				currentMultiplier: game.currentMultiplier,
 				status: 'won',
 				newBalance,
-				payout
+				payout,
+				minePositions: game.minePositions
 			});
 		}
 

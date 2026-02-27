@@ -192,28 +192,28 @@ async function checkAchievement(
 		}
 
 		case 'true_dedication': {
-			// Check if user has bought at least $1000 worth of any single coin on each of the last 14 consecutive days with no sells
+			// Check if user has bought at least $1000 worth of any single coin on each of the last 14 consecutive days with no sells ever on that coin
 			const result = await db.execute(sql`
 				WITH daily_buys AS (
-					SELECT t.coin_id, DATE(t.timestamp) AS buy_date,
+					SELECT t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC') AS buy_date,
 						SUM(CAST(t.total_base_currency_amount AS NUMERIC)) AS daily_amount
 					FROM "transaction" t
 					WHERE t.user_id = ${userId} AND t.type = 'BUY'
-					GROUP BY t.coin_id, DATE(t.timestamp)
+					GROUP BY t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC')
 					HAVING SUM(CAST(t.total_base_currency_amount AS NUMERIC)) >= 1000
 				),
-				has_sells AS (
+				coins_with_sells AS (
 					SELECT DISTINCT t.coin_id
 					FROM "transaction" t
 					WHERE t.user_id = ${userId} AND t.type = 'SELL'
-					AND t.timestamp >= NOW() - INTERVAL '14 days'
 				),
 				eligible_coins AS (
 					SELECT db.coin_id
 					FROM daily_buys db
-					LEFT JOIN has_sells hs ON db.coin_id = hs.coin_id
-					WHERE hs.coin_id IS NULL
-					AND db.buy_date >= CURRENT_DATE - INTERVAL '13 days'
+					LEFT JOIN coins_with_sells cs ON db.coin_id = cs.coin_id
+					WHERE cs.coin_id IS NULL
+					AND db.buy_date >= (NOW() AT TIME ZONE 'UTC')::DATE - INTERVAL '13 days'
+					AND db.buy_date <= (NOW() AT TIME ZONE 'UTC')::DATE
 					GROUP BY db.coin_id
 					HAVING COUNT(DISTINCT db.buy_date) >= 14
 				)
@@ -309,6 +309,9 @@ async function checkAchievement(
 
 		case 'mines_24':
 			return ctx.arcadeWon === true && (ctx.minesCount ?? 0) >= 24;
+
+		case 'mines_21':
+			return ctx.arcadeWon === true && (ctx.minesTilesRevealed ?? 0) >= 21 && (ctx.minesCount ?? 0) === 3;
 
 		case 'arcade_100': {
 			const [userData] = await db
@@ -765,6 +768,36 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 			.from(userInventory)
 			.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
 		progress['own_10_colors'] = Number(colorCount?.cnt ?? 0);
+
+		const dedicationResult = await db.execute(sql`
+			WITH daily_buys AS (
+				SELECT t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC') AS buy_date
+				FROM "transaction" t
+				WHERE t.user_id = ${userId} AND t.type = 'BUY'
+				GROUP BY t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC')
+				HAVING SUM(CAST(t.total_base_currency_amount AS NUMERIC)) >= 1000
+			),
+			coins_with_sells AS (
+				SELECT DISTINCT t.coin_id
+				FROM "transaction" t
+				WHERE t.user_id = ${userId} AND t.type = 'SELL'
+			),
+			eligible_buys AS (
+				SELECT db.coin_id, db.buy_date
+				FROM daily_buys db
+				LEFT JOIN coins_with_sells cs ON db.coin_id = cs.coin_id
+				WHERE cs.coin_id IS NULL
+				AND db.buy_date >= (NOW() AT TIME ZONE 'UTC')::DATE - INTERVAL '13 days'
+				AND db.buy_date <= (NOW() AT TIME ZONE 'UTC')::DATE
+			)
+			SELECT COALESCE(MAX(day_count), 0) AS best
+			FROM (
+				SELECT coin_id, COUNT(DISTINCT buy_date) AS day_count
+				FROM eligible_buys
+				GROUP BY coin_id
+			) sub
+		`);
+		progress['true_dedication'] = Number((dedicationResult as any)[0]?.best ?? 0);
 	} catch (e) {
 		console.error('Achievement progress error:', e);
 	}

@@ -137,7 +137,7 @@ export const CRATE_TIERS: Record<CrateTierId, CrateTier> = {
 	legendary: {
 		id: 'legendary',
 		label: 'Motion Crate',
-		description: 'Guaranteed rare+ color. Best legendary odds.',
+		description: 'High chance of rare+ colors. Best legendary odds.',
 		cost: 1000,
 		accent: '#e5a63b',
 		sprite: { idle: '/chests/chest3_idle.png', open: '/chests/chest3_open.png' },
@@ -151,7 +151,7 @@ export const CRATE_TIERS: Record<CrateTierId, CrateTier> = {
 	mythic: {
 		id: 'mythic',
 		label: 'Auraful Crate',
-		description: 'The ultimate crate. Guaranteed epic+ color.',
+		description: 'The ultimate crate. Very high chance of epic+ color.',
 		cost: 2500,
 		accent: '#c24adb',
 		sprite: { idle: '/chests/chest4_idle.png', open: '/chests/chest4_open.png' },

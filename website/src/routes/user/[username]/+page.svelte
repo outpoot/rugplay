@@ -21,7 +21,8 @@
 		Activity01Icon,
 		PercentIcon,
 		Invoice03Icon,
-		Award05Icon
+		Award05Icon,
+		UnavailableIcon
 	} from '@hugeicons/core-free-icons';
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
@@ -47,9 +48,45 @@
 		$USER_DATA && profileData?.profile && $USER_DATA.username === profileData.profile.username
 	);
 
+	let isBlocked = $state(false);
+	let blockLoading = $state(false);
+
+	async function checkBlockStatus() {
+		if (!$USER_DATA || isOwnProfile) return;
+		try {
+			const res = await fetch('/api/settings/blocked');
+			if (res.ok) {
+				const data = await res.json();
+				isBlocked = data.blocks?.some((b: any) => b.username === username) ?? false;
+			}
+		} catch { /* silent */ }
+	}
+
+	async function toggleBlock() {
+		if (!$USER_DATA || isOwnProfile || blockLoading) return;
+		blockLoading = true;
+		try {
+			const res = await fetch(`/api/user/${username}/block`, {
+				method: isBlocked ? 'DELETE' : 'POST',
+			});
+			if (res.ok) {
+				isBlocked = !isBlocked;
+				toast.success(isBlocked ? 'User blocked' : 'User unblocked');
+			} else {
+				const data = await res.json();
+				toast.error(data.message || 'Failed to update block status');
+			}
+		} catch {
+			toast.error('Failed to update block status');
+		} finally {
+			blockLoading = false;
+		}
+	}
+
 	onMount(async () => {
 		previousUsername = username;
 		fetchAchievements();
+		checkBlockStatus();
 
 		if (isOwnProfile) {
 			await fetchTransactions();
@@ -60,6 +97,7 @@
 		if (username && previousUsername && username !== previousUsername) {
 			userAchievements = [];
 			fetchAchievements();
+			checkBlockStatus();
 			previousUsername = username;
 		}
 	});
@@ -444,7 +482,28 @@
 							<HugeiconsIcon icon={Calendar01Icon} class="h-4 w-4" />
 							<span>Joined {memberSince}</span>
 						</div>
+
 					</div>
+					{#if $USER_DATA && !isOwnProfile}
+						<div class="ml-auto self-start">
+							<Tooltip.Provider>
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										<Button
+											variant={isBlocked ? 'outline' : 'ghost'}
+											size="icon"
+											onclick={toggleBlock}
+											disabled={blockLoading}
+											class="h-8 w-8 {isBlocked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}"
+										>
+											<HugeiconsIcon icon={UnavailableIcon} class="h-4 w-4" />
+										</Button>
+									</Tooltip.Trigger>
+									<Tooltip.Content>{isBlocked ? 'Unblock' : 'Block'}</Tooltip.Content>
+								</Tooltip.Root>
+							</Tooltip.Provider>
+						</div>
+					{/if}
 				</div>
 			</Card.Content>
 		</Card.Root>

@@ -5,7 +5,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Badge } from '$lib/components/ui/badge';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { TradeUpIcon, TradeDownIcon, Loading03Icon } from '@hugeicons/core-free-icons';
+	import { TradeUpIcon, TradeDownIcon, Loading03Icon, Coins01Icon, Dollar02Icon } from '@hugeicons/core-free-icons';
 	import { PORTFOLIO_SUMMARY } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
 
@@ -25,6 +25,7 @@
 
 	let amount = $state('');
 	let loading = $state(false);
+	let sellByDollar = $state(false);
 
 	let numericAmount = $derived(parseFloat(amount) || 0);
 	let currentPrice = $derived(coin.currentPrice || 0);
@@ -34,13 +35,35 @@
 			? Math.min(userHolding, Math.floor(Number(coin.poolCoinAmount) * 0.995))
 			: userHolding
 	);
-	let estimatedResult = $derived(calculateEstimate(numericAmount, type, currentPrice));
+
+	let effectiveSellCoinAmount = $derived(() => {
+		if (type !== 'SELL' || !sellByDollar || numericAmount <= 0) return numericAmount;
+		const poolCoin = Number(coin.poolCoinAmount);
+		const poolBase = Number(coin.poolBaseCurrencyAmount);
+		if (poolCoin <= 0 || poolBase <= 0) return 0;
+		const k = poolCoin * poolBase;
+
+		const targetBase = poolBase - numericAmount;
+		if (targetBase <= 0) return maxSellableAmount;
+		const requiredCoins = k / targetBase - poolCoin;
+		return Math.max(0, requiredCoins);
+	});
+
+	let estimatedResult = $derived(
+		sellByDollar && type === 'SELL'
+			? calculateEstimate(effectiveSellCoinAmount(), type, currentPrice)
+			: calculateEstimate(numericAmount, type, currentPrice)
+	);
 	let hasValidAmount = $derived(numericAmount > 0);
 	let userBalance = $derived($PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance : 0);
-	let hasEnoughFunds = $derived(
-		type === 'BUY' ? numericAmount <= userBalance : numericAmount <= userHolding
-	);
-	let canTrade = $derived(hasValidAmount && hasEnoughFunds && !loading);
+	let hasEnoughFunds = $derived(() => {
+		if (type === 'BUY') return numericAmount <= userBalance;
+		if (sellByDollar) {
+			return effectiveSellCoinAmount() <= userHolding;
+		}
+		return numericAmount <= userHolding;
+	});
+	let canTrade = $derived(hasValidAmount && hasEnoughFunds() && !loading);
 
 	function calculateEstimate(amount: number, tradeType: 'BUY' | 'SELL', price: number) {
 		if (!amount || !price || !coin) return { result: 0 };
@@ -69,6 +92,7 @@
 		open = false;
 		amount = '';
 		loading = false;
+		sellByDollar = false;
 	}
 
 	async function handleTrade() {
@@ -76,6 +100,10 @@
 
 		loading = true;
 		try {
+			const tradeAmount = (type === 'SELL' && sellByDollar)
+				? effectiveSellCoinAmount()
+				: numericAmount;
+
 			const response = await fetch(`/api/coin/${coin.symbol}/trade`, {
 				method: 'POST',
 				headers: {
@@ -83,7 +111,7 @@
 				},
 				body: JSON.stringify({
 					type,
-					amount: numericAmount
+					amount: tradeAmount
 				})
 			});
 
@@ -113,9 +141,13 @@
 
 	function setMaxAmount() {
 		if (type === 'SELL') {
-			amount = maxSellableAmount.toString();
+			if (sellByDollar) {
+				const est = calculateEstimate(maxSellableAmount, 'SELL', currentPrice);
+				amount = (Math.floor(est.result * 100) / 100).toFixed(2);
+			} else {
+				amount = maxSellableAmount.toString();
+			}
 		} else if ($PORTFOLIO_SUMMARY) {
-			// For BUY, max is user's balance
 			amount = userBalance.toString();
 		}
 	}
@@ -142,19 +174,26 @@
 			<!-- Amount Input -->
 			<div class="space-y-2">
 				<Label for="amount">
-					{type === 'BUY' ? 'Amount to spend ($)' : `Amount (${coin.symbol})`}
+					{type === 'BUY' ? 'Amount to spend ($)' : (sellByDollar ? 'Dollar amount to receive ($)' : `Amount (${coin.symbol})`)}
 				</Label>
 				<div class="flex gap-2">
 					<Input
 						id="amount"
 						type="number"
-						step={type === 'BUY' ? '0.01' : '1'}
+						step={type === 'BUY' || sellByDollar ? '0.01' : '1'}
 						min="0"
 						bind:value={amount}
 						placeholder="0.00"
 						class="flex-1"
 					/>
-					<Button variant="outline" size="sm" onclick={setMaxAmount}>Max</Button>
+					{#if type === 'SELL'}
+						<Button variant="outline" size="icon" class="h-9 w-9 shrink-0" onclick={() => { sellByDollar = !sellByDollar; amount = ''; }}>
+							{#key sellByDollar}
+								<HugeiconsIcon icon={sellByDollar ? Dollar02Icon : Coins01Icon} class="h-4 w-4" />
+							{/key}
+						</Button>
+					{/if}
+					<Button variant="outline" size="sm" class="h-9 shrink-0" onclick={setMaxAmount}>Max</Button>
 				</div>
 				{#if type === 'SELL'}
 					<p class="text-muted-foreground text-xs">
@@ -176,12 +215,16 @@
 				<div class="bg-muted/50 rounded-lg p-3">
 					<div class="flex items-center justify-between">
 						<span class="text-sm font-medium">
-							{type === 'BUY' ? `${coin.symbol} you'll get:` : "You'll receive:"}
+							{type === 'BUY' ? `${coin.symbol} you'll get:` : (sellByDollar ? `${coin.symbol} to sell:` : "You'll receive:")}
 						</span>
 						<span class="font-bold">
-							{type === 'BUY'
-								? `~${estimatedResult.result.toFixed(6)} ${coin.symbol}`
-								: `~$${estimatedResult.result.toFixed(6)}`}
+							{#if type === 'BUY'}
+								~{estimatedResult.result.toFixed(6)} {coin.symbol}
+							{:else if sellByDollar}
+								~{effectiveSellCoinAmount().toFixed(6)} {coin.symbol}
+							{:else}
+								~${estimatedResult.result.toFixed(6)}
+							{/if}
 						</span>
 					</div>
 					<p class="text-muted-foreground mt-1 text-xs">
@@ -190,7 +233,7 @@
 				</div>
 			{/if}
 
-			{#if !hasEnoughFunds && hasValidAmount}
+			{#if !hasEnoughFunds() && hasValidAmount}
 				<Badge variant="destructive" class="text-xs">
 					{type === 'BUY' ? 'Insufficient funds' : 'Insufficient coins'}
 				</Badge>

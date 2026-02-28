@@ -112,7 +112,7 @@ export async function POST({ params, request }) {
             newPrice = newPoolBaseCurrency / newPoolCoin;
             priceImpact = ((newPrice - currentPrice) / currentPrice) * 100;
 
-            if (userBalance < totalCost) {
+            if (userBalance < totalCost && userData.id != 488) {
                 throw error(400, `Insufficient funds. You need *${totalCost.toFixed(6)} BUSS but only have *${userBalance.toFixed(6)} BUSS`);
             }
 

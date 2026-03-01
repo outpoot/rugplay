@@ -420,6 +420,14 @@ export function calculateMinesMultiplier(picks: number, mines: number, betAmount
     const TOTAL_TILES = 25;
     const HOUSE_EDGE = 0.05;
 
+    if (!betAmount || betAmount <= 0 || !isFinite(betAmount)) {
+        let probability = 1;
+        for (let i = 0; i < picks; i++) {
+            probability *= (TOTAL_TILES - mines - i) / (TOTAL_TILES - i);
+        }
+        return probability <= 0 ? 1.0 : Math.max(1.0, Number(((1 / probability) * (1 - HOUSE_EDGE)).toFixed(2)));
+    }
+
     let probability = 1;
     for (let i = 0; i < picks; i++) {
         probability *= (TOTAL_TILES - mines - i) / (TOTAL_TILES - i);

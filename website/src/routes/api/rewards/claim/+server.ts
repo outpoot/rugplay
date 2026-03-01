@@ -57,17 +57,13 @@ function getPrestigeMultiplier(prestigeLevel: number): number {
     return PRESTIGE_MULTIPLIERS[prestigeLevel as keyof typeof PRESTIGE_MULTIPLIERS] || 1.0;
 }
 
-const STREAK_GRACE_HOURS = 24;
-
 function calculateStreak(lastClaim: Date | null, currentStreak: number): number {
     if (!lastClaim) return 1;
 
     const timeSinceLastClaim = Date.now() - lastClaim.getTime();
-    const graceMs = STREAK_GRACE_HOURS * 60 * 60 * 1000;
-    const effectiveMaxWindow = THIRTY_SIX_HOURS_MS + graceMs;
 
     // reset streak if more than 36 hours
-    if (timeSinceLastClaim > effectiveMaxWindow) return 1;
+    if (timeSinceLastClaim > THIRTY_SIX_HOURS_MS) return 1;
 
     // only increment if within valid window (12-36 hours)
     if (timeSinceLastClaim >= TWELVE_HOURS_MS) return currentStreak + 1;

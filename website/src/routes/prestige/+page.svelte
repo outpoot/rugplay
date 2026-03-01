@@ -157,7 +157,7 @@
 					<strong class="mt-2 block text-green-600">You will gain:</strong>
 					<ul class="mt-1 list-disc space-y-1 pl-4">
 						<li>More money in daily rewards</li>
-						<li>A daily reward reset</li>
+						<li>A daily reward cooldown reset (streak preserved)</li>
 						<li>Prestige badge and status</li>
 					</ul>
 					We will automatically sell all your coin holdings.
@@ -256,7 +256,7 @@
 								<div>
 									<p class="font-medium">Gain Status</p>
 									<p class="text-muted-foreground text-sm">
-										Earn an exclusive prestige title, enhanced daily rewards, and reset your daily reward cooldown
+										Earn an exclusive prestige title, enhanced daily rewards, and reset your daily reward cooldown (streak preserved)
 									</p>
 								</div>
 							</div>

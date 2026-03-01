@@ -141,7 +141,7 @@ export const handle: Handle = async ({ event, resolve }) => {
                 .where(eq(user.id, Number(userId)))
                 .limit(1);
 
-            if (!userRecord?.isBanned) {
+            if (userRecord && !userRecord.isBanned) {
                 try {
                     await auth.api.signOut({
                         headers: event.request.headers

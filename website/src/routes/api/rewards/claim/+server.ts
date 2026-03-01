@@ -44,17 +44,8 @@ const REWARD_TIERS = [
     8500    // Day 30+
 ];
 
-const PRESTIGE_MULTIPLIERS = {
-    0: 1.0,    // No prestige
-    1: 1.25,   // 25% bonus
-    2: 1.5,    // 50% bonus
-    3: 1.75,   // 75% bonus
-    4: 2.0,    // 100% bonus
-    5: 2.5,    // 150% bonus
-};
-
 function getPrestigeMultiplier(prestigeLevel: number): number {
-    return PRESTIGE_MULTIPLIERS[prestigeLevel as keyof typeof PRESTIGE_MULTIPLIERS] || 1.0;
+    return prestigeLevel === 0 ? 1 : 1.25**prestigeLevel
 }
 
 function calculateStreak(lastClaim: Date | null, currentStreak: number): number {

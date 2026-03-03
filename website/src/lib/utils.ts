@@ -461,18 +461,27 @@ export function calculateMinesMultiplier(picks: number, mines: number, betAmount
 
 export type TowerDifficulty = 'easy' | 'medium' | 'hard';
 
-export const twr_difficulty_config: Record<TowerDifficulty, { tiles: number; bombs: number; label: string }> = {
-    easy:   { tiles: 3, bombs: 1, label: 'Easy' },
-    medium: { tiles: 3, bombs: 2, label: 'Medium' },
-    hard:   { tiles: 4, bombs: 3, label: 'Hard' }
+export const twr_difficulty_config: Record<
+  TowerDifficulty,
+  { tiles: number; bombs: number; label: string; max?: number }
+> = {
+  easy:   { tiles: 3, bombs: 1, label: "Easy",   max: 50 },
+  medium: { tiles: 3, bombs: 2, label: "Medium", max: 500 },
+  hard:   { tiles: 4, bombs: 3, label: "Hard",   max: 1000 }
 };
 
 export function calculateTowerMultiplier(floorsCleared: number, difficulty: TowerDifficulty): number {
-    if (floorsCleared <= 0) return 1;
-    const { tiles, bombs } = twr_difficulty_config[difficulty];
-    const safeCount = tiles - bombs;
-    if (safeCount <= 0) return 1;
-    const twr_house_edge = 0.03;
-    const result = Math.pow((tiles / safeCount) * (1 - twr_house_edge), floorsCleared);
-    return Number(result.toFixed(2));
+  if (!Number.isFinite(floorsCleared) || floorsCleared <= 0) return 1;
+
+  const { tiles, bombs, max } = twr_difficulty_config[difficulty];
+  const safe = tiles - bombs;
+  if (safe <= 0) return 1;
+
+  const houseEdge = 0.03;
+
+  const perFloor = (tiles / safe) * (1 - houseEdge);
+  const result = Math.pow(perFloor, floorsCleared);
+
+  const capped = typeof max === "number" ? Math.min(result, max) : result;
+  return Math.round(capped * 100) / 100;
 }

@@ -477,7 +477,7 @@ export function calculateTowerMultiplier(floorsCleared: number, difficulty: Towe
   const safe = tiles - bombs;
   if (safe <= 0) return 1;
 
-  const houseEdge = 0.03;
+  const houseEdge = 0.05;
 
   const perFloor = (tiles / safe) * (1 - houseEdge);
   const result = Math.pow(perFloor, floorsCleared);

@@ -18,7 +18,6 @@
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 
 	const twr_floors = 10;
-	const max_bet = 1000000;
 
 	let {
 		balance = $bindable(),
@@ -44,7 +43,7 @@
 
 	const floorList = Array.from({ length: twr_floors }, (_, i) => twr_floors - 1 - i);
 
-	let canBet = $derived(bet > 0 && bet <= balance && bet <= max_bet && !playing);
+	let canBet = $derived(bet > 0 && bet <= balance && bet <= twr_difficulty_config[difficulty].maxBet && !playing);
 
 	function floorStatus(f: number): 'locked' | 'active' | 'cleared' | 'bomb-hit' | 'revealed' {
 		if (playing) {
@@ -69,14 +68,14 @@
 	}
 
 	function setBet(amount: number) {
-		const v = Math.min(amount, Math.min(balance, max_bet));
+		const v = Math.min(amount, Math.min(balance, twr_difficulty_config[difficulty].maxBet));
 		if (v >= 0) { bet = v; betDisplay = v.toLocaleString(); }
 	}
 
 	function onBetInput(e: Event) {
 		const raw = (e.target as HTMLInputElement).value.replace(/,/g, '');
 		const n = parseFloat(raw) || 0;
-		bet = Math.min(n, Math.min(balance, max_bet));
+		bet = Math.min(n, Math.min(balance, twr_difficulty_config[difficulty].maxBet));
 		betDisplay = raw;
 	}
 
@@ -197,13 +196,7 @@
 	</CardHeader>
 	<CardContent>
 		<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-			<div class="flex flex-col gap-[3px]">
-				{#if gameResult === 'won'}
-					<div class="win-banner mb-2">Top reached! 🏆</div>
-				{:else if gameResult === 'lost'}
-					<div class="lose-banner mb-2">Bombed out 💥</div>
-				{/if}
-
+			<div class="flex flex-col gap-0.75">
 				{#each floorList as f}
 					{@const fs = floorStatus(f)}
 					{@const cfg = twr_difficulty_config[difficulty]}
@@ -227,12 +220,13 @@
 							{#each Array(cfg.tiles) as _, t}
 								{@const ts = tileStatus(f, t, fs)}
 								{@const key = `${f}-${t}`}
-								<button
-									class="tower-tile"
-									class:tile-active={isActive}
-									class:tile-safe={ts === 'safe'}
-									class:tile-bomb={ts === 'bomb'}
-									class:tile-pop={justRevealed === key}
+								<Button
+								class="h-9 w-13 rounded-sm border border-border bg-card p-0 transition-[background,border-color,transform] duration-120
+									{isActive ? 'animate-[tile-pulse_2s_ease-in-out_infinite] cursor-pointer border-primary/60! hover:bg-accent! hover:border-primary!' : 'cursor-not-allowed'}
+									{ts === 'safe' ? 'border-2! border-green-500! bg-green-500/20! cursor-default' : ''}
+									{ts === 'bomb' ? 'animate-[shake_0.4s_ease] border-2! border-red-500! bg-red-500/30! cursor-default' : ''}
+									{justRevealed === key ? 'animate-[pop_0.35s_ease_forwards]' : ''}"
+									variant="ghost"
 									onclick={() => step(f, t)}
 									disabled={!isActive || busy}
 									aria-label="Tile {t + 1} floor {f + 1}"
@@ -242,7 +236,7 @@
 									{:else if ts === 'bomb'}
 										<img src="/facedev/avif/bussin.avif" alt="Bomb" class="h-5 w-5 object-contain" />
 									{/if}
-								</button>
+								</Button>
 							{/each}
 						</div>
 					</div>
@@ -286,7 +280,7 @@
 						disabled={playing}
 						placeholder="Enter bet amount"
 					/>
-					<p class="text-muted-foreground mt-1 text-xs">Max bet: {max_bet.toLocaleString()}</p>
+					<p class="text-muted-foreground mt-1 text-xs">Max bet: {twr_difficulty_config[difficulty].maxBet.toLocaleString()}</p>
 				</div>
 
 				<div class="grid grid-cols-4 gap-2">
@@ -294,7 +288,7 @@
 						<Button
 							size="sm"
 							variant="outline"
-							onclick={() => setBet(Math.floor(Math.min(balance, max_bet) * pct))}
+							onclick={() => setBet(Math.floor(Math.min(balance, twr_difficulty_config[difficulty].maxBet) * pct))}
 							disabled={playing}
 						>
 							{pct === 1 ? 'Max' : `${pct * 100}%`}
@@ -413,49 +407,6 @@
 
 	.mult-active { color: var(--primary); font-weight: 700; }
 	.mult-cleared { color: rgb(34, 197, 94); font-weight: 600; }
-
-	.tower-tile {
-		width: 52px;
-		height: 36px;
-		background: var(--card);
-		border: 1px solid var(--border);
-		border-radius: calc(var(--radius) - 4px);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
-		cursor: not-allowed;
-	}
-
-	.tile-active {
-		cursor: pointer;
-		border-color: color-mix(in srgb, var(--primary) 60%, transparent);
-		animation: tile-pulse 2s ease-in-out infinite;
-	}
-
-	.tile-active:hover:not(:disabled) {
-		background: var(--accent);
-		transform: translateY(-3px);
-		border-color: var(--primary);
-		box-shadow: 0 3px 8px color-mix(in srgb, var(--primary) 20%, transparent);
-	}
-
-	.tile-active:active:not(:disabled) { transform: translateY(0); }
-
-	.tile-safe {
-		background-color: rgba(34, 197, 94, 0.2);
-		border: 2px solid rgb(34, 197, 94);
-		cursor: default;
-	}
-
-	.tile-bomb {
-		background-color: rgba(239, 68, 68, 0.3);
-		border: 2px solid rgb(239, 68, 68);
-		cursor: default;
-		animation: shake 0.4s ease;
-	}
-
-	.tile-pop { animation: pop 0.35s ease forwards; }
 
 	@keyframes tile-pulse {
 		0%, 100% { box-shadow: none; }

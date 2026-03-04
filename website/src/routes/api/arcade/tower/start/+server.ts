@@ -20,8 +20,8 @@ export const POST: RequestHandler = async ({ request }) => {
             return json({ error: 'Invalid difficulty' }, { status: 400 });
         }
 
-        const bet = validateBetAmount(betAmount);
         const config = twr_difficulty_config[difficulty as TowerDifficulty];
+        const bet = validateBetAmount(betAmount, 0.01, config.maxBet);
 
         const floorBombs: number[][] = [];
         for (let i = 0; i < twr_floors; i++) {

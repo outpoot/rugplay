@@ -189,19 +189,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 const chunk = coinUpdates.slice(i, i + BATCH_CHUNK_SIZE);
 
                 const priceCases = sql.join(
-                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.newPrice.toString()}`),
+                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.newPrice.toString()}::numeric`),
                     sql` `
                 );
                 const marketCapCases = sql.join(
-                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.marketCap.toString()}`),
+                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.marketCap.toString()}::numeric`),
                     sql` `
                 );
                 const poolCoinCases = sql.join(
-                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.newPoolCoin.toString()}`),
+                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.newPoolCoin.toString()}::numeric`),
                     sql` `
                 );
                 const poolBaseCases = sql.join(
-                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.newPoolBaseCurrency.toString()}`),
+                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.newPoolBaseCurrency.toString()}::numeric`),
                     sql` `
                 );
                 const idList = sql.join(

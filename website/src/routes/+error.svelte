@@ -68,11 +68,7 @@
 		}}
 		aria-label="Click to interact with error illustration"
 	>
-		<img
-			src="/404.gif"
-			alt="404 Error Illustration"
-			class="h-64 w-64 cursor-pointer object-contain transition-transform duration-300 hover:rotate-12 hover:scale-110"
-		/>
+
 		<div
 			class="absolute -top-12 left-1/2 z-10 -translate-x-1/2 transform whitespace-nowrap rounded-lg bg-black px-3 py-1 text-sm text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100"
 		>

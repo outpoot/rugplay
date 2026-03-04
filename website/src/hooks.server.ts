@@ -8,6 +8,7 @@ import { db } from '$lib/server/db';
 import { user, gemTransactions } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { minesCleanupInactiveGames, minesAutoCashout } from '$lib/server/games/mines';
+import { towerCleanupInactiveGames } from '$lib/server/games/tower';
 
 async function initializeScheduler() {
     if (building) return;
@@ -53,6 +54,7 @@ async function initializeScheduler() {
             const minesCleanupInterval = setInterval(() => {
                 minesCleanupInactiveGames().catch(console.error);
                 minesAutoCashout().catch(console.error);
+                towerCleanupInactiveGames().catch(console.error);
             }, 60 * 1000);
 
             // Cleanup on process exit

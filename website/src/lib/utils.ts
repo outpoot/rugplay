@@ -458,3 +458,20 @@ export function calculateMinesMultiplier(picks: number, mines: number, betAmount
     const effectiveMultiplier = cappedPayout / betAmount;
     return Math.max(1.0, Number(effectiveMultiplier.toFixed(2)));
 }
+
+export type TowerDifficulty = 'easy' | 'medium' | 'hard';
+
+export const twr_difficulty_config: Record<TowerDifficulty, { tiles: number; bombs: number; label: string; max?: number; maxBet: number }> = {
+    easy:   { tiles: 3, bombs: 1, label: 'Easy',   maxBet: 1_000_000 },
+    medium: { tiles: 4, bombs: 2, label: 'Medium', maxBet: 100_000 },
+    hard:   { tiles: 5, bombs: 3, label: 'Hard',   maxBet: 10_000, max: 10_000 },
+};
+
+export function calculateTowerMultiplier(floor: number, difficulty: TowerDifficulty): number {
+    const HOUSE_EDGE = 0.05;
+    const config = twr_difficulty_config[difficulty];
+    const safeTiles = config.tiles - config.bombs;
+    const probability = Math.pow(safeTiles / config.tiles, floor);
+    if (probability <= 0) return 1.0;
+    return Math.max(1.0, Number(((1 / probability) * (1 - HOUSE_EDGE)).toFixed(4)));
+}

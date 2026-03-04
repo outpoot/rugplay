@@ -14,6 +14,7 @@
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount } from 'svelte';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
+	import { haptic } from '$lib/stores/haptics';
 
 	interface SlotsResult {
 		won: boolean;
@@ -163,6 +164,7 @@
 				onBalanceUpdate?.(result.newBalance);
 
 				if (result.won) {
+					haptic.trigger('success');
 					if (result.winType === '3 OF A KIND') {
 						showSchoolPrideCannons(confetti);
 						showConfetti(confetti);
@@ -170,6 +172,7 @@
 						showConfetti(confetti);
 					}
 				} else {
+					haptic.trigger('error');
 					playSound('lose');
 				}
 
@@ -185,6 +188,7 @@
 			}, maxDuration + 200);
 		} catch (error) {
 			console.error('Slots error:', error);
+			haptic.trigger('error');
 			toast.error('Bet failed', {
 				description: error instanceof Error ? error.message : 'Unknown error occurred'
 			});

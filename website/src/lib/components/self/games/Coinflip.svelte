@@ -165,6 +165,7 @@
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount } from 'svelte';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
+	import { haptic } from '$lib/stores/haptics';
 
 	interface CoinflipResult {
 		won: boolean;
@@ -200,6 +201,7 @@
 	function selectSide(side: string) {
 		if (!isFlipping) {
 			selectedSide = side;
+			haptic.trigger('selection');
 		}
 	}
 
@@ -294,18 +296,21 @@
 				onBalanceUpdate?.(resultData.newBalance);
 
 				if (resultData.won) {
+					haptic.trigger('success');
 					showConfetti(confetti);
 				}
 
 				setTimeout(() => {
 					isFlipping = false;
 					if (!resultData.won) {
+						haptic.trigger('error');
 						playSound('lose');
 					}
 				}, 500);
 			}, animationDuration);
 		} catch (error) {
 			console.error('Coinflip error:', error);
+			haptic.trigger('error');
 			toast.error('Bet failed', {
 				description: error instanceof Error ? error.message : 'Unknown error occurred'
 			});

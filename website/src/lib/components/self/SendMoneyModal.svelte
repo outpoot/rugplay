@@ -14,6 +14,7 @@
 	} from '@hugeicons/core-free-icons';
 	import { PORTFOLIO_DATA } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
+	import { haptic } from '$lib/stores/haptics';
 
 	let {
 		open = $bindable(false),
@@ -135,11 +136,13 @@
 			}
 
 			if (result.type === 'CASH') {
+				haptic.trigger('success');
 				toast.success('Money sent successfully!', {
 					description: `Sent $${result.amount.toFixed(2)} to @${result.recipient}`
 				});
 			} else {
 				const estimatedValueForToast = estimatedValue;
+				haptic.trigger('success');
 				toast.success('Coins sent successfully!', {
 					description: `Sent ${result.amount.toFixed(6)} ${result.coinSymbol} (≈$${estimatedValueForToast.toFixed(2)}) to @${result.recipient}`
 				});
@@ -148,6 +151,7 @@
 			onSuccess?.();
 			handleClose();
 		} catch (e) {
+			haptic.trigger('error');
 			toast.error('Transfer failed', {
 				description: (e as Error).message
 			});

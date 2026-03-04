@@ -17,6 +17,7 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { calculateMinesMultiplier } from '$lib/utils';
+	import { haptic } from '$lib/stores/haptics';
 
 	const GRID_SIZE = 5;
 	const TOTAL_TILES = GRID_SIZE * GRID_SIZE;
@@ -120,6 +121,7 @@
 			}
 			const result = await response.json();
 			if (result.hitMine) {
+				haptic.trigger('error');
 				playSound('lose');
 				minePositions = result.minePositions;
 				revealedTiles = Array.from({ length: TOTAL_TILES }, (_, i) => i);
@@ -129,12 +131,14 @@
 				balance = result.newBalance;
 				onBalanceUpdate?.(result.newBalance);
 			} else {
+				haptic.trigger('light');
 				playSound('flip');
 				revealedTiles = [...revealedTiles, index];
 				clickedSafeTiles = [...clickedSafeTiles, index];
 				currentMultiplier = result.currentMultiplier;
 				hasRevealedTile = true;
 				if (result.status === 'won') {
+					haptic.trigger('success');
 					resetAutoCashoutTimer();
 					balance = result.newBalance;
 					onBalanceUpdate?.(result.newBalance);
@@ -183,6 +187,7 @@
 			balance = result.newBalance;
 			onBalanceUpdate?.(balance);
 			if (result.payout > betAmount) showConfetti(confetti);
+			haptic.trigger('success');
 			playSound(result.isAbort ? 'flip' : 'win');
 			isPlaying = false;
 			sessionToken = null;

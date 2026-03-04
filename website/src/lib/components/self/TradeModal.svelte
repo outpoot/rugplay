@@ -8,6 +8,7 @@
 	import { TradeUpIcon, TradeDownIcon, Loading03Icon, Coins01Icon, Dollar02Icon } from '@hugeicons/core-free-icons';
 	import { PORTFOLIO_SUMMARY } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
+	import { haptic } from '$lib/stores/haptics';
 
 	let {
 		open = $bindable(false),
@@ -121,6 +122,7 @@
 				throw new Error(result.message || 'Trade failed');
 			}
 
+			haptic.trigger('success');
 			toast.success(`${type === 'BUY' ? 'Bought' : 'Sold'} successfully!`, {
 				description:
 					type === 'BUY'
@@ -131,6 +133,7 @@
 			onSuccess?.();
 			handleClose();
 		} catch (e) {
+			haptic.trigger('error');
 			toast.error('Trade failed', {
 				description: (e as Error).message
 			});
@@ -187,7 +190,7 @@
 						class="flex-1"
 					/>
 					{#if type === 'SELL'}
-						<Button variant="outline" size="icon" class="h-9 w-9 shrink-0" onclick={() => { sellByDollar = !sellByDollar; amount = ''; }}>
+						<Button variant="outline" size="icon" class="h-9 w-9 shrink-0" onclick={() => { haptic.trigger('selection'); sellByDollar = !sellByDollar; amount = ''; }}>
 							{#key sellByDollar}
 								<HugeiconsIcon icon={sellByDollar ? Dollar02Icon : Coins01Icon} class="h-4 w-4" />
 							{/key}

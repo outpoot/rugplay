@@ -29,6 +29,7 @@
 	import { createChart, ColorType, type IChartApi, LineSeries } from 'lightweight-charts';
 	import HopiumQuestionSkeleton from '$lib/components/self/skeletons/HopiumQuestionSkeleton.svelte';
 	import AdSquare from '$lib/components/self/ads/AdSquare.svelte';
+	import { haptic } from '$lib/stores/haptics';
 
 	const { data } = $props();
 	let question = $state(data.question);
@@ -100,6 +101,7 @@
 
 			const result = await response.json();
 			if (response.ok) {
+				haptic.trigger('success');
 				toast.success(
 					`Prediction placed! Potential winnings: $${result.bet.potentialWinnings.toFixed(2)}`
 				);
@@ -107,6 +109,7 @@
 				fetchQuestion();
 				fetchPortfolioSummary();
 			} else {
+				haptic.trigger('error');
 				toast.error(result.error || 'Failed to place prediction');
 			}
 		} catch (e) {
@@ -335,20 +338,20 @@
 										? 'bg-success/80 hover:bg-success/90 w-full'
 										: 'bg-muted hover:bg-muted/90 w-full'}
 									size="lg"
-									onclick={() => (betSide = true)}
-									disabled={question.aiResolution !== null}
-								>
-									<div class="flex w-full min-w-0 items-baseline gap-2">
-										<span class="truncate text-xl font-bold">YES</span>
-										<span class="truncate text-sm">{question.yesPercentage.toFixed(1)}¢</span>
-									</div>
-								</Button>
-								<Button
-									class={!betSide
-										? 'bg-destructive hover:bg-destructive/90 w-full'
-										: 'bg-muted hover:bg-muted/90 w-full'}
-									size="lg"
-									onclick={() => (betSide = false)}
+								onclick={() => { haptic.trigger('selection'); betSide = true; }}
+								disabled={question.aiResolution !== null}
+							>
+								<div class="flex w-full min-w-0 items-baseline gap-2">
+									<span class="truncate text-xl font-bold">YES</span>
+									<span class="truncate text-sm">{question.yesPercentage.toFixed(1)}¢</span>
+								</div>
+							</Button>
+							<Button
+								class={!betSide
+									? 'bg-destructive hover:bg-destructive/90 w-full'
+									: 'bg-muted hover:bg-muted/90 w-full'}
+								size="lg"
+								onclick={() => { haptic.trigger('selection'); betSide = false; }}
 									disabled={question.aiResolution !== null}
 								>
 									<div class="flex w-full min-w-0 items-baseline gap-2">

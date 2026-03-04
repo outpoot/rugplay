@@ -13,6 +13,7 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { formatTimeRemaining } from '$lib/utils';
+	import { haptic } from '$lib/stores/haptics';
 
 	interface RewardStatus {
 		canClaim: boolean;
@@ -76,6 +77,8 @@
 				const result = await response.json();
 				claimState = 'success';
 
+				haptic.trigger('success');
+
 				const prestigeBonus = result.prestigeBonus || 0;
 				const hasPrestigeBonus = prestigeBonus > 0;
 
@@ -126,6 +129,7 @@
 			}
 		} catch (err) {
 			error = 'Network error';
+			haptic.trigger('error');
 			toast.error('Network error', {
 				description: 'Please check your connection and try again.'
 			});

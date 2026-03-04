@@ -1,12 +1,13 @@
 import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { user, userPortfolio, transaction, notifications, coin } from '$lib/server/db/schema';
+import { user, userPortfolio, transaction, notifications, coin, priceHistory } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { formatValue, getPrestigeCost, getPrestigeName } from '$lib/utils';
-import { executeSellTrade } from '$lib/server/amm';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
+
+const BATCH_CHUNK_SIZE = 500;
 
 export const POST: RequestHandler = async ({ request, locals }) => {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -61,39 +62,162 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         if (holdings.length > 0) {
             warningMessage = `All ${holdings.length} coin holdings have been sold at current market prices. `;
 
+            const now = new Date();
+            const transactionRows: {
+                userId: number;
+                coinId: number;
+                type: 'SELL';
+                quantity: string;
+                pricePerCoin: string;
+                totalBaseCurrencyAmount: string;
+                timestamp: Date;
+            }[] = [];
+            const priceHistoryRows: {
+                coinId: number;
+                price: string;
+            }[] = [];
+            const coinUpdates: {
+                id: number;
+                newPrice: number;
+                newPoolCoin: number;
+                newPoolBaseCurrency: number;
+                marketCap: number;
+            }[] = [];
+
+            const MAX_STORABLE = 1e38;
+
             for (const holding of holdings) {
                 const quantity = Number(holding.quantity);
                 const currentPrice = Number(holding.currentPrice);
+                const poolCoinAmount = Number(holding.poolCoinAmount);
+                const poolBaseCurrencyAmount = Number(holding.poolBaseCurrencyAmount);
 
-                if (Number(holding.poolCoinAmount) <= 0 || Number(holding.poolBaseCurrencyAmount) <= 0) {
+                if (poolCoinAmount <= 0 || poolBaseCurrencyAmount <= 0) {
                     const fallbackValue = quantity * currentPrice;
                     totalSaleValue += fallbackValue;
 
-                    await tx.insert(transaction).values({
+                    transactionRows.push({
                         userId,
                         coinId: holding.coinId!,
                         type: 'SELL',
-                        quantity: holding.quantity,
+                        quantity: holding.quantity!,
                         pricePerCoin: holding.currentPrice || '0',
                         totalBaseCurrencyAmount: fallbackValue.toString(),
-                        timestamp: new Date()
+                        timestamp: now
                     });
                     continue;
                 }
 
-                const sellResult = await executeSellTrade(tx, {
-                    id: holding.coinId,
-                    poolCoinAmount: holding.poolCoinAmount,
-                    poolBaseCurrencyAmount: holding.poolBaseCurrencyAmount,
-                    currentPrice: holding.currentPrice,
-                    circulatingSupply: holding.circulatingSupply
-                }, userId, quantity);
+                const k = poolCoinAmount * poolBaseCurrencyAmount;
+                const newPoolCoin = poolCoinAmount + quantity;
+                const newPoolBaseCurrency = k / newPoolCoin;
+                const baseCurrencyReceived = poolBaseCurrencyAmount - newPoolBaseCurrency;
+                const newPrice = newPoolBaseCurrency / newPoolCoin;
 
-                if (sellResult.success && sellResult.baseCurrencyReceived) {
-                    totalSaleValue += sellResult.baseCurrencyReceived;
-                } else {
-                    totalSaleValue += sellResult.fallbackValue || (quantity * currentPrice);
+                if (baseCurrencyReceived <= 0 || newPoolBaseCurrency < 1) {
+                    const fallbackValue = quantity * currentPrice;
+                    totalSaleValue += fallbackValue;
+
+                    transactionRows.push({
+                        userId,
+                        coinId: holding.coinId!,
+                        type: 'SELL',
+                        quantity: quantity.toString(),
+                        pricePerCoin: currentPrice.toString(),
+                        totalBaseCurrencyAmount: fallbackValue.toString(),
+                        timestamp: now
+                    });
+                    continue;
                 }
+
+                totalSaleValue += baseCurrencyReceived;
+
+                transactionRows.push({
+                    userId,
+                    coinId: holding.coinId!,
+                    type: 'SELL',
+                    quantity: quantity.toString(),
+                    pricePerCoin: (baseCurrencyReceived / quantity).toString(),
+                    totalBaseCurrencyAmount: baseCurrencyReceived.toString(),
+                    timestamp: now
+                });
+
+                priceHistoryRows.push({
+                    coinId: holding.coinId!,
+                    price: newPrice.toString()
+                });
+
+                const circulatingSupply = Number(holding.circulatingSupply);
+                if (!circulatingSupply || !isFinite(circulatingSupply)) {
+                    continue;
+                }
+
+                const safeMarketCap = Math.min(
+                    circulatingSupply * newPrice,
+                    MAX_STORABLE
+                );
+
+                if (
+                    !isFinite(newPrice) ||
+                    !isFinite(newPoolCoin) ||
+                    !isFinite(newPoolBaseCurrency) ||
+                    !isFinite(safeMarketCap)
+                ) {
+                    continue;
+                }
+
+                coinUpdates.push({
+                    id: holding.coinId!,
+                    newPrice,
+                    newPoolCoin,
+                    newPoolBaseCurrency,
+                    marketCap: safeMarketCap
+                });
+            }
+
+            for (let i = 0; i < transactionRows.length; i += BATCH_CHUNK_SIZE) {
+                const chunk = transactionRows.slice(i, i + BATCH_CHUNK_SIZE);
+                await tx.insert(transaction).values(chunk);
+            }
+
+            for (let i = 0; i < priceHistoryRows.length; i += BATCH_CHUNK_SIZE) {
+                const chunk = priceHistoryRows.slice(i, i + BATCH_CHUNK_SIZE);
+                await tx.insert(priceHistory).values(chunk);
+            }
+
+            for (let i = 0; i < coinUpdates.length; i += BATCH_CHUNK_SIZE) {
+                const chunk = coinUpdates.slice(i, i + BATCH_CHUNK_SIZE);
+
+                const priceCases = sql.join(
+                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.newPrice.toString()}`),
+                    sql` `
+                );
+                const marketCapCases = sql.join(
+                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.marketCap.toString()}`),
+                    sql` `
+                );
+                const poolCoinCases = sql.join(
+                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.newPoolCoin.toString()}`),
+                    sql` `
+                );
+                const poolBaseCases = sql.join(
+                    chunk.map(c => sql`WHEN ${c.id} THEN ${c.newPoolBaseCurrency.toString()}`),
+                    sql` `
+                );
+                const idList = sql.join(
+                    chunk.map(c => sql`${c.id}`),
+                    sql`, `
+                );
+
+                await tx.execute(sql`
+                    UPDATE coin SET
+                        current_price = CASE id ${priceCases} END,
+                        market_cap = CASE id ${marketCapCases} END,
+                        pool_coin_amount = CASE id ${poolCoinCases} END,
+                        pool_base_currency_amount = CASE id ${poolBaseCases} END,
+                        updated_at = NOW()
+                    WHERE id IN (${idList})
+                `);
             }
 
             await tx
@@ -110,8 +234,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 updatedAt: new Date()
             })
             .where(eq(user.id, userId));
-
-        await tx.delete(userPortfolio).where(eq(userPortfolio.userId, userId));
 
         await tx.insert(notifications).values({
             userId: userId,

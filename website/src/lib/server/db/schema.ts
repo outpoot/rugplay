@@ -371,3 +371,26 @@ export const userBlock = pgTable("user_block", {
 	blockedIdIdx: index("user_block_blocked_id_idx").on(table.blockedId),
 	noSelfBlock: check("no_self_block", sql`blocker_id != blocked_id`),
 }));
+export const watchlist = pgTable("watchlist", {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    coinId: integer("coin_id").notNull().references(() => coin.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+    watchlistUnique: unique("watchlist_unique").on(table.userId, table.coinId),
+    userIdIdx: index("watchlist_user_id_idx").on(table.userId),
+    coinIdIdx: index("watchlist_coin_id_idx").on(table.coinId),
+}));
+
+export const portfolioSnapshot = pgTable("portfolio_snapshot", {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    totalValue: decimal("total_value", { precision: 30, scale: 8 }).notNull(),
+    cashBalance: decimal("cash_balance", { precision: 30, scale: 8 }).notNull(),
+    holdingsValue: decimal("holdings_value", { precision: 30, scale: 8 }).notNull(),
+    snapshottedAt: timestamp("snapshotted_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+    userIdIdx: index("portfolio_snapshot_user_id_idx").on(table.userId),
+    snapshottedAtIdx: index("portfolio_snapshot_snapshotted_at_idx").on(table.snapshottedAt),
+    userTimeIdx: index("portfolio_snapshot_user_time_idx").on(table.userId, table.snapshottedAt),
+}));

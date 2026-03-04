@@ -12,7 +12,7 @@ if (!process.env.REDIS_URL) {
 	process.exit(1);
 }
 
-const redis = new Redis(process.env.REDIS_URL);
+const redis = new Redis(process.env.REDIS_URL, { enableReadyCheck: false });
 
 const HEARTBEAT_INTERVAL = 30_000;
 

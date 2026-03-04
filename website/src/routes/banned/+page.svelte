@@ -15,7 +15,7 @@
 			>
 				<HugeiconsIcon icon={Alert02Icon} class="text-primary h-8 w-8" />
 			</div>
-			<Card.Title class="text-primary text-2xl">Account Suspended</Card.Title>
+			<Card.Title class="text-primary text-2xl">Account not Suspended</Card.Title>
 		</Card.Header>
 		<Card.Content class="space-y-4 text-center">
 			<p class="text-muted-foreground">

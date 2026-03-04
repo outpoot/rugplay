@@ -20,6 +20,7 @@
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import UserName from '$lib/components/self/UserName.svelte';
 	import { websocketController } from '$lib/stores/websocket';
+	import { haptic } from '$lib/stores/haptics';
 
 	const { coinSymbol } = $props<{ coinSymbol: string }>();
 	import type { Comment } from '$lib/types/comment';
@@ -105,6 +106,7 @@
 					comments = [result.comment, ...comments.slice(0, MAX_COMMENTS - 1)];
 				}
 				newComment = '';
+				haptic.trigger('light');
 			} else {
 				const error = await response.json();
 				toast.error(error.message || 'Failed to post comment');
@@ -153,6 +155,7 @@
 			shouldSignIn = true;
 			return;
 		}
+		haptic.trigger('light');
 		toggleLike(commentId);
 	}
 

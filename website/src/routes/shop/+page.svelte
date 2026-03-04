@@ -28,6 +28,7 @@
 		Loading02Icon,
 		InformationCircleIcon,
 	} from '@hugeicons/core-free-icons';
+	import { haptic } from '$lib/stores/haptics';
 	import {
 		PUBLIC_POLAR_PRODUCT_GEMS_500,
 		PUBLIC_POLAR_PRODUCT_GEMS_1300,
@@ -148,6 +149,7 @@
 		});
 		if (res.ok) {
 			equippedColor = key;
+			haptic.trigger('light');
 			toast.success(key ? 'Color equipped!' : 'Color unequipped');
 		} else {
 			const data = await res.json();
@@ -369,10 +371,14 @@
 		lootboxPhase = 'reveal';
 		const rarity = lootboxResult?.colorRarity;
 		if (rarity === 'legendary') {
+			haptic.trigger('heavy');
 			showSchoolPrideCannons(confetti);
 			showConfetti(confetti);
 		} else if (rarity === 'epic') {
+			haptic.trigger('medium');
 			showConfetti(confetti);
+		} else {
+			haptic.trigger('light');
 		}
 	}
 
@@ -407,6 +413,7 @@
 			startCycling(tier, data.reward);
 		} else {
 			toast.error(data.error ?? 'Failed to open lootbox');
+			haptic.trigger('error');
 			lootboxPhase = 'idle';
 		}
 		openingBox = false;

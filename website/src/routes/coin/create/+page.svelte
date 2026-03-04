@@ -19,6 +19,7 @@
 	import { toast } from 'svelte-sonner';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
+	import { haptic } from '$lib/stores/haptics';
 
 	let name = $state('');
 	let symbol = $state('');
@@ -110,8 +111,10 @@
 
 			await fetchPortfolioData();
 
+			haptic.trigger('success');
 			goto(`/coin/${result.coin.symbol}`);
 		} catch (e) {
+			haptic.trigger('error');
 			toast.error('Failed to create coin', {
 				description: (e as Error).message || 'An error occurred while creating the coin'
 			});

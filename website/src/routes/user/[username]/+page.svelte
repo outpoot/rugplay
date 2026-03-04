@@ -28,6 +28,7 @@
 	import { USER_DATA } from '$lib/stores/user-data';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import AdLong from '$lib/components/self/ads/AdLong.svelte';
+	import { haptic } from '$lib/stores/haptics';
 
 	let { data } = $props();
 	let username = $derived(data.username);
@@ -71,6 +72,7 @@
 			});
 			if (res.ok) {
 				isBlocked = !isBlocked;
+				haptic.trigger(isBlocked ? 'warning' : 'light');
 				toast.success(isBlocked ? 'User blocked' : 'User unblocked');
 			} else {
 				const data = await res.json();

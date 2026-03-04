@@ -14,6 +14,7 @@
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { onMount } from 'svelte';
 	import { fetchPortfolioSummary } from '$lib/stores/portfolio-data';
+	import { haptic } from '$lib/stores/haptics';
 
 	interface DiceResult {
 		won: boolean;
@@ -115,6 +116,7 @@
 	function selectNumber(num: number) {
 		if (!isRolling) {
 			selectedNumber = num;
+			haptic.trigger('selection');
 			playSound('click');
 		}
 	}
@@ -189,15 +191,18 @@
 			onBalanceUpdate?.(resultData.newBalance);
 
 			if (resultData.won) {
+				haptic.trigger('success');
 				showConfetti(confetti);
 				showSchoolPrideCannons(confetti);
 			} else {
+				haptic.trigger('error');
 				playSound('lose');
 			}
 
 			isRolling = false;
 		} catch (error) {
 			console.error('Dice roll error:', error);
+			haptic.trigger('error');
 			toast.error('Roll failed', {
 				description: error instanceof Error ? error.message : 'Unknown error occurred'
 			});

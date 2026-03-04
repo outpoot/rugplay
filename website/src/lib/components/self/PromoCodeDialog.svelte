@@ -11,6 +11,7 @@
 		Loading03Icon,
 		Tick01Icon
 	} from '@hugeicons/core-free-icons';
+	import { haptic } from '$lib/stores/haptics';
 
 	let { open = $bindable() } = $props();
 
@@ -40,10 +41,12 @@
 			isSuccess = response.ok;
 			message = response.ok ? result.message : result.error;
 			hasResult = true;
+			haptic.trigger(response.ok ? 'success' : 'error');
 		} catch (error) {
 			isSuccess = false;
 			message = 'Failed to verify promo code. Please try again.';
 			hasResult = true;
+			haptic.trigger('error');
 		} finally {
 			isVerifying = false;
 		}

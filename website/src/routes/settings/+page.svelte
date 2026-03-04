@@ -29,6 +29,7 @@
 	import { USER_DATA } from '$lib/stores/user-data';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import SEO from '$lib/components/self/SEO.svelte';
+	import { haptic } from '$lib/stores/haptics';
 
 	let shouldSignIn = $state(false);
 	let name = $state($USER_DATA?.name || '');
@@ -191,6 +192,7 @@
 
 			if (res.ok) {
 				await invalidateAll();
+				haptic.trigger('success');
 				toast.success('Settings updated successfully!', {
 					action: { label: 'Refresh', onClick: () => window.location.reload() }
 				});
@@ -232,6 +234,7 @@
 
 	async function toggleDisableMentions() {
 		disableMentions = !disableMentions;
+		haptic.trigger('light');
 		try {
 			const response = await fetch('/api/settings/mentions', {
 				method: 'POST',
@@ -256,6 +259,7 @@
 	}
 	function toggleMute() {
 		isMuted = !isMuted;
+		haptic.trigger('light');
 		volumeSettings.setMuted(isMuted);
 		saveVolumeToServer({ master: masterVolume / 100, muted: isMuted });
 	}
@@ -316,6 +320,7 @@
 
 	async function deleteAccount() {
 		if (deleteConfirmationText !== 'DELETE MY ACCOUNT') {
+			haptic.trigger('error');
 			toast.error('Please type "DELETE MY ACCOUNT" to confirm');
 			return;
 		}

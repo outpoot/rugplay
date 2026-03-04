@@ -22,6 +22,7 @@
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import ProfileBadges from '$lib/components/self/ProfileBadges.svelte';
 		import PrestigeSkeleton from '$lib/components/self/skeletons/PrestigeSkeleton.svelte';
+	import { haptic } from '$lib/stores/haptics';
 
 	let isPrestiging = $state(false);
 	let error = $state('');
@@ -93,11 +94,13 @@
 				throw new Error(result.message || 'Failed to prestige');
 			}
 
+			haptic.trigger('heavy');
 			toast.success(`Congratulations! You've reached ${prestigeName}!`);
 			await fetchPrestigeData();
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : 'An error occurred';
 			error = errorMessage;
+			haptic.trigger('error');
 			toast.error(errorMessage);
 		} finally {
 			isPrestiging = false;
@@ -108,6 +111,7 @@
 
 	function openConfirmDialog() {
 		if (!canAfford || !userData) return;
+		haptic.trigger('warning');
 		showConfirmDialog = true;
 	}
 

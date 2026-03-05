@@ -16,16 +16,16 @@
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { Clock01Icon, PiggyBankIcon } from '@hugeicons/core-free-icons';
+	import { Clock01Icon, PiggyBankIcon, CoinsDollarIcon, StarsIcon, BombIcon, DiceIcon, ElectricTower01Icon, SpadesIcon } from '@hugeicons/core-free-icons';
 	import { formatValue, formatRelativeTime, getPublicUrl } from '$lib/utils';
 
 	const games = [
-		{ id: 'coinflip', label: 'Coinflip', icon: '🪙' },
-		{ id: 'slots', label: 'Slots', icon: '🎰' },
-		{ id: 'mines', label: 'Mines', icon: '💣' },
-		{ id: 'dice', label: 'Dice', icon: '🎲' },
-		{ id: 'tower', label: 'Tower', icon: '🏗️' },
-		{ id: 'blackjack', label: 'Blackjack', icon: '🃏' }
+		{ id: 'coinflip', label: 'Coinflip', icon: CoinsDollarIcon },
+		{ id: 'slots', label: 'Slots', icon: StarsIcon },
+		{ id: 'mines', label: 'Mines', icon: BombIcon },
+		{ id: 'dice', label: 'Dice', icon: DiceIcon },
+		{ id: 'tower', label: 'Tower', icon: ElectricTower01Icon },
+		{ id: 'blackjack', label: 'Blackjack', icon: SpadesIcon }
 	];
 
 	let shouldSignIn = $state(false);
@@ -82,14 +82,14 @@
 	{:else}
 		<div class="mx-auto max-w-4xl space-y-6">
 			<!-- Game Selection -->
-			<div class="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:justify-center">
+			<div class="grid grid-cols-3 gap-2 sm:grid-cols-6">
 				{#each games as game}
 					<Button
 						variant={activeGame === game.id ? 'default' : 'outline'}
-						class="flex h-auto flex-col gap-1 py-3 sm:w-auto"
+						class="flex h-auto w-full flex-col gap-1 py-3"
 						onclick={() => (activeGame = game.id)}
 					>
-						<span class="text-xl leading-none">{game.icon}</span>
+						<HugeiconsIcon icon={game.icon} class="h-5 w-5" />
 						<span class="text-xs">{game.label}</span>
 					</Button>
 				{/each}

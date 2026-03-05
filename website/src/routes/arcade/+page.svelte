@@ -9,6 +9,7 @@
 	import SEO from '$lib/components/self/SEO.svelte';
 	import Dice from '$lib/components/self/games/Dice.svelte';
 	import Tower from '$lib/components/self/games/Tower.svelte';
+	import Blackjack from '$lib/components/self/games/Blackjack.svelte';
 	import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '$lib/components/ui/card';
 	import { arcadeActivityStore } from '$lib/stores/websocket';
 	import * as Avatar from '$lib/components/ui/avatar';
@@ -17,6 +18,15 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Clock01Icon, PiggyBankIcon } from '@hugeicons/core-free-icons';
 	import { formatValue, formatRelativeTime, getPublicUrl } from '$lib/utils';
+
+	const games = [
+		{ id: 'coinflip', label: 'Coinflip', icon: '🪙' },
+		{ id: 'slots', label: 'Slots', icon: '🎰' },
+		{ id: 'mines', label: 'Mines', icon: '💣' },
+		{ id: 'dice', label: 'Dice', icon: '🎲' },
+		{ id: 'tower', label: 'Tower', icon: '🏗️' },
+		{ id: 'blackjack', label: 'Blackjack', icon: '🃏' }
+	];
 
 	let shouldSignIn = $state(false);
 	let balance = $state(0);
@@ -72,37 +82,17 @@
 	{:else}
 		<div class="mx-auto max-w-4xl space-y-6">
 			<!-- Game Selection -->
-			<div class="flex justify-center gap-4">
-				<Button
-					variant={activeGame === 'coinflip' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'coinflip')}
-				>
-					Coinflip
-				</Button>
-				<Button
-					variant={activeGame === 'slots' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'slots')}
-				>
-					Slots
-				</Button>
-				<Button
-					variant={activeGame === 'mines' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'mines')}
-				>
-					Mines
-				</Button>
-				<Button
-					variant={activeGame === 'dice' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'dice')}
-				>
-					Dice
-				</Button>
-				<Button
-					variant={activeGame === 'tower' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'tower')}
-				>
-					Tower
-				</Button>
+			<div class="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:justify-center">
+				{#each games as game}
+					<Button
+						variant={activeGame === game.id ? 'default' : 'outline'}
+						class="flex h-auto flex-col gap-1 py-3 sm:w-auto"
+						onclick={() => (activeGame = game.id)}
+					>
+						<span class="text-xl leading-none">{game.icon}</span>
+						<span class="text-xs">{game.label}</span>
+					</Button>
+				{/each}
 			</div>
 
 			<!-- Game Content -->
@@ -116,6 +106,8 @@
 				<Dice bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{:else if activeGame === 'tower'}
 				<Tower bind:balance onBalanceUpdate={handleBalanceUpdate} />
+			{:else if activeGame === 'blackjack'}
+				<Blackjack bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{/if}
 
 			<!-- Live Arcade Activity Feed -->

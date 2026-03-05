@@ -81,6 +81,19 @@
 	keywords="crypto simulation game, trading practice game, rug pull simulation, virtual cryptocurrency game"
 />
 
+<svelte:head>
+	<!--Open Graph Tags-->
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="Rugplay" />
+	<meta
+		property="og:description"
+		content="A realistic crypto trading simulator that lets you experience the risks and mechanics of decentralized exchanges without real financial consequences."
+	/>
+	<meta property="og:url" content="https://rugplay.com" />
+	<meta property="og:image" content="%sveltekit.assets%/apple-touch-icon.png" />
+	<meta property="og:image:alt" content="Rugplay Logo" />
+</svelte:head>
+
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
 <div class="container mx-auto p-6">

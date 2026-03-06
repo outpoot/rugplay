@@ -3,6 +3,7 @@ import Redis from 'ioredis';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import leoProfanity from 'leo-profanity';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: join(__dirname, '../../.env') });
@@ -19,12 +20,26 @@ const HEARTBEAT_INTERVAL = 30_000;
 type WebSocketData = {
 	coinSymbol?: string;
 	userId?: string;
+	username?: string;
+	handle?: string;
+	userImage?: string;
 	lastActivity: number;
 };
 
 const coinSockets = new Map<string, Set<ServerWebSocket<WebSocketData>>>();
 const userSockets = new Map<string, Set<ServerWebSocket<WebSocketData>>>();
 const pingIntervals = new WeakMap<ServerWebSocket<WebSocketData>, NodeJS.Timeout>();
+
+const chatRateLimits = new Map<string, number[]>();
+
+function isRateLimited(userId: string): boolean {
+	const now = Date.now();
+	const timestamps = (chatRateLimits.get(userId) ?? []).filter(t => now - t < 60_000);
+	if (timestamps.length >= 20) return true;
+	if (timestamps.filter(t => now - t < 1500).length >= 1) return true;
+	chatRateLimits.set(userId, [...timestamps, now]);
+	return false;
+}
 
 redis.on('error', (err) => console.error('Redis Client Error', err));
 
@@ -154,7 +169,7 @@ function handleSetCoin(ws: ServerWebSocket<WebSocketData>, coinSymbol: string) {
 	}
 }
 
-function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string) {
+function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string, username?: string, userImage?: string, handle?: string) {
 	if (ws.data.userId) {
 		const prev = userSockets.get(ws.data.userId);
 		if (prev) {
@@ -166,6 +181,9 @@ function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string) {
 	}
 
 	ws.data.userId = userId;
+	ws.data.username = username;
+	ws.data.handle = handle;
+	ws.data.userImage = userImage;
 
 	if (!userSockets.has(userId)) {
 		userSockets.set(userId, new Set([ws]));
@@ -174,17 +192,43 @@ function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string) {
 	}
 }
 
+function broadcastChat(message: string): void {
+	const seen = new Set<ServerWebSocket<WebSocketData>>();
+	for (const sockets of coinSockets.values()) {
+		for (const ws of sockets) seen.add(ws);
+	}
+	for (const sockets of userSockets.values()) {
+		for (const ws of sockets) seen.add(ws);
+	}
+	for (const ws of seen) {
+		if (ws.readyState === WebSocket.OPEN) ws.send(message);
+	}
+}
+
 function checkConnections() {
 	const now = Date.now();
-	for (const [coinSymbol, sockets] of coinSockets.entries()) {
-		const staleSockets = Array.from(sockets).filter(ws => now - ws.data.lastActivity > HEARTBEAT_INTERVAL * 2);
-		for (const socket of staleSockets) {
-			socket.terminate();
+	for (const [, sockets] of coinSockets.entries()) {
+		for (const ws of Array.from(sockets).filter(ws => now - ws.data.lastActivity > HEARTBEAT_INTERVAL * 2)) {
+			ws.terminate();
+		}
+	}
+	for (const [, sockets] of userSockets.entries()) {
+		for (const ws of Array.from(sockets).filter(ws => now - ws.data.lastActivity > HEARTBEAT_INTERVAL * 2)) {
+			ws.terminate();
 		}
 	}
 }
 
 setInterval(checkConnections, HEARTBEAT_INTERVAL);
+
+setInterval(() => {
+	const now = Date.now();
+	for (const [id, timestamps] of chatRateLimits.entries()) {
+		if (timestamps.every(t => now - t >= 60_000)) {
+			chatRateLimits.delete(id);
+		}
+	}
+}, 5 * 60_000);
 
 const server = Bun.serve<WebSocketData, undefined>({
 	port: Number(process.env.PORT) || 8080,
@@ -223,12 +267,37 @@ const server = Bun.serve<WebSocketData, undefined>({
 					type: string;
 					coinSymbol?: string;
 					userId?: string;
+					username?: string;
+					userImage?: string;
+					text?: string;
 				};
 
 				if (data.type === 'set_coin' && data.coinSymbol) {
 					handleSetCoin(ws, data.coinSymbol);
 				} else if (data.type === 'set_user' && data.userId) {
-					handleSetUser(ws, data.userId);
+					handleSetUser(ws, data.userId, data.username, data.userImage, data.handle);
+				} else if (data.type === 'chat_message') {
+					if (!ws.data.userId || !ws.data.username) return;
+					const text = (data.text ?? '').trim();
+					if (!text || text.length > 200) return;
+					if (isRateLimited(ws.data.userId)) return;
+					const filtered = leoProfanity.clean(text);
+					broadcastChat(JSON.stringify({
+						type: 'chat_message',
+						userId: ws.data.userId,
+						username: ws.data.username,
+						handle: ws.data.handle,
+						userImage: ws.data.userImage,
+						text: filtered,
+						timestamp: Date.now()
+					}));
+				} else if (data.type === 'typing') {
+					if (!ws.data.username) return;
+					broadcastChat(JSON.stringify({
+						type: 'typing',
+						username: ws.data.username,
+						timestamp: Date.now()
+					}));
 				} else if (data.type === 'pong') {
 					ws.data.lastActivity = Date.now();
 				}
@@ -238,7 +307,7 @@ const server = Bun.serve<WebSocketData, undefined>({
 		},
 		open(ws) {
 			const interval = setInterval(() => {
-				if (ws.readyState === 1) {
+				if (ws.readyState === WebSocket.OPEN) {
 					ws.data.lastActivity = Date.now();
 					ws.send(JSON.stringify({ type: 'ping' }));
 				} else {

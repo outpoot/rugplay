@@ -14,6 +14,7 @@
 	import { websocketController } from '$lib/stores/websocket';
 	import { dev } from '$app/environment';
 	import { RenderScan } from 'svelte-render-scan';
+	import GlobalChat from '$lib/components/self/GlobalChat.svelte';
 
 	let { data, children } = $props<{
 		data: { userSession?: any };
@@ -160,3 +161,4 @@
 		</div>
 	</Sidebar.Inset>
 </Sidebar.Provider>
+<GlobalChat />

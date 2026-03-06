@@ -41,6 +41,15 @@ export interface ArcadeActivity {
     timestamp: number;
 }
 
+export interface ChatMessage {
+	userId: string;
+	username: string;
+	handle?: string;
+	userImage?: string;
+	text: string;
+	timestamp: number;
+}
+
 // Constants
 const WEBSOCKET_URL = PUBLIC_WEBSOCKET_URL;
 const RECONNECT_DELAY = 5000;
@@ -113,6 +122,10 @@ function createArcadeActivityStore() {
 
 export const arcadeActivityStore = createArcadeActivityStore();
 
+const max_msg_chat = 50;
+export const chatMessagesStore = writable<ChatMessage[]>([]);
+export const typingStore = writable<Map<string, number>>(new Map());
+
 let hasLoadedInitialTrades = false;
 
 // Comment callbacks
@@ -182,6 +195,14 @@ function sendMessage(message: object): void {
     if (isSocketConnected()) {
         socket!.send(JSON.stringify(message));
     }
+}
+
+export function sendChatMessage(text: string): void {
+	sendMessage({ type: 'chat_message', text });
+}
+
+export function sendTyping(): void {
+	sendMessage({ type: 'typing' });
 }
 
 function subscribeToChannels(): void {
@@ -317,6 +338,30 @@ function handleWebSocketMessage(event: MessageEvent): void {
                 }
                 break;
 
+            case 'typing': {
+                if (!message.username) break;
+                typingStore.update(map => {
+                    const next = new Map(map);
+                    next.set(message.username, Date.now());
+                    return next;
+                });
+                break;
+            }
+
+            case 'chat_message': {
+                if (!message.userId || !message.username || typeof message.text !== 'string') break;
+                const msg: ChatMessage = {
+                    userId: message.userId,
+                    username: message.username,
+                    handle: message.handle,
+                    userImage: message.userImage,
+                    text: message.text,
+                    timestamp: message.timestamp
+                };
+                chatMessagesStore.update(msgs => [...msgs, msg].slice(-max_msg_chat));
+                break;
+            }
+
             default:
                 console.log('Unhandled message type:', message.type, message);
         }
@@ -347,10 +392,12 @@ function connect(): void {
         
         USER_DATA.subscribe(user => {
             if (user?.id && isSocketConnected()) {
-                console.log('Setting user subscription for user:', user.id);
                 socket!.send(JSON.stringify({
                     type: 'set_user',
-                    userId: String(user.id)
+                    userId: String(user.id),
+                    username: user.name,
+                    handle: user.username,
+                    userImage: user.image
                 }));
             }
         })();
@@ -440,23 +487,30 @@ class WebSocketController {
         loadInitialTrades(mode);
     }
 
-    setUser(userId: string) {
+    setUser(userId: string, username?: string, userImage?: string, handle?: string) {
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
                 type: 'set_user',
-                userId
+                userId,
+                username,
+                handle,
+                userImage
             }));
         }
     }
 }
 
-// Auto-connect user when USER_DATA changes
 if (typeof window !== 'undefined') {
-    USER_DATA.subscribe(user => {
-        if (user?.id) {
-            websocketController.setUser(user.id.toString());
-        }
-    });
+	USER_DATA.subscribe(user => {
+		if (user?.id && isSocketConnected()) {
+			socket!.send(JSON.stringify({
+				type: 'set_user',
+				userId: String(user.id),
+				username: user.name,
+				userImage: user.image
+			}));
+		}
+	});
 }
 
 export const websocketController = new WebSocketController();

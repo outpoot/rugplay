@@ -68,6 +68,7 @@
 			{ title: 'Leaderboard', url: '/leaderboard', icon: ChampionIcon },
 			{ title: 'Shop', url: '/shop', icon: ShoppingBasket01Icon },
 			{ title: 'Achievements', url: '/achievements', icon: Award05Icon },
+			{ title: 'Missions', url: '/missions', icon: GiftIcon }, 
 			{ title: 'Portfolio', url: '/portfolio', icon: Briefcase01Icon },
 			{ title: 'Treemap', url: '/treemap', icon: Analytics01Icon },
 			{ title: 'Create coin', url: '/coin/create', icon: Coins02Icon },

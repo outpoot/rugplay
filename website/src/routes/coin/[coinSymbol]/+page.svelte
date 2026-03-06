@@ -12,6 +12,7 @@
 	import CoinSkeleton from '$lib/components/self/skeletons/CoinSkeleton.svelte';
 	import TopHolders from '$lib/components/self/TopHolders.svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import AmmCalculator from '$lib/components/self/AmmCalculator.svelte';
 	import {
 		TradeUpIcon,
 		TradeDownIcon,
@@ -776,6 +777,7 @@
 					</Card.Root>
 					<!-- Top Holders -->
 					<TopHolders coinSymbol={coin.symbol} />
+					<AmmCalculator {coin} />
 				</div>
 			</div>
 

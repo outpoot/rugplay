@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
+import { incrementMissionProgress } from '$lib/server/missions';
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 const THIRTY_SIX_HOURS_MS = 36 * 60 * 60 * 1000;
@@ -139,6 +140,9 @@ export const POST: RequestHandler = async ({ request }) => {
             .where(eq(user.id, currentUser.id));
 
         checkAndAwardAchievements(userId, ['streaks'], { newStreak, totalRewardsClaimed: newTotalRewards });
+
+        await incrementMissionProgress(userId, 'daily_claim_1');
+        await incrementMissionProgress(userId, 'daily_claim_7');
 
         return json({
             success: true,

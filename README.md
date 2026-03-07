@@ -1,19 +1,18 @@
-<img style="width: 128px; height: 128px" src="website/static/favicon.svg" /><h1 style="font-size: 48px"><a href="https://rugplay.com">Rugplay.com</a> - the fake crypto simulator.</h1>
+<img style="width: 128px; height: 128px" src="website/static/favicon.svg" /><h1 style="font-size: 48px"><a href="https://rugplay.com/coin/ROFK">Rugplay.com/coin/ROFK</a> - the fake crypto to you test your luck.</h1>
 
 [Privacy Policy](https://rugplay.com/legal/privacy) | [Terms of Service](https://rugplay.com/legal/terms) | [License](LICENSE) | [YouTube video](https://www.youtube.com/watch?v=nRUkvPMphRc)
 
 ## About
 
-Rugplay is a realistic cryptocurrency trading simulator that lets you experience the risks and mechanics of decentralized exchanges without real financial consequences. Create coins, trade with liquidity pools, and learn about "rug pulls" in a... relatively safe environment :)
-
+RiseOfKingdoms (*ROFK) is a realistic cryptocurrency that lets you experience the risks and mechanics of decentralized exchanges without real financial consequences. Invest now in *ROFK in a... relatively safe environment :)  
+# You should buy *ROFK
 ## Features
-- 🪙 Create coins
-- 🟢 Buy coins
-- 🔴 Sell coins
-- ⚖️ Predict on questions (similar to Polymarket)
-- 🎲 Play arcade games
-- 📊 View a Treemap graph of the entire market
-- 🏆 Compete on leaderboards
+- 🟢 Buy *ROFK
+- 🔴 Sell *ROFK with profit
+- ⚖️ Predict on *ROFK growth
+- 🎲 Play arcade games to invest in *ROFK
+- 📊 View a Treemap graph of the entire market amd see *ROFK on it
+- 🏆 Compete on leaderboards to be the major *ROFK holder
 
 ![Preview 2](github_assets/preview2.png)
 ![Preview](github_assets/preview.png)
@@ -89,7 +88,7 @@ Before you begin, make sure you have the following installed:
 
    ```ini
    # --- Database ---
-   DATABASE_URL=postgres://pguser:pgpass@localhost:5432/rugplay   # PostgreSQL connection string
+   DATABASE_URL=postgres://buy:rofk@localhost:5432/rugplay   # PostgreSQL connection string
    POSTGRES_USER=pguser      # PostgreSQL username (should match Docker config)
    POSTGRES_PASSWORD=pgpass  # PostgreSQL password (should match Docker config)
    POSTGRES_DB=rugplay       # PostgreSQL database name (should match Docker config)

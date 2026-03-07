@@ -14,6 +14,7 @@ if (!process.env.REDIS_URL) {
 }
 
 const redis = new Redis(process.env.REDIS_URL, { enableReadyCheck: false });
+const redisCmd = new Redis(process.env.REDIS_URL, { enableReadyCheck: false });
 
 const HEARTBEAT_INTERVAL = 30_000;
 
@@ -169,14 +170,24 @@ function handleSetCoin(ws: ServerWebSocket<WebSocketData>, coinSymbol: string) {
 	}
 }
 
-function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string, username?: string, userImage?: string, handle?: string) {
+async function handleSetUser(ws: ServerWebSocket<WebSocketData>, token: string) {
+	const key = `ws_token:${token}`;
+	const raw = await redisCmd.get(key);
+	if (!raw) return;
+	await redisCmd.del(key);
+
+	const { userId, username, handle, userImage } = JSON.parse(raw) as {
+		userId: string;
+		username: string;
+		handle: string;
+		userImage: string;
+	};
+
 	if (ws.data.userId) {
 		const prev = userSockets.get(ws.data.userId);
 		if (prev) {
 			prev.delete(ws);
-			if (prev.size === 0) {
-				userSockets.delete(ws.data.userId);
-			}
+			if (prev.size === 0) userSockets.delete(ws.data.userId);
 		}
 	}
 
@@ -190,6 +201,8 @@ function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string, usern
 	} else {
 		userSockets.get(userId)!.add(ws);
 	}
+
+	ws.send(JSON.stringify({ type: 'user_ready' }));
 }
 
 function broadcastChat(message: string): void {
@@ -257,7 +270,7 @@ const server = Bun.serve<WebSocketData, undefined>({
 	},
 
 	websocket: {
-		message(ws, msg) {
+		async message(ws, msg) {
 			ws.data.lastActivity = Date.now();
 
 			if (typeof msg !== 'string') return;
@@ -266,16 +279,14 @@ const server = Bun.serve<WebSocketData, undefined>({
 				const data = JSON.parse(msg) as {
 					type: string;
 					coinSymbol?: string;
-					userId?: string;
-					username?: string;
-					userImage?: string;
+					token?: string;
 					text?: string;
 				};
 
 				if (data.type === 'set_coin' && data.coinSymbol) {
 					handleSetCoin(ws, data.coinSymbol);
-				} else if (data.type === 'set_user' && data.userId) {
-					handleSetUser(ws, data.userId, data.username, data.userImage, data.handle);
+				} else if (data.type === 'set_user' && data.token) {
+					await handleSetUser(ws, data.token);
 				} else if (data.type === 'chat_message') {
 					if (!ws.data.userId || !ws.data.username) return;
 					const text = (data.text ?? '').trim();

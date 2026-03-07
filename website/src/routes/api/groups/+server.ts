@@ -7,7 +7,7 @@ import type { RequestHandler } from './$types';
 
 const GROUP_CREATION_COST = 150_000;
 const MAX_MEMBERS = 50;
-const MAX_GROUPS_PER_USER = 3;
+const MAX_GROUPS_PER_USER = 2;
 
 // GET /api/groups — list all groups with member count + user's groups
 export const GET: RequestHandler = async ({ request, url }) => {

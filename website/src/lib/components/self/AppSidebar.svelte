@@ -123,11 +123,9 @@
 
 	async function handleTradeClick(coinSymbol: string, trade: any) {
 		if (trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT') {
-			const targetPath = `/user/${trade.username}`;
-			await goto(targetPath, { invalidateAll: true });
+			await goto(`/user/${trade.username}`, { invalidateAll: true });
 		} else {
-			const targetPath = `/coin/${coinSymbol.toLowerCase()}`;
-			await goto(targetPath, { invalidateAll: true });
+			await goto(`/coin/${coinSymbol.toLowerCase()}`, { invalidateAll: true });
 		}
 		setOpenMobile(false);
 	}
@@ -156,6 +154,11 @@
 
 	function handlePromoCodesClick() {
 		goto('/admin/promo');
+		setOpenMobile(false);
+	}
+
+	function handleGroupModerationClick() {
+		goto('/admin/groups');
 		setOpenMobile(false);
 	}
 
@@ -378,19 +381,28 @@
 							<div class="text-muted-foreground space-y-1 text-xs">
 								<div class="flex justify-between">
 									<span>Cash:</span>
-									<span class="font-mono" style="color: #00ff0d"
-										>${formatCurrency($PORTFOLIO_SUMMARY.baseCurrencyBalance)}</span
-									>
+									<span class="font-mono" style="color: #00ff0d">
+										${formatCurrency($PORTFOLIO_SUMMARY.baseCurrencyBalance)}
+									</span>
 								</div>
 								<div class="flex justify-between">
 									<span>Coins:</span>
-									<span class="font-mono" style="color: #00ff0d">${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}</span
-									>
+									<span class="font-mono" style="color: #00ff0d">
+										${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}
+									</span>
 								</div>
 								{#if $GEMS_BALANCE !== null}
 									<div class="flex justify-between">
 										<span>Gems:</span>
-										<span class="font-mono" style="color: #ca00ff"><HugeiconsIcon icon={GemIcon} size={14} strokeWidth={2} style="display: inline; vertical-align: middle; color: #ca00ff" /> {$GEMS_BALANCE.toLocaleString()}</span>
+										<span class="font-mono" style="color: #ca00ff">
+											<HugeiconsIcon
+												icon={GemIcon}
+												size={14}
+												strokeWidth={2}
+												style="display: inline; vertical-align: middle; color: #ca00ff"
+											/>
+											{$GEMS_BALANCE.toLocaleString()}
+										</span>
 									</div>
 								{/if}
 							</div>
@@ -514,6 +526,13 @@
 									>
 										<HugeiconsIcon icon={Ticket01Icon} class="text-primary" />
 										Manage codes
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										onclick={handleGroupModerationClick}
+										class="text-primary hover:text-primary!"
+									>
+										<HugeiconsIcon icon={UserMultiple02Icon} class="text-primary" />
+										Manage groups
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>
 							{/if}

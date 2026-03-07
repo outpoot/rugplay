@@ -1,4 +1,3 @@
-<!-- src/routes/groups/+page.svelte -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
@@ -75,7 +74,10 @@
 	}
 
 	async function createGroup() {
-		if (!$USER_DATA) { shouldSignIn = true; return; }
+		if (!$USER_DATA) {
+			shouldSignIn = true;
+			return;
+		}
 
 		const name = newName.trim();
 		if (!name || name.length < 3) {
@@ -122,20 +124,32 @@
 <Dialog.Root bind:open={showCreate}>
 	<Dialog.Content class="max-w-md">
 		<Dialog.Header>
-			<Dialog.Title>Create Group</Dialog.Title>
+			<Dialog.Title>Create a Group</Dialog.Title>
 			<Dialog.Description>
-				Creating a group costs
-				<span class="text-primary font-semibold">${GROUP_CREATION_COST.toLocaleString()}</span>.
+				A one-time cost of
+				<span class="text-primary font-semibold">${GROUP_CREATION_COST.toLocaleString()}</span>
+				is deducted from your balance.
 			</Dialog.Description>
 		</Dialog.Header>
 		<div class="space-y-4 py-2">
 			<div class="space-y-1.5">
-				<Label>Name <span class="text-muted-foreground text-xs">(3–50 chars)</span></Label>
-				<Input bind:value={newName} maxlength={50} placeholder="My Trading Crew" />
+				<Label>
+					Name
+					<span class="text-muted-foreground ml-1 text-xs">3–50 chars</span>
+				</Label>
+				<Input bind:value={newName} maxlength={50} placeholder="Moon Gang" />
 			</div>
 			<div class="space-y-1.5">
-				<Label>Description <span class="text-muted-foreground text-xs">(optional)</span></Label>
-				<Textarea bind:value={newDescription} maxlength={200} rows={3} placeholder="What's your group about?" />
+				<Label>
+					Description
+					<span class="text-muted-foreground ml-1 text-xs">optional</span>
+				</Label>
+				<Textarea
+					bind:value={newDescription}
+					maxlength={200}
+					rows={3}
+					placeholder="What's your group about?"
+				/>
 			</div>
 		</div>
 		<Dialog.Footer>
@@ -147,33 +161,37 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-<div class="container mx-auto max-w-4xl p-4 md:p-6">
-	<!-- Header -->
-	<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+<div class="container mx-auto max-w-5xl px-4 py-8 md:py-12">
+	<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 		<div>
-			<h1 class="flex items-center gap-2 text-2xl font-bold md:text-3xl">
-				<HugeiconsIcon icon={UserMultiple02Icon} class="text-primary h-7 w-7" />
-				Groups
-			</h1>
-			<p class="text-muted-foreground mt-1 text-sm">Join a group or create your own</p>
+			<div class="mb-1 flex items-center gap-2.5">
+				<div class="bg-primary/10 border-primary/20 flex h-9 w-9 items-center justify-center rounded-lg border">
+					<HugeiconsIcon icon={UserMultiple02Icon} class="text-primary h-5 w-5" />
+				</div>
+				<h1 class="text-2xl font-bold tracking-tight md:text-3xl">Groups</h1>
+			</div>
+			<p class="text-muted-foreground text-sm">
+				Pool funds, trade together, and grow your treasury.
+			</p>
 		</div>
 		<Button
 			onclick={() => ($USER_DATA ? (showCreate = true) : (shouldSignIn = true))}
-			class="gap-2"
+			class="shrink-0 gap-2"
 		>
 			<HugeiconsIcon icon={PlusSignIcon} class="h-4 w-4" />
-			Create Group
+			New Group
 		</Button>
 	</div>
 
-	<!-- Tabs + Search -->
-	<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-		<div class="bg-muted flex rounded-lg p-1">
+	<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+		<div class="bg-muted flex shrink-0 rounded-lg p-1">
 			{#each (['all', 'mine'] as const) as t}
 				<button
 					onclick={() => (tab = t)}
 					class="rounded-md px-4 py-1.5 text-sm font-medium transition-all
-					{tab === t ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+						{tab === t
+						? 'bg-background text-foreground shadow-sm'
+						: 'text-muted-foreground hover:text-foreground'}"
 				>
 					{t === 'all' ? 'All Groups' : 'My Groups'}
 					{#if t === 'mine' && myGroups.length > 0}
@@ -182,70 +200,83 @@
 				</button>
 			{/each}
 		</div>
+
 		<div class="relative flex-1">
-			<HugeiconsIcon icon={Search01Icon} class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+			<HugeiconsIcon
+				icon={Search01Icon}
+				class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+			/>
 			<input
 				bind:value={search}
-				placeholder="Search groups..."
-				class="border-border bg-background w-full rounded-lg border py-2 pl-9 pr-3 text-sm outline-none focus:ring-1"
+				placeholder="Search by name or owner..."
+				class="border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-primary/20 w-full rounded-lg border py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:ring-2"
 			/>
 		</div>
 	</div>
 
-	<!-- Groups Grid -->
 	{#if loading}
-		<div class="grid gap-3 sm:grid-cols-2">
-			{#each Array(4) as _}
-				<Skeleton class="h-32 w-full rounded-xl" />
+		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			{#each Array(6) as _}
+				<Skeleton class="h-36 w-full rounded-xl" />
 			{/each}
 		</div>
 	{:else if filtered.length === 0}
-		<div class="text-muted-foreground flex flex-col items-center justify-center gap-3 py-16">
-			<HugeiconsIcon icon={UserMultiple02Icon} class="h-12 w-12 opacity-20" />
-			<p class="text-sm">
-				{tab === 'mine' ? "You haven't joined any groups yet." : 'No groups found.'}
-			</p>
+		<div class="flex flex-col items-center justify-center gap-4 py-24 text-center">
+			<div class="bg-muted flex h-16 w-16 items-center justify-center rounded-2xl">
+				<HugeiconsIcon icon={UserMultiple02Icon} class="text-muted-foreground h-8 w-8" />
+			</div>
+			<div>
+				<p class="font-medium">
+					{tab === 'mine' ? "You haven't joined any groups yet." : 'No groups found.'}
+				</p>
+				<p class="text-muted-foreground mt-1 text-sm">
+					{tab === 'mine' ? 'Create one to get started.' : 'Try a different search.'}
+				</p>
+			</div>
 			{#if tab === 'mine'}
-				<Button variant="outline" size="sm" onclick={() => ($USER_DATA ? (showCreate = true) : (shouldSignIn = true))}>
-					Create one
+				<Button
+					variant="outline"
+					size="sm"
+					onclick={() => ($USER_DATA ? (showCreate = true) : (shouldSignIn = true))}
+				>
+					Create a group
 				</Button>
 			{/if}
 		</div>
 	{:else}
-		<div class="grid gap-3 sm:grid-cols-2">
+		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 			{#each filtered as g (g.id)}
 				<button
 					onclick={() => goto(`/groups/${g.id}`)}
-					class="bg-card border-border hover:border-primary/40 group flex flex-col gap-2 rounded-xl border p-4 text-left transition-all hover:shadow-md"
+					class="bg-card border-border hover:border-primary/40 group relative flex flex-col gap-3 rounded-xl border p-4 text-left transition-all duration-200 hover:shadow-lg"
 				>
-					<div class="flex items-start justify-between gap-2">
-						<div class="flex items-center gap-2">
-							<div class="bg-primary/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-								<HugeiconsIcon icon={UserMultiple02Icon} class="text-primary h-5 w-5" />
-							</div>
-							<div>
-								<div class="flex items-center gap-1.5">
-									<span class="font-semibold leading-tight">{g.name}</span>
-									{#if g.role === 'owner'}
-										<HugeiconsIcon icon={CrownIcon} class="text-amber-400 h-3.5 w-3.5" />
-									{/if}
-								</div>
-								<span class="text-muted-foreground text-xs">by @{g.ownerUsername}</span>
-							</div>
+					<div class="flex items-start gap-3">
+						<div class="bg-primary/10 border-primary/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors group-hover:bg-primary/15">
+							<HugeiconsIcon icon={UserMultiple02Icon} class="text-primary h-5 w-5" />
 						</div>
-						<Badge variant="secondary" class="shrink-0 text-xs">
+						<div class="min-w-0 flex-1">
+							<div class="flex items-center gap-1.5">
+								<span class="truncate font-semibold leading-tight">{g.name}</span>
+								{#if g.role === 'owner'}
+									<HugeiconsIcon icon={CrownIcon} class="text-amber-400 h-3.5 w-3.5 shrink-0" />
+								{/if}
+							</div>
+							<span class="text-muted-foreground truncate text-xs">@{g.ownerUsername}</span>
+						</div>
+						<Badge variant="outline" class="shrink-0 text-xs">
 							<HugeiconsIcon icon={UserIcon} class="mr-1 h-3 w-3" />
 							{g.memberCount}
 						</Badge>
 					</div>
 
 					{#if g.description}
-						<p class="text-muted-foreground line-clamp-2 text-sm">{g.description}</p>
+						<p class="text-muted-foreground line-clamp-2 text-xs leading-relaxed">{g.description}</p>
 					{/if}
 
-					<div class="mt-auto flex items-center justify-between pt-1">
-						<span class="text-muted-foreground text-xs">
-							Treasury: <span class="text-foreground font-medium">{formatValue(Number(g.balance))}</span>
+					<div class="border-border flex items-center justify-between border-t pt-2.5">
+						<span class="text-muted-foreground text-xs">Treasury</span>
+						<span class="text-sm font-semibold" style="color: #00ff0d">
+							{formatValue(Number(g.balance))}
 						</span>
 					</div>
 				</button>

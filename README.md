@@ -1,4 +1,4 @@
-<img style="width: 128px; height: 128px" src="website/static/favicon.svg" /><h1 style="font-size: 48px"><a href="https://rugplay.com">Rugplay.com/coin/ROFK</a> - the fake crypto to you test your luck.</h1>
+<img style="width: 128px; height: 128px" src="website/static/favicon.svg" /><h1 style="font-size: 48px"><a href="https://rugplay.com/coin/ROFK">Rugplay.com/coin/ROFK</a> - the fake crypto to you test your luck.</h1>
 
 [Privacy Policy](https://rugplay.com/legal/privacy) | [Terms of Service](https://rugplay.com/legal/terms) | [License](LICENSE) | [YouTube video](https://www.youtube.com/watch?v=nRUkvPMphRc)
 

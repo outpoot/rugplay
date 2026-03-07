@@ -17,7 +17,9 @@ export const POST: RequestHandler = async ({ request }) => {
   try {
     const body = await request.json();
     const { sessionToken } = body ?? {};
-    if (!sessionToken) return json({ error: 'Missing session token' }, { status: 400 });
+    if (!sessionToken || typeof sessionToken !== 'string') {
+      return json({ error: 'Missing session token' }, { status: 400 });
+    }
 
     const userId = Number(session.user.id);
     const raw = await redis.get(getSessionKey(sessionToken));
@@ -37,7 +39,7 @@ export const POST: RequestHandler = async ({ request }) => {
           totalArcadeGamesPlayed: user.totalArcadeGamesPlayed,
           arcadeWinStreak: user.arcadeWinStreak,
           arcadeBestWinStreak: user.arcadeBestWinStreak,
-          totalArcadeWagered: user.totalArcadeWagered
+          totalArcadeWagered: user.totalArcadeWagered,
         })
         .from(user)
         .where(eq(user.id, userId))
@@ -62,7 +64,7 @@ export const POST: RequestHandler = async ({ request }) => {
         baseCurrencyBalance: newBal.toFixed(8),
         totalArcadeGamesPlayed: (row.totalArcadeGamesPlayed || 0) + 1,
         totalArcadeWagered: `${Number(row.totalArcadeWagered || 0) + Number(game.betAmount ?? 0)}`,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       if (won) {
@@ -94,9 +96,17 @@ export const POST: RequestHandler = async ({ request }) => {
       }
 
       try {
+        const won = result.payout > result.amountWagered;
+        const wager = Math.floor(Number(result.amountWagered ?? 0));
         await incrementMissionProgress(userId, 'arcade_play_3');
-        if (result.payout > result.amountWagered) await incrementMissionProgress(userId, 'arcade_win_1');
-        await incrementMissionProgress(userId, 'arcade_wager_500', Math.floor(Number(result.amountWagered ?? 0)));
+        await incrementMissionProgress(userId, 'arcade_play_10');
+        if (won) {
+          await incrementMissionProgress(userId, 'arcade_win_1');
+          await incrementMissionProgress(userId, 'arcade_win_3');
+          await incrementMissionProgress(userId, 'arcade_win_10');
+        }
+        await incrementMissionProgress(userId, 'arcade_wager_500', wager);
+        await incrementMissionProgress(userId, 'arcade_wager_5000', wager);
       } catch (e) {
         console.error('incrementMissionProgress failed:', e);
       }

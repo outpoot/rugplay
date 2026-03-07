@@ -43,7 +43,7 @@ export const POST: RequestHandler = async ({ request }) => {
           totalArcadeGamesPlayed: user.totalArcadeGamesPlayed,
           arcadeWinStreak: user.arcadeWinStreak,
           arcadeBestWinStreak: user.arcadeBestWinStreak,
-          totalArcadeWagered: user.totalArcadeWagered
+          totalArcadeWagered: user.totalArcadeWagered,
         })
         .from(user)
         .where(eq(user.id, userId))
@@ -59,16 +59,14 @@ export const POST: RequestHandler = async ({ request }) => {
 
       const gameResult = randomInt(1, 7);
       const won = gameResult === selectedNumber;
-      const multiplier = 3;
-      const payout = won ? roundedBet * multiplier : 0;
+      const payout = won ? roundedBet * 3 : 0;
       const newBalance = Math.round((roundedBalance - roundedBet + payout) * 1e8) / 1e8;
-
       const netResult = Math.round((payout - roundedBet) * 1e8) / 1e8;
       const isWin = netResult > 0;
 
       const updateData: any = {
         baseCurrencyBalance: newBalance.toFixed(8),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       if (isWin) {
@@ -86,13 +84,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
       await tx.update(user).set(updateData).where(eq(user.id, userId));
 
-      return {
-        won,
-        result: gameResult,
-        newBalance,
-        payout,
-        amountWagered: roundedBet
-      };
+      return { won, result: gameResult, newBalance, payout, amountWagered: roundedBet };
     });
 
     try {
@@ -108,9 +100,16 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     try {
+      const wager = Math.floor(result.amountWagered);
       await incrementMissionProgress(userId, 'arcade_play_3');
-      if (result.won) await incrementMissionProgress(userId, 'arcade_win_1');
-      await incrementMissionProgress(userId, 'arcade_wager_500', Math.floor(result.amountWagered));
+      await incrementMissionProgress(userId, 'arcade_play_10');
+      if (result.won) {
+        await incrementMissionProgress(userId, 'arcade_win_1');
+        await incrementMissionProgress(userId, 'arcade_win_3');
+        await incrementMissionProgress(userId, 'arcade_win_10');
+      }
+      await incrementMissionProgress(userId, 'arcade_wager_500', wager);
+      await incrementMissionProgress(userId, 'arcade_wager_5000', wager);
     } catch (e) {
       console.error('incrementMissionProgress failed:', e);
     }

@@ -23,7 +23,9 @@ export const POST: RequestHandler = async ({ request }) => {
     const body = await request.json();
     const { amount } = body ?? {};
     const roundedBet = validateBetAmount(Number(amount));
-    if (!isFinite(roundedBet) || roundedBet <= 0) return json({ error: 'Invalid bet amount' }, { status: 400 });
+    if (!isFinite(roundedBet) || roundedBet <= 0) {
+      return json({ error: 'Invalid bet amount' }, { status: 400 });
+    }
 
     const userId = Number(session.user.id);
     const symbols = ['bussin', 'lyntr', 'subterfuge', 'twoblade', 'wattesigma', 'webx'];
@@ -37,7 +39,7 @@ export const POST: RequestHandler = async ({ request }) => {
           totalArcadeGamesPlayed: user.totalArcadeGamesPlayed,
           arcadeWinStreak: user.arcadeWinStreak,
           arcadeBestWinStreak: user.arcadeBestWinStreak,
-          totalArcadeWagered: user.totalArcadeWagered
+          totalArcadeWagered: user.totalArcadeWagered,
         })
         .from(user)
         .where(eq(user.id, userId))
@@ -51,10 +53,14 @@ export const POST: RequestHandler = async ({ request }) => {
         throw new Error(`Insufficient funds. You need $${roundedBet.toFixed(2)} but only have $${roundedBalance.toFixed(2)}`);
       }
 
-      const reels = [getRandomSymbol(symbols), getRandomSymbol(symbols), getRandomSymbol(symbols)];
+      const reels = [
+        getRandomSymbol(symbols),
+        getRandomSymbol(symbols),
+        getRandomSymbol(symbols),
+      ];
 
       let multiplier = 0;
-      let winType: string | undefined = undefined;
+      let winType: string | undefined;
 
       if (reels[0] === reels[1] && reels[1] === reels[2]) {
         multiplier = 5;
@@ -67,13 +73,12 @@ export const POST: RequestHandler = async ({ request }) => {
       const won = multiplier > 0;
       const payout = won ? roundedBet * multiplier : 0;
       const newBalance = Math.round((roundedBalance - roundedBet + payout) * 1e8) / 1e8;
-
       const netResult = Math.round((payout - roundedBet) * 1e8) / 1e8;
       const isWin = netResult > 0;
 
       const updateData: any = {
         baseCurrencyBalance: newBalance.toFixed(8),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       if (isWin) {
@@ -107,9 +112,16 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     try {
+      const wager = Math.floor(result.amountWagered);
       await incrementMissionProgress(userId, 'arcade_play_3');
-      if (result.won) await incrementMissionProgress(userId, 'arcade_win_1');
-      await incrementMissionProgress(userId, 'arcade_wager_500', Math.floor(result.amountWagered));
+      await incrementMissionProgress(userId, 'arcade_play_10');
+      if (result.won) {
+        await incrementMissionProgress(userId, 'arcade_win_1');
+        await incrementMissionProgress(userId, 'arcade_win_3');
+        await incrementMissionProgress(userId, 'arcade_win_10');
+      }
+      await incrementMissionProgress(userId, 'arcade_wager_500', wager);
+      await incrementMissionProgress(userId, 'arcade_wager_5000', wager);
     } catch (e) {
       console.error('incrementMissionProgress failed:', e);
     }

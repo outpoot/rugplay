@@ -38,7 +38,8 @@
 		ShoppingBasket01Icon,
 		GemIcon,
 		Award05Icon,
-		ArrowDown01Icon
+		ArrowDown01Icon,
+		UserMultiple02Icon
 	} from '@hugeicons/core-free-icons';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -68,7 +69,8 @@
 			{ title: 'Leaderboard', url: '/leaderboard', icon: ChampionIcon },
 			{ title: 'Shop', url: '/shop', icon: ShoppingBasket01Icon },
 			{ title: 'Achievements', url: '/achievements', icon: Award05Icon },
-			{ title: 'Missions', url: '/missions', icon: GiftIcon }, 
+			{ title: 'Groups', url: '/groups', icon: UserMultiple02Icon },
+			{ title: 'Missions', url: '/missions', icon: GiftIcon },
 			{ title: 'Portfolio', url: '/portfolio', icon: Briefcase01Icon },
 			{ title: 'Treemap', url: '/treemap', icon: Analytics01Icon },
 			{ title: 'Create coin', url: '/coin/create', icon: Coins02Icon },
@@ -105,7 +107,6 @@
 
 	function handleModeToggle() {
 		setMode(mode.current === 'light' ? 'dark' : 'light');
-		// Remove setOpenMobile(false) to keep menu open
 	}
 
 	function formatCurrency(value: number): string {
@@ -234,7 +235,6 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 
-		<!-- Daily Rewards -->
 		{#if $USER_DATA}
 			<Sidebar.Group>
 				<Sidebar.GroupContent>
@@ -251,7 +251,6 @@
 			</Sidebar.Group>
 		{/if}
 
-		<!-- Live Trades -->
 		<Sidebar.Group>
 			<Sidebar.GroupLabel class="flex items-center justify-between">
 				<div class="flex items-center gap-2">
@@ -343,7 +342,6 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 
-		<!-- Portfolio Summary -->
 		{#if $USER_DATA}
 			<Sidebar.Group>
 				<Sidebar.GroupLabel>Portfolio</Sidebar.GroupLabel>
@@ -447,7 +445,6 @@
 							</DropdownMenu.Label>
 							<DropdownMenu.Separator />
 
-							<!-- Profile & Settings Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAccountClick}>
 									<HugeiconsIcon icon={UserIcon} />
@@ -465,7 +462,6 @@
 
 							<DropdownMenu.Separator />
 
-							<!-- Features Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAPIClick}>
 									<HugeiconsIcon icon={Key01Icon} />
@@ -497,7 +493,6 @@
 
 							{#if $USER_DATA?.isAdmin}
 								<DropdownMenu.Separator />
-								<!-- Admin Group -->
 								<DropdownMenu.Group>
 									<DropdownMenu.Item
 										onclick={handleAdminClick}
@@ -525,7 +520,6 @@
 
 							<DropdownMenu.Separator />
 
-							<!-- Legal Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleTermsClick}>
 									<HugeiconsIcon icon={JusticeScale01Icon} />
@@ -539,7 +533,6 @@
 
 							<DropdownMenu.Separator />
 
-							<!-- Sign Out -->
 							<DropdownMenu.Item
 								onclick={() => {
 									signOut().then(() => {

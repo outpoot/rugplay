@@ -348,6 +348,44 @@ export const userInventory = pgTable("user_inventory", {
 	userIdIdx: index("user_inventory_user_id_idx").on(table.userId),
 }));
 
+export const userDailyMission = pgTable("user_daily_mission", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  missionId: varchar("mission_id", { length: 100 }).notNull(),
+  progress: integer("progress").notNull().default(0),
+  completed: boolean("completed").notNull().default(false),
+  claimed: boolean("claimed").notNull().default(false),
+  date: timestamp("date", { withTimezone: true }).notNull(),
+}, (table) => ({
+  userMissionDateUnique: unique("user_daily_mission_unique").on(table.userId, table.missionId, table.date),
+  userIdIdx: index("udm_user_id_idx").on(table.userId),
+  dateIdx: index("udm_date_idx").on(table.date),
+}));
+
+export const group = pgTable("group", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(),
+  description: varchar("description", { length: 200 }),
+  ownerId: integer("owner_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  balance: decimal("balance", { precision: 20, scale: 8 }).notNull().default("0"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  ownerIdIdx: index("group_owner_id_idx").on(table.ownerId),
+  nameIdx: index("group_name_idx").on(table.name),
+}));
+
+export const groupMember = pgTable("group_member", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").notNull().references(() => group.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).notNull().default("member"), // "owner" | "member"
+  joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  groupUserUnique: unique("group_member_unique").on(table.groupId, table.userId),
+  groupIdIdx: index("gm_group_id_idx").on(table.groupId),
+  userIdIdx: index("gm_user_id_idx").on(table.userId),
+}));
+
 export const userAchievement = pgTable("user_achievement", {
 	id: serial("id").primaryKey(),
 	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),

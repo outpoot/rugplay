@@ -9,9 +9,14 @@ import { user, gemTransactions } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { minesCleanupInactiveGames, minesAutoCashout } from '$lib/server/games/mines';
 import { towerCleanupInactiveGames } from '$lib/server/games/tower';
+import { resetExpiredMissions } from '$lib/server/missions';
 
 async function initializeScheduler() {
     if (building) return;
+
+    const missionsCleanupInterval = setInterval(() => {
+        resetExpiredMissions().catch(console.error);
+    }, 60 * 60 * 1000); // every hour
 
     try {
         const lockKey = 'hopium:scheduler';

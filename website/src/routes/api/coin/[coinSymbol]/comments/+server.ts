@@ -8,6 +8,7 @@ import { isNameAppropriate } from '$lib/server/moderation';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
 import { createNotification } from '$lib/server/notification';
 import { getBlockedBySet, getBlockedSet } from '$lib/server/blocks';
+import { incrementMissionProgress } from '$lib/server/missions';
 
 export async function GET({ params, request }) {
 	const session = await auth.api.getSession({
@@ -76,7 +77,8 @@ export async function POST({ request, params }) {
 	}
 
 	const { coinSymbol } = params;
-	const { content } = await request.json();
+	const body = await request.json();
+	const content = typeof body === 'object' && body !== null ? String(body.content ?? '') : String(body ?? '');
 
 	if (!content || content.trim().length === 0) {
 		throw error(400, 'Comment content is required');
@@ -86,7 +88,15 @@ export async function POST({ request, params }) {
 		throw error(400, 'Comment must be 500 characters or less');
 	}
 
-	if (!(await isNameAppropriate(content.trim()))) {
+	let moderationOk = true;
+	try {
+		moderationOk = await isNameAppropriate(content.trim());
+	} catch (modErr) {
+		console.error('Moderation check failed, allowing content:', modErr);
+		moderationOk = true;
+	}
+
+	if (!moderationOk) {
 		throw error(400, 'Comment contains inappropriate content');
 	}
 
@@ -112,6 +122,10 @@ export async function POST({ request, params }) {
 				content: content.trim()
 			})
 			.returning();
+
+		if (!newComment || !newComment.id) {
+			throw error(500, 'Failed to create comment');
+		}
 
 		const [commentWithUser] = await db
 			.select({
@@ -140,13 +154,23 @@ export async function POST({ request, params }) {
 			})
 		);
 
-		checkAndAwardAchievements(userId, ['social']);
+		try {
+			await checkAndAwardAchievements(userId, ['social']);
+		} catch (achErr) {
+			console.error('checkAndAwardAchievements failed:', achErr);
+		}
 
-		// Detect @mentions and send notifications
+		try {
+			await incrementMissionProgress(userId, 'comment_1');
+			await incrementMissionProgress(userId, 'comment_3');
+		} catch (missErr) {
+			console.error('incrementMissionProgress failed:', missErr);
+		}
+
 		try {
 			const mentionRegex = /@([a-zA-Z0-9_]{3,30})\b/g;
 			const mentions = [...content.matchAll(mentionRegex)].map((m) => m[1].toLowerCase());
-			const uniqueMentions = [...new Set(mentions)].slice(0, 3); // Limit to 3 mentions per message
+			const uniqueMentions = [...new Set(mentions)].slice(0, 3);
 
 			if (uniqueMentions.length > 0) {
 				const mentionedUsers = await db
@@ -158,9 +182,9 @@ export async function POST({ request, params }) {
 				const blockedBySet = await getBlockedBySet(userId);
 
 				for (const mentioned of mentionedUsers) {
-					if (mentioned.id === userId) continue; // Don't notify yourself
+					if (mentioned.id === userId) continue;
 					if (mentioned.disableMentions) continue;
-					if (blockedBySet.has(mentioned.id)) continue; // Don't notify users who blocked you
+					if (blockedBySet.has(mentioned.id)) continue;
 
 					createNotification(
 						mentioned.id.toString(),

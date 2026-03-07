@@ -38,7 +38,8 @@
 		ShoppingBasket01Icon,
 		GemIcon,
 		Award05Icon,
-		ArrowDown01Icon
+		ArrowDown01Icon,
+		UserMultiple02Icon
 	} from '@hugeicons/core-free-icons';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -68,6 +69,8 @@
 			{ title: 'Leaderboard', url: '/leaderboard', icon: ChampionIcon },
 			{ title: 'Shop', url: '/shop', icon: ShoppingBasket01Icon },
 			{ title: 'Achievements', url: '/achievements', icon: Award05Icon },
+			{ title: 'Groups', url: '/groups', icon: UserMultiple02Icon },
+			{ title: 'Missions', url: '/missions', icon: GiftIcon },
 			{ title: 'Portfolio', url: '/portfolio', icon: Briefcase01Icon },
 			{ title: 'Treemap', url: '/treemap', icon: Analytics01Icon },
 			{ title: 'Create coin', url: '/coin/create', icon: Coins02Icon },
@@ -104,7 +107,6 @@
 
 	function handleModeToggle() {
 		setMode(mode.current === 'light' ? 'dark' : 'light');
-		// Remove setOpenMobile(false) to keep menu open
 	}
 
 	function formatCurrency(value: number): string {
@@ -121,11 +123,9 @@
 
 	async function handleTradeClick(coinSymbol: string, trade: any) {
 		if (trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT') {
-			const targetPath = `/user/${trade.username}`;
-			await goto(targetPath, { invalidateAll: true });
+			await goto(`/user/${trade.username}`, { invalidateAll: true });
 		} else {
-			const targetPath = `/coin/${coinSymbol.toLowerCase()}`;
-			await goto(targetPath, { invalidateAll: true });
+			await goto(`/coin/${coinSymbol.toLowerCase()}`, { invalidateAll: true });
 		}
 		setOpenMobile(false);
 	}
@@ -154,6 +154,11 @@
 
 	function handlePromoCodesClick() {
 		goto('/admin/promo');
+		setOpenMobile(false);
+	}
+
+	function handleGroupModerationClick() {
+		goto('/admin/groups');
 		setOpenMobile(false);
 	}
 
@@ -233,7 +238,6 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 
-		<!-- Daily Rewards -->
 		{#if $USER_DATA}
 			<Sidebar.Group>
 				<Sidebar.GroupContent>
@@ -250,7 +254,6 @@
 			</Sidebar.Group>
 		{/if}
 
-		<!-- Live Trades -->
 		<Sidebar.Group>
 			<Sidebar.GroupLabel class="flex items-center justify-between">
 				<div class="flex items-center gap-2">
@@ -342,7 +345,6 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 
-		<!-- Portfolio Summary -->
 		{#if $USER_DATA}
 			<Sidebar.Group>
 				<Sidebar.GroupLabel>Portfolio</Sidebar.GroupLabel>
@@ -379,19 +381,28 @@
 							<div class="text-muted-foreground space-y-1 text-xs">
 								<div class="flex justify-between">
 									<span>Cash:</span>
-									<span class="font-mono" style="color: #00ff0d"
-										>${formatCurrency($PORTFOLIO_SUMMARY.baseCurrencyBalance)}</span
-									>
+									<span class="font-mono" style="color: #00ff0d">
+										${formatCurrency($PORTFOLIO_SUMMARY.baseCurrencyBalance)}
+									</span>
 								</div>
 								<div class="flex justify-between">
 									<span>Coins:</span>
-									<span class="font-mono" style="color: #00ff0d">${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}</span
-									>
+									<span class="font-mono" style="color: #00ff0d">
+										${formatCurrency($PORTFOLIO_SUMMARY.totalCoinValue)}
+									</span>
 								</div>
 								{#if $GEMS_BALANCE !== null}
 									<div class="flex justify-between">
 										<span>Gems:</span>
-										<span class="font-mono" style="color: #ca00ff"><HugeiconsIcon icon={GemIcon} size={14} strokeWidth={2} style="display: inline; vertical-align: middle; color: #ca00ff" /> {$GEMS_BALANCE.toLocaleString()}</span>
+										<span class="font-mono" style="color: #ca00ff">
+											<HugeiconsIcon
+												icon={GemIcon}
+												size={14}
+												strokeWidth={2}
+												style="display: inline; vertical-align: middle; color: #ca00ff"
+											/>
+											{$GEMS_BALANCE.toLocaleString()}
+										</span>
 									</div>
 								{/if}
 							</div>
@@ -446,7 +457,6 @@
 							</DropdownMenu.Label>
 							<DropdownMenu.Separator />
 
-							<!-- Profile & Settings Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAccountClick}>
 									<HugeiconsIcon icon={UserIcon} />
@@ -464,7 +474,6 @@
 
 							<DropdownMenu.Separator />
 
-							<!-- Features Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleAPIClick}>
 									<HugeiconsIcon icon={Key01Icon} />
@@ -496,7 +505,6 @@
 
 							{#if $USER_DATA?.isAdmin}
 								<DropdownMenu.Separator />
-								<!-- Admin Group -->
 								<DropdownMenu.Group>
 									<DropdownMenu.Item
 										onclick={handleAdminClick}
@@ -519,12 +527,18 @@
 										<HugeiconsIcon icon={Ticket01Icon} class="text-primary" />
 										Manage codes
 									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										onclick={handleGroupModerationClick}
+										class="text-primary hover:text-primary!"
+									>
+										<HugeiconsIcon icon={UserMultiple02Icon} class="text-primary" />
+										Manage groups
+									</DropdownMenu.Item>
 								</DropdownMenu.Group>
 							{/if}
 
 							<DropdownMenu.Separator />
 
-							<!-- Legal Group -->
 							<DropdownMenu.Group>
 								<DropdownMenu.Item onclick={handleTermsClick}>
 									<HugeiconsIcon icon={JusticeScale01Icon} />
@@ -538,7 +552,6 @@
 
 							<DropdownMenu.Separator />
 
-							<!-- Sign Out -->
 							<DropdownMenu.Item
 								onclick={() => {
 									signOut().then(() => {

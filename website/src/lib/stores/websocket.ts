@@ -127,6 +127,8 @@ export const chatMessagesStore = writable<ChatMessage[]>([]);
 export const typingStore = writable<Map<string, number>>(new Map());
 
 let hasLoadedInitialTrades = false;
+let userReady = false;
+let pendingMessages: object[] = [];
 
 // Comment callbacks
 const commentSubscriptions = new Map<string, (message: any) => void>();
@@ -192,9 +194,12 @@ function isSocketConnecting(): boolean {
 }
 
 function sendMessage(message: object): void {
-    if (isSocketConnected()) {
-        socket!.send(JSON.stringify(message));
+    if (!isSocketConnected()) return;
+    if (!userReady && (message as any).type === 'chat_message') {
+        pendingMessages.push(message);
+        return;
     }
+    socket!.send(JSON.stringify(message));
 }
 
 export function sendChatMessage(text: string): void {
@@ -348,6 +353,15 @@ function handleWebSocketMessage(event: MessageEvent): void {
                 break;
             }
 
+            case 'user_ready': {
+                userReady = true;
+                for (const pending of pendingMessages) {
+                    socket?.send(JSON.stringify(pending));
+                }
+                pendingMessages = [];
+                break;
+            }
+
             case 'chat_message': {
                 if (!message.userId || !message.username || typeof message.text !== 'string') break;
                 const msg: ChatMessage = {
@@ -389,16 +403,17 @@ function connect(): void {
         isConnectedStore.set(true);
         clearReconnectTimer();
         subscribeToChannels();
-        
+
         USER_DATA.subscribe(user => {
             if (user?.id && isSocketConnected()) {
-                socket!.send(JSON.stringify({
-                    type: 'set_user',
-                    userId: String(user.id),
-                    username: user.name,
-                    handle: user.username,
-                    userImage: user.image
-                }));
+                fetch('/api/ws-token', { method: 'POST' })
+                    .then(r => r.json())
+                    .then(({ token }) => {
+                        if (token && isSocketConnected()) {
+                            socket!.send(JSON.stringify({ type: 'set_user', token }));
+                        }
+                    })
+                    .catch(console.error);
             }
         })();
     };
@@ -409,6 +424,8 @@ function connect(): void {
         console.log(`WebSocket disconnected. Code: ${event.code}`);
         isConnectedStore.set(false);
         socket = null;
+        userReady = false;
+        pendingMessages = [];
         scheduleReconnect();
     };
 
@@ -487,15 +504,16 @@ class WebSocketController {
         loadInitialTrades(mode);
     }
 
-    setUser(userId: string, username?: string, userImage?: string, handle?: string) {
+    setUser() {
         if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({
-                type: 'set_user',
-                userId,
-                username,
-                handle,
-                userImage
-            }));
+            fetch('/api/ws-token', { method: 'POST' })
+                .then(r => r.json())
+                .then(({ token }) => {
+                    if (token && socket && socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ type: 'set_user', token }));
+                    }
+                })
+                .catch(console.error);
         }
     }
 }
@@ -503,12 +521,14 @@ class WebSocketController {
 if (typeof window !== 'undefined') {
 	USER_DATA.subscribe(user => {
 		if (user?.id && isSocketConnected()) {
-			socket!.send(JSON.stringify({
-				type: 'set_user',
-				userId: String(user.id),
-				username: user.name,
-				userImage: user.image
-			}));
+			fetch('/api/ws-token', { method: 'POST' })
+				.then(r => r.json())
+				.then(({ token }) => {
+					if (token && isSocketConnected()) {
+						socket!.send(JSON.stringify({ type: 'set_user', token }));
+					}
+				})
+				.catch(console.error);
 		}
 	});
 }

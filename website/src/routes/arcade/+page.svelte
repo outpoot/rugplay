@@ -9,7 +9,7 @@
 	import SEO from '$lib/components/self/SEO.svelte';
 	import Dice from '$lib/components/self/games/Dice.svelte';
 	import Tower from '$lib/components/self/games/Tower.svelte';
-	import { CardContent, CardHeader, CardTitle, CardFooter } from '$lib/components/ui/card';
+	import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '$lib/components/ui/card';
 	import { arcadeActivityStore } from '$lib/stores/websocket';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as HoverCard from '$lib/components/ui/hover-card';
@@ -17,7 +17,6 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Cards01FreeIcons, Clock01Icon, PiggyBankIcon } from '@hugeicons/core-free-icons';
 	import { formatValue, formatRelativeTime, getPublicUrl } from '$lib/utils';
-	import * as Card from '$lib/components/ui/card';
 
 	let shouldSignIn = $state(false);
 	let balance = $state(0);
@@ -63,8 +62,8 @@
 	<h1 class="mb-6 text-center text-3xl font-bold">Arcade</h1>
 
 	{#if !$USER_DATA}
-		<Card.Root class="gap-1 mx-auto max-w-4xl p-6">
-			<Card.Content>
+		<Card class="gap-1 mx-auto max-w-4xl p-6">
+			<CardContent>
 				<div class="py-12 text-center">
 					<div
 						class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
@@ -76,8 +75,8 @@
 					<p class="mb-6 text-muted-foreground">You need to be logged in to access the arcade</p>
 					<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 				</div>
-			</Card.Content>
-		</Card.Root>
+			</CardContent>
+		</Card>
 	{:else}
 		<div class="mx-auto max-w-4xl space-y-6">
 			<!-- Game Selection -->
@@ -128,7 +127,7 @@
 			{/if}
 
 			<!-- Live Arcade Activity Feed -->
-			<Card.Root>
+			<Card>
 				<CardHeader>
 					<CardTitle>Live</CardTitle>
 				</CardHeader>
@@ -193,7 +192,7 @@
 				<CardFooter>
 					<p class="text-muted-foreground text-xs">Showing bets of $1,000 or more only</p>
 				</CardFooter>
-			</Card.Root>
+			</Card>
 		</div>
 	{/if}
 </div>

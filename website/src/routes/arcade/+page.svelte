@@ -15,7 +15,7 @@
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { Clock01Icon, PiggyBankIcon } from '@hugeicons/core-free-icons';
+	import { Cards01FreeIcons, Clock01Icon, PiggyBankIcon } from '@hugeicons/core-free-icons';
 	import { formatValue, formatRelativeTime, getPublicUrl } from '$lib/utils';
 
 	let shouldSignIn = $state(false);
@@ -62,13 +62,21 @@
 	<h1 class="mb-6 text-center text-3xl font-bold">Arcade</h1>
 
 	{#if !$USER_DATA}
-		<div class="flex h-96 items-center justify-center">
-			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">Sign in to play</div>
-				<p class="text-muted-foreground mb-4 text-sm">You need an account to play arcade games</p>
-				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
-			</div>
-		</div>
+		<Card class="gap-1 mx-auto max-w-4xl p-6">
+			<CardContent>
+				<div class="py-12 text-center">
+					<div
+						class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+					>
+						<HugeiconsIcon icon={Cards01FreeIcons} class="text-muted-foreground h-8 w-8" />
+					</div>
+
+					<h3 class="mb-2 text-lg font-semibold">Please sign in</h3>
+					<p class="mb-6 text-muted-foreground">You need to be logged in to access the arcade</p>
+					<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+				</div>
+			</CardContent>
+		</Card>
 	{:else}
 		<div class="mx-auto max-w-4xl space-y-6">
 			<!-- Game Selection -->

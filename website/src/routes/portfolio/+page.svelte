@@ -31,6 +31,10 @@
 	let shouldSignIn = $state(false);
 
 	onMount(async () => {
+		if (!$USER_DATA) {
+			loading = false;
+			return;
+		}
 		await Promise.all([loadPortfolioData(), fetchRecentTransactions()]);
 		loading = false;
 	});
@@ -277,14 +281,21 @@
 	{#if loading}
 		<PortfolioSkeleton />
 	{:else if !$USER_DATA}
-		<div class="flex h-96 items-center justify-center">
-			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">
-					You need to be logged in to view your portfolio
+		<Card.Root class="gap-1 mx-auto max-w-4xl p-6">
+			<Card.Content>
+				<div class="py-12 text-center">
+					<div
+						class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+					>
+						<HugeiconsIcon icon={Wallet01Icon} class="text-muted-foreground h-8 w-8" />
+					</div>
+
+					<h3 class="mb-2 text-lg font-semibold">Please sign in</h3>
+					<p class="mb-6 text-muted-foreground">You need to be logged in to view your portfolio</p>
+					<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 				</div>
-				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
-			</div>
-		</div>
+			</Card.Content>
+		</Card.Root>
 	{:else if error}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">

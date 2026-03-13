@@ -21,10 +21,13 @@
 		ArrowLeft01Icon,
 		ArrowRight01Icon,
 		ReceiptDollarIcon,
-		Invoice03Icon
+		Invoice03Icon,
+		TransactionFreeIcons
 	} from '@hugeicons/core-free-icons';
 	import { formatPrice, formatValue, formatQuantity, formatDate, debounce } from '$lib/utils';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { USER_DATA } from '$lib/stores/user-data';
+	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 
 	let transactions = $state<any[]>([]);
 	let totalCount = $state(0);
@@ -35,6 +38,8 @@
 	let sortOrder = $state($page.url.searchParams.get('sortOrder') || 'desc');
 	let showFilterPopover = $state(false);
 	let currentPage = $state(parseInt($page.url.searchParams.get('page') || '1'));
+
+	let shouldSignIn = $state(false);
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 	let perPage = $derived(isDesktop.current ? 20 : 15);
@@ -57,7 +62,7 @@
 	let previousSearchQueryForEffect = $state('');
 
 	onMount(() => {
-		fetchTransactions();
+		if ($USER_DATA) fetchTransactions();
 	});
 
 	function updateURL() {
@@ -126,7 +131,7 @@
 
 	function performSearch() {
 		currentPage = 1;
-		fetchTransactions();
+		if ($USER_DATA) fetchTransactions();
 	}
 
 	function updateSearchUrl() {
@@ -155,19 +160,19 @@
 		}
 		currentPage = 1;
 		updateURL();
-		fetchTransactions();
+		if ($USER_DATA) fetchTransactions();
 	}
 
 	function handleTypeFilterChange() {
 		currentPage = 1;
 		updateURL();
-		fetchTransactions();
+		if ($USER_DATA) fetchTransactions();
 	}
 
 	function handleSortOrderChange() {
 		currentPage = 1;
 		updateURL();
-		fetchTransactions();
+		if ($USER_DATA) fetchTransactions();
 	}
 
 	function resetFilters() {
@@ -178,14 +183,14 @@
 		currentPage = 1;
 
 		goto('/transactions', { noScroll: true, replaceState: true });
-		fetchTransactions();
+		if ($USER_DATA) fetchTransactions();
 		showFilterPopover = false;
 	}
 
 	function applyFilters() {
 		currentPage = 1;
 		updateURL();
-		fetchTransactions();
+		if ($USER_DATA) fetchTransactions();
 		showFilterPopover = false;
 	}
 
@@ -200,7 +205,7 @@
 	function handlePageChange(page: number) {
 		currentPage = page;
 		updateURL();
-		fetchTransactions();
+		if ($USER_DATA) fetchTransactions();
 	}
 
 	let currentTypeFilterLabel = $derived(
@@ -336,6 +341,8 @@
 	keywords="trading history game, transaction records simulator, crypto trading log, virtual trading history"
 />
 
+<SignInConfirmDialog bind:open={shouldSignIn} />
+
 <div class="container mx-auto max-w-7xl p-6">
 	<header class="mb-8">
 		<div class="text-center">
@@ -343,215 +350,234 @@
 			<p class="text-muted-foreground mb-6">
 				Complete record of your trading activity and transactions
 			</p>
+			{#if !$USER_DATA}
+				<Card.Root class="gap-1 mx-auto max-w-4xl p-6">
+					<Card.Content>
+						<div class="py-12 text-center">
+							<div
+								class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+							>
+								<HugeiconsIcon icon={TransactionFreeIcons} class="text-muted-foreground h-8 w-8" />
+							</div>
 
-			<div class="mx-auto flex max-w-2xl items-center justify-center gap-2">
-				<div class="relative flex-1">
-					<HugeiconsIcon icon={Search01Icon} class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-					<Input
-						bind:value={searchQuery}
-						placeholder="Search by coin name or symbol..."
-						class="pl-10 pr-4"
-						onblur={updateSearchUrl}
-						onkeydown={handleSearchKeydown}
-					/>
-				</div>
+							<h3 class="mb-2 text-lg font-semibold">Please sign in</h3>
+							<p class="mb-6 text-muted-foreground">You need to be logged in to view your transactions</p>
+							<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+						</div>
+					</Card.Content>
+				</Card.Root>
+			{:else}
+				<div class="mx-auto flex max-w-2xl items-center justify-center gap-2">
+					<div class="relative flex-1">
+						<HugeiconsIcon icon={Search01Icon} class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+						<Input
+							bind:value={searchQuery}
+							placeholder="Search by coin name or symbol..."
+							class="pl-10 pr-4"
+							onblur={updateSearchUrl}
+							onkeydown={handleSearchKeydown}
+						/>
+					</div>
 
-				<Popover.Root bind:open={showFilterPopover}>
-					<Popover.Trigger>
-						<Button variant="outline" size="default" class="flex items-center gap-2">
-							<HugeiconsIcon icon={SlidersHorizontalIcon} class="h-4 w-4" />
-							Filters
-							{#if hasActiveFilters}
-								<Badge variant="secondary" class="h-5 w-5 rounded-full p-0 text-xs">•</Badge>
-							{/if}
-						</Button>
-					</Popover.Trigger>
-					<Popover.Content class="w-80 p-4" align="end">
-						<div class="space-y-4">
-							<div class="space-y-2">
-								<Label class="text-sm font-medium">Sort By</Label>
-								<div class="grid grid-cols-2 gap-2">
-									<Button
-										variant={sortBy === 'timestamp' ? 'default' : 'outline'}
-										size="sm"
-										onclick={() => handleSortChange('timestamp')}
+					<Popover.Root bind:open={showFilterPopover}>
+						<Popover.Trigger>
+							<Button variant="outline" size="default" class="flex items-center gap-2">
+								<HugeiconsIcon icon={SlidersHorizontalIcon} class="h-4 w-4" />
+								Filters
+								{#if hasActiveFilters}
+									<Badge variant="secondary" class="h-5 w-5 rounded-full p-0 text-xs">•</Badge>
+								{/if}
+							</Button>
+						</Popover.Trigger>
+						<Popover.Content class="w-80 p-4" align="end">
+							<div class="space-y-4">
+								<div class="space-y-2">
+									<Label class="text-sm font-medium">Sort By</Label>
+									<div class="grid grid-cols-2 gap-2">
+										<Button
+											variant={sortBy === 'timestamp' ? 'default' : 'outline'}
+											size="sm"
+											onclick={() => handleSortChange('timestamp')}
+										>
+											Date
+										</Button>
+										<Button
+											variant={sortBy === 'totalBaseCurrencyAmount' ? 'default' : 'outline'}
+											size="sm"
+											onclick={() => handleSortChange('totalBaseCurrencyAmount')}
+										>
+											Amount
+										</Button>
+										<Button
+											variant={sortBy === 'quantity' ? 'default' : 'outline'}
+											size="sm"
+											onclick={() => handleSortChange('quantity')}
+										>
+											Quantity
+										</Button>
+										<Button
+											variant={sortBy === 'pricePerCoin' ? 'default' : 'outline'}
+											size="sm"
+											onclick={() => handleSortChange('pricePerCoin')}
+										>
+											Price
+										</Button>
+									</div>
+								</div>
+
+								<div class="space-y-2">
+									<Label class="text-sm font-medium">Sort Order</Label>
+									<Select.Root
+										type="single"
+										bind:value={sortOrder}
+										onValueChange={handleSortOrderChange}
 									>
-										Date
-									</Button>
-									<Button
-										variant={sortBy === 'totalBaseCurrencyAmount' ? 'default' : 'outline'}
-										size="sm"
-										onclick={() => handleSortChange('totalBaseCurrencyAmount')}
+										<Select.Trigger class="w-full">
+											{currentSortOrderLabel}
+										</Select.Trigger>
+										<Select.Content>
+											<Select.Group>
+												{#each sortOrderOptions as option}
+													<Select.Item value={option.value} label={option.label}>
+														{option.label}
+													</Select.Item>
+												{/each}
+											</Select.Group>
+										</Select.Content>
+									</Select.Root>
+								</div>
+
+								<div class="space-y-2">
+									<Label class="text-sm font-medium">Transaction Type</Label>
+									<Select.Root
+										type="single"
+										bind:value={typeFilter}
+										onValueChange={handleTypeFilterChange}
 									>
-										Amount
+										<Select.Trigger class="w-full">
+											{currentTypeFilterLabel}
+										</Select.Trigger>
+										<Select.Content>
+											<Select.Group>
+												{#each typeFilterOptions as option}
+													<Select.Item value={option.value} label={option.label}>
+														{option.label}
+													</Select.Item>
+												{/each}
+											</Select.Group>
+										</Select.Content>
+									</Select.Root>
+								</div>
+
+								<div class="flex gap-2 pt-2">
+									<Button variant="outline" size="sm" onclick={resetFilters} class="flex-1">
+										Reset
 									</Button>
-									<Button
-										variant={sortBy === 'quantity' ? 'default' : 'outline'}
-										size="sm"
-										onclick={() => handleSortChange('quantity')}
-									>
-										Quantity
-									</Button>
-									<Button
-										variant={sortBy === 'pricePerCoin' ? 'default' : 'outline'}
-										size="sm"
-										onclick={() => handleSortChange('pricePerCoin')}
-									>
-										Price
-									</Button>
+									<Button size="sm" onclick={applyFilters} class="flex-1">Apply</Button>
 								</div>
 							</div>
+						</Popover.Content>
+					</Popover.Root>
 
-							<div class="space-y-2">
-								<Label class="text-sm font-medium">Sort Order</Label>
-								<Select.Root
-									type="single"
-									bind:value={sortOrder}
-									onValueChange={handleSortOrderChange}
-								>
-									<Select.Trigger class="w-full">
-										{currentSortOrderLabel}
-									</Select.Trigger>
-									<Select.Content>
-										<Select.Group>
-											{#each sortOrderOptions as option}
-												<Select.Item value={option.value} label={option.label}>
-													{option.label}
-												</Select.Item>
-											{/each}
-										</Select.Group>
-									</Select.Content>
-								</Select.Root>
-							</div>
-
-							<div class="space-y-2">
-								<Label class="text-sm font-medium">Transaction Type</Label>
-								<Select.Root
-									type="single"
-									bind:value={typeFilter}
-									onValueChange={handleTypeFilterChange}
-								>
-									<Select.Trigger class="w-full">
-										{currentTypeFilterLabel}
-									</Select.Trigger>
-									<Select.Content>
-										<Select.Group>
-											{#each typeFilterOptions as option}
-												<Select.Item value={option.value} label={option.label}>
-													{option.label}
-												</Select.Item>
-											{/each}
-										</Select.Group>
-									</Select.Content>
-								</Select.Root>
-							</div>
-
-							<div class="flex gap-2 pt-2">
-								<Button variant="outline" size="sm" onclick={resetFilters} class="flex-1">
-									Reset
-								</Button>
-								<Button size="sm" onclick={applyFilters} class="flex-1">Apply</Button>
-							</div>
-						</div>
-					</Popover.Content>
-				</Popover.Root>
-
-				<Button variant="outline" size="default" onclick={fetchTransactions} disabled={loading}>
-					<HugeiconsIcon icon={Refresh01Icon} class="h-4 w-4" />
-				</Button>
-			</div>
+					<Button variant="outline" size="default" onclick={() => $USER_DATA && fetchTransactions()} disabled={loading}>
+						<HugeiconsIcon icon={Refresh01Icon} class="h-4 w-4" />
+					</Button>
+				</div>
+			{/if}
 		</div>
 	</header>
 
-	<!-- Pagination Info -->
-	{#if !loading && totalCount > 0}
-		<div class="mb-4 flex items-center justify-between">
-			<div class="text-muted-foreground text-sm">
-				Showing {startIndex}-{endIndex} of {totalCount} transactions
-			</div>
-			{#if hasActiveFilters}
-				<Button variant="link" size="sm" onclick={resetFilters} class="h-auto p-0">
-					Clear all filters
-				</Button>
-			{/if}
-		</div>
-	{/if}
-
-	<!-- Transactions Table -->
-	<Card.Root>
-		<Card.Header>
-			<Card.Title class="flex items-center gap-2">
-				<HugeiconsIcon icon={ReceiptDollarIcon} class="h-5 w-5" />
-				History
-			</Card.Title>
-			<Card.Description>Complete record of your trading activity and transfers</Card.Description>
-		</Card.Header>
-		<Card.Content>
-			{#if loading}
-				<div class="space-y-4">
-					{#each Array(10) as _}
-						<div class="bg-muted h-16 animate-pulse rounded-lg"></div>
-					{/each}
+	{#if $USER_DATA}
+		<!-- Pagination Info -->
+		{#if !loading && totalCount > 0}
+			<div class="mb-4 flex items-center justify-between">
+				<div class="text-muted-foreground text-sm">
+					Showing {startIndex}-{endIndex} of {totalCount} transactions
 				</div>
-			{:else}
-				<DataTable
-					columns={transactionsColumns}
-					data={transactions}
-					onRowClick={(tx) => {
-						if (tx.coin) {
-							goto(`/coin/${tx.coin.symbol}`);
-						}
-					}}
-					emptyIcon={Invoice03Icon}
-					emptyTitle="No transactions found"
-					emptyDescription={hasActiveFilters
-						? 'No transactions match your current filters. Try adjusting your search criteria.'
-						: "You haven't made any trades or transfers yet. Start by buying coins or sending money to other users."}
-				/>
-			{/if}
-		</Card.Content>
-	</Card.Root>
+				{#if hasActiveFilters}
+					<Button variant="link" size="sm" onclick={resetFilters} class="h-auto p-0">
+						Clear all filters
+					</Button>
+				{/if}
+			</div>
+		{/if}
 
-	<!-- Pagination -->
-	{#if !loading && totalPages > 1}
-		<div class="mt-8 flex justify-center">
-			<Pagination.Root
-				count={totalCount}
-				{perPage}
-				{siblingCount}
-				page={currentPage}
-				onPageChange={handlePageChange}
-			>
-				{#snippet children({ pages, currentPage: paginationCurrentPage })}
-					<Pagination.Content>
-						<Pagination.Item>
-							<Pagination.PrevButton>
-								<HugeiconsIcon icon={ArrowLeft01Icon} class="h-4 w-4" />
-								<span class="hidden sm:block">Previous</span>
-							</Pagination.PrevButton>
-						</Pagination.Item>
-						{#each pages as page (page.key)}
-							{#if page.type === 'ellipsis'}
-								<Pagination.Item>
-									<Pagination.Ellipsis />
-								</Pagination.Item>
-							{:else}
-								<Pagination.Item>
-									<Pagination.Link {page} isActive={paginationCurrentPage === page.value}>
-										{page.value}
-									</Pagination.Link>
-								</Pagination.Item>
-							{/if}
+		<!-- Transactions Table -->
+		<Card.Root>
+			<Card.Header>
+				<Card.Title class="flex items-center gap-2">
+					<HugeiconsIcon icon={ReceiptDollarIcon} class="h-5 w-5" />
+					History
+				</Card.Title>
+				<Card.Description>Complete record of your trading activity and transfers</Card.Description>
+			</Card.Header>
+			<Card.Content>
+				{#if loading}
+					<div class="space-y-4">
+						{#each Array(10) as _}
+							<div class="bg-muted h-16 animate-pulse rounded-lg"></div>
 						{/each}
-						<Pagination.Item>
-							<Pagination.NextButton>
-								<span class="hidden sm:block">Next</span>
-								<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
-							</Pagination.NextButton>
-						</Pagination.Item>
-					</Pagination.Content>
-				{/snippet}
-			</Pagination.Root>
-		</div>
+					</div>
+				{:else}
+					<DataTable
+						columns={transactionsColumns}
+						data={transactions}
+						onRowClick={(tx) => {
+							if (tx.coin) {
+								goto(`/coin/${tx.coin.symbol}`);
+							}
+						}}
+						emptyIcon={Invoice03Icon}
+						emptyTitle="No transactions found"
+						emptyDescription={hasActiveFilters
+							? 'No transactions match your current filters. Try adjusting your search criteria.'
+							: "You haven't made any trades or transfers yet. Start by buying coins or sending money to other users."}
+					/>
+				{/if}
+			</Card.Content>
+		</Card.Root>
+
+		<!-- Pagination -->
+		{#if !loading && totalPages > 1}
+			<div class="mt-8 flex justify-center">
+				<Pagination.Root
+					count={totalCount}
+					{perPage}
+					{siblingCount}
+					page={currentPage}
+					onPageChange={handlePageChange}
+				>
+					{#snippet children({ pages, currentPage: paginationCurrentPage })}
+						<Pagination.Content>
+							<Pagination.Item>
+								<Pagination.PrevButton>
+									<HugeiconsIcon icon={ArrowLeft01Icon} class="h-4 w-4" />
+									<span class="hidden sm:block">Previous</span>
+								</Pagination.PrevButton>
+							</Pagination.Item>
+							{#each pages as page (page.key)}
+								{#if page.type === 'ellipsis'}
+									<Pagination.Item>
+										<Pagination.Ellipsis />
+									</Pagination.Item>
+								{:else}
+									<Pagination.Item>
+										<Pagination.Link {page} isActive={paginationCurrentPage === page.value}>
+											{page.value}
+										</Pagination.Link>
+									</Pagination.Item>
+								{/if}
+							{/each}
+							<Pagination.Item>
+								<Pagination.NextButton>
+									<span class="hidden sm:block">Next</span>
+									<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
+								</Pagination.NextButton>
+							</Pagination.Item>
+						</Pagination.Content>
+					{/snippet}
+				</Pagination.Root>
+			</div>
+		{/if}
 	{/if}
 </div>

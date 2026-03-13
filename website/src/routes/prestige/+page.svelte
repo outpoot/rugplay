@@ -12,7 +12,8 @@
 		ArrowRight01Icon,
 		Alert02Icon,
 		Loading03Icon,
-		StarIcon
+		StarIcon,
+		Money01FreeIcons
 	} from '@hugeicons/core-free-icons';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -21,7 +22,7 @@
 	import SEO from '$lib/components/self/SEO.svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import ProfileBadges from '$lib/components/self/ProfileBadges.svelte';
-		import PrestigeSkeleton from '$lib/components/self/skeletons/PrestigeSkeleton.svelte';
+	import PrestigeSkeleton from '$lib/components/self/skeletons/PrestigeSkeleton.svelte';
 	import { haptic } from '$lib/stores/haptics';
 
 	let isPrestiging = $state(false);
@@ -207,13 +208,21 @@
 	{#if loading}
 		<PrestigeSkeleton />
 	{:else if !userData}
-		<div class="flex h-96 items-center justify-center">
-			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">Sign in to prestige</div>
-				<p class="text-muted-foreground mb-4 text-sm">You need an account to prestige</p>
-				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
-			</div>
-		</div>
+		<Card.Root class="gap-1 mx-auto max-w-4xl p-6">
+			<Card.Content>
+				<div class="py-12 text-center">
+					<div
+						class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+					>
+						<HugeiconsIcon icon={Money01FreeIcons} class="text-muted-foreground h-8 w-8" />
+					</div>
+
+					<h3 class="mb-2 text-lg font-semibold">Please sign in</h3>
+					<p class="mb-6 text-muted-foreground">You need to be logged in to prestige</p>
+					<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+				</div>
+			</Card.Content>
+		</Card.Root>
 	{:else}
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 			<!-- Main Content Column -->

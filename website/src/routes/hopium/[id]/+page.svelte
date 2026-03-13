@@ -12,6 +12,7 @@
 	import UserName from '$lib/components/self/UserName.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import {
 		Loading03Icon,
 		Calculator01Icon,
@@ -35,6 +36,7 @@
 	let question = $state(data.question);
 	let loading = $state(false);
 	let probabilityData = $state(data.probabilityData);
+	let shouldSignIn = $state(false);
 
 	// Betting form
 	let betSide = $state<boolean>(true);
@@ -215,6 +217,8 @@
 		: 'AI-powered prediction market question in the Rugplay simulation game.'}
 	keywords="AI prediction market question, virtual prediction, cryptocurrency prediction game, yes no prediction, forecasting simulation"
 />
+
+<SignInConfirmDialog bind:open={shouldSignIn} />
 
 <div class="container mx-auto max-w-7xl p-6">
 	{#if loading}
@@ -454,7 +458,7 @@
 							<Card.Content class="pb-6">
 								<div class="py-6 text-center">
 									<p class="text-muted-foreground mb-4 text-sm">Sign in to make predictions</p>
-									<Button size="lg" onclick={() => goto('/')}>Sign In</Button>
+									<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 								</div>
 							</Card.Content>
 						</Card.Root>

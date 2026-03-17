@@ -195,8 +195,7 @@ async function checkAchievement(
 			// Check if user has bought at least $1000 worth of any single coin on each of the last 14 consecutive days with no sells ever on that coin
 			const result = await db.execute(sql`
 				WITH daily_buys AS (
-					SELECT t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC') AS buy_date,
-						SUM(CAST(t.total_base_currency_amount AS NUMERIC)) AS daily_amount
+					SELECT t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC') AS buy_date
 					FROM "transaction" t
 					WHERE t.user_id = ${userId} AND t.type = 'BUY'
 					GROUP BY t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC')
@@ -207,17 +206,24 @@ async function checkAchievement(
 					FROM "transaction" t
 					WHERE t.user_id = ${userId} AND t.type = 'SELL'
 				),
-				eligible_coins AS (
-					SELECT db.coin_id
+				eligible_buys AS (
+					SELECT db.coin_id, db.buy_date
 					FROM daily_buys db
 					LEFT JOIN coins_with_sells cs ON db.coin_id = cs.coin_id
 					WHERE cs.coin_id IS NULL
-					AND db.buy_date >= (NOW() AT TIME ZONE 'UTC')::DATE - INTERVAL '13 days'
-					AND db.buy_date <= (NOW() AT TIME ZONE 'UTC')::DATE
-					GROUP BY db.coin_id
-					HAVING COUNT(DISTINCT db.buy_date) >= 14
+				),
+				streaks AS (
+					SELECT coin_id,
+						buy_date - (ROW_NUMBER() OVER (PARTITION BY coin_id ORDER BY buy_date))::int AS grp
+					FROM eligible_buys
+				),
+				streak_counts AS (
+					SELECT coin_id, COUNT(*) AS cnt
+					FROM streaks
+					GROUP BY coin_id, grp
 				)
-				SELECT COUNT(*) AS cnt FROM eligible_coins
+				SELECT COUNT(*) AS cnt FROM streak_counts
+				WHERE cnt >= 14
 			`);
 			return Number(result[0]?.cnt ?? 0) > 0;
 		}
@@ -787,14 +793,17 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 				FROM daily_buys db
 				LEFT JOIN coins_with_sells cs ON db.coin_id = cs.coin_id
 				WHERE cs.coin_id IS NULL
-				AND db.buy_date >= (NOW() AT TIME ZONE 'UTC')::DATE - INTERVAL '13 days'
-				AND db.buy_date <= (NOW() AT TIME ZONE 'UTC')::DATE
-			)
-			SELECT COALESCE(MAX(day_count), 0) AS best
-			FROM (
-				SELECT coin_id, COUNT(DISTINCT buy_date) AS day_count
+			),
+			streaks AS (
+				SELECT coin_id,
+					buy_date - (ROW_NUMBER() OVER (PARTITION BY coin_id ORDER BY buy_date))::int AS grp
 				FROM eligible_buys
-				GROUP BY coin_id
+			)
+			SELECT COALESCE(MAX(cnt), 0) AS best
+			FROM (
+				SELECT coin_id, COUNT(*) AS cnt
+				FROM streaks
+				GROUP BY coin_id, grp
 			) sub
 		`);
 		progress['true_dedication'] = Number((dedicationResult as any)[0]?.best ?? 0);

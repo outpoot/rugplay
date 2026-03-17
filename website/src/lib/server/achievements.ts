@@ -32,6 +32,9 @@ export interface AchievementContext {
 	slotsWinType?: string; // '3 OF A KIND' etc
 	minesTilesRevealed?: number; // for mines cashout
 	minesCount?: number; // number of mines in the game
+	floor?: number; //tower
+	difficulty?: any; //tower
+	cardsValue?: number;
 
 	// Streak context
 	newStreak?: number;
@@ -195,8 +198,7 @@ async function checkAchievement(
 			// Check if user has bought at least $1000 worth of any single coin on each of the last 14 consecutive days with no sells ever on that coin
 			const result = await db.execute(sql`
 				WITH daily_buys AS (
-					SELECT t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC') AS buy_date,
-						SUM(CAST(t.total_base_currency_amount AS NUMERIC)) AS daily_amount
+					SELECT t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC') AS buy_date
 					FROM "transaction" t
 					WHERE t.user_id = ${userId} AND t.type = 'BUY'
 					GROUP BY t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC')
@@ -207,17 +209,24 @@ async function checkAchievement(
 					FROM "transaction" t
 					WHERE t.user_id = ${userId} AND t.type = 'SELL'
 				),
-				eligible_coins AS (
-					SELECT db.coin_id
+				eligible_buys AS (
+					SELECT db.coin_id, db.buy_date
 					FROM daily_buys db
 					LEFT JOIN coins_with_sells cs ON db.coin_id = cs.coin_id
 					WHERE cs.coin_id IS NULL
-					AND db.buy_date >= (NOW() AT TIME ZONE 'UTC')::DATE - INTERVAL '13 days'
-					AND db.buy_date <= (NOW() AT TIME ZONE 'UTC')::DATE
-					GROUP BY db.coin_id
-					HAVING COUNT(DISTINCT db.buy_date) >= 14
+				),
+				streaks AS (
+					SELECT coin_id,
+						buy_date - (ROW_NUMBER() OVER (PARTITION BY coin_id ORDER BY buy_date))::int AS grp
+					FROM eligible_buys
+				),
+				streak_counts AS (
+					SELECT coin_id, COUNT(*) AS cnt
+					FROM streaks
+					GROUP BY coin_id, grp
 				)
-				SELECT COUNT(*) AS cnt FROM eligible_coins
+				SELECT COUNT(*) AS cnt FROM streak_counts
+				WHERE cnt >= 14
 			`);
 			return Number(result[0]?.cnt ?? 0) > 0;
 		}
@@ -311,7 +320,20 @@ async function checkAchievement(
 			return ctx.arcadeWon === true && (ctx.minesCount ?? 0) >= 24;
 
 		case 'mines_21':
-			return ctx.arcadeWon === true && (ctx.minesTilesRevealed ?? 0) >= 22 && (ctx.minesCount ?? 0) === 3;
+			return (
+				ctx.arcadeWon === true && (ctx.minesTilesRevealed ?? 0) >= 22 && (ctx.minesCount ?? 0) === 3
+			);
+
+		case 'tower_god':
+			return (
+				ctx.arcadeWon === true &&
+				ctx.floor == 10 &&
+				(ctx.difficulty as any) == 'hard' &&
+				(ctx.arcadeWager ?? 0) >= 10
+			);
+
+		case 'blackjack_21':
+			return ctx.arcadeWon === true && (ctx.cardsValue ?? 0) == 21;
 
 		case 'arcade_100': {
 			const [userData] = await db
@@ -399,6 +421,8 @@ async function checkAchievement(
 			return (ctx.newPrestigeLevel ?? 0) >= 3;
 		case 'prestige_5':
 			return (ctx.newPrestigeLevel ?? 0) >= 5;
+		case 'prestige_7':
+			return (ctx.newPrestigeLevel ?? 0) >= 7;
 
 		// HOPIUM
 		case 'first_bet':
@@ -497,12 +521,26 @@ async function checkAchievement(
 			return true; // triggered when bio is updated
 
 		// SHOP
+		case 'own_5_colors': {
+			const [result] = await db
+				.select({ cnt: count() })
+				.from(userInventory)
+				.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
+			return Number(result.cnt) >= 5;
+		}
 		case 'own_10_colors': {
 			const [result] = await db
 				.select({ cnt: count() })
 				.from(userInventory)
 				.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
 			return Number(result.cnt) >= 10;
+		}
+		case 'own_15_colors': {
+			const [result] = await db
+				.select({ cnt: count() })
+				.from(userInventory)
+				.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
+			return Number(result.cnt) >= 15;
 		}
 
 		case 'open_50_crates': {
@@ -686,6 +724,7 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 			progress['prestige_1'] = userData.prestigeLevel ?? 0;
 			progress['prestige_3'] = userData.prestigeLevel ?? 0;
 			progress['prestige_5'] = userData.prestigeLevel ?? 0;
+			progress['prestige_7'] = userData.prestigeLevel ?? 0;
 			progress['open_50_crates'] = userData.cratesOpened ?? 0;
 		}
 
@@ -767,7 +806,9 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 			.select({ cnt: count() })
 			.from(userInventory)
 			.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
+		progress['own_5_colors'] = Number(colorCount?.cnt ?? 0);
 		progress['own_10_colors'] = Number(colorCount?.cnt ?? 0);
+		progress['own_15_colors'] = Number(colorCount?.cnt ?? 0);
 
 		const dedicationResult = await db.execute(sql`
 			WITH daily_buys AS (
@@ -787,14 +828,17 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 				FROM daily_buys db
 				LEFT JOIN coins_with_sells cs ON db.coin_id = cs.coin_id
 				WHERE cs.coin_id IS NULL
-				AND db.buy_date >= (NOW() AT TIME ZONE 'UTC')::DATE - INTERVAL '13 days'
-				AND db.buy_date <= (NOW() AT TIME ZONE 'UTC')::DATE
-			)
-			SELECT COALESCE(MAX(day_count), 0) AS best
-			FROM (
-				SELECT coin_id, COUNT(DISTINCT buy_date) AS day_count
+			),
+			streaks AS (
+				SELECT coin_id,
+					buy_date - (ROW_NUMBER() OVER (PARTITION BY coin_id ORDER BY buy_date))::int AS grp
 				FROM eligible_buys
-				GROUP BY coin_id
+			)
+			SELECT COALESCE(MAX(cnt), 0) AS best
+			FROM (
+				SELECT coin_id, COUNT(*) AS cnt
+				FROM streaks
+				GROUP BY coin_id, grp
 			) sub
 		`);
 		progress['true_dedication'] = Number((dedicationResult as any)[0]?.best ?? 0);

@@ -32,9 +32,6 @@ export interface AchievementContext {
 	slotsWinType?: string; // '3 OF A KIND' etc
 	minesTilesRevealed?: number; // for mines cashout
 	minesCount?: number; // number of mines in the game
-	floor?: number; //tower
-	difficulty?: any; //tower
-	cardsValue?: number;
 
 	// Streak context
 	newStreak?: number;
@@ -320,20 +317,7 @@ async function checkAchievement(
 			return ctx.arcadeWon === true && (ctx.minesCount ?? 0) >= 24;
 
 		case 'mines_21':
-			return (
-				ctx.arcadeWon === true && (ctx.minesTilesRevealed ?? 0) >= 22 && (ctx.minesCount ?? 0) === 3
-			);
-
-		case 'tower_god':
-			return (
-				ctx.arcadeWon === true &&
-				ctx.floor == 10 &&
-				(ctx.difficulty as any) == 'hard' &&
-				(ctx.arcadeWager ?? 0) >= 10
-			);
-
-		case 'blackjack_21':
-			return ctx.arcadeWon === true && (ctx.cardsValue ?? 0) == 21;
+			return ctx.arcadeWon === true && (ctx.minesTilesRevealed ?? 0) >= 22 && (ctx.minesCount ?? 0) === 3;
 
 		case 'arcade_100': {
 			const [userData] = await db
@@ -421,8 +405,6 @@ async function checkAchievement(
 			return (ctx.newPrestigeLevel ?? 0) >= 3;
 		case 'prestige_5':
 			return (ctx.newPrestigeLevel ?? 0) >= 5;
-		case 'prestige_7':
-			return (ctx.newPrestigeLevel ?? 0) >= 7;
 
 		// HOPIUM
 		case 'first_bet':
@@ -521,26 +503,12 @@ async function checkAchievement(
 			return true; // triggered when bio is updated
 
 		// SHOP
-		case 'own_5_colors': {
-			const [result] = await db
-				.select({ cnt: count() })
-				.from(userInventory)
-				.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
-			return Number(result.cnt) >= 5;
-		}
 		case 'own_10_colors': {
 			const [result] = await db
 				.select({ cnt: count() })
 				.from(userInventory)
 				.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
 			return Number(result.cnt) >= 10;
-		}
-		case 'own_15_colors': {
-			const [result] = await db
-				.select({ cnt: count() })
-				.from(userInventory)
-				.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
-			return Number(result.cnt) >= 15;
 		}
 
 		case 'open_50_crates': {
@@ -724,7 +692,6 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 			progress['prestige_1'] = userData.prestigeLevel ?? 0;
 			progress['prestige_3'] = userData.prestigeLevel ?? 0;
 			progress['prestige_5'] = userData.prestigeLevel ?? 0;
-			progress['prestige_7'] = userData.prestigeLevel ?? 0;
 			progress['open_50_crates'] = userData.cratesOpened ?? 0;
 		}
 
@@ -806,9 +773,7 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 			.select({ cnt: count() })
 			.from(userInventory)
 			.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
-		progress['own_5_colors'] = Number(colorCount?.cnt ?? 0);
 		progress['own_10_colors'] = Number(colorCount?.cnt ?? 0);
-		progress['own_15_colors'] = Number(colorCount?.cnt ?? 0);
 
 		const dedicationResult = await db.execute(sql`
 			WITH daily_buys AS (

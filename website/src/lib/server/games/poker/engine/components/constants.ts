@@ -2,6 +2,7 @@
 export const tablePrefix = "poker:table:";
 export const codePrefix = "poker:code:";
 export const playerPrefix = "poker:player:";
+export const imagePrefix = "poker:image:";
 export const ttl = 7200;
 
 // General game settings

@@ -8,6 +8,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import Dice from '$lib/components/self/games/Dice.svelte';
+	import Poker from '$lib/components/self/games/Poker.svelte';
 	import Tower from '$lib/components/self/games/Tower.svelte';
 	import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '$lib/components/ui/card';
 	import { arcadeActivityStore } from '$lib/stores/websocket';
@@ -17,7 +18,7 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Clock01Icon, PiggyBankIcon } from '@hugeicons/core-free-icons';
 	import { formatValue, formatRelativeTime, getPublicUrl } from '$lib/utils';
-
+	
 	let shouldSignIn = $state(false);
 	let balance = $state(0);
 	let activeGame = $state('coinflip');
@@ -103,6 +104,12 @@
 				>
 					Tower
 				</Button>
+				<Button
+					variant={activeGame === 'poker' ? 'default' : 'outline'}
+					onclick={() => (activeGame = 'poker')}
+				>
+					Poker
+				</Button>
 			</div>
 
 			<!-- Game Content -->
@@ -116,6 +123,8 @@
 				<Dice bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{:else if activeGame === 'tower'}
 				<Tower bind:balance onBalanceUpdate={handleBalanceUpdate} />
+			{:else if activeGame === 'poker'}
+				<Poker bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{/if}
 
 			<!-- Live Arcade Activity Feed -->

@@ -1,22 +1,18 @@
 import type { PokerTable, WinnerInfo } from "./types";
-import { evalHand, compareScores } from "./eval";
+import { evalHand, compare } from "./eval";
 
 function activePlayers(table: PokerTable) {
     return table.players.filter(p => !p.folded);
 }
 
-/**
- * Recalculates sidepots from all players" cumulative chipsBet.
- * Ported from brunoscopelliti/poker-holdem-engine split-pot.js
- * Each sidepot: { minChipsBet, pot }
- *   - minChipsBet: a player must have bet at least this to be eligible
- *   - pot: the chips in this sidepot
- */
+// This is the main sidepot / split logic. Basically for payout etc.
+
+
 export function splitPot(table: PokerTable): void {
     let bets = table.players.map(p => p.chipsBet).sort((a, b) => a - b);
     table.sidepots = [];
 
-    if (bets[0] === bets[bets.length - 1]) return; // everyone equal, no sidepots
+    if (bets[0] === bets[bets.length - 1]) return;
 
     let bet: number | undefined;
     while ((bet = bets.shift()) !== undefined && bet >= 0) {
@@ -54,7 +50,7 @@ export function resolveShowdown(table: PokerTable): void {
 
     const winners: WinnerInfo[] = [];
 
-    // Use live sidepots if any all-in occurred, otherwise treat as one pot
+    // sidepot resolve
     const pots = table.sidepots.length > 0
         ? table.sidepots
         : [{ minChipsBet: table.callAmount, pot: table.pot }];
@@ -62,12 +58,12 @@ export function resolveShowdown(table: PokerTable): void {
     for (const sidepot of pots) {
         const eligible = evals
             .filter(e => e.chipsBet >= sidepot.minChipsBet)
-            .sort((a, b) => compareScores(b.score, a.score));
+            .sort((a, b) => compare(b.score, a.score));
 
         if (eligible.length === 0) continue;
 
         const best = eligible[0].score;
-        const potWinners = eligible.filter(e => compareScores(e.score, best) === 0);
+        const potWinners = eligible.filter(e => compare(e.score, best) === 0);
         const share = Math.floor(sidepot.pot / potWinners.length);
         let remainder = sidepot.pot - share * potWinners.length;
 

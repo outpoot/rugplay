@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { createCanvas, registerFont } from 'canvas';
+import { createCanvas, registerFont, CanvasRenderingContext2D  } from 'canvas';
 import { imagePrefix } from '$lib/server/games/poker/engine';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '$lib/server/s3';

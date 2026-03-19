@@ -1,4 +1,5 @@
 import { PUBLIC_B2_BUCKET, PUBLIC_B2_ENDPOINT } from "$env/static/public";
+import { ttl } from "$lib/server/games/poker/engine/index.js";
 import { error } from '@sveltejs/kit';
 
 export async function GET({ params, request }) {
@@ -25,6 +26,8 @@ export async function GET({ params, request }) {
             cacheControl = 'public, max-age=31536000, immutable';
         } else if (path.includes('/avatars/') || path.includes('profile-') || path.includes('avatar')) {
             cacheControl = 'public, max-age=60';
+        } else if (path.includes('/poker/')) {
+            cacheControl = `public, max-age=${ttl}`;
         } else {
             cacheControl = 'public, max-age=86400';
         }

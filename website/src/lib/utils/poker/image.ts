@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { createCanvas, registerFont, CanvasRenderingContext2D  } from 'canvas';
-import { imagePrefix } from '$lib/server/games/poker/engine';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { imagePrefix, tablePrefix } from '$lib/server/games/poker/engine';
+import { PutObjectCommand, DeleteObjectsCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { s3Client } from '$lib/server/s3';
 import { PUBLIC_B2_BUCKET, PUBLIC_BETTER_AUTH_URL } from '$env/static/public';
 import { redis } from '$lib/server/redis';
@@ -73,4 +73,87 @@ export async function image(
   await redis.set(`${imagePrefix}${code}`, imageUrl);
 
   return imageUrl;
+}
+
+// Clear old images
+// Gets called from the main scheduler
+export async function clear(): Promise<void> {
+  const prefix = 'poker/meta/';
+
+  const [s3Keys, redisUrls] = await Promise.all([
+    // These two work at the same time
+    (async () => {
+      let continuationToken: string | undefined;
+      const keys: string[] = [];
+
+      do {
+        const res = await s3Client.send(
+          new ListObjectsV2Command({
+            Bucket: PUBLIC_B2_BUCKET,
+            Prefix: prefix,
+            ContinuationToken: continuationToken
+          })
+        );
+
+        for (const obj of res.Contents ?? []) {
+          if (obj.Key) keys.push(obj.Key);
+        }
+
+        continuationToken = res.IsTruncated ? res.NextContinuationToken : undefined;
+      } while (continuationToken);
+
+      return keys;
+    })(),
+    (async () => {
+      let cursor = '0';
+      const urls = new Set<string>();
+
+      do {
+        const { cursor: nextCursor, keys } = await redis.scan(cursor, {
+          MATCH: `${imagePrefix}*`,
+          COUNT: 500
+        });
+
+        cursor = nextCursor;
+
+        if (keys.length === 0) continue;
+
+        const values: any = await redis.mGet(keys);
+
+        for (const v of values) {
+          if (v) urls.add(v);
+        }
+
+        for (const v of values) {
+          if (v) urls.add(v);
+        }
+      } while (cursor !== '0');
+
+      return urls;
+    })()
+  ]);
+
+  const toDelete: { Key: string }[] = [];
+
+  for (const key of s3Keys) {
+    const url = `${PUBLIC_BETTER_AUTH_URL}/api/proxy/s3/${key}`;
+
+    if (!redisUrls.has(url)) {
+      toDelete.push({ Key: key });
+    }
+  }
+
+  if (toDelete.length === 0) return;
+
+  // and actually remove them.
+  for (let i = 0; i < toDelete.length; i += 1000) {
+    const chunk = toDelete.slice(i, i + 1000);
+
+    await s3Client.send(
+      new DeleteObjectsCommand({
+        Bucket: PUBLIC_B2_BUCKET,
+        Delete: { Objects: chunk }
+      })
+    );
+  }
 }

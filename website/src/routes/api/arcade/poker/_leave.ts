@@ -6,7 +6,7 @@ import { redis } from '$lib/server/redis';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '$lib/server/s3';
 import { PUBLIC_B2_BUCKET, PUBLIC_B2_ENDPOINT } from '$env/static/public';
-import { removePlayer, tablePrefix, codePrefix, playerPrefix } from '$lib/server/games/poker/engine';
+import { removePlayer, tablePrefix, codePrefix, playerPrefix, imagePrefix } from '$lib/server/games/poker/engine';
 import { loadTable, saveTable, publishStateToAll } from './_helpers';
 
 // leaving is also interesting, since you can leave mid game etc.
@@ -58,6 +58,7 @@ export async function handleLeave(userId: number, body: any) {
         // redis clear
         await redis.del(`${tablePrefix}${tableId}`);
         await redis.del(`${codePrefix}${table.code}`);
+        await redis.del(`${imagePrefix}${table.code}`);
         try {
             const imgRedisKey = `poker:image:${table.code}`;
             const existing = await redis.get(imgRedisKey);

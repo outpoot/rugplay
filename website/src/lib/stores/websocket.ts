@@ -113,7 +113,6 @@ function createArcadeActivityStore() {
 
 export const arcadeActivityStore = createArcadeActivityStore();
 
-//
 let hasLoadedInitialTrades = false;
 
 // Comment callbacks
@@ -441,12 +440,11 @@ class WebSocketController {
         loadInitialTrades(mode);
     }
 
-    setUser(userId: string, token?: string) {
+    setUser(userId: string) {
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
                 type: 'set_user',
-                userId,
-                token
+                userId
             }));
         }
     }

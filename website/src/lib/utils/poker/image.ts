@@ -4,7 +4,7 @@ import { createCanvas, registerFont, CanvasRenderingContext2D  } from 'canvas';
 import { imagePrefix } from '$lib/server/games/poker/engine';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '$lib/server/s3';
-import { PUBLIC_B2_BUCKET, PUBLIC_B2_ENDPOINT } from '$env/static/public';
+import { PUBLIC_B2_BUCKET, PUBLIC_BETTER_AUTH_URL } from '$env/static/public';
 import { redis } from '$lib/server/redis';
 import sharp from 'sharp';
 import { randomBytes } from 'crypto';
@@ -68,7 +68,7 @@ export async function image(
     })
   );
 
-  const imageUrl = `${PUBLIC_B2_ENDPOINT}/${PUBLIC_B2_BUCKET}/${key}`;
+  const imageUrl = `${PUBLIC_BETTER_AUTH_URL}/api/proxy/s3/${key}`;
 
   await redis.set(`${imagePrefix}${code}`, imageUrl);
 

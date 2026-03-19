@@ -5,7 +5,6 @@ import {
     tablePrefix,
     type PokerTable
 } from '$lib/server/games/poker/engine';
-import type { RequestHandler } from '$types';
 import { image } from '$lib/utils/poker/image';
 
 // Main route that handles the Image generation. Thats why this is the link you copy when you share etc.
@@ -22,7 +21,7 @@ function format(n: number): string {
 }
 
 // This requires polling of metadata to be allowed. so BETTER allow it.
-export const GET: RequestHandler = async ({ url }) => {
+export const GET = async ({ url }) => {
     const code = url.searchParams.get('code') ?? '';
 
     if (!/^\d{4}$/.test(code)) {

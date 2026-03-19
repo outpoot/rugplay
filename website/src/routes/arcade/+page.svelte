@@ -18,15 +18,31 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Clock01Icon, PiggyBankIcon } from '@hugeicons/core-free-icons';
 	import { formatValue, formatRelativeTime, getPublicUrl } from '$lib/utils';
-	
+	import { page } from '$app/state';
+	import { onMount } from 'svelte';
+
 	let shouldSignIn = $state(false);
 	let balance = $state(0);
 	let activeGame = $state('coinflip');
+	let joincode = $state('');
 
 	// Filter activities to only show bets >= $1000
 	const filteredActivities = $derived(
 		$arcadeActivityStore.filter((activity) => activity.amount >= 1000).slice(0, 10)
 	);
+	
+	onMount(() => {
+		const params = page.url.searchParams;
+		const game = params.get('game');
+		const code = params.get('code') ?? '';
+		if (game === 'poker') {
+			activeGame = 'poker';
+		}
+		if (code && /^\d{4}$/.test(code)) {
+			joincode = code;
+			activeGame = 'poker';
+		}
+	});
 
 	function handleBalanceUpdate(newBalance: number) {
 		balance = newBalance;
@@ -124,7 +140,7 @@
 			{:else if activeGame === 'tower'}
 				<Tower bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{:else if activeGame === 'poker'}
-				<Poker bind:balance onBalanceUpdate={handleBalanceUpdate} />
+				<Poker bind:balance onBalanceUpdate={handleBalanceUpdate} code={joincode} />
 			{/if}
 
 			<!-- Live Arcade Activity Feed -->

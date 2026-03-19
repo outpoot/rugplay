@@ -9,6 +9,7 @@ import { user, gemTransactions } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { minesCleanupInactiveGames, minesAutoCashout } from '$lib/server/games/mines';
 import { towerCleanupInactiveGames } from '$lib/server/games/tower';
+import { clear as clearPokerImages } from '$lib/utils/poker/image';
 
 async function initializeScheduler() {
     if (building) return;
@@ -57,11 +58,16 @@ async function initializeScheduler() {
                 towerCleanupInactiveGames().catch(console.error);
             }, 60 * 1000);
 
+            const pokerCleanupInterval = setInterval(() => {
+                clearPokerImages().catch(console.error);
+            }, 60 * 1000);
+
             // Cleanup on process exit
             const cleanup = async () => {
                 clearInterval(renewInterval);
                 clearInterval(schedulerInterval);
                 clearInterval(minesCleanupInterval);
+                clearInterval(pokerCleanupInterval);
                 const currentValue = await redis.get(lockKey);
                 if (currentValue === lockValue) {
                     await redis.del(lockKey);

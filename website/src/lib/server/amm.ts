@@ -3,10 +3,10 @@ import { coin, transaction, priceHistory, userPortfolio } from '$lib/server/db/s
 import { eq, and, gte } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
 
-export async function calculate24hMetrics(coinId: number, currentPrice: number) {
+export async function calculate24hMetrics(coinId: number, currentPrice: number, queryCtx: typeof db = db) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    const [priceData] = await db
+    const [priceData] = await queryCtx
         .select({ price: priceHistory.price })
         .from(priceHistory)
         .where(and(
@@ -25,7 +25,7 @@ export async function calculate24hMetrics(coinId: number, currentPrice: number) 
         }
     }
 
-    const volumeData = await db
+    const volumeData = await queryCtx
         .select({ totalBaseCurrencyAmount: transaction.totalBaseCurrencyAmount })
         .from(transaction)
         .where(and(
@@ -33,7 +33,7 @@ export async function calculate24hMetrics(coinId: number, currentPrice: number) 
             gte(transaction.timestamp, twentyFourHoursAgo)
         ));
 
-    const volume24h = volumeData.reduce((sum, tx) => sum + Number(tx.totalBaseCurrencyAmount), 0);
+    const volume24h = volumeData.reduce((sum, t) => sum + Number(t.totalBaseCurrencyAmount), 0);
 
     return { change24h: Number(change24h.toFixed(4)), volume24h: Number(volume24h.toFixed(4)) };
 }
@@ -85,7 +85,7 @@ export async function executeSellTrade(
         price: newPrice.toString()
     });
 
-    const metrics = await calculate24hMetrics(coinData.id, newPrice);
+    const metrics = await calculate24hMetrics(coinData.id, newPrice, tx);
 
     const MAX_STORABLE = 1e38;
     const safeMarketCap = Math.min(Number(coinData.circulatingSupply) * newPrice, MAX_STORABLE);

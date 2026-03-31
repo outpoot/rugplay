@@ -40,7 +40,7 @@ export async function POST({ params, request }) {
         throw error(404, 'Coin not found');
     }
 
-    return await db.transaction(async (tx) => {
+    const txResult = await db.transaction(async (tx) => {
         const [coinData] = await tx.select({
             id: coin.id,
             symbol: coin.symbol,
@@ -169,7 +169,7 @@ export async function POST({ params, request }) {
                 price: newPrice.toString()
             });
 
-            const metrics = await calculate24hMetrics(coinData.id, newPrice);
+            const metrics = await calculate24hMetrics(coinData.id, newPrice, tx);
 
             const MAX_STORABLE = 1e38;
             const safeMarketCap = Math.min(Number(coinData.circulatingSupply) * newPrice, MAX_STORABLE);
@@ -197,7 +197,7 @@ export async function POST({ params, request }) {
             };
 
             const tradeData = {
-                type: 'BUY',
+                type: 'BUY' as const,
                 username: userData.username,
                 userImage: userData.image || '',
                 amount: coinsBought,
@@ -210,38 +210,18 @@ export async function POST({ params, request }) {
                 userId: userId.toString()
             };
 
-            await redis.publish(`prices:${normalizedSymbol}`, JSON.stringify(priceUpdateData));
-
-            await redis.publish('trades:all', JSON.stringify({
-                type: 'all-trades',
-                data: tradeData
-            }));
-
-            if (totalCost >= 1000) {
-                await redis.publish('trades:large', JSON.stringify({
-                    type: 'live-trade',
-                    data: tradeData
-                }));
-            }
-
-            checkAndAwardAchievements(userId, ['trading', 'wealth', 'special'], {
-                tradeType: 'BUY',
-                tradeAmount: totalCost,
-                coinChange24h: Number(coinData.change24h || 0),
-                newBalance: userBalance - totalCost,
-                newPrice,
-                oldPrice: currentPrice
-            });
-
-            return json({
-                success: true,
-                type: 'BUY',
-                coinsBought,
+            return {
+                tradeType: 'BUY' as const,
+                priceUpdateData,
+                tradeData,
                 totalCost,
+                coinsBought,
                 newPrice,
                 priceImpact,
-                newBalance: userBalance - totalCost
-            });
+                newBalance: userBalance - totalCost,
+                coinChange24h: Number(coinData.change24h || 0),
+                oldPrice: currentPrice
+            };
 
         } else {
             // AMM SELL: amount = number of coins to sell
@@ -304,7 +284,7 @@ export async function POST({ params, request }) {
                     ));
             }
 
-            const metrics = sellResult.metrics || await calculate24hMetrics(coinData.id, newPrice);
+            const metrics = sellResult.metrics || await calculate24hMetrics(coinData.id, newPrice, tx);
 
             const priceUpdateData = {
                 currentPrice: newPrice,
@@ -316,7 +296,7 @@ export async function POST({ params, request }) {
             };
 
             const tradeData = {
-                type: 'SELL',
+                type: 'SELL' as const,
                 username: userData.username,
                 userImage: userData.image || '',
                 amount: amount,
@@ -329,42 +309,70 @@ export async function POST({ params, request }) {
                 userId: userId.toString()
             };
 
-            await redis.publish(`prices:${normalizedSymbol}`, JSON.stringify(priceUpdateData));
-
-            await redis.publish('trades:all', JSON.stringify({
-                type: 'all-trades',
-                data: tradeData
-            }));
-
-            if (totalCost >= 1000) {
-                await redis.publish('trades:large', JSON.stringify({
-                    type: 'live-trade',
-                    data: tradeData
-                }));
-            }
-
-            checkAndAwardAchievements(userId, ['trading', 'wealth', 'creation', 'special'], {
-                tradeType: 'SELL',
-                tradeAmount: totalCost,
-                coinChange24h: metrics.change24h,
-                newBalance: userBalance + totalCost,
-                newPrice,
-                oldPrice: currentPrice,
-                coinCreatedAt: coinData.createdAt,
-                firstInvestmentAt: await getFirstBuyTimestamp(userId, coinData.id)
-            });
-
-            return json({
-                success: true,
-                type: 'SELL',
+            return {
+                tradeType: 'SELL' as const,
+                priceUpdateData,
+                tradeData,
+                totalCost,
                 coinsSold: amount,
-                totalReceived: totalCost,
+                coinId: coinData.id,
                 newPrice,
                 priceImpact,
-                newBalance: userBalance + totalCost
-            });
+                newBalance: userBalance + totalCost,
+                coinChange24h: metrics.change24h,
+                oldPrice: currentPrice,
+                coinCreatedAt: coinData.createdAt
+            };
         }
     });
+
+    redis.publish(`prices:${normalizedSymbol}`, JSON.stringify(txResult.priceUpdateData)).catch(console.error);
+    redis.publish('trades:all', JSON.stringify({ type: 'all-trades', data: txResult.tradeData })).catch(console.error);
+    if (txResult.totalCost >= 1000) {
+        redis.publish('trades:large', JSON.stringify({ type: 'live-trade', data: txResult.tradeData })).catch(console.error);
+    }
+
+    if (txResult.tradeType === 'BUY') {
+        checkAndAwardAchievements(userId, ['trading', 'wealth', 'special'], {
+            tradeType: 'BUY',
+            tradeAmount: txResult.totalCost,
+            coinChange24h: txResult.coinChange24h,
+            newBalance: txResult.newBalance,
+            newPrice: txResult.newPrice,
+            oldPrice: txResult.oldPrice
+        });
+
+        return json({
+            success: true,
+            type: 'BUY',
+            coinsBought: txResult.coinsBought,
+            totalCost: txResult.totalCost,
+            newPrice: txResult.newPrice,
+            priceImpact: txResult.priceImpact,
+            newBalance: txResult.newBalance
+        });
+    } else {
+        checkAndAwardAchievements(userId, ['trading', 'wealth', 'creation', 'special'], {
+            tradeType: 'SELL',
+            tradeAmount: txResult.totalCost,
+            coinChange24h: txResult.coinChange24h,
+            newBalance: txResult.newBalance,
+            newPrice: txResult.newPrice,
+            oldPrice: txResult.oldPrice,
+            coinCreatedAt: txResult.coinCreatedAt,
+            firstInvestmentAt: await getFirstBuyTimestamp(userId, txResult.coinId)
+        });
+
+        return json({
+            success: true,
+            type: 'SELL',
+            coinsSold: txResult.coinsSold,
+            totalReceived: txResult.totalCost,
+            newPrice: txResult.newPrice,
+            priceImpact: txResult.priceImpact,
+            newBalance: txResult.newBalance
+        });
+    }
 }
 
 async function getFirstBuyTimestamp(userId: number, coinId: number): Promise<Date | undefined> {

@@ -12,7 +12,11 @@ const globalForDb = globalThis as unknown as {
     client: postgres.Sql | undefined;
 };
 
-const client = globalForDb.client ?? postgres(env.DATABASE_URL);
+const client = globalForDb.client ?? postgres(env.DATABASE_URL, {
+    max: 5,
+    idle_timeout: 20,
+    connect_timeout: 10,
+});
 if (env.NODE_ENV !== 'production') globalForDb.client = client;
 
 export const db = drizzle(client, { schema });

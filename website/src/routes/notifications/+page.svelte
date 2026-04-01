@@ -21,20 +21,22 @@
 	} from '$lib/stores/notifications';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { formatTimeAgo, formatValue } from '$lib/utils';
-	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import NotificationItem from './NotificationItem.svelte';
+	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	let loading = $state(true);
 	let newNotificationIds = $state<number[]>([]);
+	let shouldSignIn = $state(false);
 
 	onMount(async () => {
-		if (!$USER_DATA) {
-			goto('/');
-			return;
-		}
-
 		try {
+			if (!$USER_DATA) {
+				loading = false;
+				return;
+			}
+
 			await fetchNotifications();
 
 			const unreadIds = ($NOTIFICATIONS || []).filter((n) => !n.isRead).map((n) => n.id);
@@ -100,6 +102,8 @@
 	description="View your notifications and updates from Rugplay."
 />
 
+<SignInConfirmDialog bind:open={shouldSignIn} />
+
 <div class="container mx-auto max-w-4xl p-6">
 	<header class="mb-8">
 		<div class="text-center">
@@ -118,7 +122,8 @@
 						<HugeiconsIcon icon={Notification01Icon} class="text-muted-foreground h-8 w-8" />
 					</div>
 					<h3 class="mb-2 text-lg font-semibold">Please sign in</h3>
-					<p class="text-muted-foreground">You need to be signed in to view notifications</p>
+					<p class="mb-6 text-muted-foreground">You need to be signed in to view your notifications</p>
+					<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 				</div>
 			{:else if loading}
 				<NotificationsSkeleton />

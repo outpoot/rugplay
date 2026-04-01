@@ -18,9 +18,9 @@
 		VolumeMute01Icon,
 		Download01Icon,
 		Delete01Icon,
-		Notification03Icon,
 		ArrowLeft01Icon,
-		ArrowRight01Icon
+		ArrowRight01Icon,
+		GearsIcon
 	} from '@hugeicons/core-free-icons';
 	import * as Pagination from '$lib/components/ui/pagination';
 	import { toast } from 'svelte-sonner';
@@ -30,6 +30,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { haptic } from '$lib/stores/haptics';
+	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 
 	let shouldSignIn = $state(false);
 	let name = $state($USER_DATA?.name || '');
@@ -116,7 +117,7 @@
 		window.addEventListener('beforeunload', beforeUnloadHandler);
 		volumeSettings.setMaster($USER_DATA?.volumeMaster || 0);
 		volumeSettings.setMuted($USER_DATA?.volumeMuted || false);
-		loadBlockedUsers();
+		if ($USER_DATA) loadBlockedUsers();
 	});
 
 	onDestroy(() => {
@@ -369,301 +370,310 @@
 	keywords="game account settings, profile settings game, privacy settings, audio settings game"
 />
 
+<SignInConfirmDialog bind:open={shouldSignIn} />
+
 <div class="container mx-auto max-w-2xl p-6">
 	<h1 class="mb-6 text-2xl font-bold">Settings</h1>
 
 	{#if !$USER_DATA}
-	<div class="flex h-96 items-center justify-center">
-		<div class="text-center">
-			<div class="text-muted-foreground mb-4 text-xl">
-				You need to be logged in to view your settings
-			</div>
-			<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
-		</div>
-	</div>
-{:else}
-	<div class="space-y-6">
-		<Card.Root>
-			<Card.Header>
-				<Card.Title>Profile Settings</Card.Title>
-				<Card.Description>Update your profile information</Card.Description>
-			</Card.Header>
+		<Card.Root class="gap-1 mx-auto max-w-4xl p-6">
 			<Card.Content>
-				<div class="mb-6 flex items-center gap-4">
+				<div class="py-12 text-center">
 					<div
-						class="group relative cursor-pointer"
-						role="button"
-						tabindex="0"
-						onclick={handleAvatarClick}
-						onkeydown={(e) => e.key === 'Enter' && handleAvatarClick()}
+						class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
 					>
-						<Avatar.Root class="size-20">
-							<Avatar.Image src={currentAvatarUrl} alt={name} />
-							<Avatar.Fallback>?</Avatar.Fallback>
-						</Avatar.Root>
+						<HugeiconsIcon icon={GearsIcon} class="text-muted-foreground h-8 w-8" />
+					</div>
+
+					<h3 class="mb-2 text-lg font-semibold">Please sign in</h3>
+					<p class="mb-6 text-muted-foreground">You need to be logged in to view your settings</p>
+					<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+				</div>
+			</Card.Content>
+		</Card.Root>
+	{:else}
+		<div class="space-y-6">
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>Profile Settings</Card.Title>
+					<Card.Description>Update your profile information</Card.Description>
+				</Card.Header>
+				<Card.Content>
+					<div class="mb-6 flex items-center gap-4">
 						<div
-							class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+							class="group relative cursor-pointer"
+							role="button"
+							tabindex="0"
+							onclick={handleAvatarClick}
+							onkeydown={(e) => e.key === 'Enter' && handleAvatarClick()}
 						>
-							<span class="text-xs text-white">Change</span>
+							<Avatar.Root class="size-20">
+								<Avatar.Image src={currentAvatarUrl} alt={name} />
+								<Avatar.Fallback>?</Avatar.Fallback>
+							</Avatar.Root>
+							<div
+								class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+							>
+								<span class="text-xs text-white">Change</span>
+							</div>
+						</div>
+						<div>
+							<h3 class="text-lg font-semibold">{name}</h3>
+							<p class="text-muted-foreground text-sm">@{username}</p>
 						</div>
 					</div>
-					<div>
-						<h3 class="text-lg font-semibold">{name}</h3>
-						<p class="text-muted-foreground text-sm">@{username}</p>
-					</div>
-				</div>
 
-				<input
-					type="file"
-					accept="image/*"
-					class="hidden"
-					bind:this={fileInput}
-					onchange={handleAvatarChange}
-				/>
+					<input
+						type="file"
+						accept="image/*"
+						class="hidden"
+						bind:this={fileInput}
+						onchange={handleAvatarChange}
+					/>
 
-				<form onsubmit={handleSubmit} class="space-y-4">
-					<div class="space-y-2">
-						<Label for="name">Display Name</Label>
-						<Input
-							id="name"
-							bind:value={name}
-							required
-							class={nameError ? 'border-destructive' : ''}
-						/>
-						{#if nameError}
-							<p class="text-destructive text-sm">{nameError}</p>
-						{/if}
-					</div>
-
-					<div class="space-y-2">
-						<Label for="username">Username</Label>
-						<div class="relative">
-							<span class="text-muted-foreground absolute left-3 top-4 -translate-y-1/2 transform"
-								>@</span
-							>
+					<form onsubmit={handleSubmit} class="space-y-4">
+						<div class="space-y-2">
+							<Label for="name">Display Name</Label>
 							<Input
-								id="username"
-								bind:value={username}
+								id="name"
+								bind:value={name}
 								required
-								pattern={'^[a-zA-Z0-9_]{3,30}$'}
-								class="pl-8"
+								class={nameError ? 'border-destructive' : ''}
 							/>
-							<div class="absolute right-3 top-1.5">
-								{#if checkingUsername}
-									<span class="text-muted-foreground text-sm">Checking…</span>
-								{:else if username !== initialUsername}
-									{#if usernameAvailable}
-										<HugeiconsIcon icon={Tick01Icon} class="text-success" />
-									{:else}
-										<span class="text-destructive text-sm">Taken</span>
+							{#if nameError}
+								<p class="text-destructive text-sm">{nameError}</p>
+							{/if}
+						</div>
+
+						<div class="space-y-2">
+							<Label for="username">Username</Label>
+							<div class="relative">
+								<span class="text-muted-foreground absolute left-3 top-4 -translate-y-1/2 transform"
+									>@</span
+								>
+								<Input
+									id="username"
+									bind:value={username}
+									required
+									pattern={'^[a-zA-Z0-9_]{3,30}$'}
+									class="pl-8"
+								/>
+								<div class="absolute right-3 top-1.5">
+									{#if checkingUsername}
+										<span class="text-muted-foreground text-sm">Checking…</span>
+									{:else if username !== initialUsername}
+										{#if usernameAvailable}
+											<HugeiconsIcon icon={Tick01Icon} class="text-success" />
+										{:else}
+											<span class="text-destructive text-sm">Taken</span>
+										{/if}
 									{/if}
-								{/if}
+								</div>
+							</div>
+							<p class="text-muted-foreground text-xs">
+								Only letters, numbers, underscores. 3–30 characters.
+							</p>
+						</div>
+
+						<div class="space-y-2">
+							<Label for="bio">Bio</Label>
+							<Textarea id="bio" bind:value={bio} rows={4} placeholder="Tell us about yourself" />
+						</div>
+
+						<Button type="submit" disabled={loading || !isDirty || !!nameError}>
+							{loading ? 'Saving…' : 'Save Changes'}
+						</Button>
+					</form>
+				</Card.Content>
+			</Card.Root>
+
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>Audio Settings</Card.Title>
+					<Card.Description>Adjust volume for game sounds</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-4">
+					<div class="space-y-3">
+						<div class="flex items-center justify-between">
+							<Label class="text-base font-medium">Volume</Label>
+							<div class="flex items-center gap-2">
+								<Button variant="ghost" size="sm" onclick={toggleMute} class="h-8 w-8 p-0">
+									{#if isMuted}
+										<HugeiconsIcon icon={VolumeMute01Icon} class="h-4 w-4" />
+									{:else}
+										<HugeiconsIcon icon={VolumeHighIcon} class="h-4 w-4" />
+									{/if}
+								</Button>
+								<span class="text-muted-foreground w-10 text-right text-sm"
+									>{Math.round(masterVolume)}%</span
+								>
 							</div>
 						</div>
+						{#if browser}
+							<Slider
+								type="single"
+								value={masterVolume}
+								onValueChange={handleMasterVolumeChange}
+								max={100}
+								step={1}
+								disabled={isMuted}
+							/>
+						{:else}
+							<!-- Fallback slider for SSR -->
+							<div class="relative flex w-full touch-none select-none items-center">
+								<div class="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
+									<div
+										class="absolute h-full bg-primary transition-all"
+										style="width: {masterVolume}%"
+									></div>
+								</div>
+							</div>
+						{/if}
 						<p class="text-muted-foreground text-xs">
-							Only letters, numbers, underscores. 3–30 characters.
+							Controls all game sounds including effects and background audio
 						</p>
 					</div>
+				</Card.Content>
+			</Card.Root>
 
-					<div class="space-y-2">
-						<Label for="bio">Bio</Label>
-						<Textarea id="bio" bind:value={bio} rows={4} placeholder="Tell us about yourself" />
-					</div>
-
-					<Button type="submit" disabled={loading || !isDirty || !!nameError}>
-						{loading ? 'Saving…' : 'Save Changes'}
-					</Button>
-				</form>
-			</Card.Content>
-		</Card.Root>
-
-		<Card.Root>
-			<Card.Header>
-				<Card.Title>Audio Settings</Card.Title>
-				<Card.Description>Adjust volume for game sounds</Card.Description>
-			</Card.Header>
-			<Card.Content class="space-y-4">
-				<div class="space-y-3">
-					<div class="flex items-center justify-between">
-						<Label class="text-base font-medium">Volume</Label>
-						<div class="flex items-center gap-2">
-							<Button variant="ghost" size="sm" onclick={toggleMute} class="h-8 w-8 p-0">
-								{#if isMuted}
-									<HugeiconsIcon icon={VolumeMute01Icon} class="h-4 w-4" />
-								{:else}
-									<HugeiconsIcon icon={VolumeHighIcon} class="h-4 w-4" />
-								{/if}
-							</Button>
-							<span class="text-muted-foreground w-10 text-right text-sm"
-								>{Math.round(masterVolume)}%</span
-							>
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>Notification Settings</Card.Title>
+					<Card.Description>Control how you receive notifications</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-4">
+					<div class="flex items-center justify-between rounded-lg border p-4">
+						<div class="space-y-1">
+							<h4 class="text-sm font-medium">Mentions</h4>
+							<p class="text-muted-foreground text-xs">
+								Receive notifications when someone @mentions you in comments
+							</p>
 						</div>
+						<Switch checked={!disableMentions} onCheckedChange={toggleDisableMentions} />
 					</div>
-					{#if browser}
-						<Slider
-							type="single"
-							value={masterVolume}
-							onValueChange={handleMasterVolumeChange}
-							max={100}
-							step={1}
-							disabled={isMuted}
-						/>
+				</Card.Content>
+			</Card.Root>
+
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>Blocked Users</Card.Title>
+					<Card.Description>Users you've blocked won't appear in comments and can't send you notifications</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-2">
+					{#if blockedLoading}
+						<p class="text-muted-foreground text-sm">Loading...</p>
+					{:else if blockedUsers.length === 0}
+						<p class="text-muted-foreground text-sm">You haven't blocked anyone.</p>
 					{:else}
-						<!-- Fallback slider for SSR -->
-						<div class="relative flex w-full touch-none select-none items-center">
-							<div class="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
-								<div
-									class="absolute h-full bg-primary transition-all"
-									style="width: {masterVolume}%"
-								></div>
+						{#each paginatedBlocked as blocked}
+							<div class="flex items-center justify-between rounded-lg border p-3">
+								<div class="flex items-center gap-3">
+									<a href="/user/{blocked.username}" class="font-medium hover:underline">@{blocked.username}</a>
+								</div>
+								<Button
+									variant="outline"
+									size="sm"
+									onclick={() => unblockUser(blocked.username)}
+									disabled={unblockingUser === blocked.username}
+								>
+									{unblockingUser === blocked.username ? 'Unblocking...' : 'Unblock'}
+								</Button>
 							</div>
-						</div>
+						{/each}
+						{#if blockedTotalPages > 1}
+							<div class="mt-4 flex justify-center">
+								<Pagination.Root
+									count={blockedUsers.length}
+									perPage={blockedPerPage}
+									siblingCount={1}
+									page={blockedPage}
+									onPageChange={(page) => { blockedPage = page; }}
+								>
+									{#snippet children({ pages, currentPage: paginationCurrentPage })}
+										<Pagination.Content>
+											<Pagination.Item>
+												<Pagination.PrevButton>
+													<HugeiconsIcon icon={ArrowLeft01Icon} class="h-4 w-4" />
+												</Pagination.PrevButton>
+											</Pagination.Item>
+											{#each pages as page (page.key)}
+												{#if page.type === 'ellipsis'}
+													<Pagination.Item>
+														<Pagination.Ellipsis />
+													</Pagination.Item>
+												{:else}
+													<Pagination.Item>
+														<Pagination.Link {page} isActive={paginationCurrentPage === page.value}>
+															{page.value}
+														</Pagination.Link>
+													</Pagination.Item>
+												{/if}
+											{/each}
+											<Pagination.Item>
+												<Pagination.NextButton>
+													<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
+												</Pagination.NextButton>
+											</Pagination.Item>
+										</Pagination.Content>
+									{/snippet}
+								</Pagination.Root>
+							</div>
+						{/if}
 					{/if}
-					<p class="text-muted-foreground text-xs">
-						Controls all game sounds including effects and background audio
-					</p>
-				</div>
-			</Card.Content>
-		</Card.Root>
+				</Card.Content>
+			</Card.Root>
 
-		<Card.Root>
-			<Card.Header>
-				<Card.Title>Notification Settings</Card.Title>
-				<Card.Description>Control how you receive notifications</Card.Description>
-			</Card.Header>
-			<Card.Content class="space-y-4">
-				<div class="flex items-center justify-between rounded-lg border p-4">
-					<div class="space-y-1">
-						<h4 class="text-sm font-medium">Mentions</h4>
-						<p class="text-muted-foreground text-xs">
-							Receive notifications when someone @mentions you in comments
-						</p>
-					</div>
-					<Switch checked={!disableMentions} onCheckedChange={toggleDisableMentions} />
-				</div>
-			</Card.Content>
-		</Card.Root>
-
-		<Card.Root>
-			<Card.Header>
-				<Card.Title>Blocked Users</Card.Title>
-				<Card.Description>Users you've blocked won't appear in comments and can't send you notifications</Card.Description>
-			</Card.Header>
-			<Card.Content class="space-y-2">
-				{#if blockedLoading}
-					<p class="text-muted-foreground text-sm">Loading...</p>
-				{:else if blockedUsers.length === 0}
-					<p class="text-muted-foreground text-sm">You haven't blocked anyone.</p>
-				{:else}
-					{#each paginatedBlocked as blocked}
-						<div class="flex items-center justify-between rounded-lg border p-3">
-							<div class="flex items-center gap-3">
-								<a href="/user/{blocked.username}" class="font-medium hover:underline">@{blocked.username}</a>
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>Data & Privacy</Card.Title>
+					<Card.Description>Manage your personal data and account</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-4">
+					<div class="space-y-4">
+						<div class="flex items-center justify-between rounded-lg border p-4">
+							<div class="space-y-1">
+								<h4 class="text-sm font-medium">Download Your Data</h4>
+								<p class="text-muted-foreground text-xs">
+									Export a complete copy of your account data including transactions, bets, and
+									profile information.
+								</p>
 							</div>
 							<Button
 								variant="outline"
 								size="sm"
-								onclick={() => unblockUser(blocked.username)}
-								disabled={unblockingUser === blocked.username}
+								onclick={downloadUserData}
+								disabled={isDownloading}
+								class="ml-4"
 							>
-								{unblockingUser === blocked.username ? 'Unblocking...' : 'Unblock'}
+								<HugeiconsIcon icon={Download01Icon} class="h-4 w-4" />
+								{isDownloading ? 'Downloading...' : 'Download Data'}
 							</Button>
 						</div>
-					{/each}
-					{#if blockedTotalPages > 1}
-						<div class="mt-4 flex justify-center">
-							<Pagination.Root
-								count={blockedUsers.length}
-								perPage={blockedPerPage}
-								siblingCount={1}
-								page={blockedPage}
-								onPageChange={(page) => { blockedPage = page; }}
+
+						<div
+							class="border-destructive/20 bg-destructive/5 flex items-center justify-between rounded-lg border p-4"
+						>
+							<div class="space-y-1">
+								<h4 class="text-destructive text-sm font-medium">Delete Account</h4>
+								<p class="text-muted-foreground text-xs">
+									Schedule your account for permanent deletion. This will anonymize your data while
+									preserving transaction records for compliance.
+								</p>
+							</div>
+							<Button
+								variant="destructive"
+								size="sm"
+								onclick={() => (deleteDialogOpen = true)}
+								class="ml-4"
 							>
-								{#snippet children({ pages, currentPage: paginationCurrentPage })}
-									<Pagination.Content>
-										<Pagination.Item>
-											<Pagination.PrevButton>
-												<HugeiconsIcon icon={ArrowLeft01Icon} class="h-4 w-4" />
-											</Pagination.PrevButton>
-										</Pagination.Item>
-										{#each pages as page (page.key)}
-											{#if page.type === 'ellipsis'}
-												<Pagination.Item>
-													<Pagination.Ellipsis />
-												</Pagination.Item>
-											{:else}
-												<Pagination.Item>
-													<Pagination.Link {page} isActive={paginationCurrentPage === page.value}>
-														{page.value}
-													</Pagination.Link>
-												</Pagination.Item>
-											{/if}
-										{/each}
-										<Pagination.Item>
-											<Pagination.NextButton>
-												<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
-											</Pagination.NextButton>
-										</Pagination.Item>
-									</Pagination.Content>
-								{/snippet}
-							</Pagination.Root>
+								<HugeiconsIcon icon={Delete01Icon} class="h-4 w-4" />
+								Delete Account
+							</Button>
 						</div>
-					{/if}
-				{/if}
-			</Card.Content>
-		</Card.Root>
-
-		<Card.Root>
-			<Card.Header>
-				<Card.Title>Data & Privacy</Card.Title>
-				<Card.Description>Manage your personal data and account</Card.Description>
-			</Card.Header>
-			<Card.Content class="space-y-4">
-				<div class="space-y-4">
-					<div class="flex items-center justify-between rounded-lg border p-4">
-						<div class="space-y-1">
-							<h4 class="text-sm font-medium">Download Your Data</h4>
-							<p class="text-muted-foreground text-xs">
-								Export a complete copy of your account data including transactions, bets, and
-								profile information.
-							</p>
-						</div>
-						<Button
-							variant="outline"
-							size="sm"
-							onclick={downloadUserData}
-							disabled={isDownloading}
-							class="ml-4"
-						>
-							<HugeiconsIcon icon={Download01Icon} class="h-4 w-4" />
-							{isDownloading ? 'Downloading...' : 'Download Data'}
-						</Button>
 					</div>
-
-					<div
-						class="border-destructive/20 bg-destructive/5 flex items-center justify-between rounded-lg border p-4"
-					>
-						<div class="space-y-1">
-							<h4 class="text-destructive text-sm font-medium">Delete Account</h4>
-							<p class="text-muted-foreground text-xs">
-								Schedule your account for permanent deletion. This will anonymize your data while
-								preserving transaction records for compliance.
-							</p>
-						</div>
-						<Button
-							variant="destructive"
-							size="sm"
-							onclick={() => (deleteDialogOpen = true)}
-							class="ml-4"
-						>
-							<HugeiconsIcon icon={Delete01Icon} class="h-4 w-4" />
-							Delete Account
-						</Button>
-					</div>
-				</div>
-			</Card.Content>
-		</Card.Root>
-	</div>
+				</Card.Content>
+			</Card.Root>
+		</div>
 	{/if}
 </div>
 

@@ -135,127 +135,122 @@
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
 <div class="container mx-auto max-w-5xl px-4 py-6">
-	{#if !$PORTFOLIO_SUMMARY}
-		<div class="flex h-96 items-center justify-center">
-			<div class="text-center">
-				<div class="text-muted-foreground mb-4 text-xl">Sign in to create your own coin</div>
-				<p class="text-muted-foreground mb-4 text-sm">You need an account to create coins.</p>
-				<Button onclick={() => (shouldSignIn = true)} class="w-fit">
-					Sign in to continue
-				</Button>
-			</div>
-		</div>
-	{:else}
-		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-			<!-- Main Form Column -->
-			<div class="lg:col-span-2">
-				<Card>
-					<CardHeader>
-						<CardTitle class="text-lg">Coin Details</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<form onsubmit={handleSubmit} class="space-y-6">
-							<!-- Icon Upload -->
-							<div>
-								<Label for="icon">Coin Icon (Optional)</Label>
-								<div class="mt-2 space-y-2">
-									<label for="icon" class="block cursor-pointer">
-										<div
-											class="border-muted-foreground/25 bg-muted/50 hover:border-muted-foreground/50 group h-24 w-24 overflow-hidden rounded-full border-2 border-dashed transition-colors"
-										>
-											<Input
-												id="icon"
-												type="file"
-												accept="image/*"
-												onchange={handleIconChange}
-												class="hidden"
-											/>
-											{#if iconPreview}
-												<img src={iconPreview} alt="Preview" class="h-full w-full object-cover" />
-											{:else}
-												<div class="flex h-full items-center justify-center">
-													<HugeiconsIcon icon={ImageAdd01Icon} class="text-muted-foreground h-8 w-8" />
-												</div>
-											{/if}
-										</div>
-									</label>
-									<p class="{iconError ? 'text-destructive' : 'text-muted-foreground'} text-sm">
-										{#if iconError}
-											{iconError}
-										{:else if iconFile}
-											{iconFile.name} ({(iconFile.size / 1024).toFixed(2)} KB)
+	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+		<!-- Main Form Column -->
+		<div class="lg:col-span-2">
+			<Card>
+				<CardHeader>
+					<CardTitle class="text-lg">Coin Details</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<form onsubmit={handleSubmit} class="space-y-6">
+						<!-- Icon Upload -->
+						<div>
+							<Label for="icon">Coin Icon (Optional)</Label>
+							<div class="mt-2 space-y-2">
+								<label for="icon" class="block cursor-pointer">
+									<div
+										class="border-muted-foreground/25 bg-muted/50 hover:border-muted-foreground/50 group h-24 w-24 overflow-hidden rounded-full border-2 border-dashed transition-colors"
+									>
+										<Input
+											id="icon"
+											type="file"
+											accept="image/*"
+											onchange={handleIconChange}
+											class="hidden"
+										/>
+										{#if iconPreview}
+											<img src={iconPreview} alt="Preview" class="h-full w-full object-cover" />
 										{:else}
-											Click to upload your coin's icon (PNG or JPG, max 1MB)
+											<div class="flex h-full items-center justify-center">
+												<HugeiconsIcon icon={ImageAdd01Icon} class="text-muted-foreground h-8 w-8" />
+											</div>
 										{/if}
-									</p>
-								</div>
+									</div>
+								</label>
+								<p class="{iconError ? 'text-destructive' : 'text-muted-foreground'} text-sm">
+									{#if iconError}
+										{iconError}
+									{:else if iconFile}
+										{iconFile.name} ({(iconFile.size / 1024).toFixed(2)} KB)
+									{:else}
+										Click to upload your coin's icon (PNG or JPG, max 1MB)
+									{/if}
+								</p>
 							</div>
+						</div>
 
-							<!-- Name Input -->
-							<div class="space-y-2">
-								<Label for="name">Coin Name</Label>
+						<!-- Name Input -->
+						<div class="space-y-2">
+							<Label for="name">Coin Name</Label>
+							<Input
+								id="name"
+								type="text"
+								bind:value={name}
+								placeholder="e.g., Bitcoin"
+								required
+							/>
+							{#if nameError}
+								<p class="text-destructive text-xs">{nameError}</p>
+							{:else}
+								<p class="text-muted-foreground text-sm">
+									Choose a memorable name for your cryptocurrency
+								</p>
+							{/if}
+						</div>
+
+						<!-- Symbol Input -->
+						<div class="space-y-2">
+							<Label for="symbol">Symbol</Label>
+							<div class="relative">
+								<span
+									class="text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+									>*</span
+								>
 								<Input
-									id="name"
+									id="symbol"
 									type="text"
-									bind:value={name}
-									placeholder="e.g., Bitcoin"
+									bind:value={symbol}
+									placeholder="BTC"
+									class="pl-8 uppercase"
 									required
 								/>
-								{#if nameError}
-									<p class="text-destructive text-xs">{nameError}</p>
-								{:else}
-									<p class="text-muted-foreground text-sm">
-										Choose a memorable name for your cryptocurrency
-									</p>
-								{/if}
 							</div>
+							{#if symbolError}
+								<p class="text-destructive text-xs">{symbolError}</p>
+							{:else}
+								<p class="text-muted-foreground text-sm">
+									Short identifier for your coin (e.g., BTC for Bitcoin). Will be displayed as *{symbol ||
+										'SYMBOL'}
+								</p>
+							{/if}
+						</div>
 
-							<!-- Symbol Input -->
-							<div class="space-y-2">
-								<Label for="symbol">Symbol</Label>
-								<div class="relative">
-									<span
-										class="text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 text-sm"
-										>*</span
-									>
-									<Input
-										id="symbol"
-										type="text"
-										bind:value={symbol}
-										placeholder="BTC"
-										class="pl-8 uppercase"
-										required
-									/>
+						<!-- Fair Launch Info -->
+						<Alert variant="default" class="bg-muted/50">
+							<HugeiconsIcon icon={InformationCircleIcon} class="h-4 w-4" />
+							<AlertDescription class="space-y-2">
+								<p class="font-medium">Fair Launch Settings</p>
+								<div class="text-muted-foreground space-y-1 text-sm">
+									<p>• Total Supply: <span class="font-medium">1,000,000,000 tokens</span></p>
+									<p>• Starting Price: <span class="font-medium">$0.000001 per token</span></p>
+									<p>• You receive <span class="font-medium">100%</span> of the supply</p>
+									<p>• Initial Market Cap: <span class="font-medium">$1,000</span></p>
+									<p>• Trading Lock: <span class="font-medium">1 minute creator-only period</span></p>
+									<p class="mt-2 text-sm">
+										After creation, you'll have 1 minute of exclusive trading time before others can trade. This allows you to purchase your initial supply.
+									</p>
 								</div>
-								{#if symbolError}
-									<p class="text-destructive text-xs">{symbolError}</p>
-								{:else}
-									<p class="text-muted-foreground text-sm">
-										Short identifier for your coin (e.g., BTC for Bitcoin). Will be displayed as *{symbol ||
-											'SYMBOL'}
-									</p>
-								{/if}
-							</div>
+							</AlertDescription>
+						</Alert>
 
-							<!-- Fair Launch Info -->
-							<Alert variant="default" class="bg-muted/50">
-								<HugeiconsIcon icon={InformationCircleIcon} class="h-4 w-4" />
-								<AlertDescription class="space-y-2">
-									<p class="font-medium">Fair Launch Settings</p>
-									<div class="text-muted-foreground space-y-1 text-sm">
-										<p>• Total Supply: <span class="font-medium">1,000,000,000 tokens</span></p>
-										<p>• Starting Price: <span class="font-medium">$0.000001 per token</span></p>
-										<p>• You receive <span class="font-medium">100%</span> of the supply</p>
-										<p>• Initial Market Cap: <span class="font-medium">$1,000</span></p>
-										<p>• Trading Lock: <span class="font-medium">1 minute creator-only period</span></p>
-										<p class="mt-2 text-sm">
-											After creation, you'll have 1 minute of exclusive trading time before others can trade. This allows you to purchase your initial supply.
-										</p>
-									</div>
-								</AlertDescription>
-							</Alert>
-
-							<!-- Submit Button -->
+						<!-- Submit Button -->
+						{#if !$PORTFOLIO_SUMMARY}
+							<Button onclick={() => (shouldSignIn = true)} class="w-full" size="lg">
+								<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
+								Sign in to create
+							</Button>
+						{:else}
 							<Button type="submit" disabled={!canSubmit} class="w-full" size="lg">
 								{#if isSubmitting}
 									<HugeiconsIcon icon={Loading03Icon} class="h-4 w-4 animate-spin" />
@@ -265,98 +260,98 @@
 									Create Coin (${TOTAL_COST.toFixed(2)})
 								{/if}
 							</Button>
-						</form>
-					</CardContent>
-				</Card>
-			</div>
+						{/if}
+					</form>
+				</CardContent>
+			</Card>
+		</div>
 
-			<!-- Right Column - Preview and Info -->
-			<div class="space-y-4">
-				<!-- Cost Summary Card -->
-				{#if $PORTFOLIO_SUMMARY}
-					<Card>
-						<CardHeader class="pb-2">
-							<div class="flex items-center justify-between">
-								<CardTitle class="text-base">Cost Summary</CardTitle>
-								<div class="text-sm">
-									<span class="text-muted-foreground">Balance: </span>
-									<span class={hasEnoughFunds ? 'text-green-600' : 'text-destructive'}>
-										${$PORTFOLIO_SUMMARY.baseCurrencyBalance.toLocaleString()}
-									</span>
-								</div>
-							</div>
-						</CardHeader>
-						<CardContent class="space-y-2">
-							<div class="flex justify-between text-sm">
-								<span class="text-muted-foreground">Creation Fee</span>
-								<span>${CREATION_FEE}</span>
-							</div>
-							<div class="flex justify-between text-sm">
-								<span class="text-muted-foreground">Initial Liquidity</span>
-								<span>${INITIAL_LIQUIDITY}</span>
-							</div>
-							<Separator class="my-2" />
-							<div class="flex justify-between font-medium">
-								<span>Total Cost</span>
-								<span class="text-primary">${TOTAL_COST}</span>
-							</div>
-						</CardContent>
-					</Card>
-				{/if}
-
-				<!-- Info Card -->
+		<!-- Right Column - Preview and Info -->
+		<div class="space-y-4">
+			<!-- Cost Summary Card -->
+			{#if $PORTFOLIO_SUMMARY}
 				<Card>
 					<CardHeader class="pb-2">
-						<CardTitle class="text-base">What Happens After Launch?</CardTitle>
+						<div class="flex items-center justify-between">
+							<CardTitle class="text-base">Cost Summary</CardTitle>
+							<div class="text-sm">
+								<span class="text-muted-foreground">Balance: </span>
+								<span class={hasEnoughFunds ? 'text-green-600' : 'text-destructive'}>
+									${$PORTFOLIO_SUMMARY.baseCurrencyBalance.toLocaleString()}
+								</span>
+							</div>
+						</div>
 					</CardHeader>
-					<CardContent class="space-y-4">
-						<div class="space-y-3">
-							<div class="flex gap-3">
-								<div
-									class="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-medium"
-								>
-									1
-								</div>
-								<div>
-									<p class="font-medium">Fair Distribution</p>
-									<p class="text-muted-foreground text-sm">
-										Everyone starts buying at the same price - no pre-sales or hidden allocations
-									</p>
-								</div>
-							</div>
-							<div class="flex gap-3">
-								<div
-									class="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-medium"
-								>
-									2
-								</div>
-								<div>
-									<p class="font-medium">Price Discovery</p>
-									<p class="text-muted-foreground text-sm">
-										Token price increases automatically as more people buy, following a bonding
-										curve
-									</p>
-								</div>
-							</div>
-							<div class="flex gap-3">
-								<div
-									class="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-medium"
-								>
-									3
-								</div>
-								<div>
-									<p class="font-medium">Instant Trading</p>
-									<p class="text-muted-foreground text-sm">
-										Trading begins immediately - buy, sell, or distribute your tokens as you wish
-									</p>
-								</div>
-							</div>
+					<CardContent class="space-y-2">
+						<div class="flex justify-between text-sm">
+							<span class="text-muted-foreground">Creation Fee</span>
+							<span>${CREATION_FEE}</span>
+						</div>
+						<div class="flex justify-between text-sm">
+							<span class="text-muted-foreground">Initial Liquidity</span>
+							<span>${INITIAL_LIQUIDITY}</span>
+						</div>
+						<Separator class="my-2" />
+						<div class="flex justify-between font-medium">
+							<span>Total Cost</span>
+							<span class="text-primary">${TOTAL_COST}</span>
 						</div>
 					</CardContent>
 				</Card>
-			</div>
+			{/if}
+
+			<!-- Info Card -->
+			<Card>
+				<CardHeader class="pb-2">
+					<CardTitle class="text-base">What Happens After Launch?</CardTitle>
+				</CardHeader>
+				<CardContent class="space-y-4">
+					<div class="space-y-3">
+						<div class="flex gap-3">
+							<div
+								class="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-medium"
+							>
+								1
+							</div>
+							<div>
+								<p class="font-medium">Fair Distribution</p>
+								<p class="text-muted-foreground text-sm">
+									Everyone starts buying at the same price - no pre-sales or hidden allocations
+								</p>
+							</div>
+						</div>
+						<div class="flex gap-3">
+							<div
+								class="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-medium"
+							>
+								2
+							</div>
+							<div>
+								<p class="font-medium">Price Discovery</p>
+								<p class="text-muted-foreground text-sm">
+									Token price increases automatically as more people buy, following a bonding
+									curve
+								</p>
+							</div>
+						</div>
+						<div class="flex gap-3">
+							<div
+								class="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-medium"
+							>
+								3
+							</div>
+							<div>
+								<p class="font-medium">Instant Trading</p>
+								<p class="text-muted-foreground text-sm">
+									Trading begins immediately - buy, sell, or distribute your tokens as you wish
+								</p>
+							</div>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
 		</div>
-	{/if}
+	</div>
 </div>
 
 <style>

@@ -22,6 +22,7 @@
 	import { playSound, showConfetti, showSchoolPrideCannons } from '$lib/utils';
 	import { volumeSettings } from '$lib/stores/volume-settings';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import {
 		GemIcon,
 		ShoppingBasket01Icon,
@@ -51,6 +52,8 @@
 	let confirmTier = $state<CrateTierId | null>(null);
 
 	let gemsNeededDialog = $state<{ tierId: CrateTierId; needed: number; pkg: GemPackage } | null>(null);
+
+	let shouldSignIn = $state(false);
 
 	// Per-crate state
 	let activeLootbox = $state<CrateTierId | null>(null);
@@ -441,6 +444,8 @@
 	keywords="rugplay shop, gems, name colors, cosmetics, crates"
 />
 
+<SignInConfirmDialog bind:open={shouldSignIn} />
+
 <!-- Success modal -->
 {#if showSuccessModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
@@ -654,7 +659,7 @@
 		{#if !$USER_DATA}
 			<div class="py-16 text-center">
 				<p class="text-muted-foreground mb-4">Sign in to open crates.</p>
-				<Button onclick={() => goto('/')}>Sign In</Button>
+				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
 			</div>
 		{:else}
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

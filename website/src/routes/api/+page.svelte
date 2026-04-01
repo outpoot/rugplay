@@ -86,14 +86,19 @@
 	</div>
 
 	{#if !$USER_DATA}
-		<Card>
-			<CardContent class="flex flex-col items-center justify-center py-12">
-				<HugeiconsIcon icon={Key01Icon} class="text-muted-foreground mb-4 h-12 w-12" />
-				<h3 class="mb-2 text-lg font-semibold">Sign in required</h3>
-				<p class="text-muted-foreground mb-4 text-center">
-					Sign in to get your free API key.
-				</p>
-				<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+		<Card class="gap-1 mx-auto max-w-4xl p-6">
+			<CardContent>
+				<div class="py-12 text-center">
+					<div
+						class="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+					>
+						<HugeiconsIcon icon={Key01Icon} class="text-muted-foreground h-8 w-8" />
+					</div>
+
+					<h3 class="mb-2 text-lg font-semibold">Please sign in</h3>
+					<p class="mb-6 text-muted-foreground">You need to be logged in to get your free API key.</p>
+					<Button onclick={() => (shouldSignIn = true)}>Sign In</Button>
+				</div>
 			</CardContent>
 		</Card>
 	{:else}

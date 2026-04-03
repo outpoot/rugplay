@@ -231,7 +231,7 @@
 									<p class="text-destructive text-xs">{symbolError}</p>
 								{:else}
 									<p class="text-muted-foreground text-sm">
-										Short identifier for your coin (e.g., BTC for Bitcoin). Will be displayed as *{symbol ||
+										Short identifier for your coin (e.g., BTC for Bitcoin). Will be displayed as *{symbol.toUpperCase() ||
 											'SYMBOL'}
 									</p>
 								{/if}

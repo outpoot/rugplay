@@ -9,15 +9,14 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { USER_DATA } from '$lib/stores/user-data';
-	import { GEMS_BALANCE, fetchGemsBalance } from '$lib/stores/gems';
+	import { GEMS_BALANCE } from '$lib/stores/gems';
 	import {
-		GEM_PACKAGES,
 		NAME_COLOR_CATALOG,
 		CRATE_TIERS,
 		RARITY_LABEL,
 		RARITY_CLASS,
 	} from '$lib/data/shop-catalog';
-	import type { CrateTierId, CrateTier, Rarity, GemPackage } from '$lib/data/shop-catalog';
+	import type { CrateTierId, CrateTier, Rarity } from '$lib/data/shop-catalog';
 	import confetti from 'canvas-confetti';
 	import { playSound, showConfetti, showSchoolPrideCannons } from '$lib/utils';
 	import { volumeSettings } from '$lib/stores/volume-settings';
@@ -25,32 +24,13 @@
 	import {
 		GemIcon,
 		ShoppingBasket01Icon,
-		Loading02Icon,
 		InformationCircleIcon,
 	} from '@hugeicons/core-free-icons';
 	import { haptic } from '$lib/stores/haptics';
-	import {
-		PUBLIC_POLAR_PRODUCT_GEMS_500,
-		PUBLIC_POLAR_PRODUCT_GEMS_1300,
-		PUBLIC_POLAR_PRODUCT_GEMS_2800,
-		PUBLIC_POLAR_PRODUCT_GEMS_8000,
-	} from '$env/static/public';
-
-	let PolarEmbedCheckout: any = null;
-
-	const PRODUCT_ID_MAP: Record<string, string> = {
-		PUBLIC_POLAR_PRODUCT_GEMS_500,
-		PUBLIC_POLAR_PRODUCT_GEMS_1300,
-		PUBLIC_POLAR_PRODUCT_GEMS_2800,
-		PUBLIC_POLAR_PRODUCT_GEMS_8000,
-	};
-
-	let loadingPackage = $state<string | null>(null);
-	let showSuccessModal = $state(false);
 
 	let confirmTier = $state<CrateTierId | null>(null);
 
-	let gemsNeededDialog = $state<{ tierId: CrateTierId; needed: number; pkg: GemPackage } | null>(null);
+	let gemsNeededDialog = $state<{ tierId: CrateTierId; needed: number } | null>(null);
 
 	// Per-crate state
 	let activeLootbox = $state<CrateTierId | null>(null);
@@ -89,15 +69,6 @@
 
 	onMount(async () => {
 		volumeSettings.load();
-		const mod = await import('@polar-sh/checkout/embed');
-		PolarEmbedCheckout = mod.PolarEmbedCheckout;
-		PolarEmbedCheckout.init();
-
-		const params = new URLSearchParams(window.location.search);
-		if (params.get('success') === 'true') {
-			showSuccessModal = true;
-			window.history.replaceState({}, '', '/shop');
-		}
 
 		if ($USER_DATA) {
 			await loadInventory();
@@ -111,33 +82,6 @@
 			ownedColors = data.nameColors ?? [];
 			GEMS_BALANCE.set(data.gems ?? 0);
 			equippedColor = $USER_DATA?.nameColor ?? null;
-		}
-	}
-
-	async function handlePurchaseGems(pkg: (typeof GEM_PACKAGES)[0]) {
-		if (!$USER_DATA) { goto('/'); return; }
-		if (!PolarEmbedCheckout) { toast.error('Checkout not ready, please wait.'); return; }
-
-		const productId = PRODUCT_ID_MAP[pkg.productEnvKey];
-		if (!productId) {
-			toast.error('Product not configured. Please try again later.');
-			return;
-		}
-
-		loadingPackage = pkg.id;
-		try {
-			const checkoutUrl = `${window.location.origin}/api/checkout/polar?products=${encodeURIComponent(productId)}`;
-			const checkout = await PolarEmbedCheckout.create(checkoutUrl, { theme: 'dark' });
-			checkout.addEventListener('success', () => {
-				loadingPackage = null;
-				showSuccessModal = true;
-				setTimeout(() => fetchGemsBalance(), 3000);
-			});
-			checkout.addEventListener('close', () => { loadingPackage = null; });
-		} catch (e) {
-			console.error('Checkout error:', e);
-			toast.error('Failed to open checkout');
-			loadingPackage = null;
 		}
 	}
 
@@ -164,8 +108,7 @@
 		const balance = $GEMS_BALANCE ?? 0;
 		if (balance < tier.cost) {
 			const needed = tier.cost - balance;
-			const pkg = GEM_PACKAGES.find(p => p.gems >= needed) ?? GEM_PACKAGES[GEM_PACKAGES.length - 1];
-			gemsNeededDialog = { tierId, needed, pkg };
+			gemsNeededDialog = { tierId, needed };
 			return;
 		}
 		confirmTier = tierId;
@@ -441,29 +384,9 @@
 	keywords="rugplay shop, gems, name colors, cosmetics, crates"
 />
 
-<!-- Success modal -->
-{#if showSuccessModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-		<Card.Root class="w-full max-w-md">
-			<Card.Header class="text-center">
-				<div class="mb-3 flex justify-center">
-					<HugeiconsIcon icon={GemIcon} size={56} color="#ca00ff" strokeWidth={1.5} />
-				</div>
-				<Card.Title class="text-2xl">Thanks for the purchase!</Card.Title>
-				<Card.Description>Your Gems will appear in your balance shortly.</Card.Description>
-			</Card.Header>
-			<Card.Footer class="flex gap-3">
-				<Button variant="outline" class="flex-1" onclick={() => (showSuccessModal = false)}>
-					Continue
-				</Button>
-			</Card.Footer>
-		</Card.Root>
-	</div>
-{/if}
-
 <!-- Not enough gems dialog -->
 {#if gemsNeededDialog}
-	{@const { needed, pkg } = gemsNeededDialog}
+	{@const { needed } = gemsNeededDialog}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
 		<Card.Root class="w-full max-w-sm text-center">
 			<Card.Header>
@@ -479,30 +402,18 @@
 			</Card.Header>
 			<Card.Content class="pb-2">
 				<p class="text-muted-foreground text-sm">
-					Purchase the
-					<span class="text-foreground font-semibold">{pkg.gems.toLocaleString()} Gems</span>
-					pack for
-					<span class="text-foreground font-semibold">${pkg.price.toFixed(2)}</span>?
+					You can no longer buy Gems with real money. Earn
+					<span class="text-foreground font-semibold"> {needed.toLocaleString()} more Gems</span>
+					through gameplay rewards before opening this crate.
 				</p>
 			</Card.Content>
-			<Card.Footer class="flex gap-3">
+			<Card.Footer>
 				<Button
 					variant="outline"
-					class="flex-1"
+					class="w-full"
 					onclick={() => (gemsNeededDialog = null)}
 				>
-					No, thanks
-				</Button>
-				<Button
-					class="flex-1"
-					onclick={() => { handlePurchaseGems(pkg); gemsNeededDialog = null; }}
-					disabled={loadingPackage !== null}
-				>
-					{#if loadingPackage}
-						<HugeiconsIcon icon={Loading02Icon} class="animate-spin" size={16} />
-					{:else}
-						Yes, purchase
-					{/if}
+					Close
 				</Button>
 			</Card.Footer>
 		</Card.Root>
@@ -708,66 +619,6 @@
 				{/each}
 			</div>
 		{/if}
-	</section>
-
-	<!-- Get Gems -->
-	<section>
-		<div class="mb-5">
-			<h2 class="text-xl font-bold">Get Gems</h2>
-			<p class="text-muted-foreground text-sm">Purchase Gems to spend in the shop</p>
-		</div>
-		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-			{#each GEM_PACKAGES as pkg}
-				{@const isFeatured = pkg.id === 'whale'}
-				{@const isMostPopular = pkg.id === 'builder'}
-				{@const isDisabled = !$USER_DATA || loadingPackage === pkg.id}
-				<div class="relative pt-3">
-					{#if isFeatured}
-						<div class="absolute -top-0 left-1/2 z-20 -translate-x-1/2 rounded-full px-3 py-0.5 text-xs font-bold" style="background: #ca00ff; color: white;">
-							Best Value
-						</div>
-					{/if}
-					{#if isMostPopular}
-						<div class="absolute -top-0 left-1/2 z-20 -translate-x-1/2 rounded-full px-3 py-0.5 text-xs font-bold" style="background: #0ea5e9; color: white;">
-							Most Popular
-						</div>
-					{/if}
-				<button
-					class="gem-card group relative flex w-full flex-col items-center rounded-xl border text-left transition-all h-full
-						{isDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}
-						{isFeatured ? 'ring-1 ring-[#ca00ff]/40' : isMostPopular ? 'ring-1 ring-sky-500/40' : ''}"
-					style="--accent: #ca00ff; border-color: color-mix(in srgb, #ca00ff 30%, transparent);"
-					disabled={isDisabled}
-					onclick={() => $USER_DATA ? handlePurchaseGems(pkg) : goto('/')}
-				>
-					<div class="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity group-hover:opacity-100" style="background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, #ca00ff 12%, transparent), transparent 70%);"></div>
-					<div class="relative z-10 flex flex-col items-center flex-1 p-5 pb-3">
-						{#if loadingPackage === pkg.id}
-							<HugeiconsIcon icon={Loading02Icon} size={40} class="animate-spin" color="#ca00ff" />
-						{:else}
-							<HugeiconsIcon icon={GemIcon} size={40} color="#ca00ff" strokeWidth={1.5} />
-						{/if}
-						<div class="mt-2 flex flex-col items-center gap-0.5">
-							<span class="text-2xl font-bold">{pkg.gems.toLocaleString()}</span>
-							{#if pkg.bonusPct > 0}
-								<Badge variant="secondary" class="mt-1 text-xs">+{pkg.bonusPct}% bonus</Badge>
-							{/if}
-						</div>
-					</div>
-					<div class="relative z-10 flex w-full items-center justify-center rounded-b-xl border-t py-2.5 bg-input/30">
-						<span class="font-mono text-lg font-semibold">${pkg.price.toFixed(2)}</span>
-					</div>
-				</button>
-				</div>
-			{/each}
-		</div>
-		<p class="text-muted-foreground mt-4 text-center text-sm">
-			<HugeiconsIcon icon={InformationCircleIcon} class="inline h-4 w-4 align-text-bottom" />
-			Spend $4.99 or more on Gems to <span class="text-foreground font-semibold">permanently remove all ads</span> from Rugplay.
-		</p>
-		<p class="text-muted-foreground mt-2 text-center text-xs">
-			Gems have no real-world monetary value and are non-refundable. Purchases are for cosmetic items only.
-		</p>
 	</section>
 
 	<!-- Inventory -->

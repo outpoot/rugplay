@@ -27,7 +27,9 @@ export const POST: RequestHandler = async ({ request }) => {
         for (let i = 0; i < twr_floors; i++) {
             const bombs = new Set<number>();
             while (bombs.size < config.bombs) {
-                bombs.add(Math.floor(Math.random() * config.tiles));
+                const rand = new Uint32Array(1);
+                crypto.getRandomValues(rand);
+                bombs.add(rand[0] % config.tiles);
             }
             floorBombs.push(Array.from(bombs));
         }

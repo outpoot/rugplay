@@ -1,15 +1,26 @@
 import { PUBLIC_B2_BUCKET, PUBLIC_B2_ENDPOINT } from "$env/static/public";
 import { error } from '@sveltejs/kit';
 
+const EXPECTED_HOST = new URL(PUBLIC_B2_ENDPOINT).hostname;
+
 export async function GET({ params, request }) {
     const path = params.path;
-    
+
     if (!path) {
         throw error(400, 'Path is required');
     }
 
+    if (path.includes('..') || path.includes('\0')) {
+        throw error(400, 'Invalid path');
+    }
+
+    const s3Url = `${PUBLIC_B2_ENDPOINT}/${PUBLIC_B2_BUCKET}/${path}`;
+
+    if (new URL(s3Url).hostname !== EXPECTED_HOST) {
+        throw error(400, 'Invalid path');
+    }
+
     try {
-        const s3Url = `${PUBLIC_B2_ENDPOINT}/${PUBLIC_B2_BUCKET}/${path}`;
         const response = await fetch(s3Url);
 
         if (!response.ok) {

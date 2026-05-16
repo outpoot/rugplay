@@ -155,12 +155,16 @@ export async function POST({ request, params }) {
 					.where(inArray(user.username, uniqueMentions));
 
 				const senderName = commentWithUser.userName || commentWithUser.userUsername;
-				const blockedBySet = await getBlockedBySet(userId);
+				const [blockedBySet, senderBlockedSet] = await Promise.all([
+					getBlockedBySet(userId),
+					getBlockedSet(userId)
+				]);
 
 				for (const mentioned of mentionedUsers) {
 					if (mentioned.id === userId) continue; // Don't notify yourself
 					if (mentioned.disableMentions) continue;
 					if (blockedBySet.has(mentioned.id)) continue; // Don't notify users who blocked you
+					if (senderBlockedSet.has(mentioned.id)) continue; // Don't notify users you've blocked
 
 					createNotification(
 						mentioned.id.toString(),

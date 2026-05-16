@@ -1,15 +1,20 @@
 import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { promoCode, promoCodeRedemption } from '$lib/server/db/schema';
+import { promoCode, promoCodeRedemption, user } from '$lib/server/db/schema';
 import { eq, count } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
     const session = await auth.api.getSession({ headers: request.headers });
-    if (!session?.user || !session.user.isAdmin) {
-        throw error(403, 'Admin access required');
-    }
+    if (!session?.user) throw error(403, 'Admin access required');
+
+    const [currentUser] = await db
+        .select({ isAdmin: user.isAdmin })
+        .from(user)
+        .where(eq(user.id, Number(session.user.id)))
+        .limit(1);
+    if (!currentUser?.isAdmin) throw error(403, 'Admin access required');
 
     const { code, description, rewardAmount, maxUses, expiresAt } = await request.json();
 
@@ -58,9 +63,14 @@ export const POST: RequestHandler = async ({ request }) => {
 
 export const GET: RequestHandler = async ({ request }) => {
     const session = await auth.api.getSession({ headers: request.headers });
-    if (!session?.user || !session.user.isAdmin) {
-        throw error(403, 'Admin access required');
-    }
+    if (!session?.user) throw error(403, 'Admin access required');
+
+    const [currentUserGet] = await db
+        .select({ isAdmin: user.isAdmin })
+        .from(user)
+        .where(eq(user.id, Number(session.user.id)))
+        .limit(1);
+    if (!currentUserGet?.isAdmin) throw error(403, 'Admin access required');
 
     const rows = await db
         .select({

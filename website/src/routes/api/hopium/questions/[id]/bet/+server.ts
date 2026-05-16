@@ -13,7 +13,8 @@ export const POST: RequestHandler = async ({ params, request }) => {
     const questionId = parseInt(params.id!);
     const { side, amount } = await request.json();
 
-    if (typeof side !== 'boolean' || !amount || amount <= 0) {
+    const MAX_BET = 1_000_000;
+    if (typeof side !== 'boolean' || !amount || !Number.isFinite(amount) || amount <= 0 || amount > MAX_BET) {
         return json({ error: 'Invalid bet parameters' }, { status: 400 });
     }
 

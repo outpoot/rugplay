@@ -93,16 +93,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 const poolBaseCurrencyAmount = Number(holding.poolBaseCurrencyAmount);
 
                 if (poolCoinAmount <= 0 || poolBaseCurrencyAmount <= 0) {
-                    const fallbackValue = quantity * currentPrice;
-                    totalSaleValue += fallbackValue;
-
                     transactionRows.push({
                         userId,
                         coinId: holding.coinId!,
                         type: 'SELL',
                         quantity: holding.quantity!,
-                        pricePerCoin: holding.currentPrice || '0',
-                        totalBaseCurrencyAmount: fallbackValue.toString(),
+                        pricePerCoin: '0',
+                        totalBaseCurrencyAmount: '0',
                         timestamp: now
                     });
                     continue;
@@ -115,16 +112,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 const newPrice = newPoolBaseCurrency / newPoolCoin;
 
                 if (baseCurrencyReceived <= 0 || newPoolBaseCurrency < 1) {
-                    const fallbackValue = quantity * currentPrice;
-                    totalSaleValue += fallbackValue;
-
                     transactionRows.push({
                         userId,
                         coinId: holding.coinId!,
                         type: 'SELL',
                         quantity: quantity.toString(),
-                        pricePerCoin: currentPrice.toString(),
-                        totalBaseCurrencyAmount: fallbackValue.toString(),
+                        pricePerCoin: '0',
+                        totalBaseCurrencyAmount: '0',
                         timestamp: now
                     });
                     continue;

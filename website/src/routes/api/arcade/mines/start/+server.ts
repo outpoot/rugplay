@@ -45,7 +45,9 @@ export const POST: RequestHandler = async ({ request }) => {
             // Generate mine positions
             const positions = new Set<number>();
             while (positions.size < mineCount) {
-                positions.add(Math.floor(Math.random() * 25));
+                const rand = new Uint32Array(1);
+                crypto.getRandomValues(rand);
+                positions.add(rand[0] % 25);
             }
 
             // transaction token for authentication stuff

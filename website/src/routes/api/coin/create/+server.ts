@@ -3,7 +3,7 @@ import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { coin, user, priceHistory } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { uploadCoinIcon } from '$lib/server/s3';
+import { uploadCoinIcon, deleteObject } from '$lib/server/s3';
 import { CREATION_FEE, FIXED_SUPPLY, STARTING_PRICE, INITIAL_LIQUIDITY, TOTAL_COST, MAX_FILE_SIZE } from '$lib/data/constants';
 import { isNameAppropriate } from '$lib/server/moderation';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
@@ -73,74 +73,72 @@ export async function POST({ request }) {
 
     await validateInputs(name, normalizedSymbol, iconFile);
 
-    let createdCoin: any;
+    // Upload icon before the DB transaction so state stays consistent
     let iconKey: string | null = null;
-
-    await db.transaction(async (tx) => {
-        const existingCoin = await tx.select().from(coin).where(eq(coin.symbol, normalizedSymbol)).limit(1);
-        if (existingCoin.length > 0) {
-            throw error(400, 'A coin with this symbol already exists');
-        }
-
-        const [userData] = await tx
-            .select({ baseCurrencyBalance: user.baseCurrencyBalance })
-            .from(user)
-            .where(eq(user.id, userId))
-            .for('update')
-            .limit(1);
-
-        if (!userData) {
-            throw error(404, 'User not found');
-        }
-
-        const currentBalance = Number(userData.baseCurrencyBalance);
-        if (currentBalance < TOTAL_COST) {
-            throw error(400, `Insufficient funds. You need $${TOTAL_COST.toFixed(2)} but only have $${currentBalance.toFixed(2)}.`);
-        }
-
-        await tx.update(user)
-            .set({
-                baseCurrencyBalance: (currentBalance - TOTAL_COST).toString(),
-                updatedAt: new Date()
-            })
-            .where(eq(user.id, userId));
-
-        const [newCoin] = await tx.insert(coin).values({
-            name,
-            symbol: normalizedSymbol,
-            icon: null,
-            creatorId: userId,
-            initialSupply: FIXED_SUPPLY.toString(),
-            circulatingSupply: FIXED_SUPPLY.toString(),
-            currentPrice: STARTING_PRICE.toString(),
-            marketCap: (FIXED_SUPPLY * STARTING_PRICE).toString(),
-            poolCoinAmount: FIXED_SUPPLY.toString(),
-            poolBaseCurrencyAmount: INITIAL_LIQUIDITY.toString(),
-            tradingUnlocksAt: new Date(Date.now() + 60 * 1000), // 1 minute from now
-            isLocked: true
-        }).returning();
-
-        createdCoin = newCoin;
-
-        await tx.insert(priceHistory).values({
-            coinId: newCoin.id,
-            price: STARTING_PRICE.toString()
-        });
-    });
-
     if (iconFile && iconFile.size > 0) {
-        try {
-            iconKey = await handleIconUpload(iconFile, normalizedSymbol);
+        iconKey = await handleIconUpload(iconFile, normalizedSymbol);
+    }
 
-            await db.update(coin)
-                .set({ icon: iconKey })
-                .where(eq(coin.id, createdCoin.id));
+    let createdCoin: any;
 
-            createdCoin.icon = iconKey;
-        } catch (e) {
-            console.error('Icon upload failed after coin creation:', e);
-            // coin is still created successfully, just without icon
+    try {
+        await db.transaction(async (tx) => {
+            const existingCoin = await tx.select().from(coin).where(eq(coin.symbol, normalizedSymbol)).limit(1);
+            if (existingCoin.length > 0) {
+                throw error(400, 'A coin with this symbol already exists');
+            }
+
+            const [userData] = await tx
+                .select({ baseCurrencyBalance: user.baseCurrencyBalance })
+                .from(user)
+                .where(eq(user.id, userId))
+                .for('update')
+                .limit(1);
+
+            if (!userData) {
+                throw error(404, 'User not found');
+            }
+
+            const currentBalance = Number(userData.baseCurrencyBalance);
+            if (currentBalance < TOTAL_COST) {
+                throw error(400, `Insufficient funds. You need $${TOTAL_COST.toFixed(2)} but only have $${currentBalance.toFixed(2)}.`);
+            }
+
+            await tx.update(user)
+                .set({
+                    baseCurrencyBalance: (currentBalance - TOTAL_COST).toString(),
+                    updatedAt: new Date()
+                })
+                .where(eq(user.id, userId));
+
+            const [newCoin] = await tx.insert(coin).values({
+                name,
+                symbol: normalizedSymbol,
+                icon: iconKey,
+                creatorId: userId,
+                initialSupply: FIXED_SUPPLY.toString(),
+                circulatingSupply: FIXED_SUPPLY.toString(),
+                currentPrice: STARTING_PRICE.toString(),
+                marketCap: (FIXED_SUPPLY * STARTING_PRICE).toString(),
+                poolCoinAmount: FIXED_SUPPLY.toString(),
+                poolBaseCurrencyAmount: INITIAL_LIQUIDITY.toString(),
+                tradingUnlocksAt: new Date(Date.now() + 60 * 1000), // 1 minute from now
+                isLocked: true
+            }).returning();
+
+            createdCoin = newCoin;
+
+            await tx.insert(priceHistory).values({
+                coinId: newCoin.id,
+                price: STARTING_PRICE.toString()
+            });
+        });
+    } catch (e) {
+        // Clean up the S3 icon if the DB transaction failed
+        if (iconKey) {
+            deleteObject(iconKey).catch(console.error);
         }
+        throw e;
     }
 
     checkAndAwardAchievements(userId, ['creation']);

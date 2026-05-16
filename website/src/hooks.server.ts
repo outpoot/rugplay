@@ -9,6 +9,39 @@ import { user, gemTransactions } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { minesCleanupInactiveGames, minesAutoCashout } from '$lib/server/games/mines';
 import { towerCleanupInactiveGames } from '$lib/server/games/tower';
+import { checkRateLimit } from '$lib/server/ratelimit';
+
+const RATE_RULES: Array<{
+    match: (path: string, method: string) => boolean;
+    key: string;
+    limit: number;
+    windowSecs: number;
+}> = [
+    {
+        match: (p) => p.startsWith('/api/arcade/'),
+        key: 'arcade',
+        limit: 10,
+        windowSecs: 5
+    },
+    {
+        match: (p) => p.endsWith('/trade'),
+        key: 'trade',
+        limit: 20,
+        windowSecs: 60
+    },
+    {
+        match: (p, m) => p.includes('/comments') && m === 'POST',
+        key: 'comments',
+        limit: 5,
+        windowSecs: 60
+    },
+    {
+        match: (p) => p.endsWith('/bet'),
+        key: 'bet',
+        limit: 10,
+        windowSecs: 60
+    }
+];
 
 async function initializeScheduler() {
     if (building) return;
@@ -195,6 +228,23 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     event.locals.userSession = userData;
+
+    if (userData && event.url.pathname.startsWith('/api/')) {
+        const path = event.url.pathname;
+        const method = event.request.method;
+        for (const rule of RATE_RULES) {
+            if (rule.match(path, method)) {
+                const allowed = await checkRateLimit(userData.id, rule.key, rule.limit, rule.windowSecs);
+                if (!allowed) {
+                    return new Response(
+                        JSON.stringify({ error: 'Too many requests' }),
+                        { status: 429, headers: { 'Content-Type': 'application/json' } }
+                    );
+                }
+                break;
+            }
+        }
+    }
 
     if (event.url.pathname.startsWith('/api/') && !event.url.pathname.startsWith('/api/proxy/')) {
         const response = await svelteKitHandler({ event, resolve, auth });

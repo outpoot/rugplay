@@ -19,6 +19,8 @@
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { onMount } from 'svelte';
 
+	const MAX_TRADES = 200;
+
 	function handleUserClick(username: string) {
 		goto(`/user/${username}`);
 	}
@@ -31,9 +33,19 @@
 		}
 	}
 
+	$: trades = $allTradesStore;
+	$: displayTrades = trades && trades.length > MAX_TRADES ? trades.slice(0, MAX_TRADES) : trades;
+	$: preparedTrades = (displayTrades || []).map((t: any) => {
+		return {
+			...t,
+			numericUserId: Number(t.userId),
+			coinSymbolLower: t.coinSymbol ? String(t.coinSymbol).toLowerCase() : t.coinSymbol
+		};
+	});
+
 	onMount(() => {
 		loadInitialTrades("expanded");
-	})
+	});
 </script>
 
 <SEO 
@@ -64,9 +76,9 @@
 					<HugeiconsIcon icon={Activity01Icon} class="h-5 w-5" />
 					Stream
 				</div>
-				{#if $allTradesStore.length > 0}
+				{#if trades && trades.length > 0}
 					<Badge variant="secondary" class="w-fit sm:ml-auto">
-						{$allTradesStore.length} trade{$allTradesStore.length !== 1 ? 's' : ''}
+						{trades.length} trade{trades.length !== 1 ? 's' : ''}
 					</Badge>
 				{/if}
 			</CardTitle>
@@ -75,7 +87,7 @@
 			<div class="space-y-3">
 				{#if $isLoadingTrades}
 					<LiveTradeSkeleton />
-				{:else if $allTradesStore.length === 0}
+				{:else if !preparedTrades || preparedTrades.length === 0}
 					<div class="flex flex-col items-center justify-center py-12 text-center sm:py-16">
 						<HugeiconsIcon icon={Activity01Icon} class="text-muted-foreground/50 mb-4 h-12 w-12 sm:h-16 sm:w-16" />
 						<h3 class="mb-2 text-base font-semibold sm:text-lg">Waiting for trades...</h3>
@@ -84,7 +96,7 @@
 						</p>
 					</div>
 				{:else}
-					{#each $allTradesStore as trade (trade.timestamp)}
+					{#each preparedTrades as trade (trade.id ?? trade.timestamp)}
 						<div
 							class="hover:bg-muted/50 flex flex-col gap-3 rounded-lg border p-3 transition-colors sm:flex-row sm:items-center sm:justify-between sm:p-4"
 						>
@@ -94,7 +106,7 @@
 										{#if trade.type === 'TRANSFER_IN' || trade.type === 'TRANSFER_OUT'}
 											{#if trade.amount > 0}
 												<button
-													onclick={() => handleCoinClick(trade.coinSymbol, trade)}
+													onclick={() => handleCoinClick(trade.coinSymbolLower, trade)}
 													class="flex cursor-pointer items-center gap-1.5 transition-opacity hover:underline hover:opacity-80"
 												>
 													<CoinIcon
@@ -121,7 +133,7 @@
 											{/if}
 										{:else}
 											<button
-												onclick={() => handleCoinClick(trade.coinSymbol, trade)}
+												onclick={() => handleCoinClick(trade.coinSymbolLower, trade)}
 												class="flex cursor-pointer items-center gap-1.5 transition-opacity hover:underline hover:opacity-80"
 											>
 												<CoinIcon
@@ -161,7 +173,7 @@
 												</div>
 											</HoverCard.Trigger>
 											<HoverCard.Content class="w-80" side="top" sideOffset={3}>
-												<UserProfilePreview userId={parseInt(trade.userId)} />
+												<UserProfilePreview userId={trade.numericUserId} />
 											</HoverCard.Content>
 										</HoverCard.Root>
 									</div>

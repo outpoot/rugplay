@@ -15,8 +15,8 @@ const openai = new OpenAI({
 });
 
 const MODELS = {
-    STANDARD: 'google/gemini-2.0-flash-001',
-    WEB_SEARCH: 'google/gemini-2.0-flash-001:online'
+    STANDARD: 'google/gemini-3.1-flash-lite',
+    WEB_SEARCH: 'google/gemini-3-flash-preview:online'
 } as const;
 
 const VALIDATION_CRITERIA = `

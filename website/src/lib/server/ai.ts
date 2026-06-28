@@ -33,8 +33,8 @@ Criteria for validation:
 const QuestionValidationSchema = z.object({
     isValid: z.boolean(),
     requiresWebSearch: z.boolean(),
-    reason: z.string(),
-    suggestedResolutionDate: z.string()
+    reason: z.string().optional().default(''),
+    suggestedResolutionDate: z.string().optional()
 });
 
 const QuestionResolutionSchema = z.object({
@@ -276,7 +276,13 @@ Also determine:
 
 Note: All coins use *SYMBOL format (e.g., *BTC, *DOGE). All trading is simulated with *BUSS currency.
 
-Provide your response in the specified JSON format with a precise ISO 8601 datetime string for suggestedResolutionDate.
+Respond with ONLY a JSON object in exactly this format (all fields required):
+{
+  "isValid": boolean,
+  "requiresWebSearch": boolean,
+  "reason": string (a clear explanation of why the question is valid or invalid; never empty),
+  "suggestedResolutionDate": string (a precise ISO 8601 datetime, e.g. "2026-06-30T18:00:00Z")
+}
 `;
 
     try {

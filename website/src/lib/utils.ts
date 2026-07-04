@@ -108,7 +108,9 @@ export function formatDate(timestamp: string): string {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+		// If different years
+		year: (date.getFullYear() !== new Date().getFullYear()) ? 'numeric' : undefined
     });
 }
 

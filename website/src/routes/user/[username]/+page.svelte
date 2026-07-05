@@ -27,7 +27,6 @@
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import * as Tooltip from '$lib/components/ui/tooltip';
-	import AdLong from '$lib/components/self/ads/AdLong.svelte';
 	import { haptic } from '$lib/stores/haptics';
 
 	let { data } = $props();
@@ -756,8 +755,6 @@
 				</Card.Content>
 			</Card.Root>
 		{/if}
-
-		<AdLong />
 
 		<!-- Created Coins -->
 		{#if hasCreatedCoins}

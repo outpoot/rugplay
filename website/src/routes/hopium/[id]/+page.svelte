@@ -28,7 +28,6 @@
 	import { formatDateWithYear, getPublicUrl, formatTimeUntil } from '$lib/utils';
 	import { createChart, ColorType, type IChartApi, LineSeries } from 'lightweight-charts';
 	import HopiumQuestionSkeleton from '$lib/components/self/skeletons/HopiumQuestionSkeleton.svelte';
-	import AdSquare from '$lib/components/self/ads/AdSquare.svelte';
 	import { haptic } from '$lib/stores/haptics';
 
 	const { data } = $props();
@@ -575,8 +574,6 @@
 					</Card.Content>
 				</Card.Root>
 			</div>
-
-			<AdSquare />
 
 			<!-- Recent Activity Section -->
 			{#if question.recentBets && question.recentBets.length > 0}

@@ -30,7 +30,6 @@
 	import { formatDateWithYear, formatTimeUntil, formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import type { PredictionQuestion } from '$lib/types/prediction';
-	import AdLong from '$lib/components/self/ads/AdLong.svelte';
 	import { haptic } from '$lib/stores/haptics';
 
 	let questions = $state<PredictionQuestion[]>([]);
@@ -367,7 +366,6 @@
 					{/each}
 				</div>
 
-				<AdLong />
 			{/if}
 		</div>
 	</div>

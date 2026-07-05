@@ -5,8 +5,8 @@ import { redis } from "$lib/server/redis";
 import { building } from '$app/environment';
 import { redirect, type Handle } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { user, gemTransactions } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { user } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 import { minesCleanupInactiveGames, minesAutoCashout } from '$lib/server/games/mines';
 import { towerCleanupInactiveGames } from '$lib/server/games/tower';
 import { checkRateLimit } from '$lib/server/ratelimit';
@@ -190,12 +190,6 @@ export const handle: Handle = async ({ event, resolve }) => {
                     throw redirect(302, `/banned?reason=${banReason}`);
                 }
             } else if (userRecord) {
-                const [spendResult] = await db
-                    .select({ total: sql<number>`COALESCE(SUM(${gemTransactions.usdAmount}), 0)` })
-                    .from(gemTransactions)
-                    .where(eq(gemTransactions.userId, userRecord.id));
-                const totalUsdSpent = Number(spendResult?.total ?? 0);
-
                 userData = {
                     id: userRecord.id.toString(),
                     name: userRecord.name,
@@ -213,8 +207,7 @@ export const handle: Handle = async ({ event, resolve }) => {
                     nameColor: userRecord.nameColor ?? null,
                     founderBadge: userRecord.founderBadge ?? false,
                     prestigeLevel: userRecord.prestigeLevel ?? 0,
-                    disableMentions: userRecord.disableMentions ?? false,
-                    hideAds: totalUsdSpent >= 499
+                    disableMentions: userRecord.disableMentions ?? false
                 };
 
                 const cacheTTL = userRecord.isAdmin ? CACHE_TTL * 2 : CACHE_TTL;

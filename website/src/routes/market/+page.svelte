@@ -25,7 +25,6 @@
 	import { formatPrice, formatMarketCap, debounce, formatRelativeTime } from '$lib/utils';
 	import { MediaQuery } from 'svelte/reactivity';
 	import type { CoinData, FilterOption, VolatilityBadge, MarketResponse } from '$lib/types/market';
-	import AdLong from '$lib/components/self/ads/AdLong.svelte';
 
 	let { data } = $props();
 
@@ -512,8 +511,6 @@
 				</Card.Root>
 			{/each}
 		</div>
-
-		<AdLong />
 
 		<!-- Pagination -->
 		{#if totalPages > 1}

@@ -21,7 +21,6 @@ export type User = {
     founderBadge: boolean;
     prestigeLevel: number;
     disableMentions: boolean;
-    hideAds: boolean;
 } | null;
 
 export const USER_DATA = writable<User>(null);

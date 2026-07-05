@@ -13,7 +13,6 @@
 		DiscordIcon
 	} from '@hugeicons/core-free-icons';
 	import UserManualModal from '$lib/components/self/UserManualModal.svelte';
-	import AdLong from '$lib/components/self/ads/AdLong.svelte';
 
 	let showUserManual = $state(false);
 	function handleManual() {
@@ -176,5 +175,4 @@
 		</Card>
 	</div>
 
-	<AdLong />
 </div>

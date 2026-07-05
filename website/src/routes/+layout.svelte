@@ -12,7 +12,6 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { page } from '$app/state';
 	import { websocketController } from '$lib/stores/websocket';
-	import { dev } from '$app/environment';
 	import { RenderScan } from 'svelte-render-scan';
 
 	let { data, children } = $props<{
@@ -114,19 +113,6 @@
 		return titleMap[routeId] || 'Rugplay';
 	}
 
-	let adScriptLoaded = false;
-
-	$effect(() => {
-		const shouldHide = $USER_DATA?.hideAds;
-		if (dev || shouldHide || adScriptLoaded) return;
-
-		adScriptLoaded = true;
-		const script = document.createElement('script');
-		script.async = true;
-		script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7420543404967748';
-		script.crossOrigin = 'anonymous';
-		document.head.appendChild(script);
-	});
 </script>
 
 <!-- <RenderScan /> -->

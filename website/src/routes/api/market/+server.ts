@@ -59,12 +59,16 @@ export async function GET({ url }) {
         const conditions = [eq(coin.isListed, true)];
 
         if (searchQuery) {
-            conditions.push(
-                or(
-                    ilike(coin.name, `%${searchQuery}%`),
-                    ilike(coin.symbol, `%${searchQuery}%`)
-                )!
-            );
+            if(searchQuery.startsWith('*')) {
+                conditions.push(eq(coin.symbol, searchQuery.slice(1)));
+            } else {
+                conditions.push(
+                    or(
+                        ilike(coin.name, `%${searchQuery}%`),
+                        ilike(coin.symbol, `%${searchQuery}%`)
+                    )!
+                );
+            }
         }
 
         switch (priceFilter) {

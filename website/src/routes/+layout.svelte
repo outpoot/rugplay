@@ -88,6 +88,7 @@
 			'/settings': 'Settings',
 			'/admin': 'Admin',
 			'/admin/promo': 'Promo Codes',
+			'/admin/seasons': 'Season Settings',
 			'/transactions': 'Transactions',
 			'/hopium': 'Hopium',
 			'/arcade': 'Arcade',

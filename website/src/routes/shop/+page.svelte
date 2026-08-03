@@ -400,13 +400,6 @@
 					more Gems to open this crate.
 				</Card.Description>
 			</Card.Header>
-			<Card.Content class="pb-2">
-				<p class="text-muted-foreground text-sm">
-					You can no longer buy Gems with real money. Earn
-					<span class="text-foreground font-semibold"> {needed.toLocaleString()} more Gems</span>
-					through gameplay rewards before opening this crate.
-				</p>
-			</Card.Content>
 			<Card.Footer>
 				<Button
 					variant="outline"

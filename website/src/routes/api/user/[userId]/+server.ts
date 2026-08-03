@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, coin, transaction, userPortfolio } from '$lib/server/db/schema';
 import { eq, desc, sql, count, and, gte } from 'drizzle-orm';
+import { getUserTrophies, getBestTrophy } from '$lib/server/seasons';
 
 export async function GET({ params }) {
     const { userId } = params;
@@ -130,11 +131,19 @@ export async function GET({ params }) {
                 )
             );
 
+        const [seasonTrophies, { bestTrophy, trophyCount }] = await Promise.all([
+            getUserTrophies(actualUserId),
+            getBestTrophy(actualUserId)
+        ]);
+
         return json({
             profile: {
                 ...userProfile,
                 baseCurrencyBalance,
                 totalPortfolioValue,
+                bestTrophy,
+                trophyCount,
+                seasonTrophies,
             }, stats: {
                 totalPortfolioValue,
                 baseCurrencyBalance,
@@ -149,7 +158,8 @@ export async function GET({ params }) {
                 sellVolume24h: transactionStats24h[0]?.sellVolume24h || 0,
             },
             createdCoins,
-            recentTransactions
+            recentTransactions,
+            seasonTrophies
         });
     } catch (e) {
         console.error('Failed to fetch user profile:', e);

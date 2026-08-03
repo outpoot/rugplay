@@ -8,7 +8,9 @@ import {
 	comment,
 	predictionQuestion,
 	predictionBet,
-	userInventory
+	userInventory,
+	seasonParticipant,
+	seasonTrophy
 } from './db/schema';
 import { eq, and, sql, count, gte, gt, ne } from 'drizzle-orm';
 import { ACHIEVEMENTS_MAP, ACHIEVEMENTS } from '$lib/data/achievements';
@@ -39,6 +41,10 @@ export interface AchievementContext {
 
 	// Prestige context
 	newPrestigeLevel?: number;
+
+	seasonJoined?: boolean;
+	seasonGrowth?: number;
+	seasonFinalRank?: number;
 
 	// Crate context
 	cratesOpened?: number;
@@ -530,6 +536,42 @@ async function checkAchievement(
 				.limit(1);
 			if (!userData) return false;
 			return userData.createdAt <= sixMonthsAgo;
+		}
+
+		case 'season_entry':
+			return ctx.seasonJoined === true;
+
+		case 'season_double':
+			return (ctx.seasonGrowth ?? 0) >= 2;
+		case 'season_10x':
+			return (ctx.seasonGrowth ?? 0) >= 10;
+		case 'season_100x':
+			return (ctx.seasonGrowth ?? 0) >= 100;
+
+		case 'season_podium':
+			return (ctx.seasonFinalRank ?? Infinity) <= 3;
+		case 'season_champion':
+			return ctx.seasonFinalRank === 1;
+
+		case 'season_underdog':
+			return (ctx.seasonFinalRank ?? Infinity) <= 10;
+
+		case 'season_dynasty': {
+			const [result] = await db
+				.select({ wins: count() })
+				.from(seasonTrophy)
+				.where(and(eq(seasonTrophy.userId, userId), eq(seasonTrophy.rank, 1)));
+			return (result?.wins ?? 0) >= 2;
+		}
+
+		case 'season_regular':
+		case 'season_veteran': {
+			const [result] = await db
+				.select({ seasons: count() })
+				.from(seasonParticipant)
+				.where(eq(seasonParticipant.userId, userId));
+			const target = ACHIEVEMENTS_MAP[achievementId]?.targetValue ?? 0;
+			return (result?.seasons ?? 0) >= target;
 		}
 
 		default:

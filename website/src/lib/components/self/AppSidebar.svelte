@@ -157,6 +157,11 @@
 		setOpenMobile(false);
 	}
 
+	function handleSeasonSettingsClick() {
+		goto('/admin/seasons');
+		setOpenMobile(false);
+	}
+
 	function handleTermsClick() {
 		goto('/legal/terms');
 		setOpenMobile(false);
@@ -518,6 +523,13 @@
 									>
 										<HugeiconsIcon icon={Ticket01Icon} class="text-primary" />
 										Manage codes
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										onclick={handleSeasonSettingsClick}
+										class="text-primary hover:text-primary!"
+									>
+										<HugeiconsIcon icon={ChampionIcon} class="text-primary" />
+										Season settings
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>
 							{/if}

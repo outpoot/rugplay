@@ -7,6 +7,7 @@
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
 	import DataTable from '$lib/components/self/DataTable.svelte';
 	import HomeSkeleton from '$lib/components/self/skeletons/HomeSkeleton.svelte';
+	import SeasonCard from '$lib/components/self/SeasonCard.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -15,16 +16,25 @@
 	let shouldSignIn = $state(false);
 	let coins = $state<any[]>([]);
 	let loading = $state(true);
+	let seasonData = $state<any>(null);
 
 	onMount(async () => {
 		try {
-			const response = await fetch('/api/coins/top');
-			if (response.ok) {
-				const result = await response.json();
-				coins = result.coins;
-			} else {
-				toast.error('Failed to load coins');
-			}
+			const [coinResult, loadedSeasonData] = await Promise.all([
+				fetch('/api/coins/top').then(async (response) => {
+					if (!response.ok) throw new Error('Failed to load coins');
+					return response.json();
+				}),
+				fetch('/api/season')
+					.then((response) => (response.ok ? response.json() : null))
+					.catch((e) => {
+						console.error('Failed to fetch season:', e);
+						return null;
+					})
+			]);
+
+			coins = coinResult.coins;
+			seasonData = loadedSeasonData;
 		} catch (e) {
 			console.error('Failed to fetch coins:', e);
 			toast.error('Failed to load coins');
@@ -101,7 +111,7 @@
 	</header>
 
 	{#if loading}
-		<HomeSkeleton />
+		<HomeSkeleton showSeason={!seasonData || !!seasonData.season} />
 	{:else if coins.length === 0}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
@@ -110,30 +120,62 @@
 			</div>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+			{#if seasonData?.season}
+				<div class="order-last md:col-span-2 lg:order-none lg:col-span-1 lg:col-start-4 lg:row-span-2 lg:row-start-1">
+					<SeasonCard data={seasonData} />
+				</div>
+			{/if}
 			{#each coins.slice(0, 6) as coin (coin.symbol)}
-				<a href={`/coin/${coin.symbol}`} class="block">
-					<Card.Root class="hover:bg-card/50 h-full transition-all hover:shadow-md">
-						<Card.Header>
-							<Card.Title class="flex items-center justify-between">
-								<div class="flex items-center gap-2">
-									<CoinIcon icon={coin.icon} symbol={coin.symbol} name={coin.name} size={6} />
-									<span>{coin.name} (*{coin.symbol})</span>
+				<a href={`/coin/${coin.symbol}`} class="block h-full">
+					<Card.Root class="hover:bg-card/50 flex h-full flex-col gap-0 transition-all hover:shadow-md">
+						<Card.Header class="pb-4">
+							<Card.Title class="flex min-w-0 items-center gap-3">
+								<CoinIcon
+									icon={coin.icon}
+									symbol={coin.symbol}
+									name={coin.name}
+									size={10}
+									class="shrink-0"
+								/>
+								<div class="min-w-0 flex-1">
+									<div class="truncate text-base leading-tight font-semibold">{coin.name}</div>
+									<Badge
+										variant="secondary"
+										class="mt-1 max-w-full font-mono text-[11px] font-medium"
+									>
+										<span class="truncate">*{coin.symbol}</span>
+									</Badge>
 								</div>
-								<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="ml-2">
+							</Card.Title>
+						</Card.Header>
+
+						<Card.Content class="flex flex-1 flex-col justify-center gap-2 py-2">
+							<span class="text-muted-foreground text-xs">Price</span>
+							<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+								<span class="text-3xl font-bold tracking-tight">${formatPrice(coin.price)}</span>
+								<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="shrink-0">
 									{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
 								</Badge>
-							</Card.Title>
-							<Card.Description>Market Cap: {formatMarketCap(coin.marketCap)}</Card.Description>
-						</Card.Header>
-						<Card.Content>
-							<div class="flex items-baseline justify-between">
-								<span class="text-3xl font-bold">${formatPrice(coin.price)}</span>
-								<span class="text-muted-foreground text-sm">
-									24h Vol: {formatMarketCap(coin.volume24h)}
-								</span>
 							</div>
 						</Card.Content>
+
+						<Card.Footer class="mt-4 border-t pt-4">
+							<div class="grid w-full grid-cols-2 gap-3">
+								<div class="min-w-0">
+									<div class="text-muted-foreground text-xs">Market Cap</div>
+									<div class="truncate text-sm font-medium tabular-nums">
+										{formatMarketCap(coin.marketCap)}
+									</div>
+								</div>
+								<div class="min-w-0 text-right">
+									<div class="text-muted-foreground text-xs">24h Volume</div>
+									<div class="truncate text-sm font-medium tabular-nums">
+										{formatMarketCap(coin.volume24h)}
+									</div>
+								</div>
+							</div>
+						</Card.Footer>
 					</Card.Root>
 				</a>
 			{/each}

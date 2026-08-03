@@ -1,7 +1,7 @@
 import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { user, userPortfolio, coin, transaction } from '$lib/server/db/schema';
+import { user, userPortfolio, coin, transaction, season, seasonParticipant } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
 import { formatValue } from '$lib/utils';
@@ -77,6 +77,20 @@ export const POST: RequestHandler = async ({ request }) => {
 
             if (senderData.id === recipientData.id) {
                 throw error(400, 'Cannot transfer to yourself');
+            }
+
+            const [recipientSeasonEntry] = await tx
+                .select({ id: seasonParticipant.id })
+                .from(seasonParticipant)
+                .innerJoin(season, eq(season.id, seasonParticipant.seasonId))
+                .where(and(
+                    eq(seasonParticipant.userId, recipientData.id),
+                    eq(season.status, 'ACTIVE')
+                ))
+                .limit(1);
+
+            if (recipientSeasonEntry) {
+                throw error(400, 'This player is competing in a season and cannot receive transfers');
             }
 
             if (type === 'CASH') {

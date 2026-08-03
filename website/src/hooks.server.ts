@@ -1,5 +1,6 @@
 import { auth } from "$lib/auth";
 import { resolveExpiredQuestions, processAccountDeletions } from "$lib/server/job";
+import { rolloverSeasons } from "$lib/server/seasons";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { redis } from "$lib/server/redis";
 import { building } from '$app/environment';
@@ -78,10 +79,12 @@ async function initializeScheduler() {
 
             resolveExpiredQuestions().catch(console.error);
             processAccountDeletions().catch(console.error);
+            rolloverSeasons().catch(console.error);
 
             const schedulerInterval = setInterval(() => {
                 resolveExpiredQuestions().catch(console.error);
                 processAccountDeletions().catch(console.error);
+                rolloverSeasons().catch(console.error);
             }, 5 * 60 * 1000);
 
             const minesCleanupInterval = setInterval(() => {

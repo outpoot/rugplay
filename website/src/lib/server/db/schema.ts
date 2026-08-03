@@ -5,6 +5,8 @@ export const transactionTypeEnum = pgEnum('transaction_type', ['BUY', 'SELL', 'T
 export const predictionMarketEnum = pgEnum('prediction_market_status', ['ACTIVE', 'RESOLVED', 'CANCELLED']);
 export const notificationTypeEnum = pgEnum('notification_type', ['HOPIUM', 'SYSTEM', 'TRANSFER', 'RUG_PULL', 'MENTION']);
 export const shopItemTypeEnum = pgEnum('shop_item_type', ['namecolor']);
+export const seasonStatusEnum = pgEnum('season_status', ['UPCOMING', 'ACTIVE', 'ENDED']);
+export const seasonTrophyTierEnum = pgEnum('season_trophy_tier', ['CHAMPION', 'RUNNER_UP', 'THIRD', 'TOP_10', 'TOP_100', 'PARTICIPANT']);
 
 export const user = pgTable("user", {
 	id: serial("id").primaryKey(),
@@ -74,6 +76,10 @@ export const session = pgTable("session", {
 	ipAddress: text("ip_address"),
 	userAgent: text("user_agent"),
 	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+}, (table) => {
+	return {
+		userIdIdx: index("session_user_id_idx").on(table.userId),
+	};
 });
 
 export const account = pgTable("account", {
@@ -142,6 +148,7 @@ export const userPortfolio = pgTable("user_portfolio", {
 	(table) => {
 		return {
 			pk: primaryKey({ columns: [table.userId, table.coinId] }),
+			coinIdQuantityIdx: index("user_portfolio_coin_id_quantity_idx").on(table.coinId, table.quantity.desc()),
 		};
 	},
 );
@@ -160,11 +167,11 @@ export const transaction = pgTable("transaction", {
 }, (table) => {
 	return {
 		userIdIdx: index("transaction_user_id_idx").on(table.userId),
-		coinIdIdx: index("transaction_coin_id_idx").on(table.coinId),
 		typeIdx: index("transaction_type_idx").on(table.type),
 		timestampIdx: index("transaction_timestamp_idx").on(table.timestamp),
 		userCoinIdx: index("transaction_user_coin_idx").on(table.userId, table.coinId),
 		coinTypeIdx: index("transaction_coin_type_idx").on(table.coinId, table.type),
+		coinTimestampIdx: index("transaction_coin_id_timestamp_idx").on(table.coinId, table.timestamp),
 	};
 });
 
@@ -173,6 +180,10 @@ export const priceHistory = pgTable("price_history", {
 	coinId: integer("coin_id").notNull().references(() => coin.id, { onDelete: "cascade" }),
 	price: decimal("price", { precision: 30, scale: 8 }).notNull(),
 	timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => {
+	return {
+		coinIdTimestampIdx: index("price_history_coin_id_timestamp_idx").on(table.coinId, table.timestamp),
+	};
 });
 
 export const comment = pgTable("comment", {
@@ -293,10 +304,11 @@ export const notifications = pgTable("notification", {
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => {
 	return {
-		userIdIdx: index("notification_user_id_idx").on(table.userId),
 		typeIdx: index("notification_type_idx").on(table.type),
 		isReadIdx: index("notification_is_read_idx").on(table.isRead),
 		createdAtIdx: index("notification_created_at_idx").on(table.createdAt),
+		userIdCreatedAtIdx: index("notification_user_id_created_at_idx").on(table.userId, table.createdAt.desc()),
+		userUnreadIdx: index("notification_user_unread_idx").on(table.userId).where(sql`is_read = false`),
 	};
 });
 
@@ -359,6 +371,59 @@ export const userAchievement = pgTable("user_achievement", {
 	userIdIdx: index("user_achievement_user_id_idx").on(table.userId),
 	achievementIdIdx: index("user_achievement_achievement_id_idx").on(table.achievementId),
 }));
+
+export const season = pgTable("season", {
+	id: serial("id").primaryKey(),
+	number: integer("number").notNull().unique(),
+	name: varchar("name", { length: 80 }).notNull(),
+	backgroundImage: varchar("background_image", { length: 2048 }),
+	status: seasonStatusEnum("status").notNull().default('UPCOMING'),
+	startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+	endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+	rankedStake: decimal("ranked_stake", { precision: 30, scale: 8 }).notNull(),
+	endedAt: timestamp("ended_at", { withTimezone: true }),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => {
+	return {
+		statusIdx: index("season_status_idx").on(table.status),
+		endsAtIdx: index("season_ends_at_idx").on(table.endsAt),
+	};
+});
+
+export const seasonParticipant = pgTable("season_participant", {
+	id: serial("id").primaryKey(),
+	seasonId: integer("season_id").notNull().references(() => season.id, { onDelete: "cascade" }),
+	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+	prestigeAtEntry: integer("prestige_at_entry").notNull().default(0),
+	scoreMultiplier: decimal("score_multiplier", { precision: 6, scale: 4 }).notNull().default("1.0000"),
+	startingStake: decimal("starting_stake", { precision: 30, scale: 8 }).notNull(),
+	sacrificed: decimal("sacrificed", { precision: 30, scale: 8 }).notNull().default("0.00000000"),
+	finalScore: decimal("final_score", { precision: 42, scale: 8 }),
+	finalRank: integer("final_rank"),
+}, (table) => {
+	return {
+		seasonUserUnique: unique("season_participant_unique").on(table.seasonId, table.userId),
+		seasonIdIdx: index("season_participant_season_id_idx").on(table.seasonId),
+		userIdIdx: index("season_participant_user_id_idx").on(table.userId),
+	};
+});
+
+export const seasonTrophy = pgTable("season_trophy", {
+	id: serial("id").primaryKey(),
+	seasonId: integer("season_id").notNull().references(() => season.id, { onDelete: "cascade" }),
+	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	rank: integer("rank").notNull(),
+	tier: seasonTrophyTierEnum("tier").notNull(),
+	score: decimal("score", { precision: 42, scale: 8 }).notNull(),
+	awardedAt: timestamp("awarded_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => {
+	return {
+		seasonUserUnique: unique("season_trophy_unique").on(table.seasonId, table.userId),
+		userIdIdx: index("season_trophy_user_id_idx").on(table.userId),
+		seasonIdIdx: index("season_trophy_season_id_idx").on(table.seasonId),
+	};
+});
 
 export const userBlock = pgTable("user_block", {
 	id: serial("id").primaryKey(),

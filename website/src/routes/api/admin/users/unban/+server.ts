@@ -29,11 +29,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	try {
-		// A pending deletion request bans the user as a side effect, so unbanning without
-		// clearing the request would leave the account looking healthy until the scheduled
-		// job hard-deletes it. Delete the row rather than marking it processed: the
-		// duplicate check in /api/settings/delete-account ignores is_processed, so a
-		// leftover row would permanently block the user from deleting their own account.
 		const cancelledDeletionRequests = await db.transaction(async (tx) => {
 			const cancelled = await tx
 				.delete(accountDeletionRequest)

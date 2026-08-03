@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { coin, user } from '$lib/server/db/schema';
-import { eq, desc, asc, like, ilike, and, gte, lte, between, or, count } from 'drizzle-orm';
+import { eq, desc, asc, like, ilike, and, gte, lte, between, or, count, sql } from 'drizzle-orm';
 
 const VALID_SORT_FIELDS = ['marketCap', 'currentPrice', 'change24h', 'volume24h', 'createdAt'];
 const VALID_SORT_ORDERS = ['asc', 'desc'];
@@ -121,26 +121,31 @@ export async function GET({ url }) {
             }
         })();
 
-        const [[{ total }], coins] = await Promise.all([
-            db.select({ total: count() }).from(coin).where(whereCondition),
-            db.select({
-                symbol: coin.symbol,
-                name: coin.name,
-                icon: coin.icon,
-                currentPrice: coin.currentPrice,
-                marketCap: coin.marketCap,
-                volume24h: coin.volume24h,
-                change24h: coin.change24h,
-                createdAt: coin.createdAt,
-                creatorName: user.name
-            })
-                .from(coin)
-                .leftJoin(user, eq(coin.creatorId, user.id))
-                .where(whereCondition)
-                .orderBy(orderFn(sortColumn))
-                .limit(limit)
-                .offset((page - 1) * limit)
-        ]);
+        const coins = await db.select({
+            symbol: coin.symbol,
+            name: coin.name,
+            icon: coin.icon,
+            currentPrice: coin.currentPrice,
+            marketCap: coin.marketCap,
+            volume24h: coin.volume24h,
+            change24h: coin.change24h,
+            createdAt: coin.createdAt,
+            creatorName: user.name,
+            total: sql<number>`count(*) over()`
+        })
+            .from(coin)
+            .leftJoin(user, eq(coin.creatorId, user.id))
+            .where(whereCondition)
+            .orderBy(orderFn(sortColumn))
+            .limit(limit)
+            .offset((page - 1) * limit);
+
+        // count(*) over() only comes back when the page has rows; re-count for out-of-range pages
+        let total = coins.length > 0 ? Number(coins[0].total) : 0;
+        if (coins.length === 0 && page > 1) {
+            const [countRow] = await db.select({ total: count() }).from(coin).where(whereCondition);
+            total = countRow?.total || 0;
+        }
 
         const formattedCoins = coins.map(c => ({
             symbol: c.symbol,

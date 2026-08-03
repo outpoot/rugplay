@@ -305,3 +305,17 @@ export async function processAccountDeletions() {
         console.error('Error processing account deletions:', error);
     }
 }
+
+export async function cleanupExpiredSessions() {
+    try {
+        const deleted = await db.delete(session)
+            .where(lte(session.expiresAt, new Date()))
+            .returning({ id: session.id });
+
+        if (deleted.length > 0) {
+            console.log(`🧹 Cleaned up ${deleted.length} expired sessions`);
+        }
+    } catch (error) {
+        console.error('Error cleaning up expired sessions:', error);
+    }
+}

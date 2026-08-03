@@ -2,9 +2,21 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, transaction, userPortfolio, coin } from '$lib/server/db/schema';
 import { eq, desc, gte, and, sql, inArray, ilike, count } from 'drizzle-orm';
+import { redis } from '$lib/server/redis';
+
+const LEADERBOARD_CACHE_KEY = 'leaderboard:data:v1';
+const LEADERBOARD_CACHE_TTL_SECS = 60;
 
 async function getLeaderboardData() {
     try {
+        try {
+            const cached = await redis.get(LEADERBOARD_CACHE_KEY);
+            if (cached) {
+                return json(JSON.parse(cached));
+            }
+        } catch (e) {
+            console.error('Leaderboard cache read failed:', e);
+        }
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
         const topRugpullers = await db
@@ -176,12 +188,20 @@ async function getLeaderboardData() {
         const processedCashKings = cashKings.map(processUser);
         const processedPaperMillionaires = paperMillionaires.map(processUser);
 
-        return json({
+        const payload = {
             topRugpullers: processedRugpullers,
             biggestLosers: aggregatedLosers,
             cashKings: processedCashKings,
             paperMillionaires: processedPaperMillionaires
-        });
+        };
+
+        try {
+            await redis.set(LEADERBOARD_CACHE_KEY, JSON.stringify(payload), { EX: LEADERBOARD_CACHE_TTL_SECS });
+        } catch (e) {
+            console.error('Leaderboard cache write failed:', e);
+        }
+
+        return json(payload);
 
     } catch (error) {
         console.error('Failed to fetch leaderboard data:', error);

@@ -4,6 +4,38 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<script>
+		(() => {
+			let storedMode;
+			try {
+				storedMode = localStorage.getItem('mode-watcher-mode');
+			} catch {
+				// storage can be unavailable in private or embedded browsing contexts
+			}
+
+			const mode = ['dark', 'light', 'system'].includes(storedMode) ? storedMode : 'system';
+			const isDark =
+				mode === 'dark' ||
+				(mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+			document.documentElement.classList.toggle('dark', isDark);
+			document.documentElement.dataset.initialMode = isDark ? 'dark' : 'light';
+			document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+		})();
+	</script>
+	<style>
+		html,
+		body {
+			background: #ffffff;
+			color: #1e1e24;
+		}
+
+		html[data-initial-mode='dark'],
+		html[data-initial-mode='dark'] body {
+			background: #1e1e24;
+			color: #fafafa;
+		}
+	</style>
 
 	<link rel="icon" type="image/svg+xml" href="%sveltekit.assets%/favicon.svg" />
 	<link rel="icon" type="image/png" sizes="48x48" href="%sveltekit.assets%/favicon-48x48.png" />

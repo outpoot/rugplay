@@ -60,6 +60,7 @@ export const user = pgTable("user", {
 }, (table) => {
 	return {
 		usernameIdx: index("user_username_idx").on(table.username),
+		usernameTrgmIdx: index("user_username_trgm_idx").using("gin", table.username.op("gin_trgm_ops")),
 		isBannedIdx: index("user_is_banned_idx").on(table.isBanned),
 		isAdminIdx: index("user_is_admin_idx").on(table.isAdmin),
 		createdAtIdx: index("user_created_at_idx").on(table.createdAt),
@@ -96,6 +97,11 @@ export const account = pgTable("account", {
 	password: text("password"),
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => {
+	return {
+		userIdIdx: index("account_user_id_idx").on(table.userId),
+		providerAccountIdx: index("account_provider_account_idx").on(table.providerId, table.accountId),
+	};
 });
 
 export const verification = pgTable("verification", {
@@ -128,9 +134,10 @@ export const coin = pgTable("coin", {
 	isLocked: boolean("is_locked").default(true).notNull(),
 }, (table) => {
 	return {
-		symbolIdx: index("coin_symbol_idx").on(table.symbol),
 		creatorIdIdx: index("coin_creator_id_idx").on(table.creatorId),
 		isListedIdx: index("coin_is_listed_idx").on(table.isListed),
+		nameTrgmIdx: index("coin_name_trgm_idx").using("gin", table.name.op("gin_trgm_ops")),
+		symbolTrgmIdx: index("coin_symbol_trgm_idx").using("gin", table.symbol.op("gin_trgm_ops")),
 		marketCapIdx: index("coin_market_cap_idx").on(table.marketCap),
 		currentPriceIdx: index("coin_current_price_idx").on(table.currentPrice),
 		change24hIdx: index("coin_change24h_idx").on(table.change24h),
@@ -335,7 +342,8 @@ export const apikey = pgTable("apikey", {
 	permissions: text('permissions'),
 	metadata: text('metadata')
 }, (table) => ({
-	userIdx: index("idx_apikey_user").on(table.userId)
+	userIdx: index("idx_apikey_user").on(table.userId),
+	keyIdx: index("idx_apikey_key").on(table.key)
 }));
 
 export const gemTransactions = pgTable("gem_transactions", {

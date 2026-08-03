@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { promoCode, promoCodeRedemption, user } from '$lib/server/db/schema';
 import { eq, count } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
+import { MAX_PROMO_REWARD } from '$lib/data/constants';
 
 export const POST: RequestHandler = async ({ request }) => {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -20,6 +21,18 @@ export const POST: RequestHandler = async ({ request }) => {
 
     if (!code || !rewardAmount) {
         return json({ error: 'Code and reward amount are required' }, { status: 400 });
+    }
+
+    const parsedReward = Number(rewardAmount);
+
+    if (!Number.isFinite(parsedReward) || parsedReward <= 0) {
+        return json({ error: 'Reward amount must be a positive number' }, { status: 400 });
+    }
+
+    if (parsedReward > MAX_PROMO_REWARD) {
+        return json({
+            error: `Reward amount cannot exceed $${MAX_PROMO_REWARD.toLocaleString()} per redemption`
+        }, { status: 400 });
     }
 
     const normalizedCode = code.trim().toUpperCase();
@@ -40,7 +53,7 @@ export const POST: RequestHandler = async ({ request }) => {
         .values({
             code: normalizedCode,
             description: description || null,
-            rewardAmount: Number(rewardAmount).toFixed(8),
+            rewardAmount: parsedReward.toFixed(8),
             maxUses: maxUses || null,
             expiresAt: expiresAt ? new Date(expiresAt) : null,
             createdBy: userId

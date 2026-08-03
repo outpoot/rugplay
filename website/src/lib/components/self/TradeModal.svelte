@@ -9,6 +9,7 @@
 	import { PORTFOLIO_SUMMARY } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
 	import { haptic } from '$lib/stores/haptics';
+	import { SWAP_FEE_RATE } from '$lib/data/constants';
 
 	let {
 		open = $bindable(false),
@@ -44,7 +45,11 @@
 		if (poolCoin <= 0 || poolBase <= 0) return 0;
 		const k = poolCoin * poolBase;
 
-		const targetBase = poolBase - numericAmount;
+		// The typed figure is what the seller wants to *receive*, so the pool has to
+		// give up more than that to cover the fee taken off the top.
+		const grossNeeded = numericAmount / (1 - SWAP_FEE_RATE);
+
+		const targetBase = poolBase - grossNeeded;
 		if (targetBase <= 0) return maxSellableAmount;
 		const requiredCoins = k / targetBase - poolCoin;
 		return Math.max(0, requiredCoins);
@@ -67,25 +72,28 @@
 	let canTrade = $derived(hasValidAmount && hasEnoughFunds() && !loading);
 
 	function calculateEstimate(amount: number, tradeType: 'BUY' | 'SELL', price: number) {
-		if (!amount || !price || !coin) return { result: 0 };
+		if (!amount || !price || !coin) return { result: 0, fee: 0 };
 
 		const poolCoin = Number(coin.poolCoinAmount);
 		const poolBase = Number(coin.poolBaseCurrencyAmount);
 
-		if (poolCoin <= 0 || poolBase <= 0) return { result: 0 };
+		if (poolCoin <= 0 || poolBase <= 0) return { result: 0, fee: 0 };
 
 		const k = poolCoin * poolBase;
 
 		if (tradeType === 'BUY') {
-			// AMM formula: how many coins for spending 'amount' dollars
-			const newPoolBase = poolBase + amount;
+			// Fee is skimmed before the money reaches the pool, so only the net swaps
+			const fee = amount * SWAP_FEE_RATE;
+			const newPoolBase = poolBase + (amount - fee);
 			const newPoolCoin = k / newPoolBase;
-			return { result: poolCoin - newPoolCoin };
+			return { result: poolCoin - newPoolCoin, fee };
 		} else {
-			// AMM formula: how many dollars for selling 'amount' coins
+			// Pool pays out in full, then the fee is skimmed off what reaches the seller
 			const newPoolCoin = poolCoin + amount;
 			const newPoolBase = k / newPoolCoin;
-			return { result: poolBase - newPoolBase };
+			const gross = poolBase - newPoolBase;
+			const fee = gross * SWAP_FEE_RATE;
+			return { result: gross - fee, fee };
 		}
 	}
 
@@ -230,8 +238,18 @@
 							{/if}
 						</span>
 					</div>
+					<div class="mt-1 flex items-center justify-between">
+						<span class="text-muted-foreground text-xs">
+							Trading fee ({(SWAP_FEE_RATE * 100).toFixed(1)}%)
+						</span>
+						<span class="text-muted-foreground text-xs">
+							-${estimatedResult.fee.toFixed(6)}
+						</span>
+					</div>
 					<p class="text-muted-foreground mt-1 text-xs">
-						AMM estimation - includes slippage from pool impact
+						AMM estimation - includes slippage from pool impact and the {(
+							SWAP_FEE_RATE * 100
+						).toFixed(1)}% trading fee
 					</p>
 				</div>
 			{/if}

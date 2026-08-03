@@ -7,6 +7,7 @@ import { redis } from '$lib/server/redis';
 import { createNotification } from '$lib/server/notification';
 import { calculate24hMetrics, executeSellTrade } from '$lib/server/amm';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
+import { SWAP_FEE_RATE } from '$lib/data/constants';
 
 export async function POST({ params, request }) {
     const session = await auth.api.getSession({
@@ -103,8 +104,11 @@ export async function POST({ params, request }) {
 
         if (type === 'BUY') {
             // AMM BUY: amount = dollars to spend
+            const feeAmount = amount * SWAP_FEE_RATE;
+            const amountIntoPool = amount - feeAmount;
+
             const k = poolCoinAmount * poolBaseCurrencyAmount;
-            const newPoolBaseCurrency = poolBaseCurrencyAmount + amount;
+            const newPoolBaseCurrency = poolBaseCurrencyAmount + amountIntoPool;
             const newPoolCoin = k / newPoolBaseCurrency;
             const coinsBought = poolCoinAmount - newPoolCoin;
 
@@ -215,6 +219,7 @@ export async function POST({ params, request }) {
                 priceUpdateData,
                 tradeData,
                 totalCost,
+                feePaid: feeAmount,
                 coinsBought,
                 newPrice,
                 priceImpact,
@@ -250,11 +255,14 @@ export async function POST({ params, request }) {
                 throw error(400, 'Trade failed - insufficient liquidity or invalid parameters');
             }
 
-            totalCost = sellResult.baseCurrencyReceived ?? 0;
+            const grossReceived = sellResult.baseCurrencyReceived ?? 0;
+            const feeAmount = sellResult.feeAmount ?? 0;
+
+            totalCost = sellResult.netReceived ?? 0;
             newPrice = sellResult.newPrice;
             priceImpact = sellResult.priceImpact;
 
-            if (totalCost <= 0) {
+            if (grossReceived <= 0) {
                 throw error(400, 'Trade amount results in zero base currency received');
             }
 
@@ -314,6 +322,7 @@ export async function POST({ params, request }) {
                 priceUpdateData,
                 tradeData,
                 totalCost,
+                feePaid: feeAmount,
                 coinsSold: amount,
                 coinId: coinData.id,
                 newPrice,
@@ -347,6 +356,8 @@ export async function POST({ params, request }) {
             type: 'BUY',
             coinsBought: txResult.coinsBought,
             totalCost: txResult.totalCost,
+            feePaid: txResult.feePaid,
+            feeRate: SWAP_FEE_RATE,
             newPrice: txResult.newPrice,
             priceImpact: txResult.priceImpact,
             newBalance: txResult.newBalance
@@ -368,6 +379,8 @@ export async function POST({ params, request }) {
             type: 'SELL',
             coinsSold: txResult.coinsSold,
             totalReceived: txResult.totalCost,
+            feePaid: txResult.feePaid,
+            feeRate: SWAP_FEE_RATE,
             newPrice: txResult.newPrice,
             priceImpact: txResult.priceImpact,
             newBalance: txResult.newBalance

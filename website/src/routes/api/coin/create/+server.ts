@@ -2,9 +2,9 @@ import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { coin, user, priceHistory } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, count } from 'drizzle-orm';
 import { uploadCoinIcon, deleteObject } from '$lib/server/s3';
-import { CREATION_FEE, FIXED_SUPPLY, STARTING_PRICE, INITIAL_LIQUIDITY, TOTAL_COST, MAX_FILE_SIZE } from '$lib/data/constants';
+import { FIXED_SUPPLY, STARTING_PRICE, INITIAL_LIQUIDITY, MAX_FILE_SIZE, getCreationFee } from '$lib/data/constants';
 import { isNameAppropriate } from '$lib/server/moderation';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
 
@@ -54,6 +54,34 @@ async function handleIconUpload(iconFile: File | null, symbol: string): Promise<
     );
 }
 
+export async function GET({ request }) {
+    const session = await auth.api.getSession({
+        headers: request.headers
+    });
+
+    if (!session?.user) {
+        throw error(401, 'Not authenticated');
+    }
+
+    const userId = Number(session.user.id);
+
+    const [{ coinsCreated }] = await db
+        .select({ coinsCreated: count() })
+        .from(coin)
+        .where(eq(coin.creatorId, userId));
+
+    const created = Number(coinsCreated);
+    const creationFee = getCreationFee(created);
+
+    return json({
+        coinsCreated: created,
+        creationFee,
+        liquidityDeposit: INITIAL_LIQUIDITY,
+        totalCost: creationFee + INITIAL_LIQUIDITY,
+        nextCreationFee: getCreationFee(created + 1)
+    });
+}
+
 export async function POST({ request }) {
     const session = await auth.api.getSession({
         headers: request.headers
@@ -80,6 +108,7 @@ export async function POST({ request }) {
     }
 
     let createdCoin: any;
+    let creationFee = 0;
 
     try {
         await db.transaction(async (tx) => {
@@ -99,14 +128,22 @@ export async function POST({ request }) {
                 throw error(404, 'User not found');
             }
 
+            const [{ coinsCreated }] = await tx
+                .select({ coinsCreated: count() })
+                .from(coin)
+                .where(eq(coin.creatorId, userId));
+
+            creationFee = getCreationFee(Number(coinsCreated));
+            const totalCost = creationFee + INITIAL_LIQUIDITY;
+
             const currentBalance = Number(userData.baseCurrencyBalance);
-            if (currentBalance < TOTAL_COST) {
-                throw error(400, `Insufficient funds. You need $${TOTAL_COST.toFixed(2)} but only have $${currentBalance.toFixed(2)}.`);
+            if (currentBalance < totalCost) {
+                throw error(400, `Insufficient funds. You need $${totalCost.toFixed(2)} (a $${creationFee.toFixed(2)} creation fee for coin #${Number(coinsCreated) + 1} plus $${INITIAL_LIQUIDITY.toFixed(2)} of liquidity) but only have $${currentBalance.toFixed(2)}.`);
             }
 
             await tx.update(user)
                 .set({
-                    baseCurrencyBalance: (currentBalance - TOTAL_COST).toString(),
+                    baseCurrencyBalance: (currentBalance - totalCost).toString(),
                     updatedAt: new Date()
                 })
                 .where(eq(user.id, userId));
@@ -151,7 +188,7 @@ export async function POST({ request }) {
             symbol: createdCoin.symbol,
             icon: createdCoin.icon
         },
-        feePaid: CREATION_FEE,
+        feePaid: creationFee,
         liquidityDeposited: INITIAL_LIQUIDITY,
         initialPrice: STARTING_PRICE,
         supply: FIXED_SUPPLY,

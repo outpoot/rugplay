@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { user, promoCode, promoCodeRedemption } from '$lib/server/db/schema';
 import { eq, and, count } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
+import { MAX_PROMO_REWARD } from '$lib/data/constants';
 
 export const POST: RequestHandler = async ({ request }) => {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -84,7 +85,7 @@ export const POST: RequestHandler = async ({ request }) => {
         }
 
         const currentBalance = Number(userData.baseCurrencyBalance || 0);
-        const rewardAmount = Number(promoData.rewardAmount);
+        const rewardAmount = Math.min(Number(promoData.rewardAmount), MAX_PROMO_REWARD);
         const newBalance = currentBalance + rewardAmount;
 
         await tx

@@ -2,6 +2,7 @@ import { db } from '$lib/server/db';
 import { coin, transaction, priceHistory, userPortfolio } from '$lib/server/db/schema';
 import { eq, and, gte } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
+import { SWAP_FEE_RATE } from '$lib/data/constants';
 
 export async function calculate24hMetrics(coinId: number, currentPrice: number, queryCtx: typeof db = db) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -69,6 +70,9 @@ export async function executeSellTrade(
     }
 
     const priceImpact = ((newPrice - currentPrice) / currentPrice) * 100;
+
+    const feeAmount = baseCurrencyReceived * SWAP_FEE_RATE;
+    const netReceived = baseCurrencyReceived - feeAmount;
 
     await tx.insert(transaction).values({
         userId,
@@ -138,6 +142,8 @@ export async function executeSellTrade(
     return {
         success: true,
         baseCurrencyReceived,
+        feeAmount,
+        netReceived,
         newPrice,
         priceImpact,
         newPoolCoin,

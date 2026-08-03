@@ -15,6 +15,7 @@
 	import { PORTFOLIO_DATA } from '$lib/stores/portfolio-data';
 	import { toast } from 'svelte-sonner';
 	import { haptic } from '$lib/stores/haptics';
+	import { CASH_TRANSFER_FEE_RATE } from '$lib/data/constants';
 
 	let {
 		open = $bindable(false),
@@ -47,6 +48,11 @@
 			? numericAmount * selectedCoinHolding.currentPrice
 			: 0
 	);
+
+	let cashTransferFee = $derived(
+		transferType === 'CASH' ? numericAmount * CASH_TRANSFER_FEE_RATE : 0
+	);
+	let cashAmountReceived = $derived(numericAmount - cashTransferFee);
 
 	let maxAmount = $derived(
 		transferType === 'CASH' ? userBalance : selectedCoinHolding ? selectedCoinHolding.quantity : 0
@@ -138,7 +144,7 @@
 			if (result.type === 'CASH') {
 				haptic.trigger('success');
 				toast.success('Money sent successfully!', {
-					description: `Sent $${result.amount.toFixed(2)} to @${result.recipient}`
+					description: `@${result.recipient} received $${result.amountReceived.toFixed(2)}`
 				});
 			} else {
 				const estimatedValueForToast = estimatedValue;
@@ -292,7 +298,9 @@
 					{/if}
 				</div>
 				{#if transferType === 'CASH'}
-					<p class="text-muted-foreground text-xs">Minimum: $10.00 per transfer</p>
+					<p class="text-muted-foreground text-xs">
+						Minimum: $10.00 per transfer &middot; {(CASH_TRANSFER_FEE_RATE * 100).toFixed(0)}% fee
+					</p>
 				{:else if transferType === 'COIN'}
 					<p class="text-muted-foreground text-xs">Minimum estimated value: $10.00 per transfer</p>
 				{/if}
@@ -329,6 +337,20 @@
 							{/if}
 						</div>
 					</div>
+					{#if transferType === 'CASH'}
+						<div class="flex items-center justify-between">
+							<span class="text-muted-foreground text-xs">
+								Transfer fee ({(CASH_TRANSFER_FEE_RATE * 100).toFixed(0)}%)
+							</span>
+							<span class="text-muted-foreground text-xs">
+								-${cashTransferFee.toFixed(2)}
+							</span>
+						</div>
+						<div class="flex items-center justify-between">
+							<span class="text-sm font-medium">They receive:</span>
+							<span class="font-bold">${cashAmountReceived.toFixed(2)}</span>
+						</div>
+					{/if}
 					<div class="flex items-center justify-between">
 						<span class="text-sm font-medium">To:</span>
 						<span class="font-bold">@{recipientUsername}</span>

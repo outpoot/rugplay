@@ -16,6 +16,7 @@
 	import { PORTFOLIO_SUMMARY, fetchPortfolioData } from '$lib/stores/portfolio-data';
 	import { onMount } from 'svelte';
 	import { CREATION_FEE, INITIAL_LIQUIDITY, TOTAL_COST } from '$lib/data/constants';
+	import { formatValue } from '$lib/utils';
 	import { toast } from 'svelte-sonner';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
@@ -28,8 +29,26 @@
 	let isSubmitting = $state(false);
 	let error = $state('');
 
-	onMount(() => {
+	let pricing = $state<{
+		coinsCreated: number;
+		creationFee: number;
+		liquidityDeposit: number;
+		totalCost: number;
+		nextCreationFee: number;
+	} | null>(null);
+
+	let creationFee = $derived(pricing?.creationFee ?? CREATION_FEE);
+	let totalCost = $derived(pricing?.totalCost ?? TOTAL_COST);
+
+	onMount(async () => {
 		fetchPortfolioData();
+
+		try {
+			const res = await fetch('/api/coin/create');
+			if (res.ok) pricing = await res.json();
+		} catch (e) {
+			console.error('Failed to load creation pricing', e);
+		}
 	});
 
 	let nameError = $derived(
@@ -53,7 +72,7 @@
 	);
 
 	let hasEnoughFunds = $derived(
-		$PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance >= TOTAL_COST : false
+		$PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance >= totalCost : false
 	);
 
 	let canSubmit = $derived(isFormValid && hasEnoughFunds && !isSubmitting);
@@ -262,7 +281,7 @@
 									Creating...
 								{:else}
 									<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
-									Create Coin (${TOTAL_COST.toFixed(2)})
+									Create Coin (${totalCost.toFixed(2)})
 								{/if}
 							</Button>
 						</form>
@@ -278,18 +297,17 @@
 						<CardHeader class="pb-2">
 							<div class="flex items-center justify-between">
 								<CardTitle class="text-base">Cost Summary</CardTitle>
-								<div class="text-sm">
-									<span class="text-muted-foreground">Balance: </span>
-									<span class={hasEnoughFunds ? 'text-green-600' : 'text-destructive'}>
-										${$PORTFOLIO_SUMMARY.baseCurrencyBalance.toLocaleString()}
-									</span>
-								</div>
 							</div>
 						</CardHeader>
 						<CardContent class="space-y-2">
 							<div class="flex justify-between text-sm">
-								<span class="text-muted-foreground">Creation Fee</span>
-								<span>${CREATION_FEE}</span>
+								<span class="text-muted-foreground">
+									Creation Fee
+									{#if pricing && pricing.coinsCreated > 0}
+										<span class="text-xs">(coin #{pricing.coinsCreated + 1})</span>
+									{/if}
+								</span>
+								<span>{formatValue(creationFee)}</span>
 							</div>
 							<div class="flex justify-between text-sm">
 								<span class="text-muted-foreground">Initial Liquidity</span>
@@ -298,8 +316,14 @@
 							<Separator class="my-2" />
 							<div class="flex justify-between font-medium">
 								<span>Total Cost</span>
-								<span class="text-primary">${TOTAL_COST}</span>
+								<span class="text-primary">{formatValue(totalCost)}</span>
 							</div>
+							{#if pricing && pricing.nextCreationFee > pricing.creationFee}
+								<p class="text-muted-foreground text-xs">
+									Fee rises with every coin. Next one:
+									{formatValue(pricing.nextCreationFee)}
+								</p>
+							{/if}
 						</CardContent>
 					</Card>
 				{/if}

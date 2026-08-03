@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
 import { formatValue } from '$lib/utils';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
+import { CASH_TRANSFER_FEE_RATE } from '$lib/data/constants';
 import type { RequestHandler } from './$types';
 
 interface TransferRequest {
@@ -86,6 +87,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
                 const recipientBalance = Number(recipientData.baseCurrencyBalance);
 
+                const feeAmount = amount * CASH_TRANSFER_FEE_RATE;
+                const amountReceived = amount - feeAmount;
+
                 await tx
                     .update(user)
                     .set({
@@ -97,7 +101,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 await tx
                     .update(user)
                     .set({
-                        baseCurrencyBalance: (recipientBalance + amount).toFixed(8),
+                        baseCurrencyBalance: (recipientBalance + amountReceived).toFixed(8),
                         updatedAt: new Date()
                     })
                     .where(eq(user.id, recipientData.id));
@@ -120,7 +124,7 @@ export const POST: RequestHandler = async ({ request }) => {
                     type: 'TRANSFER_IN',
                     quantity: '0',
                     pricePerCoin: '1',
-                    totalBaseCurrencyAmount: amount.toString(),
+                    totalBaseCurrencyAmount: amountReceived.toString(),
                     timestamp: new Date(),
                     senderUserId: senderId,
                     recipientUserId: recipientData.id
@@ -131,7 +135,7 @@ export const POST: RequestHandler = async ({ request }) => {
                         recipientData.id.toString(),
                         'TRANSFER',
                         'Money received!',
-                        `You received ${formatValue(amount)} from @${senderData.username}`,
+                        `You received ${formatValue(amountReceived)} from @${senderData.username}`,
                         `/user/${senderData.id}`
                     );
                 })();
@@ -142,6 +146,9 @@ export const POST: RequestHandler = async ({ request }) => {
                     success: true,
                     type: 'CASH',
                     amount,
+                    feePaid: feeAmount,
+                    feeRate: CASH_TRANSFER_FEE_RATE,
+                    amountReceived,
                     recipient: recipientData.username,
                     newBalance: senderBalance - amount
                 });

@@ -9,14 +9,24 @@
 	import SEO from '$lib/components/self/SEO.svelte';
 	import Dice from '$lib/components/self/games/Dice.svelte';
 	import Tower from '$lib/components/self/games/Tower.svelte';
+	import Blackjack from '$lib/components/self/games/Blackjack.svelte';
 	import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '$lib/components/ui/card';
 	import { arcadeActivityStore } from '$lib/stores/websocket';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { Clock01Icon, PiggyBankIcon } from '@hugeicons/core-free-icons';
+	import { Clock01Icon, PiggyBankIcon, CoinsDollarIcon, StarsIcon, BombIcon, DiceIcon, ElectricTower01Icon, SpadesIcon } from '@hugeicons/core-free-icons';
 	import { formatValue, formatRelativeTime, getPublicUrl } from '$lib/utils';
+
+	const games = [
+		{ id: 'coinflip', label: 'Coinflip', icon: CoinsDollarIcon },
+		{ id: 'slots', label: 'Slots', icon: StarsIcon },
+		{ id: 'mines', label: 'Mines', icon: BombIcon },
+		{ id: 'dice', label: 'Dice', icon: DiceIcon },
+		{ id: 'tower', label: 'Tower', icon: ElectricTower01Icon },
+		{ id: 'blackjack', label: 'Blackjack', icon: SpadesIcon }
+	];
 
 	let shouldSignIn = $state(false);
 	let balance = $state(0);
@@ -72,37 +82,17 @@
 	{:else}
 		<div class="mx-auto max-w-4xl space-y-6">
 			<!-- Game Selection -->
-			<div class="flex justify-center gap-4">
-				<Button
-					variant={activeGame === 'coinflip' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'coinflip')}
-				>
-					Coinflip
-				</Button>
-				<Button
-					variant={activeGame === 'slots' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'slots')}
-				>
-					Slots
-				</Button>
-				<Button
-					variant={activeGame === 'mines' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'mines')}
-				>
-					Mines
-				</Button>
-				<Button
-					variant={activeGame === 'dice' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'dice')}
-				>
-					Dice
-				</Button>
-				<Button
-					variant={activeGame === 'tower' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'tower')}
-				>
-					Tower
-				</Button>
+			<div class="grid grid-cols-3 gap-2 sm:grid-cols-6">
+				{#each games as game}
+					<Button
+						variant={activeGame === game.id ? 'default' : 'outline'}
+						class="flex h-auto w-full flex-col gap-1 py-3"
+						onclick={() => (activeGame = game.id)}
+					>
+						<HugeiconsIcon icon={game.icon} class="h-5 w-5" />
+						<span class="text-xs">{game.label}</span>
+					</Button>
+				{/each}
 			</div>
 
 			<!-- Game Content -->
@@ -116,6 +106,8 @@
 				<Dice bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{:else if activeGame === 'tower'}
 				<Tower bind:balance onBalanceUpdate={handleBalanceUpdate} />
+			{:else if activeGame === 'blackjack'}
+				<Blackjack bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{/if}
 
 			<!-- Live Arcade Activity Feed -->

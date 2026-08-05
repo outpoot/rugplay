@@ -10,6 +10,7 @@ import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { minesCleanupInactiveGames, minesAutoCashout } from '$lib/server/games/mines';
 import { towerCleanupInactiveGames } from '$lib/server/games/tower';
+import { crashAdvanceRounds } from '$lib/server/games/crash';
 import { checkRateLimit } from '$lib/server/ratelimit';
 
 const RATE_RULES: Array<{
@@ -89,22 +90,28 @@ async function initializeScheduler() {
                 cleanupExpiredSessions().catch(console.error);
             }, 5 * 60 * 1000);
 
-            const minesCleanupInterval = setInterval(() => {
-                minesCleanupInactiveGames().catch(console.error);
-                minesAutoCashout().catch(console.error);
-                towerCleanupInactiveGames().catch(console.error);
-            }, 60 * 1000);
+			const minesCleanupInterval = setInterval(() => {
+				minesCleanupInactiveGames().catch(console.error);
+				minesAutoCashout().catch(console.error);
+				towerCleanupInactiveGames().catch(console.error);
+			}, 60 * 1000);
+
+			// Crash game round advancement (every 500ms for smooth transitions)
+			const crashInterval = setInterval(() => {
+				crashAdvanceRounds().catch(console.error);
+			}, 500);
 
             // Cleanup on process exit
-            const cleanup = async () => {
-                clearInterval(renewInterval);
-                clearInterval(schedulerInterval);
-                clearInterval(minesCleanupInterval);
-                const currentValue = await redis.get(lockKey);
-                if (currentValue === lockValue) {
-                    await redis.del(lockKey);
-                }
-            };
+			const cleanup = async () => {
+				clearInterval(renewInterval);
+				clearInterval(schedulerInterval);
+				clearInterval(minesCleanupInterval);
+				clearInterval(crashInterval);
+				const currentValue = await redis.get(lockKey);
+				if (currentValue === lockValue) {
+					await redis.del(lockKey);
+				}
+			};
 
             process.on('SIGTERM', cleanup);
             process.on('SIGINT', cleanup);

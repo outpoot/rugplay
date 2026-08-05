@@ -24,6 +24,7 @@ type WebSocketData = {
 
 const coinSockets = new Map<string, Set<ServerWebSocket<WebSocketData>>>();
 const userSockets = new Map<string, Set<ServerWebSocket<WebSocketData>>>();
+const allSockets = new Set<ServerWebSocket<WebSocketData>>();
 const pingIntervals = new WeakMap<ServerWebSocket<WebSocketData>, NodeJS.Timeout>();
 
 redis.on('error', (err) => console.error('Redis Client Error', err));
@@ -34,7 +35,7 @@ redis.on('connect', () => {
 		else console.log(`Successfully psubscribed to patterns. Active psubscriptions: ${count}`);
 	});
 
-	redis.subscribe('trades:all', 'trades:large', 'arcade:activity', (err, count) => {
+	redis.subscribe('trades:all', 'trades:large', 'arcade:activity', 'crash:round', (err, count) => {
 		if (err) console.error("Failed to subscribe to channels", err);
 		else console.log(`Successfully subscribed to channels. Active subscriptions: ${count}`);
 	});
@@ -102,28 +103,28 @@ redis.on('message', (channel, msg) => {
 					}
 				}
 			}
-		} else if (channel === 'arcade:activity') {
+		} else if (channel === 'arcade:activity' || channel === 'crash:round') {
 			const eventData = JSON.parse(msg);
 			const eventMessage = JSON.stringify({
-				type: 'arcade_activity',
+				type: channel === 'crash:round' ? 'crash_round' : 'arcade_activity',
 				...eventData
 			});
 
-			const allSockets = new Set<ServerWebSocket<WebSocketData>>();
+			const sockets = new Set<ServerWebSocket<WebSocketData>>(allSockets);
 
-			for (const [, sockets] of coinSockets.entries()) {
-				for (const ws of sockets) {
-					allSockets.add(ws);
+			for (const [, set] of coinSockets.entries()) {
+				for (const ws of set) {
+					sockets.add(ws);
 				}
 			}
 
-			for (const [, sockets] of userSockets.entries()) {
-				for (const ws of sockets) {
-					allSockets.add(ws);
+			for (const [, set] of userSockets.entries()) {
+				for (const ws of set) {
+					sockets.add(ws);
 				}
 			}
 
-			for (const ws of allSockets) {
+			for (const ws of sockets) {
 				if (ws.readyState === WebSocket.OPEN) {
 					ws.send(eventMessage);
 				}
@@ -237,6 +238,8 @@ const server = Bun.serve<WebSocketData, undefined>({
 			}
 		},
 		open(ws) {
+			allSockets.add(ws);
+
 			const interval = setInterval(() => {
 				if (ws.readyState === 1) {
 					ws.data.lastActivity = Date.now();
@@ -248,6 +251,8 @@ const server = Bun.serve<WebSocketData, undefined>({
 
 			pingIntervals.set(ws, interval);
 		}, close(ws) {
+			allSockets.delete(ws);
+
 			const interval = pingIntervals.get(ws);
 			if (interval) {
 				clearInterval(interval);

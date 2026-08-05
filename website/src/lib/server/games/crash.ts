@@ -120,8 +120,8 @@ async function ensureRound(): Promise<CrashRound> {
 	return round;
 }
 
-async function publishRound(round: CrashRound) {
-	const payload = {
+async function publishRound(round: CrashRound, includeHistoryEntry = false) {
+	const payload: Record<string, unknown> = {
 		type: 'crash_round',
 		roundId: round.roundId,
 		status: round.status,
@@ -136,6 +136,22 @@ async function publishRound(round: CrashRound) {
 			round.status === 'running' ? crashMultiplierAt(Date.now() - round.startTime) : 1,
 		betCount: Object.keys(round.bets).length
 	};
+
+	// Only attach the history entry on the publish that immediately follows the
+	// waiting/settled transition to "crashed" — republishes of the same crashed
+	// round (e.g. after a server restart) must NOT resend it, or WS clients
+	// would duplicate the entry in their local history array.
+	if (round.status === 'crashed' && includeHistoryEntry) {
+		payload.historyEntry = {
+			roundId: round.roundId,
+			crashPoint: round.crashPoint,
+			serverSeed: round.serverSeed,
+			serverSeedHash: round.serverSeedHash,
+			nonce: round.nonce,
+			crashedAt: round.crashedAt
+		};
+	}
+
 	await redis.publish(CRASH_CHANNEL, JSON.stringify(payload));
 }
 
@@ -322,9 +338,9 @@ export async function crashAdvanceRounds() {
 			if (updated) {
 				const updatedRound = await getRound();
 				if (updatedRound) {
+					await publishRound(updatedRound, true);
 					await settleLosses(updatedRound);
 					await redis.eval(MARK_SETTLED, { keys: [CRASH_ROUND_KEY], arguments: [] });
-					await publishRound(updatedRound);
 				}
 			}
 		}

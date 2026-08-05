@@ -13,6 +13,11 @@ import { towerCleanupInactiveGames } from '$lib/server/games/tower';
 import { crashAdvanceRounds } from '$lib/server/games/crash';
 import { checkRateLimit } from '$lib/server/ratelimit';
 
+// NOTE: rules are checked in order and the first match wins (see the `break`
+// below), so more specific rules must come before the generic '/api/arcade/'
+// catch-all. It used to sit first, which meant it swallowed every arcade
+// request — including '/bet' endpoints — and the stricter per-bet limit
+// below could never actually apply.
 const RATE_RULES: Array<{
     match: (path: string, method: string) => boolean;
     key: string;
@@ -20,10 +25,10 @@ const RATE_RULES: Array<{
     windowSecs: number;
 }> = [
     {
-        match: (p) => p.startsWith('/api/arcade/'),
-        key: 'arcade',
+        match: (p) => p.endsWith('/bet'),
+        key: 'bet',
         limit: 10,
-        windowSecs: 5
+        windowSecs: 60
     },
     {
         match: (p) => p.endsWith('/trade'),
@@ -38,10 +43,10 @@ const RATE_RULES: Array<{
         windowSecs: 60
     },
     {
-        match: (p) => p.endsWith('/bet'),
-        key: 'bet',
+        match: (p) => p.startsWith('/api/arcade/'),
+        key: 'arcade',
         limit: 10,
-        windowSecs: 60
+        windowSecs: 5
     }
 ];
 
@@ -96,9 +101,19 @@ async function initializeScheduler() {
 				towerCleanupInactiveGames().catch(console.error);
 			}, 60 * 1000);
 
-			// Crash game round advancement (every 500ms for smooth transitions)
+			// Crash game round advancement (every 500ms for smooth transitions).
+			// Guarded against overlap: settlement inside crashAdvanceRounds can take
+			// longer than 500ms when a round has many bets, and letting ticks stack up
+			// risks concurrent runs racing on the same round state in Redis.
+			let crashTickRunning = false;
 			const crashInterval = setInterval(() => {
-				crashAdvanceRounds().catch(console.error);
+				if (crashTickRunning) return;
+				crashTickRunning = true;
+				crashAdvanceRounds()
+					.catch(console.error)
+					.finally(() => {
+						crashTickRunning = false;
+					});
 			}, 500);
 
             // Cleanup on process exit

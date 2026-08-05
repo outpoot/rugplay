@@ -29,6 +29,12 @@
 	const MIN_BET_AMOUNT = 0.01;
 	const WAITING_MS = 8000;
 	const PAUSE_MS = 5000;
+	const MAX_CRASH_POINT = 10_000;
+	// Fixed chart scale — the Y-axis uses a constant log range so the curve grows
+	// upward naturally instead of re-normalizing every frame (which made the graph
+	// shrink/diminish as the multiplier passed ~1.5x).
+	const CHART_MAX_MULTIPLIER = 100;
+	const CHART_MAX_POINTS = 400;
 
 	let {
 		balance = $bindable(),
@@ -152,7 +158,7 @@
 	}
 
 	function resetChart() {
-		chartPoints = [];
+		chartPoints = [{ x: 0, y: 1 }];
 		if (ctx && canvas) {
 			ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 		}
@@ -192,16 +198,20 @@
 
 		if (chartPoints.length < 2) return;
 
-		let maxY = 1.01;
-		let maxX = 1;
-		for (const p of chartPoints) {
-			if (p.y > maxY) maxY = p.y;
-			if (p.x > maxX) maxX = p.x;
-		}
-
+		// Fixed scales — the curve grows naturally without re-normalizing.
+		// Y-axis: constant log range from 1x to CHART_MAX_MULTIPLIER, so the curve
+		// always starts at the bottom and climbs upward as the multiplier grows.
+		// X-axis: scrolling window over the last CHART_MAX_POINTS points, so the
+		// curve moves rightward and scrolls left instead of compressing.
+		const maxLogY = Math.log(CHART_MAX_MULTIPLIER);
+		const logRange = maxLogY; // log(1) = 0
+		const firstX = chartPoints[0].x;
+		const lastX = chartPoints[chartPoints.length - 1].x;
+		const xRange = Math.max(1, lastX - firstX);
 		const toXY = (p: { x: number; y: number }) => {
-			const x = (p.x / maxX) * w;
-			const y = h - (p.y / maxY) * (h - 24) - 12;
+			const x = ((p.x - firstX) / xRange) * w;
+			const logY = Math.log(Math.max(p.y, 1));
+			const y = h - (logY / logRange) * (h - 24) - 12;
 			return [x, y] as const;
 		};
 
@@ -259,7 +269,7 @@
 	function addChartPoint(mult: number) {
 		const x = chartPoints.length > 0 ? chartPoints[chartPoints.length - 1].x + 1 : 0;
 		chartPoints.push({ x, y: mult });
-		if (chartPoints.length > 400) chartPoints.shift();
+		if (chartPoints.length > CHART_MAX_POINTS) chartPoints.shift();
 		drawChart();
 	}
 
@@ -392,6 +402,13 @@
 			}
 			hasBet = false;
 			cashedOut = false;
+
+			// Prepend the newly crashed round to the recent-crashes history without
+			// waiting for a page refresh / state refetch. Guard against duplicates
+			// in case of reconnect replays or duplicate broadcasts.
+			if (msg.historyEntry && !history.some((h) => h.roundId === msg.historyEntry.roundId)) {
+				history = [msg.historyEntry, ...history].slice(0, 50);
+			}
 		}
 	}
 
@@ -417,6 +434,7 @@
 					if (chartAnimationId) cancelAnimationFrame(chartAnimationId);
 					chartAnimationId = requestAnimationFrame(animateChart);
 				} else if (data.round.status === 'crashed') {
+					resetChart();
 					crashPoint = data.round.crashPoint;
 					addChartPoint(data.round.crashPoint);
 					currentMultiplier = data.round.crashPoint;
@@ -849,7 +867,7 @@
 		text-shadow: 0 0 24px currentColor;
 	}
 
-	.cashout-btn {
+	:global(.cashout-btn) {
 		animation: cashout-pulse 1.4s ease-in-out infinite;
 	}
 

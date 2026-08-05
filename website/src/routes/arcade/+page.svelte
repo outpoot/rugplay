@@ -9,6 +9,7 @@
 	import SEO from '$lib/components/self/SEO.svelte';
 	import Dice from '$lib/components/self/games/Dice.svelte';
 	import Tower from '$lib/components/self/games/Tower.svelte';
+	import Crash from '$lib/components/self/games/Crash.svelte';
 	import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '$lib/components/ui/card';
 	import { arcadeActivityStore } from '$lib/stores/websocket';
 	import * as Avatar from '$lib/components/ui/avatar';
@@ -103,6 +104,12 @@
 				>
 					Tower
 				</Button>
+				<Button
+					variant={activeGame === 'crash' ? 'default' : 'outline'}
+					onclick={() => (activeGame = 'crash')}
+				>
+					Crash
+				</Button>
 			</div>
 
 			<!-- Game Content -->
@@ -116,6 +123,8 @@
 				<Dice bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{:else if activeGame === 'tower'}
 				<Tower bind:balance onBalanceUpdate={handleBalanceUpdate} />
+			{:else if activeGame === 'crash'}
+				<Crash bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{/if}
 
 			<!-- Live Arcade Activity Feed -->

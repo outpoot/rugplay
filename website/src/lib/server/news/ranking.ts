@@ -72,15 +72,6 @@ export async function getNewsFeed(opts: {
 
 	const pinnedBoostExpr = sql<number>`CASE WHEN ${newsArticle.isPinned} THEN 10.0 ELSE 0.0 END`;
 
-	// Composite "For You" score: recency decays smoothly, engagement adds
-	// a log-scaled bump (so one viral article doesn't permanently dominate),
-	// relevance triples anything touching the user's own coins, pinned
-	// articles float to the top regardless.
-	const scoreExpr = sql<number>`
-		(${pinnedBoostExpr}) +
-		((${recencyScoreExpr}) * 5.0 + (${engagementScoreExpr})) * (${relevanceBoostExpr})
-	`.as('feed_score');
-
 	const baseWhere = cursor
 		? and(eq(newsArticle.isHidden, false), sql`${newsArticle.id} < ${cursor}`)
 		: eq(newsArticle.isHidden, false);
@@ -91,7 +82,13 @@ export async function getNewsFeed(opts: {
 	} else if (sort === 'trending') {
 		orderByClause = desc(engagementScoreExpr);
 	} else {
-		orderByClause = desc(scoreExpr);
+		// Composite "For You" score, inlined directly into ORDER BY: recency
+		// decays smoothly, engagement adds a log-scaled bump (so one viral
+		// article doesn't permanently dominate), relevance triples anything
+		// touching the user's own coins, pinned articles float to the top
+		// regardless. Inlined rather than referenced via a SELECT alias,
+		// since the expression isn't part of the selected column list.
+		orderByClause = desc(sql`(${pinnedBoostExpr}) + ((${recencyScoreExpr}) * 5.0 + (${engagementScoreExpr})) * (${relevanceBoostExpr})`);
 	}
 
 	const rows = await db

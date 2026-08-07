@@ -3,6 +3,7 @@ import { predictionQuestion, predictionBet, user, accountDeletionRequest, sessio
 import { eq, and, lte, isNull } from 'drizzle-orm';
 import { resolveQuestion, getRugplayData } from '$lib/server/ai';
 import { createNotification } from '$lib/server/notification';
+import { publishNewsEvent } from '$lib/server/news/pipeline';
 import { formatValue } from '$lib/utils';
 
 export async function resolveExpiredQuestions() {
@@ -223,6 +224,20 @@ export async function resolveExpiredQuestions() {
                             message,
                             `/hopium/${question.id}`
                         );
+                    }
+                });
+
+                // This job runs on a schedule (not a user-facing request),
+                // so a few extra seconds while the AI writer runs is fine
+                // — awaiting it here just means one extra question in the
+                // batch takes a bit longer, never a blocked HTTP response.
+                await publishNewsEvent({
+                    type: 'HOPIUM_RESOLVED',
+                    relatedQuestionId: question.id,
+                    metadata: {
+                        question: question.question,
+                        resolution: resolution.resolution,
+                        confidence: resolution.confidence
                     }
                 });
 

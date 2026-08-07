@@ -217,31 +217,43 @@ export async function POST({ params, request }) {
 
             // Fire-and-forget news events. Never awaited on the trade path —
             // a slow/failed AI call must never delay the trade response.
+            // Wrapped in an IIFE (matching the RUG_PULL hook in amm.ts) so
+            // this promise chain is fully detached from the surrounding
+            // db.transaction callback — calling publishNewsEvent directly
+            // inside the transaction body ties its scheduling to that
+            // callback's execution context, and on serverless the function
+            // can suspend the moment the transaction resolves, potentially
+            // abandoning an in-flight query mid-connection and starving the
+            // (small, max:5) pool for subsequent requests.
             if (priceImpact > 25 && totalCost > 500) {
-                publishNewsEvent({
-                    type: 'COIN_PUMP',
-                    relatedCoinId: coinData.id,
-                    relatedUserId: userId,
-                    metadata: {
-                        symbol: coinData.symbol,
-                        name: coinData.name,
-                        priceChangePercent: priceImpact
-                    }
-                });
+                (() => {
+                    publishNewsEvent({
+                        type: 'COIN_PUMP',
+                        relatedCoinId: coinData.id,
+                        relatedUserId: userId,
+                        metadata: {
+                            symbol: coinData.symbol,
+                            name: coinData.name,
+                            priceChangePercent: priceImpact
+                        }
+                    }).catch((err) => console.error('Failed to publish COIN_PUMP news event:', err));
+                })();
             }
             if (totalCost > 5000) {
-                publishNewsEvent({
-                    type: 'WHALE_TRADE',
-                    relatedCoinId: coinData.id,
-                    relatedUserId: userId,
-                    metadata: {
-                        symbol: coinData.symbol,
-                        name: coinData.name,
-                        side: 'BUY',
-                        amount: totalCost,
-                        username: userData.username
-                    }
-                });
+                (() => {
+                    publishNewsEvent({
+                        type: 'WHALE_TRADE',
+                        relatedCoinId: coinData.id,
+                        relatedUserId: userId,
+                        metadata: {
+                            symbol: coinData.symbol,
+                            name: coinData.name,
+                            side: 'BUY',
+                            amount: totalCost,
+                            username: userData.username
+                        }
+                    }).catch((err) => console.error('Failed to publish WHALE_TRADE news event:', err));
+                })();
             }
 
             return {
@@ -349,20 +361,25 @@ export async function POST({ params, request }) {
 
             // Fire-and-forget: whale-sized sell. Rug pulls (a specific,
             // more severe subset of large sells) are handled separately
-            // inside executeSellTrade/amm.ts.
+            // inside executeSellTrade/amm.ts. Wrapped in an IIFE — see the
+            // comment on the BUY branch's news hooks above for why this
+            // can't call publishNewsEvent directly inside the transaction
+            // callback.
             if (!isRugPullSell(priceImpact, grossReceived) && grossReceived > 5000) {
-                publishNewsEvent({
-                    type: 'WHALE_TRADE',
-                    relatedCoinId: coinData.id,
-                    relatedUserId: userId,
-                    metadata: {
-                        symbol: coinData.symbol,
-                        name: coinData.name,
-                        side: 'SELL',
-                        amount: grossReceived,
-                        username: userData.username
-                    }
-                });
+                (() => {
+                    publishNewsEvent({
+                        type: 'WHALE_TRADE',
+                        relatedCoinId: coinData.id,
+                        relatedUserId: userId,
+                        metadata: {
+                            symbol: coinData.symbol,
+                            name: coinData.name,
+                            side: 'SELL',
+                            amount: grossReceived,
+                            username: userData.username
+                        }
+                    }).catch((err) => console.error('Failed to publish WHALE_TRADE news event:', err));
+                })();
             }
 
             return {

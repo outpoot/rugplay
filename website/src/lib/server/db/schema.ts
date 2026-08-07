@@ -8,6 +8,29 @@ export const shopItemTypeEnum = pgEnum('shop_item_type', ['namecolor']);
 export const seasonStatusEnum = pgEnum('season_status', ['UPCOMING', 'ACTIVE', 'ENDED']);
 export const seasonTrophyTierEnum = pgEnum('season_trophy_tier', ['CHAMPION', 'RUNNER_UP', 'THIRD', 'TOP_10', 'TOP_100', 'PARTICIPANT']);
 
+// Every event type the news feed can turn into an article. Keep this in
+// sync with `ARTICLE_TEMPLATES` in `$lib/server/news/templates.ts`.
+export const newsArticleTypeEnum = pgEnum('news_article_type', [
+	'RUG_PULL', // large dump detected by the AMM (amm.ts isRugPull)
+	'COIN_PUMP', // large, fast positive price move
+	'COIN_CREATED', // a new coin was listed
+	'COIN_MILESTONE', // market cap / holder count crossed a threshold
+	'HOPIUM_RESOLVED', // a prediction question was resolved (review-style article)
+	'HOPIUM_TRENDING', // a prediction question is getting a lot of volume
+	'WHALE_TRADE', // a single trade above a $ threshold
+	'LEADERBOARD_SHAKEUP', // #1 on a leaderboard changed
+	'SEASON_EVENT', // season started/ended
+	'PLATFORM' // generic/editorial, mostly for admin-authored or digest articles
+]);
+
+// AI-authored, or the deterministic template fallback used when the AI
+// call fails / OPENROUTER_API_KEY is unset / the response fails validation.
+export const newsArticleSourceEnum = pgEnum('news_article_source', ['AI', 'TEMPLATE']);
+
+export const newsReactionTypeEnum = pgEnum('news_reaction_type', ['LIKE', 'DISLIKE']);
+
+export const newsReportStatusEnum = pgEnum('news_report_status', ['OPEN', 'REVIEWED', 'DISMISSED']);
+
 export const user = pgTable("user", {
 	id: serial("id").primaryKey(),
 	name: text("name").notNull(),
@@ -444,3 +467,114 @@ export const userBlock = pgTable("user_block", {
 	blockedIdIdx: index("user_block_blocked_id_idx").on(table.blockedId),
 	noSelfBlock: check("no_self_block", sql`blocker_id != blocked_id`),
 }));
+
+export const newsArticle = pgTable(
+	'news_article',
+	{
+		id: serial('id').primaryKey(),
+		type: newsArticleTypeEnum('type').notNull(),
+		source: newsArticleSourceEnum('source').notNull().default('TEMPLATE'),
+
+		headline: varchar('headline', { length: 160 }).notNull(),
+		// Short one-liner shown in compact/feed layout cards.
+		summary: varchar('summary', { length: 280 }).notNull(),
+		// Longer body shown in magazine layout / article detail view.
+		// Markdown-lite: plain text + line breaks, sanitized on render.
+		body: text('body').notNull(),
+
+		// Optional cover image. Either an internal object-storage key
+		// (resolved through getPublicUrl, same as coin.icon / user.image)
+		// or a full https URL to a royalty-free stock image.
+		coverImage: text('cover_image'),
+		coverImageAttribution: varchar('cover_image_attribution', { length: 200 }),
+
+		// Loose references so a card can render a coin icon / user avatar
+		// inline without a join fan-out. Nullable — not every article type
+		// has all of these.
+		relatedCoinId: integer('related_coin_id').references(() => coin.id, { onDelete: 'set null' }),
+		relatedUserId: integer('related_user_id').references(() => user.id, { onDelete: 'set null' }),
+		relatedQuestionId: integer('related_question_id').references(() => predictionQuestion.id, {
+			onDelete: 'set null'
+		}),
+
+		// Snapshot of key numbers at generation time, so cards don't need to
+		// re-derive "crashed 42%" style stats later (coin price keeps moving).
+		// e.g. { "priceImpact": -42.1, "amount": 15000, "symbol": "DOGE2" }
+		metadata: text('metadata'), // JSON string, kept as text for portability
+
+		// Denormalized counters, updated on react/unreact for fast feed sorting
+		// (avoids a COUNT(*) join on every feed request).
+		likesCount: integer('likes_count').notNull().default(0),
+		dislikesCount: integer('dislikes_count').notNull().default(0),
+		sharesCount: integer('shares_count').notNull().default(0),
+		viewsCount: integer('views_count').notNull().default(0),
+
+		// Pre-computed relevance score for the "trending" sort, refreshed
+		// periodically by a small job (see news/ranking.ts). Kept separate
+		// from the per-request personalized score, which also factors in
+		// the requesting user's holdings and is computed on read.
+		trendingScore: decimal('trending_score', { precision: 12, scale: 4 }).notNull().default('0'),
+
+		isPinned: boolean('is_pinned').notNull().default(false),
+		isHidden: boolean('is_hidden').notNull().default(false), // soft-hide after reports
+
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			typeIdx: index('news_article_type_idx').on(table.type),
+			createdAtIdx: index('news_article_created_at_idx').on(table.createdAt.desc()),
+			trendingIdx: index('news_article_trending_idx').on(table.trendingScore.desc()),
+			relatedCoinIdx: index('news_article_related_coin_idx').on(table.relatedCoinId),
+			relatedUserIdx: index('news_article_related_user_idx').on(table.relatedUserId),
+			visibleFeedIdx: index('news_article_visible_feed_idx')
+				.on(table.isHidden, table.createdAt.desc())
+		};
+	}
+);
+
+export const newsArticleReaction = pgTable(
+	'news_article_reaction',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		type: newsReactionTypeEnum('type').notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.userId, table.articleId] }),
+			articleIdIdx: index('news_article_reaction_article_id_idx').on(table.articleId)
+		};
+	}
+);
+
+export const newsArticleReport = pgTable(
+	'news_article_report',
+	{
+		id: serial('id').primaryKey(),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		reason: varchar('reason', { length: 300 }),
+		status: newsReportStatusEnum('status').notNull().default('OPEN'),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			// A user can report a given article only once.
+			userArticleUnique: unique('news_article_report_user_article_unique').on(
+				table.userId,
+				table.articleId
+			),
+			statusIdx: index('news_article_report_status_idx').on(table.status)
+		};
+	}
+);

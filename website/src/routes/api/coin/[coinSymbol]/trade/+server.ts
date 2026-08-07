@@ -7,6 +7,7 @@ import { redis } from '$lib/server/redis';
 import { createNotification } from '$lib/server/notification';
 import { calculate24hMetrics, executeSellTrade } from '$lib/server/amm';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
+import { publishNewsEvent } from '$lib/server/news/pipeline';
 import { SWAP_FEE_RATE } from '$lib/data/constants';
 
 export async function POST({ params, request }) {
@@ -214,6 +215,35 @@ export async function POST({ params, request }) {
                 userId: userId.toString()
             };
 
+            // Fire-and-forget news events. Never awaited on the trade path —
+            // a slow/failed AI call must never delay the trade response.
+            if (priceImpact > 25 && totalCost > 500) {
+                publishNewsEvent({
+                    type: 'COIN_PUMP',
+                    relatedCoinId: coinData.id,
+                    relatedUserId: userId,
+                    metadata: {
+                        symbol: coinData.symbol,
+                        name: coinData.name,
+                        priceChangePercent: priceImpact
+                    }
+                });
+            }
+            if (totalCost > 5000) {
+                publishNewsEvent({
+                    type: 'WHALE_TRADE',
+                    relatedCoinId: coinData.id,
+                    relatedUserId: userId,
+                    metadata: {
+                        symbol: coinData.symbol,
+                        name: coinData.name,
+                        side: 'BUY',
+                        amount: totalCost,
+                        username: userData.username
+                    }
+                });
+            }
+
             return {
                 tradeType: 'BUY' as const,
                 priceUpdateData,
@@ -317,6 +347,24 @@ export async function POST({ params, request }) {
                 userId: userId.toString()
             };
 
+            // Fire-and-forget: whale-sized sell. Rug pulls (a specific,
+            // more severe subset of large sells) are handled separately
+            // inside executeSellTrade/amm.ts.
+            if (!isRugPullSell(priceImpact, grossReceived) && grossReceived > 5000) {
+                publishNewsEvent({
+                    type: 'WHALE_TRADE',
+                    relatedCoinId: coinData.id,
+                    relatedUserId: userId,
+                    metadata: {
+                        symbol: coinData.symbol,
+                        name: coinData.name,
+                        side: 'SELL',
+                        amount: grossReceived,
+                        username: userData.username
+                    }
+                });
+            }
+
             return {
                 tradeType: 'SELL' as const,
                 priceUpdateData,
@@ -386,6 +434,13 @@ export async function POST({ params, request }) {
             newBalance: txResult.newBalance
         });
     }
+}
+
+// Mirrors the isRugPull threshold in amm.ts's executeSellTrade — used here
+// only to avoid double-publishing a WHALE_TRADE for the same sell that
+// amm.ts already published as a RUG_PULL.
+function isRugPullSell(priceImpact: number, baseCurrencyReceived: number): boolean {
+    return priceImpact < -20 && baseCurrencyReceived > 1000;
 }
 
 async function getFirstBuyTimestamp(userId: number, coinId: number): Promise<Date | undefined> {

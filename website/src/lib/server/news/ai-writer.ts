@@ -1,7 +1,8 @@
 /**
- * AI news writer. Mirrors the OpenRouter setup in `$lib/server/ai.ts`
- * (same client, same model tier) but is fully optional: every call site
- * in `pipeline.ts` falls back to `generateTemplateArticle` if this module
+ * AI news writer. Uses OpenRouter's free-model router (see MODEL below)
+ * rather than a paid model, since news articles are a nice-to-have, not
+ * a core feature — this is fully optional: every call site in
+ * `pipeline.ts` falls back to `generateTemplateArticle` if this module
  * throws, times out, or isn't configured. Nothing here should ever be
  * allowed to block article creation.
  */
@@ -20,9 +21,15 @@ const openai = OPENROUTER_API_KEY
 		})
 	: null;
 
-// Same "flash-lite" tier as ai.ts's validateQuestion — cheap and fast is
-// the right call here, this runs once per market event, not on demand.
-const MODEL = 'google/gemini-3.1-flash-lite';
+// openrouter/free: OpenRouter's own router that randomly selects a free
+// model from whatever's currently available, filtered to ones that
+// support the features this call needs (structured JSON output). This
+// avoids hardcoding a specific ":free" model slug, since individual free
+// models get added/removed/rate-limited on their own schedule — the
+// router absorbs that churn instead of this file needing updates every
+// time a specific model disappears. See:
+// https://openrouter.ai/openrouter/free
+const MODEL = 'openrouter/free';
 
 const ArticleSchema = z.object({
 	headline: z.string().min(8).max(150),

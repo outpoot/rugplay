@@ -19,8 +19,10 @@
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import UserName from '$lib/components/self/UserName.svelte';
+	import MentionDropdown from '$lib/components/self/MentionDropdown.svelte';
 	import { websocketController } from '$lib/stores/websocket';
 	import { haptic } from '$lib/stores/haptics';
+	import { debounce } from '$lib/utils';
 
 	const { coinSymbol } = $props<{ coinSymbol: string }>();
 	import type { Comment } from '$lib/types/comment';
@@ -33,6 +35,90 @@
 
 	const MAX_COMMENTS = 50;
 	const MAX_LINES_PREVIEW = 3;
+
+	// --- @mention autocomplete ---
+	interface MentionUser {
+		id: number;
+		username: string;
+		name: string;
+		image: string | null;
+		bio: string | null;
+		isAdmin: boolean | null;
+	}
+	let mentionResults = $state<MentionUser[]>([]);
+	let mentionLoading = $state(false);
+	let mentionActiveIndex = $state(0);
+	let mentionQuery = $state<string | null>(null); // null when dropdown is closed
+	let mentionStartIndex = $state(0); // index of the "@" in newComment
+	let textareaEl = $state<HTMLTextAreaElement | null>(null);
+
+	const debouncedMentionSearch = debounce(async (q: string) => {
+		try {
+			const response = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
+			if (response.ok) {
+				const result = await response.json();
+				mentionResults = result.users ?? [];
+			} else {
+				mentionResults = [];
+			}
+		} catch {
+			mentionResults = [];
+		} finally {
+			mentionLoading = false;
+		}
+	}, 200);
+
+	function handleCommentInput(e: Event) {
+		const el = e.target as HTMLTextAreaElement;
+		const caret = el.selectionStart ?? newComment.length;
+		const textBeforeCaret = newComment.slice(0, caret);
+
+		// Find the start of an in-progress "@token" ending right at the caret.
+		const match = textBeforeCaret.match(/(?:^|\s)@([a-zA-Z0-9_]{0,30})$/);
+
+		if (!match) {
+			mentionQuery = null;
+			mentionResults = [];
+			return;
+		}
+
+		const query = match[1];
+		mentionStartIndex = caret - query.length - 1; // position of "@"
+		mentionQuery = query;
+		mentionActiveIndex = 0;
+
+		if (query.length === 0) {
+			mentionResults = [];
+			mentionLoading = false;
+			return;
+		}
+
+		mentionLoading = true;
+		debouncedMentionSearch(query);
+	}
+
+	function closeMentionDropdown() {
+		mentionQuery = null;
+		mentionResults = [];
+		mentionLoading = false;
+	}
+
+	function selectMention(user: MentionUser) {
+		const caret = textareaEl?.selectionStart ?? newComment.length;
+		const before = newComment.slice(0, mentionStartIndex);
+		const after = newComment.slice(caret);
+		const insertion = `@${user.username} `;
+		newComment = `${before}${insertion}${after}`;
+		closeMentionDropdown();
+
+		// Restore focus + caret position after the inserted mention.
+		requestAnimationFrame(() => {
+			if (!textareaEl) return;
+			const newCaret = before.length + insertion.length;
+			textareaEl.focus();
+			textareaEl.setSelectionRange(newCaret, newCaret);
+		});
+	}
 
 	$effect(() => {
 		websocketController.setCoin(coinSymbol);
@@ -106,6 +192,7 @@
 					comments = [result.comment, ...comments.slice(0, MAX_COMMENTS - 1)];
 				}
 				newComment = '';
+				closeMentionDropdown();
 				haptic.trigger('light');
 			} else {
 				const error = await response.json();
@@ -119,6 +206,36 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
+		if (mentionQuery !== null && (mentionResults.length > 0 || mentionLoading)) {
+			if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				if (mentionResults.length > 0) {
+					mentionActiveIndex = (mentionActiveIndex + 1) % mentionResults.length;
+				}
+				return;
+			}
+			if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				if (mentionResults.length > 0) {
+					mentionActiveIndex =
+						(mentionActiveIndex - 1 + mentionResults.length) % mentionResults.length;
+				}
+				return;
+			}
+			if ((e.key === 'Enter' || e.key === 'Tab') && !e.ctrlKey && !e.metaKey) {
+				if (mentionResults[mentionActiveIndex]) {
+					e.preventDefault();
+					selectMention(mentionResults[mentionActiveIndex]);
+					return;
+				}
+			}
+			if (e.key === 'Escape') {
+				e.preventDefault();
+				closeMentionDropdown();
+				return;
+			}
+		}
+
 		if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 			submitComment();
@@ -216,13 +333,25 @@
 			<div class="space-y-3">
 				<div class="relative">
 					<Textarea
+						bind:ref={textareaEl}
 						bind:value={newComment}
 						placeholder="Share your thoughts about this coin..."
 						class="min-h-[80px] w-full break-words pb-8 pr-20"
 						style="word-break: break-word; overflow-wrap: break-word;"
 						maxlength={500}
 						onkeydown={handleKeydown}
+						oninput={handleCommentInput}
+						onblur={() => setTimeout(closeMentionDropdown, 150)}
 					/>
+					{#if mentionQuery !== null}
+						<MentionDropdown
+							users={mentionResults}
+							activeIndex={mentionActiveIndex}
+							loading={mentionLoading}
+							onSelect={selectMention}
+							onHover={(i) => (mentionActiveIndex = i)}
+						/>
+					{/if}
 					<kbd
 						class="bg-muted pointer-events-none absolute bottom-2 right-2 hidden h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-70 sm:flex"
 					>

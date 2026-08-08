@@ -578,3 +578,72 @@ export const newsArticleReport = pgTable(
 		};
 	}
 );
+
+// Per-user view/dwell-time log, the core signal for personalized ranking.
+// One row per (user, article): repeated views update the same row rather
+// than appending, since what matters for personalization is "how long has
+// this user, in total, actually looked at this article" not a raw hit
+// count (viewsCount on news_article already covers raw popularity).
+//
+// dwellMs is reported by the client in two ways: an IntersectionObserver
+// in the feed accumulates time-visible for each card as the user scrolls
+// past it, and the article detail page accumulates time-on-page. Both
+// flush via navigator.sendBeacon on unload/navigate so the number is
+// real even if the user closes the tab mid-read, and both are best-effort
+// — a lost beacon just means that one visit doesn't contribute, it never
+// blocks anything.
+export const newsArticleView = pgTable(
+	'news_article_view',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		// Cumulative milliseconds this user has spent with the article
+		// visible, across every visit. Capped client-side (see
+		// lib/utils/news-dwell.ts) and per-request server-side (see
+		// routes/api/news/[id]/view) so a stuck tab can't inflate this
+		// indefinitely.
+		dwellMs: integer('dwell_ms').notNull().default(0),
+		viewCount: integer('view_count').notNull().default(1),
+		lastViewedAt: timestamp('last_viewed_at', { withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.userId, table.articleId] }),
+			articleIdIdx: index('news_article_view_article_id_idx').on(table.articleId),
+			// Used to build each user's affinity profile (see news/ranking.ts):
+			// "what has this person actually spent time reading lately".
+			userLastViewedIdx: index('news_article_view_user_last_viewed_idx').on(
+				table.userId,
+				table.lastViewedAt.desc()
+			)
+		};
+	}
+);
+
+// Per-user share log. news_article.sharesCount stays as the fast global
+// counter for the feed card; this table exists so shares can also count
+// as a strong positive signal in a specific user's affinity profile,
+// same as a like but weighted higher (sharing is a more deliberate,
+// costlier action than a tap).
+export const newsArticleShare = pgTable(
+	'news_article_share',
+	{
+		id: serial('id').primaryKey(),
+		userId: integer('user_id').references(() => user.id, { onDelete: 'set null' }),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			articleIdIdx: index('news_article_share_article_id_idx').on(table.articleId),
+			userIdIdx: index('news_article_share_user_id_idx').on(table.userId)
+		};
+	}
+);

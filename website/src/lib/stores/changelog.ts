@@ -26,11 +26,13 @@ export function hasUnreadChangelog(lastSeen: string): boolean {
 	return lastSeen !== getLatestVersion();
 }
 
-// Lightweight client-side-only reaction tally per version, e.g. { "2.4.0": { fire: 3, skull: 1 } }
-export type ReactionKey = 'fire' | 'skull' | 'rocket';
-export type ReactionTally = Record<string, Partial<Record<ReactionKey, number>>>;
+// Client-side-only like/dislike per version, mirroring the news article
+// reaction shape (LIKE/DISLIKE, one active choice, click again to undo).
+// There's no backend table for changelog reactions, so this is local only.
+export type ChangelogReaction = 'LIKE' | 'DISLIKE';
+export type ReactionState = Record<string, ChangelogReaction>;
 
-function loadReactions(): ReactionTally {
+function loadReactions(): ReactionState {
 	if (!browser) return {};
 	try {
 		return JSON.parse(localStorage.getItem(REACTIONS_KEY) ?? '{}');
@@ -40,24 +42,25 @@ function loadReactions(): ReactionTally {
 }
 
 function createReactionsStore() {
-	const { subscribe, update, set } = writable<ReactionTally>(loadReactions());
+	const { subscribe, update } = writable<ReactionState>(loadReactions());
+
+	function persist(state: ReactionState) {
+		if (browser) localStorage.setItem(REACTIONS_KEY, JSON.stringify(state));
+	}
 
 	return {
 		subscribe,
-		react: (version: string, key: ReactionKey) => {
-			update((tally) => {
-				const versionTally = { ...(tally[version] ?? {}) };
-				versionTally[key] = (versionTally[key] ?? 0) + 1;
-				const next = { ...tally, [version]: versionTally };
-				if (browser) {
-					localStorage.setItem(REACTIONS_KEY, JSON.stringify(next));
+		react: (version: string, type: ChangelogReaction) => {
+			update((state) => {
+				const next = { ...state };
+				if (next[version] === type) {
+					delete next[version];
+				} else {
+					next[version] = type;
 				}
+				persist(next);
 				return next;
 			});
-		},
-		reset: () => {
-			if (browser) localStorage.removeItem(REACTIONS_KEY);
-			set({});
 		}
 	};
 }

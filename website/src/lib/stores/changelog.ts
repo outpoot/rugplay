@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
-import { getLatestVersion } from '$lib/data/changelog';
 
 const STORAGE_KEY = 'rugplay:last-seen-changelog';
 const REACTIONS_KEY = 'rugplay:changelog-reactions';
@@ -11,7 +10,8 @@ function createLastSeenStore() {
 
 	return {
 		subscribe,
-		markSeen: (version: string = getLatestVersion()) => {
+		markSeen: (version: string) => {
+			if (!version) return;
 			if (browser) {
 				localStorage.setItem(STORAGE_KEY, version);
 			}
@@ -22,8 +22,11 @@ function createLastSeenStore() {
 
 export const LAST_SEEN_VERSION = createLastSeenStore();
 
-export function hasUnreadChangelog(lastSeen: string): boolean {
-	return lastSeen !== getLatestVersion();
+// Sidebar badge fetches the latest version once and compares it against
+// the persisted last-seen value — see AppSidebar.svelte.
+export function hasUnreadChangelog(lastSeen: string, latestVersion: string | null): boolean {
+	if (!latestVersion) return false;
+	return lastSeen !== latestVersion;
 }
 
 // Client-side-only like/dislike per version, mirroring the news article

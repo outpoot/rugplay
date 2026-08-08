@@ -49,6 +49,10 @@ export const user = pgTable("user", {
 	bio: varchar("bio", { length: 160 }).default("Hello am 48 year old man from somalia. Sorry for my bed england. I selled my wife for internet connection for play “conter stirk”"),
 	username: varchar("username", { length: 30 }).notNull().unique(),
 
+	// When enabled, user search (including @mention autocomplete) also
+	// fuzzy-matches this user against `name` and `bio`, not just `username`.
+	smartSearchEnabled: boolean("smart_search_enabled").notNull().default(false),
+
 	volumeMaster: decimal("volume_master", { precision: 3, scale: 2 }).notNull().default("0.70"),
 	volumeMuted: boolean("volume_muted").notNull().default(false),
 

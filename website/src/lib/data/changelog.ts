@@ -8,7 +8,7 @@ export interface ChangeEntry {
 export interface ChangelogRelease {
 	version: string; // e.g. "2.4.0"
 	date: string; // ISO date string, e.g. "2026-08-08"
-	title?: string; // optional flavor headline for the release
+	title?: string; // optional short headline for the release
 	summary?: string; // short blurb under the headline
 	changes: ChangeEntry[];
 }
@@ -18,8 +18,8 @@ export const CHANGELOG: ChangelogRelease[] = [
 	{
 		version: '2.4.0',
 		date: '2026-08-08',
-		title: 'Gems, Prestige & the Great Sidebar Cleanup',
-		summary: 'A big one — new currency, a fresh way to flex, and a bunch of squashed bugs.',
+		title: 'Gems, Prestige & the sidebar cleanup',
+		summary: 'New currency, a new way to reset your progress, and a bunch of fixes.',
 		changes: [
 			{ category: 'new', text: 'Introduced Gems, a premium currency earnable through achievements and the shop' },
 			{ category: 'new', text: 'Added Prestige — reset your portfolio for permanent account-wide bonuses' },
@@ -33,31 +33,31 @@ export const CHANGELOG: ChangelogRelease[] = [
 	{
 		version: '2.3.1',
 		date: '2026-07-22',
-		title: 'Hopium Hotfix',
+		title: 'Hopium hotfix',
 		summary: 'Quick patch after the Hopium prediction markets launch.',
 		changes: [
 			{ category: 'fixed', text: 'Fixed Hopium markets occasionally settling with the wrong outcome' },
 			{ category: 'fixed', text: 'Fixed notification badge count not clearing after reading all notifications' },
-			{ category: 'improved', text: 'Reduced API rate-limit false positives on the /market page' }
+			{ category: 'improved', text: 'Reduced API rate-limit false positives on the market page' }
 		]
 	},
 	{
 		version: '2.3.0',
 		date: '2026-07-15',
-		title: 'Hopium Launches',
-		summary: 'Bet on the future. Or don\u2019t. Your call.',
+		title: 'Hopium launches',
+		summary: 'Bet on real crypto and market outcomes, kind of like Polymarket.',
 		changes: [
 			{ category: 'new', text: 'Hopium prediction markets — bet on real crypto and market outcomes' },
 			{ category: 'new', text: 'Arcade section with mini-games for quick side bets' },
 			{ category: 'improved', text: 'Redesigned the achievements page with progress bars' },
-			{ category: 'removed', text: 'Removed the legacy /explore page in favor of /market' }
+			{ category: 'removed', text: 'Removed the legacy explore page in favor of market' }
 		]
 	},
 	{
 		version: '2.2.0',
 		date: '2026-06-30',
-		title: 'Season One',
-		summary: 'The leaderboard resets. The rugpulls continue.',
+		title: 'Season one',
+		summary: 'The leaderboard resets, and promo codes arrive.',
 		changes: [
 			{ category: 'new', text: 'Seasonal leaderboards with end-of-season rewards' },
 			{ category: 'new', text: 'Promo codes — redeem codes for bonus cash and gems' },

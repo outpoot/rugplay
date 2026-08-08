@@ -64,6 +64,7 @@
 	let isDeleting = $state(false);
 	let isDownloading = $state(false);
 	let disableMentions = $state($USER_DATA?.disableMentions || false);
+	let smartSearchEnabled = $state($USER_DATA?.smartSearchEnabled || false);
 
 	// Blocked users state
 	let blockedUsers = $state<Array<{ id: number; blockedId: number; username: string; name: string; image: string | null; createdAt: string }>>([]);
@@ -248,6 +249,25 @@
 		} catch {
 			disableMentions = !disableMentions;
 			toast.error('Failed to update mention settings');
+		}
+	}
+
+	async function toggleSmartSearch() {
+		smartSearchEnabled = !smartSearchEnabled;
+		haptic.trigger('light');
+		try {
+			const response = await fetch('/api/settings/smart-search', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ smartSearchEnabled })
+			});
+			if (!response.ok) {
+				smartSearchEnabled = !smartSearchEnabled;
+				toast.error('Failed to update smart search settings');
+			}
+		} catch {
+			smartSearchEnabled = !smartSearchEnabled;
+			toast.error('Failed to update smart search settings');
 		}
 	}
 
@@ -540,6 +560,16 @@
 						</p>
 					</div>
 					<Switch checked={!disableMentions} onCheckedChange={toggleDisableMentions} />
+				</div>
+				<div class="flex items-center justify-between rounded-lg border p-4">
+					<div class="space-y-1">
+						<h4 class="text-sm font-medium">Smart Search</h4>
+						<p class="text-muted-foreground text-xs">
+							Let others find you by bio or display name, not just username, in user search and
+							@mentions
+						</p>
+					</div>
+					<Switch checked={smartSearchEnabled} onCheckedChange={toggleSmartSearch} />
 				</div>
 			</Card.Content>
 		</Card.Root>

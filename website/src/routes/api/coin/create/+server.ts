@@ -7,6 +7,7 @@ import { uploadCoinIcon, deleteObject } from '$lib/server/s3';
 import { FIXED_SUPPLY, STARTING_PRICE, INITIAL_LIQUIDITY, MAX_FILE_SIZE, getCreationFee } from '$lib/data/constants';
 import { isNameAppropriate } from '$lib/server/moderation';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
+import { publishNewsEvent } from '$lib/server/news/pipeline';
 
 async function validateInputs(name: string, symbol: string, iconFile: File | null) {
     if (!name || name.length < 2 || name.length > 255) {
@@ -109,6 +110,7 @@ export async function POST({ request }) {
 
     let createdCoin: any;
     let creationFee = 0;
+    let creatorUsername: string | undefined;
 
     try {
         await db.transaction(async (tx) => {
@@ -118,7 +120,7 @@ export async function POST({ request }) {
             }
 
             const [userData] = await tx
-                .select({ baseCurrencyBalance: user.baseCurrencyBalance })
+                .select({ baseCurrencyBalance: user.baseCurrencyBalance, username: user.username })
                 .from(user)
                 .where(eq(user.id, userId))
                 .for('update')
@@ -135,6 +137,7 @@ export async function POST({ request }) {
 
             creationFee = getCreationFee(Number(coinsCreated));
             const totalCost = creationFee + INITIAL_LIQUIDITY;
+            creatorUsername = userData.username;
 
             const currentBalance = Number(userData.baseCurrencyBalance);
             if (currentBalance < totalCost) {
@@ -179,6 +182,18 @@ export async function POST({ request }) {
     }
 
     checkAndAwardAchievements(userId, ['creation']);
+
+    // Fire-and-forget — never await from the request path.
+    publishNewsEvent({
+        type: 'COIN_CREATED',
+        relatedCoinId: createdCoin.id,
+        relatedUserId: userId,
+        metadata: {
+            symbol: createdCoin.symbol,
+            name: createdCoin.name,
+            creatorUsername
+        }
+    });
 
     return json({
         success: true,

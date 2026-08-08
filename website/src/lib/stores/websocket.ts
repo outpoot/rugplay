@@ -41,6 +41,15 @@ export interface ArcadeActivity {
     timestamp: number;
 }
 
+export interface NewsArticlePublished {
+    id: number;
+    type: string;
+    headline: string;
+    summary: string;
+    coverImage: string | null;
+    createdAt: string;
+}
+
 // Constants
 const WEBSOCKET_URL = PUBLIC_WEBSOCKET_URL;
 const RECONNECT_DELAY = 5000;
@@ -58,6 +67,10 @@ export const allTradesStore = writable<LiveTrade[]>([]);
 export const isConnectedStore = writable<boolean>(false);
 export const isLoadingTrades = writable<boolean>(false);
 export const priceUpdatesStore = writable<Record<string, PriceUpdate>>({});
+// Latest article published while the socket is connected. The /news page
+// watches this to show a "new articles available" banner instead of
+// requiring a manual refresh. Reset to null after the page consumes it.
+export const newsPublishedStore = writable<NewsArticlePublished | null>(null);
 
 function createArcadeActivityStore() {
     const STORAGE_KEY = 'arcade_activities';
@@ -249,6 +262,17 @@ function handleArcadeActivityMessage(message: any): void {
     }
 }
 
+function handleNewsPublishedMessage(message: any): void {
+    newsPublishedStore.set({
+        id: message.id,
+        type: message.type,
+        headline: message.headline,
+        summary: message.summary,
+        coverImage: message.coverImage ?? null,
+        createdAt: message.createdAt
+    });
+}
+
 function handleWebSocketMessage(event: MessageEvent): void {
     try {
         const message = JSON.parse(event.data);
@@ -265,6 +289,10 @@ function handleWebSocketMessage(event: MessageEvent): void {
 
             case 'arcade_activity':
                 handleArcadeActivityMessage(message);
+                break;
+
+            case 'news_published':
+                handleNewsPublishedMessage(message);
                 break;
 
             case 'ping':

@@ -38,7 +38,9 @@
 		ShoppingBasket01Icon,
 		GemIcon,
 		Award05Icon,
-		ArrowDown01Icon
+		ArrowDown01Icon,
+		Globe02Icon,
+		StarIcon
 	} from '@hugeicons/core-free-icons';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -49,6 +51,8 @@
 	import DailyRewards from './DailyRewards.svelte';
 	import PromoCodeDialog from './PromoCodeDialog.svelte';
 	import UserManualModal from './UserManualModal.svelte';
+	import WhatsNewModal from './WhatsNewModal.svelte';
+	import { LAST_SEEN_VERSION, hasUnreadChangelog } from '$lib/stores/changelog';
 	import { signOut } from '$lib/auth-client';
 	import { formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
@@ -63,6 +67,7 @@
 		navMain: [
 			{ title: 'Home', url: '/', icon: Home03Icon },
 			{ title: 'Market', url: '/market', icon: Store01Icon },
+			{ title: 'News', url: '/news', icon: Globe02Icon },
 			{ title: 'Hopium', url: '/hopium', icon: ArrowUpDownIcon },
 			{ title: 'Arcade', url: '/arcade', icon: Joystick04Icon },
 			{ title: 'Leaderboard', url: '/leaderboard', icon: ChampionIcon },
@@ -81,6 +86,8 @@
 	let shouldSignIn = $state(false);
 	let showPromoCode = $state(false);
 	let showUserManual = $state(false);
+	let showWhatsNew = $state(false);
+	let latestChangelogVersion = $state<string | null>(null);
 
 	onMount(() => {
 		if ($USER_DATA) {
@@ -96,6 +103,13 @@
 			PORTFOLIO_SUMMARY.set(null);
 			ARCADE_STATS.set(null);
 		}
+
+		fetch('/api/changelog')
+			.then((r) => r.json())
+			.then((d) => {
+				latestChangelogVersion = d.releases?.[0]?.version ?? null;
+			})
+			.catch(() => {});
 	});
 
 	function handleNavClick(title: string) {
@@ -162,6 +176,11 @@
 		setOpenMobile(false);
 	}
 
+	function handleEditChangelogsClick() {
+		goto('/admin/changelog');
+		setOpenMobile(false);
+	}
+
 	function handleTermsClick() {
 		goto('/legal/terms');
 		setOpenMobile(false);
@@ -174,6 +193,11 @@
 
 	function handleUserManualClick() {
 		showUserManual = true;
+		setOpenMobile(false);
+	}
+
+	function handleWhatsNewClick() {
+		showWhatsNew = true;
 		setOpenMobile(false);
 	}
 
@@ -191,6 +215,7 @@
 <SignInConfirmDialog bind:open={shouldSignIn} />
 <PromoCodeDialog bind:open={showPromoCode} />
 <UserManualModal bind:open={showUserManual} />
+<WhatsNewModal bind:open={showWhatsNew} />
 <Sidebar.Root collapsible="offcanvas">
 	<Sidebar.Header>
 		<div class="flex items-center gap-2 px-2 py-2">
@@ -488,6 +513,15 @@
 									<HugeiconsIcon icon={BookOpen01Icon} />
 									User Manual
 								</DropdownMenu.Item>
+								<DropdownMenu.Item onclick={handleWhatsNewClick} class="justify-between">
+									<span class="flex items-center gap-2">
+										<HugeiconsIcon icon={StarIcon} />
+										What's New
+									</span>
+									{#if hasUnreadChangelog($LAST_SEEN_VERSION, latestChangelogVersion)}
+										<span class="bg-primary h-1.5 w-1.5 rounded-full"></span>
+									{/if}
+								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleModeToggle}>
 									{#if mode.current === 'light'}
 										<HugeiconsIcon icon={Moon01Icon} />
@@ -530,6 +564,13 @@
 									>
 										<HugeiconsIcon icon={ChampionIcon} class="text-primary" />
 										Season settings
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										onclick={handleEditChangelogsClick}
+										class="text-primary hover:text-primary!"
+									>
+										<HugeiconsIcon icon={StarIcon} class="text-primary" />
+										Edit Changelogs
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>
 							{/if}

@@ -647,3 +647,63 @@ export const newsArticleShare = pgTable(
 		};
 	}
 );
+
+// Admin-authored "What's New" entries shown in the sidebar changelog modal.
+// Separate from newsArticle (that's AI/template-generated market journalism;
+// this is hand-written release notes). One row per version.
+export const changelogCategoryEnum = pgEnum('changelog_category', [
+	'NEW',
+	'IMPROVED',
+	'FIXED',
+	'REMOVED'
+]);
+
+export const changelogRelease = pgTable(
+	'changelog_release',
+	{
+		id: serial('id').primaryKey(),
+		version: varchar('version', { length: 50 }).notNull().unique(),
+		title: varchar('title', { length: 160 }),
+		summary: varchar('summary', { length: 280 }),
+
+		// Optional cover image. Either an internal object-storage key
+		// (resolved through getPublicUrl, same pattern as coin.icon /
+		// newsArticle.coverImage) when uploaded as a file, or a full
+		// https URL when the admin pasted a link instead.
+		coverImage: text('cover_image'),
+		coverImageIsExternal: boolean('cover_image_is_external').notNull().default(false),
+
+		releasedAt: timestamp('released_at', { withTimezone: true }).notNull().defaultNow(),
+
+		createdBy: integer('created_by').references(() => user.id, { onDelete: 'set null' }),
+		updatedBy: integer('updated_by').references(() => user.id, { onDelete: 'set null' }),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			releasedAtIdx: index('changelog_release_released_at_idx').on(table.releasedAt.desc())
+		};
+	}
+);
+
+export const changelogChange = pgTable(
+	'changelog_change',
+	{
+		id: serial('id').primaryKey(),
+		releaseId: integer('release_id')
+			.notNull()
+			.references(() => changelogRelease.id, { onDelete: 'cascade' }),
+		category: changelogCategoryEnum('category').notNull(),
+		text: varchar('text', { length: 280 }).notNull(),
+		// Manual ordering within a release, since entries are typically
+		// added and reordered by hand in the admin editor.
+		sortOrder: integer('sort_order').notNull().default(0)
+	},
+	(table) => {
+		return {
+			releaseIdIdx: index('changelog_change_release_id_idx').on(table.releaseId)
+		};
+	}
+);
+

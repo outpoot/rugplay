@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
@@ -21,6 +22,7 @@
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import { NEWS_TYPE_META } from '$lib/data/news-meta';
 	import { getPublicUrl } from '$lib/utils';
+	import { trackArticlePageDwell } from '$lib/utils/news-dwell';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import type { NewsArticle } from '$lib/types/news';
 
@@ -28,6 +30,11 @@
 
 	let article = $state<NewsArticle>(data.article);
 	let copied = $state(false);
+
+	// Reading the full article page is the strongest dwell signal the
+	// personalization system gets — tracked for as long as this page stays
+	// mounted and the tab is focused, flushed on navigate-away/unload.
+	onMount(() => trackArticlePageDwell(article.id));
 	let shouldSignIn = $state(false);
 	let reportDialogOpen = $state(false);
 	let reportSubmitting = $state(false);

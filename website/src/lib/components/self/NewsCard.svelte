@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Avatar from '$lib/components/ui/avatar';
@@ -6,6 +7,7 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { getPublicUrl } from '$lib/utils';
+	import { trackArticleDwell } from '$lib/utils/news-dwell';
 	import CoinIcon from './CoinIcon.svelte';
 	import UserName from './UserName.svelte';
 	import NewsArticleActions from './NewsArticleActions.svelte';
@@ -26,6 +28,18 @@
 
 	let copied = $state(false);
 	let meta = $derived(NEWS_TYPE_META[article.type]);
+	let cardEl: HTMLElement | null = $state(null);
+
+	// Track how long this specific card sits visible on screen as the user
+	// scrolls the feed — this is the "did they actually linger on this one"
+	// signal the personalized ranking (news/ranking.ts) uses, on top of the
+	// explicit like/dislike/share/report actions. Best-effort: a missed
+	// beacon just means that one impression doesn't contribute, nothing in
+	// the UI depends on it succeeding.
+	onMount(() => {
+		if (!cardEl) return;
+		return trackArticleDwell(article.id, cardEl);
+	});
 
 	function timeAgo(iso: string): string {
 		const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -82,7 +96,7 @@
 </script>
 
 {#if layout === 'magazine'}
-	<Card.Root class="overflow-hidden py-0 gap-0 transition-shadow hover:shadow-lg">
+	<Card.Root bind:ref={cardEl} class="overflow-hidden py-0 gap-0 transition-shadow hover:shadow-lg">
 		{#if article.coverImage}
 			<button
 				type="button"
@@ -158,7 +172,7 @@
 		</Card.Content>
 	</Card.Root>
 {:else}
-	<Card.Root class="overflow-hidden py-0 gap-0 transition-shadow hover:shadow-md">
+	<Card.Root bind:ref={cardEl} class="overflow-hidden py-0 gap-0 transition-shadow hover:shadow-md">
 		<div class="flex gap-3 p-3 sm:gap-4 sm:p-4">
 			{#if article.coverImage}
 				<button

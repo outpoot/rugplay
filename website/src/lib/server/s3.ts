@@ -118,7 +118,12 @@ export async function uploadChangelogImage(
         throw new Error('Unsupported image format. Only JPEG, PNG, GIF, and WebP are allowed.');
     }
 
-    const processedImage = await processImage(Buffer.from(body));
+    // Changelog covers are wide banners, not square icons — use a larger
+    // max dimension and higher quality than the default avatar/coin sizing.
+    const processedImage = await processImage(Buffer.from(body), {
+        maxSize: 1600,
+        quality: 82
+    });
 
     const key = `changelog/${releaseId}-${Date.now()}.webp`;
 

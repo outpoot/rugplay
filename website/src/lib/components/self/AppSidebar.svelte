@@ -87,6 +87,7 @@
 	let showPromoCode = $state(false);
 	let showUserManual = $state(false);
 	let showWhatsNew = $state(false);
+	let latestChangelogVersion = $state<string | null>(null);
 
 	onMount(() => {
 		if ($USER_DATA) {
@@ -102,6 +103,13 @@
 			PORTFOLIO_SUMMARY.set(null);
 			ARCADE_STATS.set(null);
 		}
+
+		fetch('/api/changelog')
+			.then((r) => r.json())
+			.then((d) => {
+				latestChangelogVersion = d.releases?.[0]?.version ?? null;
+			})
+			.catch(() => {});
 	});
 
 	function handleNavClick(title: string) {
@@ -165,6 +173,11 @@
 
 	function handleSeasonSettingsClick() {
 		goto('/admin/seasons');
+		setOpenMobile(false);
+	}
+
+	function handleEditChangelogsClick() {
+		goto('/admin/changelog');
 		setOpenMobile(false);
 	}
 
@@ -505,7 +518,7 @@
 										<HugeiconsIcon icon={StarIcon} />
 										What's New
 									</span>
-									{#if hasUnreadChangelog($LAST_SEEN_VERSION)}
+									{#if hasUnreadChangelog($LAST_SEEN_VERSION, latestChangelogVersion)}
 										<span class="bg-primary h-1.5 w-1.5 rounded-full"></span>
 									{/if}
 								</DropdownMenu.Item>
@@ -551,6 +564,13 @@
 									>
 										<HugeiconsIcon icon={ChampionIcon} class="text-primary" />
 										Season settings
+									</DropdownMenu.Item>
+									<DropdownMenu.Item
+										onclick={handleEditChangelogsClick}
+										class="text-primary hover:text-primary!"
+									>
+										<HugeiconsIcon icon={StarIcon} class="text-primary" />
+										Edit Changelogs
 									</DropdownMenu.Item>
 								</DropdownMenu.Group>
 							{/if}

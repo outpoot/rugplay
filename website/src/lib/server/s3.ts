@@ -104,4 +104,34 @@ export async function uploadCoinIcon(
     return key;
 }
 
+export async function uploadChangelogImage(
+    releaseId: number | string,
+    body: Uint8Array,
+    contentType: string,
+): Promise<string> {
+    if (!contentType || !contentType.startsWith('image/')) {
+        throw new Error('Invalid file type. Only images are allowed.');
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(contentType.toLowerCase())) {
+        throw new Error('Unsupported image format. Only JPEG, PNG, GIF, and WebP are allowed.');
+    }
+
+    const processedImage = await processImage(Buffer.from(body));
+
+    const key = `changelog/${releaseId}-${Date.now()}.webp`;
+
+    const command = new PutObjectCommand({
+        Bucket: PUBLIC_B2_BUCKET,
+        Key: key,
+        Body: processedImage.buffer,
+        ContentType: processedImage.contentType,
+        ContentLength: processedImage.size,
+    });
+
+    await s3Client.send(command);
+    return key;
+}
+
 export { s3Client };

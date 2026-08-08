@@ -39,7 +39,8 @@
 		GemIcon,
 		Award05Icon,
 		ArrowDown01Icon,
-		Globe02Icon
+		Globe02Icon,
+		StarIcon
 	} from '@hugeicons/core-free-icons';
 	import { mode, setMode } from 'mode-watcher';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -50,6 +51,8 @@
 	import DailyRewards from './DailyRewards.svelte';
 	import PromoCodeDialog from './PromoCodeDialog.svelte';
 	import UserManualModal from './UserManualModal.svelte';
+	import WhatsNewModal from './WhatsNewModal.svelte';
+	import { LAST_SEEN_VERSION, hasUnreadChangelog } from '$lib/stores/changelog';
 	import { signOut } from '$lib/auth-client';
 	import { formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
@@ -83,6 +86,7 @@
 	let shouldSignIn = $state(false);
 	let showPromoCode = $state(false);
 	let showUserManual = $state(false);
+	let showWhatsNew = $state(false);
 
 	onMount(() => {
 		if ($USER_DATA) {
@@ -179,6 +183,11 @@
 		setOpenMobile(false);
 	}
 
+	function handleWhatsNewClick() {
+		showWhatsNew = true;
+		setOpenMobile(false);
+	}
+
 	function handlePrestigeClick() {
 		goto('/prestige');
 		setOpenMobile(false);
@@ -193,6 +202,7 @@
 <SignInConfirmDialog bind:open={shouldSignIn} />
 <PromoCodeDialog bind:open={showPromoCode} />
 <UserManualModal bind:open={showUserManual} />
+<WhatsNewModal bind:open={showWhatsNew} />
 <Sidebar.Root collapsible="offcanvas">
 	<Sidebar.Header>
 		<div class="flex items-center gap-2 px-2 py-2">
@@ -489,6 +499,15 @@
 								<DropdownMenu.Item onclick={handleUserManualClick}>
 									<HugeiconsIcon icon={BookOpen01Icon} />
 									User Manual
+								</DropdownMenu.Item>
+								<DropdownMenu.Item onclick={handleWhatsNewClick} class="justify-between">
+									<span class="flex items-center gap-2">
+										<HugeiconsIcon icon={StarIcon} />
+										What's New
+									</span>
+									{#if hasUnreadChangelog($LAST_SEEN_VERSION)}
+										<span class="bg-primary h-1.5 w-1.5 rounded-full"></span>
+									{/if}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item onclick={handleModeToggle}>
 									{#if mode.current === 'light'}

@@ -11,7 +11,8 @@ export type AchievementCategory =
 	| 'social'
 	| 'shop'
 	| 'special'
-	| 'season';
+	| 'season'
+	| 'mythical';
 
 export interface AchievementDef {
 	id: string;
@@ -51,6 +52,7 @@ export const CATEGORY_LABEL: Record<AchievementCategory, string> = {
 	shop: 'Shop & Cosmetics',
 	special: 'Special',
 	season: 'Seasons',
+	mythical: 'Mythical',
 };
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -143,6 +145,11 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 	{ id: 'season_regular', name: 'Regular', description: 'Compete in 3 different seasons', icon: 'season_regular.png', difficulty: 'medium', cashReward: 10000, gemReward: 30, category: 'season', targetValue: 3 },
 	{ id: 'season_veteran', name: 'Old Guard', description: 'Compete in 10 different seasons', icon: 'season_old_guard.png', difficulty: 'legendary', cashReward: 75000, gemReward: 200, category: 'season', targetValue: 10 },
 	{ id: 'season_underdog', name: 'Underdog', description: 'Finish top 10 in a season', icon: 'season_underdog.png', difficulty: 'hard', cashReward: 20000, gemReward: 75, category: 'season', targetValue: 10 },
+
+	// MYTHICAL (1) — the only achievement in this category, by design.
+	// Instantly and permanently grants the exclusive 'ascended' name color
+	// (see NAME_COLOR_CATALOG in shop-catalog.ts) the moment it's earned.
+	{ id: 'portfolio_100t', name: 'Ascended', description: 'Reach $100,000,000,000,000 total portfolio value', icon: 'gold_coin.png', difficulty: 'legendary', cashReward: 1000000, gemReward: 1000, category: 'mythical' },
 ];
 
 export const ACHIEVEMENTS_MAP: Record<string, AchievementDef> = Object.fromEntries(
@@ -150,5 +157,5 @@ export const ACHIEVEMENTS_MAP: Record<string, AchievementDef> = Object.fromEntri
 );
 
 export const ACHIEVEMENT_CATEGORIES: AchievementCategory[] = [
-	'trading', 'wealth', 'creation', 'arcade', 'streaks', 'prestige', 'hopium', 'social', 'shop', 'special', 'season',
+	'trading', 'wealth', 'creation', 'arcade', 'streaks', 'prestige', 'hopium', 'social', 'shop', 'special', 'season', 'mythical',
 ];

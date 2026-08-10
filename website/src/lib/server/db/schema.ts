@@ -4,9 +4,43 @@ import { sql } from "drizzle-orm";
 export const transactionTypeEnum = pgEnum('transaction_type', ['BUY', 'SELL', 'TRANSFER_IN', 'TRANSFER_OUT']);
 export const predictionMarketEnum = pgEnum('prediction_market_status', ['ACTIVE', 'RESOLVED', 'CANCELLED']);
 export const notificationTypeEnum = pgEnum('notification_type', ['HOPIUM', 'SYSTEM', 'TRANSFER', 'RUG_PULL', 'MENTION']);
-export const shopItemTypeEnum = pgEnum('shop_item_type', ['namecolor']);
+export const shopItemTypeEnum = pgEnum('shop_item_type', ['namecolor', 'cardstyle', 'cardanimation']);
 export const seasonStatusEnum = pgEnum('season_status', ['UPCOMING', 'ACTIVE', 'ENDED']);
 export const seasonTrophyTierEnum = pgEnum('season_trophy_tier', ['CHAMPION', 'RUNNER_UP', 'THIRD', 'TOP_10', 'TOP_100', 'PARTICIPANT']);
+
+// Every event type the news feed can turn into an article. Keep this in
+// sync with `ARTICLE_TEMPLATES` in `$lib/server/news/templates.ts`.
+export const newsArticleTypeEnum = pgEnum('news_article_type', [
+	'RUG_PULL', // large dump detected by the AMM (amm.ts isRugPull)
+	'COIN_PUMP', // large, fast positive price move
+	'COIN_CREATED', // a new coin was listed
+	'COIN_MILESTONE', // market cap / holder count crossed a threshold
+	'HOPIUM_RESOLVED', // a prediction question was resolved (review-style article)
+	'HOPIUM_TRENDING', // a prediction question is getting a lot of volume
+	'WHALE_TRADE', // a single trade above a $ threshold
+	'LEADERBOARD_SHAKEUP', // #1 on a leaderboard changed
+	'SEASON_EVENT', // season started/ended
+	'PLATFORM' // generic/editorial, mostly for admin-authored or digest articles
+]);
+
+// AI-authored, or the deterministic template fallback used when the AI
+// call fails / OPENROUTER_API_KEY is unset / the response fails validation.
+export const newsArticleSourceEnum = pgEnum('news_article_source', ['AI', 'TEMPLATE']);
+
+export const newsReactionTypeEnum = pgEnum('news_reaction_type', ['LIKE', 'DISLIKE']);
+
+export const newsReportStatusEnum = pgEnum('news_report_status', ['OPEN', 'REVIEWED', 'DISMISSED']);
+
+// Cost, in base currency, to add a brand-new emoji reaction option to an
+// article. Once someone pays this, the emoji exists on the article and
+// everyone else can react with it for free (same as Discord: only adding
+// a *new* emoji to the picker costs anything).
+export const NEWS_REACTION_EMOJI_CREATE_COST = 5000;
+
+// Max distinct emoji reactions a single article can have. Keeps the bar
+// from becoming an unreadable wall and keeps the "first mover" slots
+// scarce/valuable, same spirit as the $5,000 cost itself.
+export const NEWS_REACTION_EMOJI_LIMIT = 6;
 
 export const user = pgTable("user", {
 	id: serial("id").primaryKey(),
@@ -25,6 +59,10 @@ export const user = pgTable("user", {
 	}).notNull().default("100.00000000"), // $100
 	bio: varchar("bio", { length: 160 }).default("Hello am 48 year old man from somalia. Sorry for my bed england. I selled my wife for internet connection for play “conter stirk”"),
 	username: varchar("username", { length: 30 }).notNull().unique(),
+
+	// When enabled, user search (including @mention autocomplete) also
+	// fuzzy-matches this user against `name` and `bio`, not just `username`.
+	smartSearchEnabled: boolean("smart_search_enabled").notNull().default(false),
 
 	volumeMaster: decimal("volume_master", { precision: 3, scale: 2 }).notNull().default("0.70"),
 	volumeMuted: boolean("volume_muted").notNull().default(false),
@@ -55,6 +93,8 @@ export const user = pgTable("user", {
 	halloweenBadge2025: boolean("halloween_badge_2025").default(false),
 	gems: integer("gems").notNull().default(0),
 	nameColor: text("name_color"),
+	cardStyle: text("card_style"),
+	cardAnimation: text("card_animation"),
 	founderBadge: boolean("founder_badge").notNull().default(false),
 	disableMentions: boolean("disable_mentions").notNull().default(false),
 }, (table) => {
@@ -132,10 +172,25 @@ export const coin = pgTable("coin", {
 	isListed: boolean("is_listed").default(true).notNull(),
 	tradingUnlocksAt: timestamp("trading_unlocks_at"),
 	isLocked: boolean("is_locked").default(true).notNull(),
+
+	// Set only by the RugPlay Bank seed script (see scripts/seed-bank.ts),
+	// never reachable from the coin creation endpoint. Pins the coin above
+	// the rest of the market on the homepage/market/coin pages and shows
+	// the "OFFICIAL" badge, so an impersonating coin can't fake this by
+	// copying the name/icon.
+	isOfficial: boolean("is_official").notNull().default(false),
+
+	// Optional per-wallet holding cap, as a percent of circulatingSupply
+	// (e.g. "2.00" = no single holder can hold more than 2% of supply).
+	// Null means uncapped. Enforced at BUY time in the trade endpoint.
+	// General-purpose column, not official-coin-specific, but currently
+	// only set on the RugPlay Bank coin.
+	maxHolderPercent: decimal("max_holder_percent", { precision: 5, scale: 2 }),
 }, (table) => {
 	return {
 		creatorIdIdx: index("coin_creator_id_idx").on(table.creatorId),
 		isListedIdx: index("coin_is_listed_idx").on(table.isListed),
+		isOfficialIdx: index("coin_is_official_idx").on(table.isOfficial),
 		nameTrgmIdx: index("coin_name_trgm_idx").using("gin", table.name.op("gin_trgm_ops")),
 		symbolTrgmIdx: index("coin_symbol_trgm_idx").using("gin", table.symbol.op("gin_trgm_ops")),
 		marketCapIdx: index("coin_market_cap_idx").on(table.marketCap),
@@ -444,3 +499,425 @@ export const userBlock = pgTable("user_block", {
 	blockedIdIdx: index("user_block_blocked_id_idx").on(table.blockedId),
 	noSelfBlock: check("no_self_block", sql`blocker_id != blocked_id`),
 }));
+
+export const newsArticle = pgTable(
+	'news_article',
+	{
+		id: serial('id').primaryKey(),
+		type: newsArticleTypeEnum('type').notNull(),
+		source: newsArticleSourceEnum('source').notNull().default('TEMPLATE'),
+
+		headline: varchar('headline', { length: 160 }).notNull(),
+		// Short one-liner shown in compact/feed layout cards.
+		summary: varchar('summary', { length: 280 }).notNull(),
+		// Longer body shown in magazine layout / article detail view.
+		// Markdown-lite: plain text + line breaks, sanitized on render.
+		body: text('body').notNull(),
+
+		// Optional cover image. Either an internal object-storage key
+		// (resolved through getPublicUrl, same as coin.icon / user.image)
+		// or a full https URL to a royalty-free stock image.
+		coverImage: text('cover_image'),
+		coverImageAttribution: varchar('cover_image_attribution', { length: 200 }),
+
+		// Loose references so a card can render a coin icon / user avatar
+		// inline without a join fan-out. Nullable — not every article type
+		// has all of these.
+		relatedCoinId: integer('related_coin_id').references(() => coin.id, { onDelete: 'set null' }),
+		relatedUserId: integer('related_user_id').references(() => user.id, { onDelete: 'set null' }),
+		relatedQuestionId: integer('related_question_id').references(() => predictionQuestion.id, {
+			onDelete: 'set null'
+		}),
+
+		// Snapshot of key numbers at generation time, so cards don't need to
+		// re-derive "crashed 42%" style stats later (coin price keeps moving).
+		// e.g. { "priceImpact": -42.1, "amount": 15000, "symbol": "DOGE2" }
+		metadata: text('metadata'), // JSON string, kept as text for portability
+
+		// Denormalized counters, updated on react/unreact for fast feed sorting
+		// (avoids a COUNT(*) join on every feed request).
+		likesCount: integer('likes_count').notNull().default(0),
+		dislikesCount: integer('dislikes_count').notNull().default(0),
+		sharesCount: integer('shares_count').notNull().default(0),
+		viewsCount: integer('views_count').notNull().default(0),
+
+		// Pre-computed relevance score for the "trending" sort, refreshed
+		// periodically by a small job (see news/ranking.ts). Kept separate
+		// from the per-request personalized score, which also factors in
+		// the requesting user's holdings and is computed on read.
+		trendingScore: decimal('trending_score', { precision: 12, scale: 4 }).notNull().default('0'),
+
+		isPinned: boolean('is_pinned').notNull().default(false),
+		isHidden: boolean('is_hidden').notNull().default(false), // soft-hide after reports
+
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			typeIdx: index('news_article_type_idx').on(table.type),
+			createdAtIdx: index('news_article_created_at_idx').on(table.createdAt.desc()),
+			trendingIdx: index('news_article_trending_idx').on(table.trendingScore.desc()),
+			relatedCoinIdx: index('news_article_related_coin_idx').on(table.relatedCoinId),
+			relatedUserIdx: index('news_article_related_user_idx').on(table.relatedUserId),
+			visibleFeedIdx: index('news_article_visible_feed_idx')
+				.on(table.isHidden, table.createdAt.desc())
+		};
+	}
+);
+
+export const newsArticleReaction = pgTable(
+	'news_article_reaction',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		type: newsReactionTypeEnum('type').notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.userId, table.articleId] }),
+			articleIdIdx: index('news_article_reaction_article_id_idx').on(table.articleId)
+		};
+	}
+);
+
+export const newsArticleReport = pgTable(
+	'news_article_report',
+	{
+		id: serial('id').primaryKey(),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		reason: varchar('reason', { length: 300 }),
+		status: newsReportStatusEnum('status').notNull().default('OPEN'),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			// A user can report a given article only once.
+			userArticleUnique: unique('news_article_report_user_article_unique').on(
+				table.userId,
+				table.articleId
+			),
+			statusIdx: index('news_article_report_status_idx').on(table.status)
+		};
+	}
+);
+
+// Per-user view/dwell-time log, the core signal for personalized ranking.
+// One row per (user, article): repeated views update the same row rather
+// than appending, since what matters for personalization is "how long has
+// this user, in total, actually looked at this article" not a raw hit
+// count (viewsCount on news_article already covers raw popularity).
+//
+// dwellMs is reported by the client in two ways: an IntersectionObserver
+// in the feed accumulates time-visible for each card as the user scrolls
+// past it, and the article detail page accumulates time-on-page. Both
+// flush via navigator.sendBeacon on unload/navigate so the number is
+// real even if the user closes the tab mid-read, and both are best-effort
+// — a lost beacon just means that one visit doesn't contribute, it never
+// blocks anything.
+export const newsArticleView = pgTable(
+	'news_article_view',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		// Cumulative milliseconds this user has spent with the article
+		// visible, across every visit. Capped client-side (see
+		// lib/utils/news-dwell.ts) and per-request server-side (see
+		// routes/api/news/[id]/view) so a stuck tab can't inflate this
+		// indefinitely.
+		dwellMs: integer('dwell_ms').notNull().default(0),
+		viewCount: integer('view_count').notNull().default(1),
+		lastViewedAt: timestamp('last_viewed_at', { withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.userId, table.articleId] }),
+			articleIdIdx: index('news_article_view_article_id_idx').on(table.articleId),
+			// Used to build each user's affinity profile (see news/ranking.ts):
+			// "what has this person actually spent time reading lately".
+			userLastViewedIdx: index('news_article_view_user_last_viewed_idx').on(
+				table.userId,
+				table.lastViewedAt.desc()
+			)
+		};
+	}
+);
+
+// Per-user share log. news_article.sharesCount stays as the fast global
+// counter for the feed card; this table exists so shares can also count
+// as a strong positive signal in a specific user's affinity profile,
+// same as a like but weighted higher (sharing is a more deliberate,
+// costlier action than a tap).
+export const newsArticleShare = pgTable(
+	'news_article_share',
+	{
+		id: serial('id').primaryKey(),
+		userId: integer('user_id').references(() => user.id, { onDelete: 'set null' }),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			articleIdIdx: index('news_article_share_article_id_idx').on(table.articleId),
+			userIdIdx: index('news_article_share_user_id_idx').on(table.userId)
+		};
+	}
+);
+
+// Threaded discussion on news articles. Deliberately its own table rather
+// than reusing `comment` (which hard-requires a coinId) — an article may
+// have no related coin at all (PLATFORM/SEASON_EVENT articles), and
+// keeping these separate avoids a nullable-but-sometimes-required column
+// on the existing coin comment table.
+export const newsArticleComment = pgTable(
+	'news_article_comment',
+	{
+		id: serial('id').primaryKey(),
+		userId: integer('user_id').references(() => user.id, { onDelete: 'set null' }),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		content: varchar('content', { length: 500 }).notNull(),
+		likesCount: integer('likes_count').notNull().default(0),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+		isDeleted: boolean('is_deleted').default(false).notNull()
+	},
+	(table) => {
+		return {
+			userIdIdx: index('news_article_comment_user_id_idx').on(table.userId),
+			articleIdIdx: index('news_article_comment_article_id_idx').on(table.articleId)
+		};
+	}
+);
+
+export const newsArticleCommentLike = pgTable(
+	'news_article_comment_like',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		commentId: integer('comment_id')
+			.notNull()
+			.references(() => newsArticleComment.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.userId, table.commentId] })
+		};
+	}
+);
+
+// --- Discord-style custom emoji reaction bar (separate from the simple
+// LIKE/DISLIKE sentiment vote in `newsArticleReaction` above) ---
+//
+// Two tables:
+//   1. newsArticleReactionEmoji — the *set of emoji options* live on a
+//      given article (max NEWS_REACTION_EMOJI_LIMIT). Row exists once
+//      someone pays NEWS_REACTION_EMOJI_CREATE_COST to add that emoji to
+//      that article. Records who paid, so the UI can credit them
+//      ("created by @username") the same way Discord shows who first
+//      reacted with a custom emoji.
+//   2. newsArticleReactionUser — who has reacted with which of those
+//      emoji. Many-to-many, unique per (user, emoji-row), so toggling is
+//      a straightforward insert/delete same as commentLike.
+//
+// Counts are read live via COUNT(*) grouped by emoji at request time
+// (article-scoped, max 6 emoji, so this is cheap) rather than a
+// denormalized counter column — avoids a second source of truth to keep
+// in sync across concurrent reacts, and the live websocket broadcast
+// (see routes/api/news/[id]/reactions) means clients never actually
+// issue that query themselves after the initial page load.
+export const newsArticleReactionEmoji = pgTable(
+	'news_article_reaction_emoji',
+	{
+		id: serial('id').primaryKey(),
+		articleId: integer('article_id')
+			.notNull()
+			.references(() => newsArticle.id, { onDelete: 'cascade' }),
+		// Native emoji character(s), e.g. "🚀". Validated server-side against
+		// a fixed allowlist (see lib/data/emoji-catalog.ts) — never
+		// arbitrary/custom image uploads, to keep this fast, cheap, and
+		// impossible to abuse for inappropriate imagery.
+		emoji: varchar('emoji', { length: 16 }).notNull(),
+		createdByUserId: integer('created_by_user_id').references(() => user.id, {
+			onDelete: 'set null'
+		}),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			// One slot per distinct emoji per article — paying again for an
+			// emoji that's already on the article isn't a thing; you just
+			// react to the existing slot for free, same as Discord.
+			articleEmojiUnique: unique('news_article_reaction_emoji_article_emoji_unique').on(
+				table.articleId,
+				table.emoji
+			),
+			articleIdIdx: index('news_article_reaction_emoji_article_id_idx').on(table.articleId)
+		};
+	}
+);
+
+export const newsArticleReactionUser = pgTable(
+	'news_article_reaction_user',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		reactionEmojiId: integer('reaction_emoji_id')
+			.notNull()
+			.references(() => newsArticleReactionEmoji.id, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.userId, table.reactionEmojiId] }),
+			reactionEmojiIdIdx: index('news_article_reaction_user_emoji_id_idx').on(
+				table.reactionEmojiId
+			)
+		};
+	}
+);
+
+// Admin-authored "What's New" entries shown in the sidebar changelog modal.
+// Separate from newsArticle (that's AI/template-generated market journalism;
+// this is hand-written release notes). One row per version.
+export const changelogCategoryEnum = pgEnum('changelog_category', [
+	'NEW',
+	'IMPROVED',
+	'FIXED',
+	'REMOVED'
+]);
+
+export const changelogRelease = pgTable(
+	'changelog_release',
+	{
+		id: serial('id').primaryKey(),
+		version: varchar('version', { length: 50 }).notNull().unique(),
+		title: varchar('title', { length: 160 }),
+		summary: varchar('summary', { length: 280 }),
+
+		// Optional cover image. Either an internal object-storage key
+		// (resolved through getPublicUrl, same pattern as coin.icon /
+		// newsArticle.coverImage) when uploaded as a file, or a full
+		// https URL when the admin pasted a link instead.
+		coverImage: text('cover_image'),
+		coverImageIsExternal: boolean('cover_image_is_external').notNull().default(false),
+
+		releasedAt: timestamp('released_at', { withTimezone: true }).notNull().defaultNow(),
+
+		createdBy: integer('created_by').references(() => user.id, { onDelete: 'set null' }),
+		updatedBy: integer('updated_by').references(() => user.id, { onDelete: 'set null' }),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			releasedAtIdx: index('changelog_release_released_at_idx').on(table.releasedAt.desc())
+		};
+	}
+);
+
+export const changelogChange = pgTable(
+	'changelog_change',
+	{
+		id: serial('id').primaryKey(),
+		releaseId: integer('release_id')
+			.notNull()
+			.references(() => changelogRelease.id, { onDelete: 'cascade' }),
+		category: changelogCategoryEnum('category').notNull(),
+		text: varchar('text', { length: 280 }).notNull(),
+		// Manual ordering within a release, since entries are typically
+		// added and reordered by hand in the admin editor.
+		sortOrder: integer('sort_order').notNull().default(0)
+	},
+	(table) => {
+		return {
+			releaseIdIdx: index('changelog_change_release_id_idx').on(table.releaseId)
+		};
+	}
+);
+
+// --- RugPlay Bank -----------------------------------------------------
+//
+// The treasury is the counterparty for currency that used to just
+// appear/vanish: trading fees and cash transfer fees were silently burned,
+// daily rewards/arcade payouts/promo codes minted from nowhere. Now every
+// one of those either credits or debits this singleton row, with a
+// ledger entry recorded alongside it. See $lib/server/treasury.ts for the
+// helpers that keep the two in sync.
+//
+// Only a subset of sources are wired up today (TRADING_FEE, CASH_TRANSFER_FEE
+// credit the treasury; DAILY_REWARD debits it). The rest of the enum is
+// provisioned for the same treatment later without another migration.
+
+export const treasuryLedgerDirectionEnum = pgEnum('treasury_ledger_direction', ['IN', 'OUT']);
+
+export const treasuryLedgerSourceEnum = pgEnum('treasury_ledger_source', [
+	'TRADING_FEE', // AMM swap fee (SWAP_FEE_RATE), wired up
+	'CASH_TRANSFER_FEE', // user-to-user cash transfer fee, wired up
+	'DAILY_REWARD', // daily login reward payout, wired up
+	'ARCADE_HOUSE_EDGE', // net player losses across arcade games — not wired yet
+	'ARCADE_PAYOUT', // net player wins across arcade games — not wired yet
+	'PROMO_CODE', // promo code redemption payout — not wired yet
+	'PREDICTION_MARKET_FEE', // hopium resolution fee/rake — not wired yet
+	'ADMIN_ADJUSTMENT', // manual admin correction
+	'SEED' // initial capitalization from the seed script
+]);
+
+// Singleton row — always id = 1. Balance is deliberately allowed to go
+// negative (see debitTreasury in $lib/server/treasury.ts): payouts are
+// never blocked on solvency today, a deficit is just a visible signal on
+// /bank rather than a silent failure.
+export const treasury = pgTable('treasury', {
+	id: integer('id').primaryKey().default(1),
+	balance: decimal('balance', { precision: 30, scale: 8 }).notNull().default('0.00000000'),
+	totalInflow: decimal('total_inflow', { precision: 30, scale: 8 }).notNull().default('0.00000000'),
+	totalOutflow: decimal('total_outflow', { precision: 30, scale: 8 }).notNull().default('0.00000000'),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
+});
+
+export const treasuryLedger = pgTable(
+	'treasury_ledger',
+	{
+		id: serial('id').primaryKey(),
+		direction: treasuryLedgerDirectionEnum('direction').notNull(),
+		source: treasuryLedgerSourceEnum('source').notNull(),
+		amount: decimal('amount', { precision: 30, scale: 8 }).notNull(),
+		// Treasury balance immediately after this entry was applied — cheap
+		// audit trail, lets /bank render a running balance without replaying
+		// the whole ledger.
+		balanceAfter: decimal('balance_after', { precision: 30, scale: 8 }).notNull(),
+		userId: integer('user_id').references(() => user.id, { onDelete: 'set null' }),
+		referenceType: varchar('reference_type', { length: 50 }),
+		referenceId: integer('reference_id'),
+		description: text('description'),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => {
+		return {
+			createdAtIdx: index('treasury_ledger_created_at_idx').on(table.createdAt),
+			sourceIdx: index('treasury_ledger_source_idx').on(table.source),
+			userIdIdx: index('treasury_ledger_user_id_idx').on(table.userId)
+		};
+	}
+);
+

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { browser } from '$app/environment';
-	import { getPublicUrl, debounce } from '$lib/utils';
+	import { getPublicUrl, debounce, formatDate } from '$lib/utils';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -20,7 +20,8 @@
 		Delete01Icon,
 		Notification03Icon,
 		ArrowLeft01Icon,
-		ArrowRight01Icon
+		ArrowRight01Icon,
+		UnavailableIcon
 	} from '@hugeicons/core-free-icons';
 	import * as Pagination from '$lib/components/ui/pagination';
 	import { toast } from 'svelte-sonner';
@@ -30,6 +31,9 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { haptic } from '$lib/stores/haptics';
+	import ProfileCard from '$lib/components/self/ProfileCard.svelte';
+	import { CARD_STYLE_CATALOG, CARD_ANIMATION_CATALOG } from '$lib/data/card-catalog';
+	import { RARITY_LABEL, RARITY_CLASS } from '$lib/data/shop-catalog';
 
 	let shouldSignIn = $state(false);
 	let name = $state($USER_DATA?.name || '');
@@ -64,6 +68,7 @@
 	let isDeleting = $state(false);
 	let isDownloading = $state(false);
 	let disableMentions = $state($USER_DATA?.disableMentions || false);
+	let smartSearchEnabled = $state($USER_DATA?.smartSearchEnabled || false);
 
 	// Blocked users state
 	let blockedUsers = $state<Array<{ id: number; blockedId: number; username: string; name: string; image: string | null; createdAt: string }>>([]);
@@ -88,6 +93,68 @@
 			toast.error('Failed to load blocked users');
 		}
 		blockedLoading = false;
+	}
+
+	// Profile card customization state
+	let ownedCardStyles = $state<string[]>([]);
+	let ownedCardAnimations = $state<string[]>([]);
+	let equippedCardStyle = $state<string | null>(null);
+	let equippedCardAnimation = $state<string | null>(null);
+	let cardCustomizationLoading = $state(false);
+	let equippingCardItem = $state<string | null>(null);
+
+	async function loadCardInventory() {
+		cardCustomizationLoading = true;
+		try {
+			const res = await fetch('/api/shop/inventory');
+			if (res.ok) {
+				const data = await res.json();
+				ownedCardStyles = data.cardStyles ?? [];
+				ownedCardAnimations = data.cardAnimations ?? [];
+				equippedCardStyle = $USER_DATA?.cardStyle ?? null;
+				equippedCardAnimation = $USER_DATA?.cardAnimation ?? null;
+			} else {
+				toast.error('Failed to load card cosmetics');
+			}
+		} catch {
+			toast.error('Failed to load card cosmetics');
+		}
+		cardCustomizationLoading = false;
+	}
+
+	async function equipCardItem(itemType: 'cardstyle' | 'cardanimation', itemKey: string | null) {
+		const equipKey = `${itemType}:${itemKey ?? 'none'}`;
+		equippingCardItem = equipKey;
+		try {
+			const res = await fetch('/api/shop/equip', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ itemType, itemKey })
+			});
+			const data = await res.json();
+			if (res.ok) {
+				if (itemType === 'cardstyle') {
+					equippedCardStyle = itemKey;
+				} else {
+					equippedCardAnimation = itemKey;
+				}
+				// Refreshes the layout's session data (USER_DATA), so every
+				// page — not just this local state — reflects the new
+				// equip immediately instead of waiting on the server-side
+				// session cache to expire, or getting silently overwritten
+				// back to the old value the next time +layout.svelte's
+				// effect re-syncs USER_DATA from stale load data.
+				await invalidateAll();
+				haptic.trigger('light');
+				toast.success(itemKey ? 'Equipped!' : 'Unequipped');
+			} else {
+				toast.error(data.error ?? 'Failed to equip');
+			}
+		} catch {
+			toast.error('Failed to equip');
+		} finally {
+			equippingCardItem = null;
+		}
 	}
 
 	async function unblockUser(username: string) {
@@ -117,6 +184,7 @@
 		volumeSettings.setMaster($USER_DATA?.volumeMaster || 0);
 		volumeSettings.setMuted($USER_DATA?.volumeMuted || false);
 		loadBlockedUsers();
+		loadCardInventory();
 	});
 
 	onDestroy(() => {
@@ -248,6 +316,25 @@
 		} catch {
 			disableMentions = !disableMentions;
 			toast.error('Failed to update mention settings');
+		}
+	}
+
+	async function toggleSmartSearch() {
+		smartSearchEnabled = !smartSearchEnabled;
+		haptic.trigger('light');
+		try {
+			const response = await fetch('/api/settings/smart-search', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ smartSearchEnabled })
+			});
+			if (!response.ok) {
+				smartSearchEnabled = !smartSearchEnabled;
+				toast.error('Failed to update smart search settings');
+			}
+		} catch {
+			smartSearchEnabled = !smartSearchEnabled;
+			toast.error('Failed to update smart search settings');
 		}
 	}
 
@@ -479,6 +566,123 @@
 
 		<Card.Root>
 			<Card.Header>
+				<Card.Title>Profile Card</Card.Title>
+				<Card.Description>
+					Customize how your profile card looks. Styles and animations are earned through
+					achievements — check the <a href="/achievements" class="underline underline-offset-2">achievements page</a> to see what unlocks what.
+				</Card.Description>
+			</Card.Header>
+			<Card.Content class="space-y-6">
+				<!-- Live preview — this is the exact same component used on the real profile page,
+				     so what's shown here is exactly what visitors will see, with your real name,
+				     avatar, bio, and badges. -->
+				<div>
+					<Label class="mb-2 block text-base font-medium">Live Preview</Label>
+					<ProfileCard
+						user={{
+							id: $USER_DATA ? Number($USER_DATA.id) : 0,
+							name: $USER_DATA?.name ?? '',
+							username: $USER_DATA?.username ?? '',
+							image: $USER_DATA?.image ?? null,
+							bio,
+							createdAt: new Date(),
+							baseCurrencyBalance: $USER_DATA?.baseCurrencyBalance ?? 0,
+							isAdmin: $USER_DATA?.isAdmin ?? false,
+							totalPortfolioValue: $USER_DATA?.baseCurrencyBalance ?? 0,
+							loginStreak: 0,
+							prestigeLevel: $USER_DATA?.prestigeLevel ?? 0,
+							halloweenBadge2025: false,
+							founderBadge: $USER_DATA?.founderBadge ?? false,
+							nameColor: $USER_DATA?.nameColor ?? null,
+							cardStyle: equippedCardStyle,
+							cardAnimation: equippedCardAnimation,
+							arcadeWins: 0,
+							arcadeLosses: 0
+						}}
+						joinedAt={formatDate(new Date().toISOString())}
+						cardStyle={equippedCardStyle}
+						cardAnimation={equippedCardAnimation}
+						showId={false}
+					/>
+					<p class="text-muted-foreground mt-2 text-xs">
+						Hover or click the preview above to test the equipped animation.
+					</p>
+				</div>
+
+				{#if cardCustomizationLoading}
+					<p class="text-muted-foreground text-sm">Loading your cosmetics…</p>
+				{:else}
+					<!-- Card styles -->
+					<div class="space-y-3">
+						<Label class="text-base font-medium">Card Style</Label>
+						<div class="flex flex-wrap gap-2">
+							<Button
+								variant={equippedCardStyle === null ? 'default' : 'outline'}
+								size="sm"
+								disabled={equippingCardItem === 'cardstyle:none'}
+								onclick={() => equipCardItem('cardstyle', null)}
+							>
+								{equippedCardStyle === null ? 'Default ✓' : 'Default'}
+							</Button>
+							{#each CARD_STYLE_CATALOG as styleItem (styleItem.key)}
+								{@const owned = ownedCardStyles.includes(styleItem.key)}
+								{@const equipped = equippedCardStyle === styleItem.key}
+								<Button
+									variant={equipped ? 'default' : 'outline'}
+									size="sm"
+									disabled={!owned || equippingCardItem === `cardstyle:${styleItem.key}`}
+									onclick={() => equipCardItem('cardstyle', styleItem.key)}
+									title={owned ? styleItem.description : `Locked — unlock via achievements`}
+									class={!owned ? 'opacity-50' : ''}
+								>
+									{#if !owned}
+										<HugeiconsIcon icon={UnavailableIcon} class="mr-1 h-3.5 w-3.5" />
+									{/if}
+									{styleItem.label}
+									{#if equipped}✓{/if}
+								</Button>
+							{/each}
+						</div>
+					</div>
+
+					<!-- Card animations -->
+					<div class="space-y-3">
+						<Label class="text-base font-medium">Hover / Click Animation</Label>
+						<div class="flex flex-wrap gap-2">
+							<Button
+								variant={equippedCardAnimation === null ? 'default' : 'outline'}
+								size="sm"
+								disabled={equippingCardItem === 'cardanimation:none'}
+								onclick={() => equipCardItem('cardanimation', null)}
+							>
+								{equippedCardAnimation === null ? 'None ✓' : 'None'}
+							</Button>
+							{#each CARD_ANIMATION_CATALOG as animItem (animItem.key)}
+								{@const owned = ownedCardAnimations.includes(animItem.key)}
+								{@const equipped = equippedCardAnimation === animItem.key}
+								<Button
+									variant={equipped ? 'default' : 'outline'}
+									size="sm"
+									disabled={!owned || equippingCardItem === `cardanimation:${animItem.key}`}
+									onclick={() => equipCardItem('cardanimation', animItem.key)}
+									title={owned ? animItem.description : `Locked — unlock via achievements`}
+									class={!owned ? 'opacity-50' : ''}
+								>
+									{#if !owned}
+										<HugeiconsIcon icon={UnavailableIcon} class="mr-1 h-3.5 w-3.5" />
+									{/if}
+									{animItem.label}
+									{#if equipped}✓{/if}
+								</Button>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</Card.Content>
+		</Card.Root>
+
+		<Card.Root>
+			<Card.Header>
 				<Card.Title>Audio Settings</Card.Title>
 				<Card.Description>Adjust volume for game sounds</Card.Description>
 			</Card.Header>
@@ -540,6 +744,16 @@
 						</p>
 					</div>
 					<Switch checked={!disableMentions} onCheckedChange={toggleDisableMentions} />
+				</div>
+				<div class="flex items-center justify-between rounded-lg border p-4">
+					<div class="space-y-1">
+						<h4 class="text-sm font-medium">Smart Search</h4>
+						<p class="text-muted-foreground text-xs">
+							Let others find you by bio or display name, not just username, in user search and
+							@mentions
+						</p>
+					</div>
+					<Switch checked={smartSearchEnabled} onCheckedChange={toggleSmartSearch} />
 				</div>
 			</Card.Content>
 		</Card.Root>

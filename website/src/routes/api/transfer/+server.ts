@@ -7,6 +7,7 @@ import { createNotification } from '$lib/server/notification';
 import { formatValue } from '$lib/utils';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
 import { CASH_TRANSFER_FEE_RATE } from '$lib/data/constants';
+import { creditTreasury } from '$lib/server/treasury';
 import type { RequestHandler } from './$types';
 
 interface TransferRequest {
@@ -143,6 +144,15 @@ export const POST: RequestHandler = async ({ request }) => {
                     senderUserId: senderId,
                     recipientUserId: recipientData.id
                 });
+
+                if (feeAmount > 0) {
+                    await creditTreasury(feeAmount, 'CASH_TRANSFER_FEE', {
+                        userId: senderId,
+                        referenceType: 'user',
+                        referenceId: recipientData.id,
+                        description: `Transfer fee: @${senderData.username} → @${recipientData.username}`
+                    }, tx);
+                }
 
                 (async () => {
                     await createNotification(

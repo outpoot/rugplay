@@ -104,4 +104,39 @@ export async function uploadCoinIcon(
     return key;
 }
 
+export async function uploadChangelogImage(
+    releaseId: number | string,
+    body: Uint8Array,
+    contentType: string,
+): Promise<string> {
+    if (!contentType || !contentType.startsWith('image/')) {
+        throw new Error('Invalid file type. Only images are allowed.');
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(contentType.toLowerCase())) {
+        throw new Error('Unsupported image format. Only JPEG, PNG, GIF, and WebP are allowed.');
+    }
+
+    // Changelog covers are wide banners, not square icons — use a larger
+    // max dimension and higher quality than the default avatar/coin sizing.
+    const processedImage = await processImage(Buffer.from(body), {
+        maxSize: 1600,
+        quality: 82
+    });
+
+    const key = `changelog/${releaseId}-${Date.now()}.webp`;
+
+    const command = new PutObjectCommand({
+        Bucket: PUBLIC_B2_BUCKET,
+        Key: key,
+        Body: processedImage.buffer,
+        ContentType: processedImage.contentType,
+        ContentLength: processedImage.size,
+    });
+
+    await s3Client.send(command);
+    return key;
+}
+
 export { s3Client };

@@ -150,3 +150,181 @@
   background-size: 200% auto;
   animation: diamond-shimmer 4s ease-in-out infinite;
 }
+
+/* Mythical name color — text base shimmer + floating sparkle particles.
+   Used only by the 'ascended' color, granted exclusively at the
+   $100,000,000,000,000 total portfolio value milestone. */
+@keyframes mythical-shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-mythical-shimmer {
+  background-size: 200% auto;
+  animation: mythical-shimmer 3.5s ease-in-out infinite;
+}
+
+@keyframes mythical-sparkle-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(90deg); }
+}
+
+.mythical-sparkle {
+  position: absolute;
+  pointer-events: none;
+  color: #e9d5ff;
+  text-shadow: 0 0 4px #d946ef, 0 0 8px #a21caf;
+  animation-name: mythical-sparkle-twinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* ==========================================================================
+   Profile card styles — achievement-granted cosmetics for the profile
+   header card. See src/lib/data/card-catalog.ts for the catalog and
+   ProfileCard.svelte for how these classes get applied.
+   ========================================================================== */
+
+.profile-card-glass {
+  background-color: color-mix(in oklab, var(--card) 55%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+}
+
+.profile-card-clear {
+  background-color: transparent;
+  border: 1px solid color-mix(in oklab, var(--foreground) 20%, transparent);
+  box-shadow: none;
+}
+
+.profile-card-invisible {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+@keyframes gold-foil-shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.profile-card-gold-foil {
+  border: 1px solid color-mix(in oklab, #eab308 45%, transparent);
+  background-image: linear-gradient(
+    120deg,
+    color-mix(in oklab, #78350f 55%, var(--card)),
+    color-mix(in oklab, #eab308 35%, var(--card)),
+    color-mix(in oklab, #78350f 55%, var(--card))
+  );
+  background-size: 200% auto;
+  animation: gold-foil-shimmer 6s ease-in-out infinite;
+}
+
+@keyframes void-drift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200px 200px; }
+}
+
+.profile-card-void {
+  background-color: #0a0a1a;
+  border: 1px solid color-mix(in oklab, #a21caf 35%, transparent);
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, #fff 100%, transparent),
+    radial-gradient(1px 1px at 70% 60%, #fff 100%, transparent),
+    radial-gradient(1px 1px at 40% 85%, #fff 100%, transparent),
+    radial-gradient(1.5px 1.5px at 90% 30%, #fff 100%, transparent),
+    radial-gradient(1px 1px at 25% 50%, #fff 100%, transparent);
+  background-size: 200px 200px;
+  animation: void-drift 40s linear infinite;
+  color: #e9d5ff;
+}
+
+/* Card hover/click animations. Applied on the same root element as the
+   style above, via group-hover/group-active so they compose with any
+   style (including 'no style'). */
+
+.profile-card-anim-lift-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.profile-card-anim-lift-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.25);
+}
+.profile-card-anim-lift-active:active {
+  transform: translateY(-1px);
+}
+
+.profile-card-anim-tilt-hover {
+  transition: transform 0.15s ease;
+  transform-style: preserve-3d;
+}
+.profile-card-anim-tilt-hover:hover {
+  transform: perspective(600px) rotateX(2deg) rotateY(-2deg) scale(1.01);
+}
+.profile-card-anim-tilt-active:active {
+  transform: perspective(600px) rotateX(0deg) rotateY(0deg) scale(0.99);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 45%, transparent); }
+  50% { box-shadow: 0 0 0 8px color-mix(in oklab, var(--primary) 0%, transparent); }
+}
+.profile-card-anim-pulse-hover:hover {
+  animation: pulse-glow 1.6s ease-out infinite;
+}
+.profile-card-anim-pulse-active:active {
+  animation: pulse-glow 0.5s ease-out 1;
+}
+
+.profile-card-anim-shine-hover {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(var(--card), var(--card)),
+    linear-gradient(120deg, #fbbf24, #f472b6, #818cf8, #fbbf24);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size: 100% 100%, 300% 300%;
+  animation: shine-border-drift 5s ease infinite;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+.profile-card-anim-shine-hover:hover {
+  box-shadow: 0 0 24px -4px rgb(251 191 36 / 0.5), 0 0 48px -12px rgb(244 114 182 / 0.4);
+  transform: translateY(-2px);
+}
+@keyframes shine-border-drift {
+  0% { background-position: 0% 0%, 0% 50%; }
+  50% { background-position: 0% 0%, 100% 50%; }
+  100% { background-position: 0% 0%, 0% 50%; }
+}
+.profile-card-anim-shine-hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  left: -150%;
+  width: 60%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in oklab, white 55%, transparent),
+    color-mix(in oklab, #fbbf24 60%, transparent),
+    transparent
+  );
+  pointer-events: none;
+  transition: left 0.7s ease;
+  filter: blur(2px);
+}
+.profile-card-anim-shine-hover:hover::after {
+  left: 140%;
+}
+.profile-card-anim-shine-active:active {
+  transform: translateY(0) scale(0.99);
+}
+.profile-card-anim-shine-active:active::after {
+  left: 140%;
+  transition: left 0.2s ease;
+}

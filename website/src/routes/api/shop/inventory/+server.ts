@@ -27,5 +27,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		gems: userData?.gems ?? 0,
 		founderBadge: userData?.founderBadge ?? false,
 		nameColors: items.filter((i) => i.itemType === 'namecolor').map((i) => i.itemKey),
+		cardStyles: items.filter((i) => i.itemType === 'cardstyle').map((i) => i.itemKey),
+		cardAnimations: items.filter((i) => i.itemType === 'cardanimation').map((i) => i.itemKey),
 	});
 };

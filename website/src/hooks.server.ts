@@ -173,6 +173,8 @@ export const handle: Handle = async ({ event, resolve }) => {
                     volumeMaster: user.volumeMaster,
                     volumeMuted: user.volumeMuted,
                     nameColor: user.nameColor,
+                    cardStyle: user.cardStyle,
+                    cardAnimation: user.cardAnimation,
                     founderBadge: user.founderBadge,
                     prestigeLevel: user.prestigeLevel,
                     disableMentions: user.disableMentions
@@ -210,6 +212,8 @@ export const handle: Handle = async ({ event, resolve }) => {
                     volumeMaster: parseFloat(userRecord.volumeMaster || '0.7'),
                     volumeMuted: userRecord.volumeMuted || false,
                     nameColor: userRecord.nameColor ?? null,
+                    cardStyle: userRecord.cardStyle ?? null,
+                    cardAnimation: userRecord.cardAnimation ?? null,
                     founderBadge: userRecord.founderBadge ?? false,
                     prestigeLevel: userRecord.prestigeLevel ?? 0,
                     disableMentions: userRecord.disableMentions ?? false

@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { Separator } from '$lib/components/ui/separator';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { ShieldUserIcon, Alert02Icon } from '@hugeicons/core-free-icons';
+	import { ShieldUserIcon, Alert02Icon, DiscordIcon } from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
 	import { goto } from '$app/navigation';
 	import SEO from '$lib/components/self/SEO.svelte';
 
-	const LAST_UPDATED = 'February 21, 2026';
-	const CONTACT_EMAIL = 'contact@outpoot.com';
+	const LAST_UPDATED = 'August 9, 2026';
+	const DISCORD_URL = 'https://discord.gg/dP3CFkTgpC';
 </script>
 
 <SEO 
@@ -85,22 +85,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">2.3 Payment Information (via Polar.sh)</h3>
-						<p class="mb-2">
-							When you purchase Gems, payments are processed by our third-party payment provider, <a href="https://polar.sh" target="_blank" rel="noopener noreferrer" class="text-primary underline">Polar.sh</a>. We do not directly collect or store your payment card details. Polar.sh may collect:
-						</p>
-						<ul class="ml-6 list-disc space-y-2">
-							<li>Payment card or payment method details (handled entirely by Polar.sh)</li>
-							<li>Billing name and email address</li>
-							<li>Transaction amounts and purchase history</li>
-						</ul>
-						<p class="text-muted-foreground mt-2 text-sm">
-							We receive only your email address, transaction confirmation, and product identifiers from Polar.sh to fulfill your Gem purchases. For details on how Polar.sh handles your payment data, please review <a href="https://polar.sh/legal/privacy" target="_blank" rel="noopener noreferrer" class="text-primary underline">Polar.sh's Privacy Policy</a>.
-						</p>
-					</div>
-
-					<div>
-						<h3 class="mb-2 text-lg font-medium">2.4 Platform Activity</h3>
+						<h3 class="mb-2 text-lg font-medium">2.3 Platform Activity</h3>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Comments and posts on coin pages</li>
 							<li>Likes and interactions with content</li>
@@ -312,11 +297,12 @@
 					</li>
 				</ul>
 				<p class="mt-3">
-					To exercise these rights, please contact us at <a
-						href="mailto:{CONTACT_EMAIL}"
-						class="text-primary underline">{CONTACT_EMAIL}</a
-					>.
+					To exercise these rights, please contact us on Discord.
 				</p>
+				<Button variant="outline" size="sm" href={DISCORD_URL} target="_blank" rel="noopener noreferrer" class="mt-2">
+					<HugeiconsIcon icon={DiscordIcon} class="h-4 w-4" />
+					Discord
+				</Button>
 			</Card.Content>
 
 			<Card.Content>
@@ -350,9 +336,6 @@
 						With service providers who assist in platform operations (under strict data processing
 						agreements)
 					</li>
-					<li>
-						<strong>Polar.sh (Payment Processor):</strong> When you purchase Gems, we share your user ID and email address with Polar.sh to process the transaction. Polar.sh acts as an independent data controller for payment data. See <a href="https://polar.sh/legal/privacy" target="_blank" rel="noopener noreferrer" class="text-primary underline">Polar.sh's Privacy Policy</a> for details.
-					</li>
 				</ul>
 			</Card.Content>
 
@@ -377,13 +360,15 @@
 				<p class="mb-4">For privacy-related questions or to exercise your rights:</p>
 				<ul class="ml-6 list-disc space-y-2">
 					<li>
-						Email: <a href="mailto:{CONTACT_EMAIL}" class="text-primary underline"
-							>{CONTACT_EMAIL}</a
-						>
+						Reach out to us on Discord
 					</li>
-					<li>To cancel account deletion: Contact us immediately at the above email</li>
+					<li>To cancel account deletion: Contact us immediately on Discord</li>
 					<li>You have the right to lodge a complaint with your local data protection authority</li>
 				</ul>
+				<Button variant="outline" size="sm" href={DISCORD_URL} target="_blank" rel="noopener noreferrer" class="mt-2">
+					<HugeiconsIcon icon={DiscordIcon} class="h-4 w-4" />
+					Discord
+				</Button>
 			</Card.Content>
 
 			<Card.Content>
@@ -396,9 +381,12 @@
 
 			<div class="rounded-lg p-4 text-sm" style="background-color: oklch(var(--primary) / 0.1);">
 				<p class="mb-2"><strong>Last Updated:</strong> {LAST_UPDATED}</p>
-				<p class="mb-2">
+				<p class="mb-2 flex items-center gap-2">
 					<strong>Contact:</strong>
-					<a href="mailto:{CONTACT_EMAIL}" class="text-primary underline">{CONTACT_EMAIL}</a>
+					<Button variant="outline" size="sm" href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
+						<HugeiconsIcon icon={DiscordIcon} class="h-4 w-4" />
+						Discord
+					</Button>
 				</p>
 				<p><strong>Platform:</strong> Rugplay - virtual cryptocurrency trading simulation</p>
 			</div>

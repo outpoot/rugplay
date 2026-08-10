@@ -32,6 +32,8 @@ export async function GET({ params }) {
                 arcadeLosses: true,
                 nameColor: true,
                 founderBadge: true,
+                cardStyle: true,
+                cardAnimation: true,
             }
         });
 

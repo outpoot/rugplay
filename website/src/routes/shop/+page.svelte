@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import { toast } from 'svelte-sonner';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import * as Card from '$lib/components/ui/card';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { Button } from '$lib/components/ui/button';
@@ -93,6 +93,7 @@
 		});
 		if (res.ok) {
 			equippedColor = key;
+			await invalidateAll();
 			haptic.trigger('light');
 			toast.success(key ? 'Color equipped!' : 'Color unequipped');
 		} else {

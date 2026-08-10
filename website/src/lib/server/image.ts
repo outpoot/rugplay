@@ -1,5 +1,6 @@
 import sharp from 'sharp';
 
+// Defaults tuned for small square assets (avatars, coin icons).
 const MAX_SIZE = 128;
 const WEBP_QUALITY = 50;
 
@@ -9,19 +10,30 @@ export interface ProcessedImage {
     size: number;
 }
 
+export interface ProcessImageOptions {
+    /** Max width/height in px, aspect ratio preserved. Default 128 (icon-sized). */
+    maxSize?: number;
+    /** WebP quality 1-100. Default 50 (fine for tiny icons, too low for banners). */
+    quality?: number;
+}
+
 export async function processImage(
     inputBuffer: Buffer,
+    options: ProcessImageOptions = {},
 ): Promise<ProcessedImage> {
+    const maxSize = options.maxSize ?? MAX_SIZE;
+    const quality = options.quality ?? WEBP_QUALITY;
+
     try {
         const image = sharp(inputBuffer, { animated: true });
 
         const processedBuffer = await image
-            .resize(MAX_SIZE, MAX_SIZE, {
+            .resize(maxSize, maxSize, {
                 fit: 'inside',
                 withoutEnlargement: true
             })
             .webp({
-                quality: WEBP_QUALITY,
+                quality,
                 effort: 6
             })
             .toBuffer();

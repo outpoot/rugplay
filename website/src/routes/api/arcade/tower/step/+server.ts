@@ -66,7 +66,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 return Number(row.baseCurrencyBalance);
             });
 
-            await checkAndAwardAchievements(userId, ['arcade', 'wealth'], {
+            await checkAndAwardAchievements(userId, ['arcade', 'wealth', 'mythical'], {
                 arcadeWon: false,
                 arcadeWager: game.betAmount
             });
@@ -119,7 +119,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 return newBal;
             });
 
-            await checkAndAwardAchievements(userId, ['arcade', 'wealth'], {
+            await checkAndAwardAchievements(userId, ['arcade', 'wealth', 'mythical'], {
                 arcadeWon: true,
                 arcadeWager: game.betAmount
             });

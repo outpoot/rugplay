@@ -1,4 +1,4 @@
-export type Rarity = 'uncommon' | 'rare' | 'epic' | 'legendary';
+export type Rarity = 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythical';
 
 export interface GemPackage {
 	id: string;
@@ -12,7 +12,7 @@ export interface NameColorItem {
 	key: string;
 	label: string;
 	rarity: Rarity;
-	price: number; // gems
+	price: number | null; // gems — null means not purchasable (e.g. mythical, achievement-granted only)
 	classes: string;
 	style?: string;
 }
@@ -29,6 +29,7 @@ export const RARITY_LABEL: Record<Rarity, string> = {
 	rare: 'Rare',
 	epic: 'Epic',
 	legendary: 'Legendary',
+	mythical: 'Mythical',
 };
 
 export const RARITY_CLASS: Record<Rarity, string> = {
@@ -36,6 +37,7 @@ export const RARITY_CLASS: Record<Rarity, string> = {
 	rare: 'text-blue-500',
 	epic: 'text-purple-500',
 	legendary: 'text-yellow-400',
+	mythical: 'text-fuchsia-400',
 };
 
 export const NAME_COLOR_CATALOG: NameColorItem[] = [
@@ -80,6 +82,18 @@ export const NAME_COLOR_CATALOG: NameColorItem[] = [
 		price: 5000,
 		classes: 'bg-clip-text text-transparent animate-diamond-shimmer',
 		style: 'background-image: linear-gradient(135deg, #e2e8f0, #67e8f9, #c084fc, #e2e8f0)',
+	},
+	// Mythical — not sold in the shop, not obtainable from crates. Instantly
+	// and permanently granted the moment a user's total portfolio value
+	// (cash + holdings) reaches $100,000,000,000,000. See the
+	// 'portfolio_100t' achievement in achievements.ts / achievements data.
+	{
+		key: 'ascended',
+		label: 'Ascended',
+		rarity: 'mythical',
+		price: null,
+		classes: 'bg-clip-text text-transparent animate-mythical-shimmer',
+		style: 'background-image: linear-gradient(135deg, #1e1b4b, #a21caf, #ec4899, #1e1b4b)',
 	},
 ];
 

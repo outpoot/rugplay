@@ -18,6 +18,8 @@ export type User = {
     volumeMuted: boolean;
 
     nameColor: string | null;
+    cardStyle: string | null;
+    cardAnimation: string | null;
     founderBadge: boolean;
     prestigeLevel: number;
     disableMentions: boolean;

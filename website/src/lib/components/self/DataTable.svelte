@@ -104,7 +104,8 @@
 					icon: rendered.icon,
 					symbol: rendered.symbol,
 					name: rendered.name,
-					size: rendered.size || 6
+					size: rendered.size || 6,
+					isOfficial: rendered.isOfficial || false
 				};
 			}
 			if (rendered?.component === 'text') {
@@ -201,6 +202,14 @@
 								<div class="flex items-center gap-2">
 									<CoinIcon icon={cellData.icon} symbol={cellData.symbol} size={cellData.size} />
 									<span class="font-medium max-w-44 truncate">{cellData.name}</span>
+									{#if cellData.isOfficial}
+										<Badge
+											variant="outline"
+											class="shrink-0 border-[oklch(0.795_0.184_86.047)]/50 bg-[oklch(0.795_0.184_86.047)]/10 text-[10px] font-semibold text-[oklch(0.55_0.15_86)] dark:text-[oklch(0.795_0.184_86.047)]"
+										>
+											● OFFICIAL
+										</Badge>
+									{/if}
 								</div>
 							{:else if cellData.type === 'rank'}
 								<div class="flex items-center gap-2">

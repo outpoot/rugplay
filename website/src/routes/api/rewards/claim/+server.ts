@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
+import { debitTreasury } from '$lib/server/treasury';
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 const THIRTY_SIX_HOURS_MS = 36 * 60 * 60 * 1000;
@@ -137,6 +138,15 @@ export const POST: RequestHandler = async ({ request }) => {
                 gems: sql`${user.gems} + ${DAILY_GEM_BONUS}`
             })
             .where(eq(user.id, currentUser.id));
+
+        if (reward.total > 0) {
+            await debitTreasury(reward.total, 'DAILY_REWARD', {
+                userId,
+                referenceType: 'user',
+                referenceId: userId,
+                description: `Daily reward claim (streak ${newStreak})`
+            }, tx);
+        }
 
         checkAndAwardAchievements(userId, ['streaks'], { newStreak, totalRewardsClaimed: newTotalRewards });
 

@@ -149,7 +149,9 @@ export async function GET({ params, url }) {
                 creatorImage: user.image,
                 creatorNameColor: user.nameColor,
                 tradingUnlocksAt: coin.tradingUnlocksAt,
-                isLocked: coin.isLocked
+                isLocked: coin.isLocked,
+                isOfficial: coin.isOfficial,
+                maxHolderPercent: coin.maxHolderPercent
             })
             .from(coin)
             .leftJoin(user, eq(coin.creatorId, user.id))

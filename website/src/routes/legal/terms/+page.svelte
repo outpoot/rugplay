@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { Separator } from '$lib/components/ui/separator';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { JusticeScale01Icon, Alert02Icon, TradeDownIcon } from '@hugeicons/core-free-icons';
+	import { JusticeScale01Icon, Alert02Icon, TradeDownIcon, DiscordIcon } from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
 	import { goto } from '$app/navigation';
 	import SEO from '$lib/components/self/SEO.svelte';
 
-	const LAST_UPDATED = 'February 21, 2026';
-	const CONTACT_EMAIL = 'contact@outpoot.com';
+	const LAST_UPDATED = 'August 9, 2026';
+	const DISCORD_URL = 'https://discord.gg/dP3CFkTgpC';
 	const MINIMUM_AGE = 13;
 </script>
 
@@ -324,20 +324,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">7.2 Themed Content and Past Projects</h3>
-						<p class="mb-3">
-							Our arcade features may include themes and references to past projects, including:
-						</p>
-						<ul class="ml-6 list-disc space-y-2">
-							<li>Visual themes, characters, or concepts from previous games or projects</li>
-							<li>Branded themes featuring past project assets</li>
-							<li>Easter eggs and references to creator's portfolio</li>
-							<li>Nostalgic elements for entertainment purposes</li>
-						</ul>
-					</div>
-
-					<div>
-						<h3 class="mb-2 text-lg font-medium">7.3 Arcade Disclaimers</h3>
+						<h3 class="mb-2 text-lg font-medium">7.2 Arcade Disclaimers</h3>
 						<p class="mb-3">By using arcade features, you acknowledge:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>
@@ -353,7 +340,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">7.4 Responsible Play</h3>
+						<h3 class="mb-2 text-lg font-medium">7.3 Responsible Play</h3>
 						<p class="mb-3">While using virtual currency, we encourage responsible usage:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Set personal limits on time spent using arcade features</li>
@@ -366,54 +353,7 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">8. Gem Purchases and Payments</h2>
-				<div class="space-y-4">
-					<div>
-						<h3 class="mb-2 text-lg font-medium">8.1 Gem Currency</h3>
-						<p class="mb-3">
-							Gems are an in-platform currency that can be purchased with real money and used exclusively to acquire cosmetic items (such as name colors) through the Shop. Gems:
-						</p>
-						<ul class="ml-6 list-disc space-y-2">
-							<li>Have no real-world monetary value outside the Platform</li>
-							<li>Cannot be exchanged, transferred, or cashed out for real money</li>
-							<li>Are non-refundable once purchased</li>
-							<li>May only be used for cosmetic items within the Platform</li>
-							<li>Do not affect gameplay, virtual trading balances, or provide competitive advantages</li>
-						</ul>
-					</div>
-
-					<div>
-						<h3 class="mb-2 text-lg font-medium">8.2 Payment Processing via Polar.sh</h3>
-						<p class="mb-3">
-							All Gem purchases are processed by our third-party payment provider, <a href="https://polar.sh" target="_blank" rel="noopener noreferrer" class="text-primary underline">Polar.sh</a>. By making a purchase, you agree to:
-						</p>
-						<ul class="ml-6 list-disc space-y-2">
-							<li>Polar.sh's <a href="https://polar.sh/legal/terms" target="_blank" rel="noopener noreferrer" class="text-primary underline">Terms of Service</a> and <a href="https://polar.sh/legal/privacy" target="_blank" rel="noopener noreferrer" class="text-primary underline">Privacy Policy</a></li>
-							<li>Providing accurate billing and payment information to Polar.sh</li>
-							<li>Being charged the displayed amount at the time of purchase</li>
-						</ul>
-						<p class="text-muted-foreground mt-2 text-sm">
-							We do not store your payment card details. All payment information is handled directly by Polar.sh.
-						</p>
-					</div>
-
-					<div>
-						<h3 class="mb-2 text-lg font-medium">8.3 Refund Policy</h3>
-						<p class="mb-3">
-							All Gem purchases are final and non-refundable. Since Gems are digital goods delivered immediately upon purchase:
-						</p>
-						<ul class="ml-6 list-disc space-y-2">
-							<li>No refunds will be issued for purchased Gems</li>
-							<li>No refunds will be issued for cosmetic items obtained using Gems</li>
-							<li>If your account is terminated for Terms violations, purchased Gems are forfeited</li>
-							<li>For billing issues or unauthorized charges, contact us at <a href="mailto:{CONTACT_EMAIL}" class="text-primary underline">{CONTACT_EMAIL}</a></li>
-						</ul>
-					</div>
-				</div>
-			</Card.Content>
-
-			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">9. Platform Availability and Modifications</h2>
+				<h2 class="mb-4 text-2xl font-semibold">8. Platform Availability and Modifications</h2>
 				<div class="space-y-4">
 					<div>
 						<h3 class="mb-2 text-lg font-medium">9.1 Service Availability</h3>
@@ -440,7 +380,7 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">10. Disclaimers and Limitation of Liability</h2>
+				<h2 class="mb-4 text-2xl font-semibold">9. Disclaimers and Limitation of Liability</h2>
 
 				<Alert.Root class="mb-4">
 					<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
@@ -494,7 +434,7 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">11. Account Termination</h2>
+				<h2 class="mb-4 text-2xl font-semibold">10. Account Termination</h2>
 				<div class="space-y-4">
 					<div>
 						<h3 class="mb-2 text-lg font-medium">11.1 Voluntary Termination</h3>
@@ -534,10 +474,10 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">12. Intellectual Property</h2>
+				<h2 class="mb-4 text-2xl font-semibold">11. Intellectual Property</h2>
 				<div class="space-y-4">
 					<div>
-						<h3 class="mb-2 text-lg font-medium">12.1 Platform Ownership</h3>
+						<h3 class="mb-2 text-lg font-medium">11.1 Platform Ownership</h3>
 						<p>Rugplay and all related intellectual property are owned by us, including:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Software, code, algorithms, and technical systems</li>
@@ -549,23 +489,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">12.2 Past Project Assets and Themes</h3>
-						<p class="mb-3">
-							Rugplay incorporates intellectual property from creator's past projects, including:
-						</p>
-						<ul class="ml-6 list-disc space-y-2">
-							<li>Characters, artwork, and visual themes from previous projects</li>
-							<li>Conceptual elements and design philosophies carried forward</li>
-							<li>Any derivative works or adaptations of existing intellectual property</li>
-						</ul>
-						<p class="text-muted-foreground mt-3 text-sm">
-							All past project assets used in Rugplay are owned by the platform creators or used
-							with proper authorization.
-						</p>
-					</div>
-
-					<div>
-						<h3 class="mb-2 text-lg font-medium">12.3 User Content</h3>
+						<h3 class="mb-2 text-lg font-medium">11.2 User Content</h3>
 						<p>For content you create (comments, coin descriptions), you:</p>
 						<ul class="ml-6 list-disc space-y-2">
 							<li>Retain ownership of your original content</li>
@@ -578,7 +502,7 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">13. Privacy and Data</h2>
+				<h2 class="mb-4 text-2xl font-semibold">12. Privacy and Data</h2>
 				<p class="mb-4">
 					Your privacy is important to us. Our data collection and processing practices are detailed
 					in our Privacy Policy, which is incorporated into these Terms by reference.
@@ -590,10 +514,10 @@
 			</Card.Content>
 
 			<Card.Content>
-				<h2 class="mb-4 text-2xl font-semibold">14. Miscellaneous</h2>
+				<h2 class="mb-4 text-2xl font-semibold">13. Miscellaneous</h2>
 				<div class="space-y-4">
 					<div>
-						<h3 class="mb-2 text-lg font-medium">14.1 Entire Agreement</h3>
+						<h3 class="mb-2 text-lg font-medium">13.1 Entire Agreement</h3>
 						<p>
 							These Terms, along with our Privacy Policy, constitute the entire agreement between
 							you and Rugplay regarding use of the Platform.
@@ -601,7 +525,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">14.2 Severability</h3>
+						<h3 class="mb-2 text-lg font-medium">13.2 Severability</h3>
 						<p>
 							If any provision of these Terms is found unenforceable, the remaining provisions will
 							continue in full force and effect.
@@ -609,7 +533,7 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">14.3 Updates to Terms</h3>
+						<h3 class="mb-2 text-lg font-medium">13.3 Updates to Terms</h3>
 						<p>
 							We may update these Terms periodically. Material changes will be communicated via
 							email and platform notifications. Continued use after changes constitutes acceptance.
@@ -617,20 +541,26 @@
 					</div>
 
 					<div>
-						<h3 class="mb-2 text-lg font-medium">14.4 Contact Information</h3>
-						<p>
-							For questions about these Terms, contact us at:
-							<a href="mailto:{CONTACT_EMAIL}" class="text-primary underline">{CONTACT_EMAIL}</a>
+						<h3 class="mb-2 text-lg font-medium">13.4 Contact Information</h3>
+						<p class="mb-3">
+							For questions about these Terms, reach out to us on Discord:
 						</p>
+						<Button variant="outline" size="sm" href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
+							<HugeiconsIcon icon={DiscordIcon} class="h-4 w-4" />
+							Discord
+						</Button>
 					</div>
 				</div>
 			</Card.Content>
 
 			<div class="rounded-lg p-4 text-sm" style="background-color: oklch(var(--primary) / 0.1);">
 				<p class="mb-2"><strong>Last Updated:</strong> {LAST_UPDATED}</p>
-				<p class="mb-2">
+				<p class="mb-2 flex items-center gap-2">
 					<strong>Contact:</strong>
-					<a href="mailto:{CONTACT_EMAIL}" class="text-primary underline">{CONTACT_EMAIL}</a>
+					<Button variant="outline" size="sm" href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
+						<HugeiconsIcon icon={DiscordIcon} class="h-4 w-4" />
+						Discord
+					</Button>
 				</p>
 				<p class="mb-2"><strong>Platform:</strong> Rugplay</p>
 			</div>

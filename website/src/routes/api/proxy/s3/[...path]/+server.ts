@@ -1,9 +1,7 @@
-import { PUBLIC_B2_BUCKET, PUBLIC_B2_ENDPOINT } from "$env/static/public";
 import { error } from '@sveltejs/kit';
+import { generateDownloadUrl } from '$lib/server/s3.js';
 
-const EXPECTED_HOST = new URL(PUBLIC_B2_ENDPOINT).hostname;
-
-export async function GET({ params, request }) {
+export async function GET({ params }) {
     const path = params.path;
 
     if (!path) {
@@ -14,14 +12,20 @@ export async function GET({ params, request }) {
         throw error(400, 'Invalid path');
     }
 
-    const s3Url = `${PUBLIC_B2_ENDPOINT}/${PUBLIC_B2_BUCKET}/${path}`;
+    let cacheControl: string;
 
-    if (new URL(s3Url).hostname !== EXPECTED_HOST) {
-        throw error(400, 'Invalid path');
+    if (path.includes('/coin/') || path.includes('coin-icon') || path.startsWith('coins/')) {
+        cacheControl = 'public, max-age=31536000, immutable';
+    } else if (path.includes('/avatars/') || path.includes('profile-') || path.includes('avatar')) {
+        cacheControl = 'public, max-age=60';
+    } else {
+        cacheControl = 'public, max-age=86400';
     }
 
     try {
-        const response = await fetch(s3Url);
+        const signedUrl = await generateDownloadUrl(path);
+
+        const response = await fetch(signedUrl);
 
         if (!response.ok) {
             throw error(response.status, 'Failed to fetch from S3');
@@ -29,16 +33,6 @@ export async function GET({ params, request }) {
 
         const contentType = response.headers.get('content-type') || 'application/octet-stream';
         const buffer = await response.arrayBuffer();
-
-        let cacheControl: string;
-        
-        if (path.includes('/coin/') || path.includes('coin-icon')) {
-            cacheControl = 'public, max-age=31536000, immutable';
-        } else if (path.includes('/avatars/') || path.includes('profile-') || path.includes('avatar')) {
-            cacheControl = 'public, max-age=60';
-        } else {
-            cacheControl = 'public, max-age=86400';
-        }
 
         return new Response(buffer, {
             headers: {

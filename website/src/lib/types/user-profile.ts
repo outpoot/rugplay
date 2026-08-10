@@ -13,6 +13,9 @@ export interface UserProfile {
 	prestigeLevel: number | null;
 	halloweenBadge2025: boolean;
 	founderBadge: boolean;
+	nameColor: string | null;
+	cardStyle: string | null;
+	cardAnimation: string | null;
 
 	arcadeWins: number;
 	arcadeLosses: number;

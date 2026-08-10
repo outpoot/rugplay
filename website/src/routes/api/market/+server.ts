@@ -130,13 +130,17 @@ export async function GET({ url }) {
             volume24h: coin.volume24h,
             change24h: coin.change24h,
             createdAt: coin.createdAt,
+            isOfficial: coin.isOfficial,
             creatorName: user.name,
             total: sql<number>`count(*) over()`
         })
             .from(coin)
             .leftJoin(user, eq(coin.creatorId, user.id))
             .where(whereCondition)
-            .orderBy(orderFn(sortColumn))
+            // Official coins (RugPlay Bank) always sort first, on every
+            // page and every sort/filter combination, so an impersonator
+            // can never be placed above the real one.
+            .orderBy(desc(coin.isOfficial), orderFn(sortColumn))
             .limit(limit)
             .offset((page - 1) * limit);
 
@@ -156,7 +160,8 @@ export async function GET({ url }) {
             volume24h: Number(c.volume24h),
             change24h: Number(c.change24h),
             createdAt: c.createdAt,
-            creatorName: c.creatorName
+            creatorName: c.creatorName,
+            isOfficial: c.isOfficial
         }));
 
         return json({

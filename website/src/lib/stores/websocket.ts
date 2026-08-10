@@ -41,6 +41,15 @@ export interface ArcadeActivity {
     timestamp: number;
 }
 
+export interface NewsArticlePublished {
+    id: number;
+    type: string;
+    headline: string;
+    summary: string;
+    coverImage: string | null;
+    createdAt: string;
+}
+
 // Constants
 const WEBSOCKET_URL = PUBLIC_WEBSOCKET_URL;
 const RECONNECT_DELAY = 5000;
@@ -58,6 +67,10 @@ export const allTradesStore = writable<LiveTrade[]>([]);
 export const isConnectedStore = writable<boolean>(false);
 export const isLoadingTrades = writable<boolean>(false);
 export const priceUpdatesStore = writable<Record<string, PriceUpdate>>({});
+// Latest article published while the socket is connected. The /news page
+// watches this to show a "new articles available" banner instead of
+// requiring a manual refresh. Reset to null after the page consumes it.
+export const newsPublishedStore = writable<NewsArticlePublished | null>(null);
 
 function createArcadeActivityStore() {
     const STORAGE_KEY = 'arcade_activities';
@@ -115,8 +128,12 @@ export const arcadeActivityStore = createArcadeActivityStore();
 
 let hasLoadedInitialTrades = false;
 
-// Comment callbacks
-const commentSubscriptions = new Map<string, (message: any) => void>();
+// Comment callbacks. A Set per room (not a single callback) since a page
+// can have more than one listener on the same room — e.g. a news article
+// page runs both NewsCommentSection and NewsReactionBar on the same
+// `news:{id}` room simultaneously, and each needs its own callback fired
+// without clobbering the other's subscription.
+const commentSubscriptions = new Map<string, Set<(message: any) => void>>();
 
 // Price update callbacks
 const priceUpdateSubscriptions = new Map<string, (priceUpdate: PriceUpdate) => void>();
@@ -204,9 +221,11 @@ function handleTradeMessage(message: any): void {
 }
 
 function handleCommentMessage(message: any): void {
-    const callback = commentSubscriptions.get(activeCoin);
-    if (callback) {
-        callback(message);
+    const callbacks = commentSubscriptions.get(activeCoin);
+    if (callbacks) {
+        for (const callback of callbacks) {
+            callback(message);
+        }
     }
 }
 
@@ -249,6 +268,17 @@ function handleArcadeActivityMessage(message: any): void {
     }
 }
 
+function handleNewsPublishedMessage(message: any): void {
+    newsPublishedStore.set({
+        id: message.id,
+        type: message.type,
+        headline: message.headline,
+        summary: message.summary,
+        coverImage: message.coverImage ?? null,
+        createdAt: message.createdAt
+    });
+}
+
 function handleWebSocketMessage(event: MessageEvent): void {
     try {
         const message = JSON.parse(event.data);
@@ -267,12 +297,17 @@ function handleWebSocketMessage(event: MessageEvent): void {
                 handleArcadeActivityMessage(message);
                 break;
 
+            case 'news_published':
+                handleNewsPublishedMessage(message);
+                break;
+
             case 'ping':
                 sendMessage({ type: 'pong' });
                 break;
 
             case 'new_comment':
             case 'comment_liked':
+            case 'reaction_update':
                 handleCommentMessage(message);
                 break;
 
@@ -392,11 +427,29 @@ function disconnect(): void {
 }
 
 function subscribeToComments(coinSymbol: string, callback: (message: any) => void): void {
-    commentSubscriptions.set(coinSymbol, callback);
+    let callbacks = commentSubscriptions.get(coinSymbol);
+    if (!callbacks) {
+        callbacks = new Set();
+        commentSubscriptions.set(coinSymbol, callbacks);
+    }
+    callbacks.add(callback);
 }
 
-function unsubscribeFromComments(coinSymbol: string): void {
-    commentSubscriptions.delete(coinSymbol);
+function unsubscribeFromComments(coinSymbol: string, callback?: (message: any) => void): void {
+    const callbacks = commentSubscriptions.get(coinSymbol);
+    if (!callbacks) return;
+
+    if (callback) {
+        callbacks.delete(callback);
+    } else {
+        // No specific callback given — clear the whole room (back-compat
+        // with any existing caller that unsubscribes without one).
+        callbacks.clear();
+    }
+
+    if (callbacks.size === 0) {
+        commentSubscriptions.delete(coinSymbol);
+    }
 }
 
 function subscribeToPriceUpdates(coinSymbol: string, callback: (priceUpdate: PriceUpdate) => void): void {
@@ -424,8 +477,8 @@ class WebSocketController {
         subscribeToComments(coinSymbol, callback);
     }
 
-    unsubscribeFromComments(coinSymbol: string) {
-        unsubscribeFromComments(coinSymbol);
+    unsubscribeFromComments(coinSymbol: string, callback?: (message: any) => void) {
+        unsubscribeFromComments(coinSymbol, callback);
     }
 
     subscribeToPriceUpdates(coinSymbol: string, callback: (priceUpdate: PriceUpdate) => void) {

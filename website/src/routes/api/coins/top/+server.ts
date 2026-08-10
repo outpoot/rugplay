@@ -13,11 +13,14 @@ export async function GET() {
                 currentPrice: coin.currentPrice,
                 change24h: coin.change24h, // Read directly from DB
                 marketCap: coin.marketCap,
-                volume24h: coin.volume24h // Read directly from DB
+                volume24h: coin.volume24h, // Read directly from DB
+                isOfficial: coin.isOfficial
             })
             .from(coin)
             .where(eq(coin.isListed, true))
-            .orderBy(desc(coin.marketCap))
+            // Official coins (RugPlay Bank) always sort first, regardless of
+            // market cap, so an impersonator can never outrank the real one.
+            .orderBy(desc(coin.isOfficial), desc(coin.marketCap))
             .limit(50);
 
         const formattedCoins = coins.map(c => ({
@@ -27,7 +30,8 @@ export async function GET() {
             price: Number(c.currentPrice),
             change24h: Number(c.change24h),
             marketCap: Number(c.marketCap),
-            volume24h: Number(c.volume24h)
+            volume24h: Number(c.volume24h),
+            isOfficial: c.isOfficial
         }));
 
         return json({ coins: formattedCoins });

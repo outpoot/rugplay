@@ -1,7 +1,8 @@
 import { db } from '$lib/server/db';
-import { coin, transaction, priceHistory, userPortfolio } from '$lib/server/db/schema';
+import { coin, transaction, priceHistory, userPortfolio, user } from '$lib/server/db/schema';
 import { eq, and, gte } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
+import { publishNewsEvent } from '$lib/server/news/pipeline';
 import { SWAP_FEE_RATE } from '$lib/data/constants';
 
 export async function calculate24hMetrics(coinId: number, currentPrice: number, queryCtx: typeof db = db) {
@@ -135,6 +136,34 @@ export async function executeSellTrade(
                 }
             } catch (error) {
                 console.error('Error sending rug pull notifications:', error);
+            }
+        })();
+
+        // Fire-and-forget: publish a news article for this rug pull.
+        // Never awaited from the trade path — a slow/failed AI call must
+        // never delay the trade response (see pipeline.ts).
+        (async () => {
+            try {
+                const [dumper] = await db
+                    .select({ username: user.username })
+                    .from(user)
+                    .where(eq(user.id, userId))
+                    .limit(1);
+
+                publishNewsEvent({
+                    type: 'RUG_PULL',
+                    relatedCoinId: coinData.id,
+                    relatedUserId: userId,
+                    metadata: {
+                        symbol: coinData.symbol,
+                        name: coinData.name,
+                        priceImpact,
+                        amountReceived: baseCurrencyReceived,
+                        dumperUsername: dumper?.username
+                    }
+                });
+            } catch (error) {
+                console.error('Error publishing rug pull news event:', error);
             }
         })();
     }

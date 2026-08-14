@@ -1,4 +1,5 @@
 import { auth } from '$lib/auth';
+import { getDailyApiUsage } from '$lib/server/api-auth';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -11,7 +12,7 @@ export const load: PageServerLoad = async (event) => {
     const keys = await auth.api.listApiKeys({ headers: event.request.headers });
     const key = keys.length > 0 ? keys[0] : null;
 
-    const todayUsage = key ? 2000 - (key.remaining || 0) : 0;
+    const todayUsage = key ? await getDailyApiUsage(key.userId) : 0;
 
     return {
         apiKey: key,

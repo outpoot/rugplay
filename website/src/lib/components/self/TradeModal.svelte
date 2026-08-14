@@ -27,7 +27,8 @@
 
 	let amount = $state('');
 	let loading = $state(false);
-	let sellByDollar = $state(false);
+	// true = amount is entered in tokens (coin), false = amount is entered in dollars
+	let tokenMode = $state(false);
 
 	let numericAmount = $derived(parseFloat(amount) || 0);
 	let currentPrice = $derived(coin.currentPrice || 0);
@@ -39,7 +40,7 @@
 	);
 
 	let effectiveSellCoinAmount = $derived(() => {
-		if (type !== 'SELL' || !sellByDollar || numericAmount <= 0) return numericAmount;
+		if (type !== 'SELL' || !tokenMode || numericAmount <= 0) return numericAmount;
 		const poolCoin = Number(coin.poolCoinAmount);
 		const poolBase = Number(coin.poolBaseCurrencyAmount);
 		if (poolCoin <= 0 || poolBase <= 0) return 0;
@@ -55,16 +56,33 @@
 		return Math.max(0, requiredCoins);
 	});
 
+	// Inverse of the AMM buy math: how many dollars it costs to buy `numericAmount` tokens.
+	let effectiveBuyCost = $derived(() => {
+		if (type !== 'BUY' || !tokenMode || numericAmount <= 0) return numericAmount;
+		const poolCoin = Number(coin.poolCoinAmount);
+		const poolBase = Number(coin.poolBaseCurrencyAmount);
+		if (poolCoin <= 0 || poolBase <= 0) return 0;
+		const k = poolCoin * poolBase;
+		const newPoolCoin = poolCoin - numericAmount;
+		if (newPoolCoin <= 0) return 0; // can't buy more tokens than exist in the pool
+		const newPoolBase = k / newPoolCoin;
+		const netIntoPool = newPoolBase - poolBase;
+		const spend = netIntoPool / (1 - SWAP_FEE_RATE);
+		return Math.max(0, spend);
+	});
+
 	let estimatedResult = $derived(
-		sellByDollar && type === 'SELL'
+		tokenMode && type === 'SELL'
 			? calculateEstimate(effectiveSellCoinAmount(), type, currentPrice)
-			: calculateEstimate(numericAmount, type, currentPrice)
+			: tokenMode && type === 'BUY'
+				? calculateEstimate(effectiveBuyCost(), type, currentPrice)
+				: calculateEstimate(numericAmount, type, currentPrice)
 	);
 	let hasValidAmount = $derived(numericAmount > 0);
 	let userBalance = $derived($PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance : 0);
 	let hasEnoughFunds = $derived(() => {
-		if (type === 'BUY') return numericAmount <= userBalance;
-		if (sellByDollar) {
+		if (type === 'BUY') return tokenMode ? effectiveBuyCost() <= userBalance : numericAmount <= userBalance;
+		if (tokenMode) {
 			return effectiveSellCoinAmount() <= userHolding;
 		}
 		return numericAmount <= userHolding;
@@ -101,7 +119,7 @@
 		open = false;
 		amount = '';
 		loading = false;
-		sellByDollar = false;
+		tokenMode = false;
 	}
 
 	async function handleTrade() {
@@ -109,9 +127,11 @@
 
 		loading = true;
 		try {
-			const tradeAmount = (type === 'SELL' && sellByDollar)
+			const tradeAmount = (type === 'SELL' && tokenMode)
 				? effectiveSellCoinAmount()
-				: numericAmount;
+				: (type === 'BUY' && tokenMode)
+					? effectiveBuyCost()
+					: numericAmount;
 
 			const response = await fetch(`/api/coin/${coin.symbol}/trade`, {
 				method: 'POST',
@@ -152,11 +172,22 @@
 
 	function setMaxAmount() {
 		if (type === 'SELL') {
-			if (sellByDollar) {
+			if (tokenMode) {
+				amount = maxSellableAmount.toString();
+			} else {
 				const est = calculateEstimate(maxSellableAmount, 'SELL', currentPrice);
 				amount = (Math.floor(est.result * 100) / 100).toFixed(2);
-			} else {
-				amount = maxSellableAmount.toString();
+			}
+		} else if (type === 'BUY' && tokenMode) {
+			// Max tokens affordable with the full balance (inverse of the buy math)
+			const poolCoin = Number(coin.poolCoinAmount);
+			const poolBase = Number(coin.poolBaseCurrencyAmount);
+			if (poolCoin > 0 && poolBase > 0) {
+				const k = poolCoin * poolBase;
+				const netIntoPool = userBalance * (1 - SWAP_FEE_RATE);
+				const newPoolBase = poolBase + netIntoPool;
+				const newPoolCoin = k / newPoolBase;
+				amount = Math.max(0, poolCoin - newPoolCoin).toString();
 			}
 		} else if ($PORTFOLIO_SUMMARY) {
 			amount = userBalance.toString();
@@ -185,25 +216,29 @@
 			<!-- Amount Input -->
 			<div class="space-y-2">
 				<Label for="amount">
-					{type === 'BUY' ? 'Amount to spend ($)' : (sellByDollar ? 'Dollar amount to receive ($)' : `Amount (${coin.symbol})`)}
+					{type === 'BUY' ? (tokenMode ? `Amount (${coin.symbol})` : 'Amount to spend ($)') : (tokenMode ? `Amount (${coin.symbol})` : 'Dollar amount to receive ($)')}
 				</Label>
 				<div class="flex gap-2">
 					<Input
 						id="amount"
 						type="number"
-						step={type === 'BUY' || sellByDollar ? '0.01' : '1'}
+						step={tokenMode ? '1' : '0.01'}
 						min="0"
 						bind:value={amount}
 						placeholder="0.00"
 						class="flex-1"
 					/>
-					{#if type === 'SELL'}
-						<Button variant="outline" size="icon" class="h-9 w-9 shrink-0" onclick={() => { haptic.trigger('selection'); sellByDollar = !sellByDollar; amount = ''; }}>
-							{#key sellByDollar}
-								<HugeiconsIcon icon={sellByDollar ? Dollar02Icon : Coins01Icon} class="h-4 w-4" />
-							{/key}
-						</Button>
-					{/if}
+					<Button
+						variant="outline"
+						size="icon"
+						class="h-9 w-9 shrink-0"
+						title={tokenMode ? 'Enter amount in dollars' : `Enter amount in ${coin.symbol}`}
+						onclick={() => { haptic.trigger('selection'); tokenMode = !tokenMode; amount = ''; }}
+					>
+						{#key tokenMode}
+							<HugeiconsIcon icon={tokenMode ? Coins01Icon : Dollar02Icon} class="h-4 w-4" />
+						{/key}
+					</Button>
 					<Button variant="outline" size="sm" class="h-9 shrink-0" onclick={setMaxAmount}>Max</Button>
 				</div>
 				{#if type === 'SELL'}
@@ -226,12 +261,12 @@
 				<div class="bg-muted/50 rounded-lg p-3">
 					<div class="flex items-center justify-between">
 						<span class="text-sm font-medium">
-							{type === 'BUY' ? `${coin.symbol} you'll get:` : (sellByDollar ? `${coin.symbol} to sell:` : "You'll receive:")}
+							{type === 'BUY' ? `${coin.symbol} you'll get:` : (tokenMode ? `${coin.symbol} to sell:` : "You'll receive:")}
 						</span>
 						<span class="font-bold">
 							{#if type === 'BUY'}
 								~{estimatedResult.result.toFixed(6)} {coin.symbol}
-							{:else if sellByDollar}
+							{:else if tokenMode}
 								~{effectiveSellCoinAmount().toFixed(6)} {coin.symbol}
 							{:else}
 								~${estimatedResult.result.toFixed(6)}

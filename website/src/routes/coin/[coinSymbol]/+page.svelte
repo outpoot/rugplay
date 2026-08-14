@@ -11,6 +11,7 @@
 	import UserName from '$lib/components/self/UserName.svelte';
 	import CoinSkeleton from '$lib/components/self/skeletons/CoinSkeleton.svelte';
 	import TopHolders from '$lib/components/self/TopHolders.svelte';
+	import CoinTrades from '$lib/components/self/CoinTrades.svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		TradeUpIcon,
@@ -775,6 +776,8 @@
 					</Card.Root>
 					<!-- Top Holders -->
 					<TopHolders coinSymbol={coin.symbol} />
+					<!-- Recent Trades -->
+					<CoinTrades coinSymbol={coin.symbol} />
 				</div>
 			</div>
 

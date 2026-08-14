@@ -9,6 +9,7 @@
 	import SEO from '$lib/components/self/SEO.svelte';
 	import Dice from '$lib/components/self/games/Dice.svelte';
 	import Tower from '$lib/components/self/games/Tower.svelte';
+	import Wheel from '$lib/components/self/games/Wheel.svelte';
 	import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '$lib/components/ui/card';
 	import { arcadeActivityStore } from '$lib/stores/websocket';
 	import * as Avatar from '$lib/components/ui/avatar';
@@ -52,8 +53,8 @@
 
 <SEO 
 	title="Arcade - Rugplay"
-	description="Play virtual arcade games with simulated currency in Rugplay. Try coinflip, slots, and mines games using virtual money with no real-world value - purely for entertainment."
-	keywords="virtual arcade simulation, coinflip game, slots game, mines game, virtual arcade, simulated games, entertainment games"
+	description="Play virtual arcade games with simulated currency in Rugplay. Try coinflip, slots, mines, dice, tower, and wheel games using virtual money with no real-world value - purely for entertainment."
+	keywords="virtual arcade simulation, coinflip game, slots game, mines game, wheel of fortune, virtual arcade, simulated games, entertainment games"
 />
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
@@ -103,6 +104,12 @@
 				>
 					Tower
 				</Button>
+				<Button
+					variant={activeGame === 'wheel' ? 'default' : 'outline'}
+					onclick={() => (activeGame = 'wheel')}
+				>
+					Wheel
+				</Button>
 			</div>
 
 			<!-- Game Content -->
@@ -116,6 +123,8 @@
 				<Dice bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{:else if activeGame === 'tower'}
 				<Tower bind:balance onBalanceUpdate={handleBalanceUpdate} />
+			{:else if activeGame === 'wheel'}
+				<Wheel bind:balance onBalanceUpdate={handleBalanceUpdate} />
 			{/if}
 
 			<!-- Live Arcade Activity Feed -->

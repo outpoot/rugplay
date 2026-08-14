@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { transaction, user, coin } from '$lib/server/db/schema';
-import { desc, gte, eq } from 'drizzle-orm';
+import { desc, gte, eq, and } from 'drizzle-orm';
 import { validateSearchParams } from '$lib/utils/validation';
 
 export async function GET({ url }) {
@@ -9,6 +9,7 @@ export async function GET({ url }) {
     const requestedLimit = params.getPositiveInt('limit', 100);
     const limit = Math.min(requestedLimit, 1000);
     const minValue = params.getNonNegativeFloat('minValue', 0);
+    const coinSymbol = params.getString('coin', '').toUpperCase();
 
     try {
         const trades = await db
@@ -29,9 +30,12 @@ export async function GET({ url }) {
             .innerJoin(user, eq(user.id, transaction.userId))
             .innerJoin(coin, eq(coin.id, transaction.coinId))
             .where(
-                minValue > 0
-                    ? gte(transaction.totalBaseCurrencyAmount, minValue.toString())
-                    : undefined
+                and(
+                    minValue > 0
+                        ? gte(transaction.totalBaseCurrencyAmount, minValue.toString())
+                        : undefined,
+                    coinSymbol ? eq(coin.symbol, coinSymbol) : undefined
+                )
             )
             .orderBy(desc(transaction.timestamp))
             .limit(limit);

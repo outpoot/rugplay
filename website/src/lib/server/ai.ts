@@ -305,7 +305,9 @@ Respond with ONLY a JSON object in exactly this format (all fields required):
 
         return {
             ...parsed,
-            suggestedResolutionDate: new Date(parsed.suggestedResolutionDate)
+            suggestedResolutionDate: parsed.suggestedResolutionDate
+                ? new Date(parsed.suggestedResolutionDate)
+                : undefined
         };
     } catch (error) {
         console.error('Question validation error:', error);

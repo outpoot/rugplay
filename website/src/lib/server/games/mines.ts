@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { calculateMinesMultiplier } from '$lib/utils';
 
@@ -43,20 +43,10 @@ export async function minesCleanupInactiveGames() {
                         continue;
                     }
 
-                    const [userData] = await db
-                        .select({ baseCurrencyBalance: user.baseCurrencyBalance })
-                        .from(user)
-                        .where(eq(user.id, game.userId))
-                        .for('update')
-                        .limit(1);
-
-                    const currentBalance = Number(userData.baseCurrencyBalance);
-                    const newBalance = Math.round((currentBalance + game.betAmount) * 100000000) / 100000000;
-
                     await db
                         .update(user)
                         .set({
-                            baseCurrencyBalance: newBalance.toFixed(8),
+                            baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${game.betAmount.toFixed(8)}::numeric`,
                             updatedAt: new Date()
                         })
                         .where(eq(user.id, game.userId));
@@ -97,22 +87,12 @@ export async function minesAutoCashout() {
                     continue;
                 }
 
-                const [userData] = await db
-                    .select({ baseCurrencyBalance: user.baseCurrencyBalance })
-                    .from(user)
-                    .where(eq(user.id, game.userId))
-                    .for('update')
-                    .limit(1);
-
-                const currentBalance = Number(userData.baseCurrencyBalance);
-                const payout = game.betAmount * game.currentMultiplier;
-                const roundedPayout = Math.round(payout * 100000000) / 100000000;
-                const newBalance = Math.round((currentBalance + roundedPayout) * 100000000) / 100000000;
+                const roundedPayout = (game.betAmount * game.currentMultiplier).toFixed(8);
 
                 await db
                     .update(user)
                     .set({
-                        baseCurrencyBalance: newBalance.toFixed(8),
+                        baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${roundedPayout}::numeric`,
                         updatedAt: new Date()
                     })
                     .where(eq(user.id, game.userId));

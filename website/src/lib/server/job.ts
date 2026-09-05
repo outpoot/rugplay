@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { predictionQuestion, predictionBet, user, accountDeletionRequest, session, account, promoCodeRedemption, userPortfolio, commentLike, comment, transaction, coin } from '$lib/server/db/schema';
-import { eq, and, lte, isNull } from 'drizzle-orm';
+import { eq, and, lte, isNull, sql, asc } from 'drizzle-orm';
 import { resolveQuestion, getRugplayData } from '$lib/server/ai';
 import { createNotification } from '$lib/server/notification';
 import { formatValue } from '$lib/utils';
@@ -38,10 +38,14 @@ export async function resolveExpiredQuestions() {
                 );
                     console.log('Resolution result:', resolution);
 
+                const afterCommit: Array<() => Promise<unknown>> = [];
                 if (resolution.confidence < 50) {
                     console.log(`Cancelling question ${question.id} due to low confidence: ${resolution.confidence}`);
 
                     await db.transaction(async (tx) => {
+                        const [lockedQuestion] = await tx.select().from(predictionQuestion)
+                            .where(eq(predictionQuestion.id, question.id)).for('update');
+                        if (!lockedQuestion || lockedQuestion.status !== 'ACTIVE') return;
                         // Mark question as cancelled
                         await tx
                             .update(predictionQuestion)
@@ -63,7 +67,7 @@ export async function resolveExpiredQuestions() {
                             .where(and(
                                 eq(predictionBet.questionId, question.id),
                                 isNull(predictionBet.settledAt)
-                            ));
+                            )).orderBy(asc(predictionBet.userId), asc(predictionBet.id));
 
                         const notificationsToCreate: Array<{
                             userId: number;
@@ -85,22 +89,10 @@ export async function resolveExpiredQuestions() {
 
                             // Refund the user
                             if (bet.userId !== null) {
-                                const [userData] = await tx
-                                    .select({ baseCurrencyBalance: user.baseCurrencyBalance })
-                                    .from(user)
-                                    .where(eq(user.id, bet.userId))
-                                    .limit(1);
-
-                                if (userData) {
-                                    const newBalance = Number(userData.baseCurrencyBalance) + refundAmount;
-                                    await tx
-                                        .update(user)
-                                        .set({
-                                            baseCurrencyBalance: newBalance.toFixed(8),
-                                            updatedAt: now,
-                                        })
-                                        .where(eq(user.id, bet.userId));
-                                }
+                                await tx.update(user).set({
+                                    baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${refundAmount.toFixed(8)}::numeric`,
+                                    updatedAt: now
+                                }).where(eq(user.id, bet.userId));
 
                                 notificationsToCreate.push({
                                     userId: bet.userId,
@@ -116,19 +108,23 @@ export async function resolveExpiredQuestions() {
                             const title = 'Prediction skipped 🥀';
                             const message = `You received a full refund of ${formatValue(amount)} for "${question.question}". We recommend predicting on more reliable questions!`;
 
-                            await createNotification(
+                            afterCommit.push(() => createNotification(
                                 userId.toString(),
                                 'HOPIUM',
                                 title,
                                 message,
                                 `/hopium/${question.id}`
-                            );
+                            ));
                         }
                     });
+                    for (const notify of afterCommit) await notify().catch(console.error);
                     continue;
                 }
 
                 await db.transaction(async (tx) => {
+                    const [lockedQuestion] = await tx.select().from(predictionQuestion)
+                        .where(eq(predictionQuestion.id, question.id)).for('update');
+                    if (!lockedQuestion || lockedQuestion.status !== 'ACTIVE') return;
                     await tx
                         .update(predictionQuestion)
                         .set({
@@ -149,12 +145,12 @@ export async function resolveExpiredQuestions() {
                         .where(and(
                             eq(predictionBet.questionId, question.id),
                             isNull(predictionBet.settledAt)
-                        ));
+                        )).orderBy(asc(predictionBet.userId), asc(predictionBet.id));
 
-                    const totalPool = Number(question.totalYesAmount) + Number(question.totalNoAmount);
+                    const totalPool = Number(lockedQuestion.totalYesAmount) + Number(lockedQuestion.totalNoAmount);
                     const winningSideTotal = resolution.resolution
-                        ? Number(question.totalYesAmount)
-                        : Number(question.totalNoAmount);
+                        ? Number(lockedQuestion.totalYesAmount)
+                        : Number(lockedQuestion.totalNoAmount);
 
                     const notificationsToCreate: Array<{
                         userId: number;
@@ -179,22 +175,10 @@ export async function resolveExpiredQuestions() {
                             .where(eq(predictionBet.id, bet.id));
 
                         if (won && winnings > 0 && bet.userId !== null) {
-                            const [userData] = await tx
-                                .select({ baseCurrencyBalance: user.baseCurrencyBalance })
-                                .from(user)
-                                .where(eq(user.id, bet.userId))
-                                .limit(1);
-
-                            if (userData) {
-                                const newBalance = Number(userData.baseCurrencyBalance) + winnings;
-                                await tx
-                                    .update(user)
-                                    .set({
-                                        baseCurrencyBalance: newBalance.toFixed(8),
-                                        updatedAt: now,
-                                    })
-                                    .where(eq(user.id, bet.userId));
-                            }
+                            await tx.update(user).set({
+                                baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${winnings.toFixed(8)}::numeric`,
+                                updatedAt: now
+                            }).where(eq(user.id, bet.userId));
                         }
 
                         if (bet.userId !== null) {
@@ -216,15 +200,16 @@ export async function resolveExpiredQuestions() {
                             ? `You won ${formatValue(winnings)} on "${question.question}"`
                             : `You lost ${formatValue(amount)} on "${question.question}"`;
 
-                        await createNotification(
+                        afterCommit.push(() => createNotification(
                             userId.toString(),
                             'HOPIUM',
                             title,
                             message,
                             `/hopium/${question.id}`
-                        );
+                        ));
                     }
                 });
+                for (const notify of afterCommit) await notify().catch(console.error);
 
             } catch (error) {
                 console.error(`Failed to resolve question ${question.id}:`, error);

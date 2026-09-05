@@ -1,3 +1,4 @@
+import type { RequestEvent } from './$types';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { coin, userPortfolio, user } from '$lib/server/db/schema';
@@ -19,7 +20,7 @@ function calculateLiquidationValue(tokensToSell: number, poolCoinAmount: number,
     return Math.max(0, baseCurrencyReceived);
 }
 
-export async function GET({ params, url }) {
+export async function GET({ params, url }: Pick<RequestEvent, 'params' | 'url'>) {
     const coinSymbol = params.coinSymbol?.toUpperCase();
     const validator = validateSearchParams(url.searchParams);
     const limit = validator.getPositiveInt('limit', 50);

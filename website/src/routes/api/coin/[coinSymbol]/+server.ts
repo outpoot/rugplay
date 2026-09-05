@@ -1,7 +1,8 @@
+import type { RequestEvent } from './$types';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { coin, user, priceHistory, transaction } from '$lib/server/db/schema';
-import { eq, desc, and, gte, lt } from 'drizzle-orm';
+import { eq, desc, and, gte, lt, sql } from 'drizzle-orm';
 import { timeToLocal } from '$lib/utils';
 
 function getInitialWindowHours(timeframe: string): number {
@@ -112,7 +113,7 @@ function aggregateVolumeData(transactionData: any[], intervalMinutes: number = 6
     return Array.from(volumeMap.values()).sort((a, b) => a.time - b.time);
 }
 
-export async function GET({ params, url }) {
+export async function GET({ params, url }: Pick<RequestEvent, 'params' | 'url'>) {
     const coinSymbol = params.coinSymbol?.toUpperCase();
     const timeframe = url.searchParams.get('timeframe') || '1m';
 
@@ -126,9 +127,14 @@ export async function GET({ params, url }) {
     const intervalMinutes = timeframeMap[timeframe as keyof typeof timeframeMap] || 1;
 
     try {
-        const [coinData] = await db
+        const [coinRow] = await db
             .select({
                 id: coin.id,
+                latestPriceTimestamp: sql<string | null>`(
+                    select ${priceHistory.timestamp} from ${priceHistory}
+                    where ${priceHistory.coinId} = ${coin.id}
+                    order by ${priceHistory.timestamp} desc limit 1
+                )`,
                 name: coin.name,
                 symbol: coin.symbol,
                 icon: coin.icon,
@@ -156,14 +162,19 @@ export async function GET({ params, url }) {
             .where(eq(coin.symbol, coinSymbol))
             .limit(1);
 
-        if (!coinData) {
+        if (!coinRow) {
             throw error(404, 'Coin not found');
         }
 
+        const { latestPriceTimestamp, ...coinData } = coinRow;
         const windowHours = getInitialWindowHours(timeframe);
         let sinceDate = new Date(Date.now() - windowHours * 60 * 60 * 1000);
 
-        let [rawPriceHistory, rawTransactions] = await Promise.all([
+        if (latestPriceTimestamp && new Date(latestPriceTimestamp) < sinceDate) {
+            sinceDate = new Date(new Date(latestPriceTimestamp).getTime() - windowHours * 60 * 60 * 1000);
+        }
+
+        const [rawPriceHistory, rawTransactions] = await Promise.all([
             db.select({ price: priceHistory.price, timestamp: priceHistory.timestamp })
                 .from(priceHistory)
                 .where(and(
@@ -185,44 +196,6 @@ export async function GET({ params, url }) {
                 .orderBy(desc(transaction.timestamp))
                 .limit(5000)
         ]);
-
-        // If no data in this window, find the last day with activity and load that instead
-        if (rawPriceHistory.length === 0) {
-            const [latestPrice] = await db
-                .select({ timestamp: priceHistory.timestamp })
-                .from(priceHistory)
-                .where(eq(priceHistory.coinId, coinData.id))
-                .orderBy(desc(priceHistory.timestamp))
-                .limit(1);
-
-            if (latestPrice) {
-                const latestTime = new Date(latestPrice.timestamp);
-                sinceDate = new Date(latestTime.getTime() - windowHours * 60 * 60 * 1000);
-
-                [rawPriceHistory, rawTransactions] = await Promise.all([
-                    db.select({ price: priceHistory.price, timestamp: priceHistory.timestamp })
-                        .from(priceHistory)
-                        .where(and(
-                            eq(priceHistory.coinId, coinData.id),
-                            gte(priceHistory.timestamp, sinceDate)
-                        ))
-                        .orderBy(desc(priceHistory.timestamp))
-                        .limit(5000),
-
-                    db.select({
-                        totalBaseCurrencyAmount: transaction.totalBaseCurrencyAmount,
-                        timestamp: transaction.timestamp
-                    })
-                        .from(transaction)
-                        .where(and(
-                            eq(transaction.coinId, coinData.id),
-                            gte(transaction.timestamp, sinceDate)
-                        ))
-                        .orderBy(desc(transaction.timestamp))
-                        .limit(5000)
-                ]);
-            }
-        }
 
         const priceData = rawPriceHistory.map(p => ({
             price: Number(p.price),

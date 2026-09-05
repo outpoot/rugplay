@@ -42,6 +42,17 @@ export async function POST({ params, request }) {
     }
 
     const txResult = await db.transaction(async (tx) => {
+        const [userData] = await tx.select({
+            baseCurrencyBalance: user.baseCurrencyBalance,
+            username: user.username,
+            image: user.image
+        }).from(user).where(eq(user.id, userId)).for('update').limit(1);
+
+        if (!userData) {
+            throw error(404, 'User not found');
+        }
+
+
         const [coinData] = await tx.select({
             id: coin.id,
             symbol: coin.symbol,
@@ -77,16 +88,6 @@ export async function POST({ params, request }) {
             await tx.update(coin)
                 .set({ isLocked: false })
                 .where(eq(coin.id, coinData.id));
-        }
-
-        const [userData] = await tx.select({
-            baseCurrencyBalance: user.baseCurrencyBalance,
-            username: user.username,
-            image: user.image
-        }).from(user).where(eq(user.id, userId)).for('update').limit(1);
-
-        if (!userData) {
-            throw error(404, 'User not found');
         }
 
         const userBalance = Number(userData.baseCurrencyBalance);

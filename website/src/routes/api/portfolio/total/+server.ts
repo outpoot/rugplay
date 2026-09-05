@@ -2,7 +2,7 @@ import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, userPortfolio, coin, transaction } from '$lib/server/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 
 export async function GET({ request }) {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -36,41 +36,48 @@ export async function GET({ request }) {
         throw error(404, 'User not found');
     }
 
+    const history = holdings.length === 0 ? [] : await db.select({
+        coinId: transaction.coinId,
+        type: transaction.type,
+        quantity: transaction.quantity,
+        totalBaseCurrencyAmount: transaction.totalBaseCurrencyAmount,
+        timestamp: transaction.timestamp
+    })
+        .from(transaction)
+        .where(
+            and(
+                eq(transaction.userId, userId),
+                inArray(transaction.coinId, holdings.map(holding => holding.coinId))
+            )
+        )
+        .orderBy(transaction.timestamp);
+
+    const historyByCoin = new Map<number, typeof history>();
+    for (const trade of history) {
+        const trades = historyByCoin.get(trade.coinId) ?? [];
+        trades.push(trade);
+        historyByCoin.set(trade.coinId, trades);
+    }
+
     let totalCoinValue = 0;
 
-    const coinHoldings = await Promise.all(holdings.map(async (holding) => {
+    const coinHoldings = holdings.map((holding) => {
         const quantity = Number(holding.quantity);
         const price = Number(holding.currentPrice);
         const value = quantity * price;
         totalCoinValue += value;
 
-        const allTransactions = await db.select({
-            type: transaction.type,
-            quantity: transaction.quantity,
-            totalBaseCurrencyAmount: transaction.totalBaseCurrencyAmount,
-            timestamp: transaction.timestamp
-        })
-            .from(transaction)
-            .where(
-                and(
-                    eq(transaction.userId, userId),
-                    eq(transaction.coinId, holding.coinId)
-                )
-            )
-            .orderBy(transaction.timestamp);
+        const allTransactions = historyByCoin.get(holding.coinId) ?? [];
 
         // calculate cost basis
         let remainingQuantity = quantity;
         let totalCostBasis = 0;
-        let runningQuantity = 0;
 
         for (const tx of allTransactions) {
             const txQuantity = Number(tx.quantity);
             const txAmount = Number(tx.totalBaseCurrencyAmount);
 
             if (tx.type === 'BUY') {
-                runningQuantity += txQuantity;
-
                 // if we still need to account for held coins
                 if (remainingQuantity > 0) {
                     const quantityToAttribute = Math.min(txQuantity, remainingQuantity);
@@ -78,8 +85,6 @@ export async function GET({ request }) {
                     totalCostBasis += quantityToAttribute * avgPrice;
                     remainingQuantity -= quantityToAttribute;
                 }
-            } else if (tx.type === 'SELL') {
-                runningQuantity -= txQuantity;
             }
 
             // if we accounted for all held coins, break
@@ -103,7 +108,7 @@ export async function GET({ request }) {
             percentageChange,
             costBasis: totalCostBasis
         };
-    }));
+    });
 
     const baseCurrencyBalance = Number(userData[0].baseCurrencyBalance);
 

@@ -3,6 +3,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PRIVATE_B2_KEY_ID, PRIVATE_B2_APP_KEY } from '$env/static/private';
 import { PUBLIC_B2_BUCKET, PUBLIC_B2_ENDPOINT, PUBLIC_B2_REGION } from '$env/static/public';
 import { processImage } from './image.js';
+import { randomUUID } from 'node:crypto';
 
 const s3Client = new S3Client({
     endpoint: PUBLIC_B2_ENDPOINT,
@@ -90,7 +91,7 @@ export async function uploadCoinIcon(
 
     const processedImage = await processImage(Buffer.from(body));
 
-    const key = `coins/${coinSymbol.toLowerCase()}.webp`;
+    const key = `coins/${coinSymbol.toLowerCase()}-${randomUUID()}.webp`;
 
     const command = new PutObjectCommand({
         Bucket: PUBLIC_B2_BUCKET,

@@ -1,10 +1,10 @@
 import { db } from '$lib/server/db';
 import { coin, transaction, priceHistory, userPortfolio } from '$lib/server/db/schema';
-import { eq, and, gte } from 'drizzle-orm';
+import { eq, and, gte, sql } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
 import { SWAP_FEE_RATE } from '$lib/data/constants';
 
-export async function calculate24hMetrics(coinId: number, currentPrice: number, queryCtx: typeof db = db) {
+export async function calculate24hMetrics(coinId: number, currentPrice: number, queryCtx: Pick<typeof db, 'select'> = db) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const [priceData] = await queryCtx
@@ -26,15 +26,15 @@ export async function calculate24hMetrics(coinId: number, currentPrice: number, 
         }
     }
 
-    const volumeData = await queryCtx
-        .select({ totalBaseCurrencyAmount: transaction.totalBaseCurrencyAmount })
+    const [volumeData] = await queryCtx
+        .select({ volume: sql<string>`coalesce(sum(${transaction.totalBaseCurrencyAmount}), 0)` })
         .from(transaction)
         .where(and(
             eq(transaction.coinId, coinId),
             gte(transaction.timestamp, twentyFourHoursAgo)
         ));
 
-    const volume24h = volumeData.reduce((sum, t) => sum + Number(t.totalBaseCurrencyAmount), 0);
+    const volume24h = Number(volumeData.volume);
 
     return { change24h: Number(change24h.toFixed(4)), volume24h: Number(volume24h.toFixed(4)) };
 }

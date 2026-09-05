@@ -70,6 +70,7 @@ async function initializeScheduler() {
                         // Lost the lock, stop scheduler
                         clearInterval(renewInterval);
                         clearInterval(schedulerInterval);
+                        clearInterval(minesCleanupInterval);
                         console.log('Lost scheduler lock, stopping...');
                     }
                 } catch (error) {
@@ -155,7 +156,7 @@ export const handle: Handle = async ({ event, resolve }) => {
         const now = Date.now();
         
         const cached = sessionCache.get(cacheKey);
-        if (cached && (now - cached.timestamp) < cached.ttl) {
+        if (!event.url.pathname.startsWith('/api/') && cached && (now - cached.timestamp) < cached.ttl) {
             userData = cached.userData;
         } else {
             const [userRecord] = await db
@@ -245,13 +246,13 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     if (event.url.pathname.startsWith('/api/') && !event.url.pathname.startsWith('/api/proxy/')) {
-        const response = await svelteKitHandler({ event, resolve, auth });
+        const response = await svelteKitHandler({ event, resolve, auth, building });
         response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
 
         return response;
     }
 
-    return svelteKitHandler({ event, resolve, auth });
+    return svelteKitHandler({ event, resolve, auth, building });
 };
 
 export function clearUserCache(userId: string) {

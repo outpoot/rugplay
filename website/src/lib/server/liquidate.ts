@@ -1,5 +1,5 @@
-import { user, userPortfolio, transaction, coin, priceHistory } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { userPortfolio, transaction, coin, priceHistory } from '$lib/server/db/schema';
+import { asc, eq, sql } from 'drizzle-orm';
 
 const BATCH_CHUNK_SIZE = 500;
 const MAX_STORABLE = 1e38;
@@ -19,8 +19,10 @@ export async function liquidateHoldings(tx: any, userId: number): Promise<{
 			circulatingSupply: coin.circulatingSupply
 		})
 		.from(userPortfolio)
-		.leftJoin(coin, eq(userPortfolio.coinId, coin.id))
-		.where(eq(userPortfolio.userId, userId));
+		.innerJoin(coin, eq(userPortfolio.coinId, coin.id))
+		.where(eq(userPortfolio.userId, userId))
+        .orderBy(asc(coin.id))
+        .for('update', { of: coin });
 
 	if (holdings.length === 0) {
 		return { totalSaleValue: 0, coinsSold: 0 };

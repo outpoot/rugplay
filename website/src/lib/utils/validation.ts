@@ -11,8 +11,8 @@ export function validateSearchParams(searchParams: URLSearchParams) {
          */
         getPositiveInt: (key: string, defaultValue: number): number => {
             const param = searchParams.get(key);
-            const parsed = param ? parseInt(param, 10) : defaultValue;
-            return Number.isInteger(parsed) && parsed > 0 ? parsed : defaultValue;
+            const parsed = param?.trim() ? Number(param) : defaultValue;
+            return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : defaultValue;
         },
 
         /**
@@ -23,8 +23,8 @@ export function validateSearchParams(searchParams: URLSearchParams) {
          */
         getNonNegativeFloat: (key: string, defaultValue: number): number => {
             const param = searchParams.get(key);
-            const parsed = param ? parseFloat(param) : defaultValue;
-            return !isNaN(parsed) && parsed >= 0 ? parsed : defaultValue;
+            const parsed = param?.trim() ? Number(param) : defaultValue;
+            return Number.isFinite(parsed) && parsed >= 0 ? parsed : defaultValue;
         },
 
         /**

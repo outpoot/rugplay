@@ -49,7 +49,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
         const noPercentage = totalAmount > 0 ? (Number(questionData.totalNoAmount) / totalAmount) * 100 : 50;
 
         // Fetch recent bets (last 10)
-        const recentBets = await db
+        const recentBetsQuery = db
             .select({
                 id: predictionBet.id,
                 side: predictionBet.side,
@@ -68,7 +68,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
             .limit(10);
 
         // Fetch probability history for the chart
-        const probabilityHistory = await db
+        const probabilityHistoryQuery = db
             .select({
                 createdAt: predictionBet.createdAt,
                 side: predictionBet.side,
@@ -77,6 +77,22 @@ export const GET: RequestHandler = async ({ params, request }) => {
             .from(predictionBet)
             .where(eq(predictionBet.questionId, questionId))
             .orderBy(asc(predictionBet.createdAt));
+
+            const userBetsQuery = userId ? db
+                .select({
+                    side: predictionBet.side,
+                    totalAmount: sum(predictionBet.amount),
+                })
+                .from(predictionBet)
+                .where(and(
+                    eq(predictionBet.questionId, questionId),
+                    eq(predictionBet.userId, userId)
+                ))
+                .groupBy(predictionBet.side) : Promise.resolve([]);
+
+        const [recentBets, probabilityHistory, userBetData] = await Promise.all([
+            recentBetsQuery, probabilityHistoryQuery, userBetsQuery
+        ]);
 
         // Calculate probability over time
         let runningYesTotal = 0;
@@ -125,18 +141,6 @@ export const GET: RequestHandler = async ({ params, request }) => {
         let userBets = null;
         if (userId) {
             // Fetch user's betting data
-            const userBetData = await db
-                .select({
-                    side: predictionBet.side,
-                    totalAmount: sum(predictionBet.amount),
-                })
-                .from(predictionBet)
-                .where(and(
-                    eq(predictionBet.questionId, questionId),
-                    eq(predictionBet.userId, userId)
-                ))
-                .groupBy(predictionBet.side);
-
             const yesAmount = userBetData.find(bet => bet.side === true)?.totalAmount || 0;
             const noAmount = userBetData.find(bet => bet.side === false)?.totalAmount || 0;
             const userTotalAmount = Number(yesAmount) + Number(noAmount);

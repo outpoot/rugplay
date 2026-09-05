@@ -2,7 +2,7 @@ import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, userPortfolio, coin, transaction, season, seasonParticipant } from '$lib/server/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray, asc } from 'drizzle-orm';
 import { createNotification } from '$lib/server/notification';
 import { formatValue } from '$lib/utils';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({ request }) => {
     } try {
         const { recipientUsername, type, amount, coinSymbol }: TransferRequest = await request.json();
 
-        if (!recipientUsername || !type || !amount || typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+        if (typeof recipientUsername !== 'string' || !recipientUsername || !['CASH', 'COIN'].includes(type) || !amount || typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
             throw error(400, 'Invalid transfer parameters');
         }
 
@@ -38,42 +38,26 @@ export const POST: RequestHandler = async ({ request }) => {
             throw error(400, 'Cash transfers require a minimum of $10.00');
         }
 
-        if (type === 'COIN' && !coinSymbol) {
+        if (type === 'COIN' && (typeof coinSymbol !== 'string' || !coinSymbol)) {
             throw error(400, 'Coin symbol required for coin transfers');
         }
 
         const senderId = Number(session.user.id);
 
-        return await db.transaction(async (tx) => {
-            const [senderData] = await tx
-                .select({
-                    id: user.id,
-                    username: user.username,
-                    baseCurrencyBalance: user.baseCurrencyBalance
-                })
-                .from(user)
-                .where(eq(user.id, senderId))
-                .for('update')
-                .limit(1);
+        const afterCommit: Array<() => Promise<unknown>> = [];
+        const response = await db.transaction(async (tx) => {
+            const [recipient] = await tx.select({ id: user.id }).from(user)
+                .where(eq(user.username, recipientUsername)).limit(1);
+            if (!recipient) throw error(404, 'Recipient not found');
 
-            if (!senderData) {
-                throw error(404, 'Sender not found');
-            }
-
-            const [recipientData] = await tx
-                .select({
-                    id: user.id,
-                    username: user.username,
-                    baseCurrencyBalance: user.baseCurrencyBalance
-                })
-                .from(user)
-                .where(eq(user.username, recipientUsername))
-                .for('update')
-                .limit(1);
-
-            if (!recipientData) {
-                throw error(404, 'Recipient not found');
-            }
+            const participants = await tx.select({
+                id: user.id, username: user.username, baseCurrencyBalance: user.baseCurrencyBalance
+            }).from(user).where(inArray(user.id, [senderId, recipient.id]))
+                .orderBy(asc(user.id)).for('update');
+            const senderData = participants.find(participant => participant.id === senderId);
+            const recipientData = participants.find(participant => participant.id === recipient.id);
+            if (!senderData) throw error(404, 'Sender not found');
+            if (!recipientData) throw error(404, 'Recipient not found');
 
             if (senderData.id === recipientData.id) {
                 throw error(400, 'Cannot transfer to yourself');
@@ -144,7 +128,7 @@ export const POST: RequestHandler = async ({ request }) => {
                     recipientUserId: recipientData.id
                 });
 
-                (async () => {
+                afterCommit.push(async () => {
                     await createNotification(
                         recipientData.id.toString(),
                         'TRANSFER',
@@ -152,9 +136,9 @@ export const POST: RequestHandler = async ({ request }) => {
                         `You received ${formatValue(amountReceived)} from @${senderData.username}`,
                         `/user/${senderData.id}`
                     );
-                })();
+                });
 
-                checkAndAwardAchievements(senderId, ['social']);
+                afterCommit.push(() => checkAndAwardAchievements(senderId, ['social']));
 
                 return json({
                     success: true,
@@ -283,7 +267,7 @@ export const POST: RequestHandler = async ({ request }) => {
                     recipientUserId: recipientData.id
                 });
 
-                (async () => {
+                afterCommit.push(async () => {
                     await createNotification(
                         recipientData.id.toString(),
                         'TRANSFER',
@@ -291,9 +275,9 @@ export const POST: RequestHandler = async ({ request }) => {
                         `You received ${amount.toFixed(6)} *${coinData.symbol} from @${senderData.username}`,
                         `/coin/${normalizedSymbol}`
                     );
-                })();
+                });
 
-                checkAndAwardAchievements(senderId, ['social']);
+                afterCommit.push(() => checkAndAwardAchievements(senderId, ['social']));
 
                 return json({
                     success: true,
@@ -306,6 +290,8 @@ export const POST: RequestHandler = async ({ request }) => {
                 });
             }
         });
+        for (const notify of afterCommit) await notify().catch(console.error);
+        return response;
 
     } catch (e) {
         console.error('Transfer error:', e);

@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import type { TowerDifficulty } from '$lib/utils';
 
@@ -44,24 +44,9 @@ export async function towerCleanupInactiveGames() {
                     const deleted = await redis.del(getSessionKey(game.sessionToken));
                     if (!deleted) continue;
 
-                    const [userData] = await db
-                        .select({ baseCurrencyBalance: user.baseCurrencyBalance })
-                        .from(user)
-                        .where(eq(user.id, game.userId))
-                        .for('update')
-                        .limit(1);
-
-                    if (!userData) {
-                        console.error(`Tower cleanup: user ${game.userId} not found, bet refund skipped (session already deleted)`);
-                        continue;
-                    }
-
-                    const currentBalance = Number(userData.baseCurrencyBalance);
-                    const newBalance = Math.round((currentBalance + game.betAmount) * 100000000) / 100000000;
-
                     await db
                         .update(user)
-                        .set({ baseCurrencyBalance: newBalance.toFixed(8), updatedAt: new Date() })
+                        .set({ baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${game.betAmount.toFixed(8)}::numeric`, updatedAt: new Date() })
                         .where(eq(user.id, game.userId));
                 } catch (error) {
                     console.error(`Failed to refund inactive tower game ${game.sessionToken}:`, error);

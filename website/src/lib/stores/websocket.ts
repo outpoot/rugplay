@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { PUBLIC_WEBSOCKET_URL } from '$env/static/public';
 import { NOTIFICATIONS, UNREAD_COUNT } from './notifications';
@@ -51,6 +51,8 @@ const MAX_ALL_TRADES = 100;
 let socket: WebSocket | null = null;
 let reconnectTimer: NodeJS.Timeout | null = null;
 let activeCoin: string = '@global';
+let shouldReconnect = false;
+let authVersion = 0;
 
 // Stores
 export const liveTradesStore = writable<LiveTrade[]>([]);
@@ -327,6 +329,7 @@ function handleWebSocketMessage(event: MessageEvent): void {
 
 function connect(): void {
     if (!browser) return;
+    shouldReconnect = true;
 
     // Don't connect if already connected or connecting
     if (isSocketConnected() || isSocketConnecting()) {
@@ -336,6 +339,7 @@ function connect(): void {
     clearReconnectTimer();
 
     socket = new WebSocket(WEBSOCKET_URL);
+    const currentSocket = socket;
 
     loadInitialTrades();
 
@@ -345,24 +349,17 @@ function connect(): void {
         clearReconnectTimer();
         subscribeToChannels();
         
-        USER_DATA.subscribe(user => {
-            if (user?.id && isSocketConnected()) {
-                console.log('Setting user subscription for user:', user.id);
-                socket!.send(JSON.stringify({
-                    type: 'set_user',
-                    userId: String(user.id)
-                }));
-            }
-        })();
+        void authenticateUser(get(USER_DATA)?.id?.toString());
     };
 
     socket.onmessage = handleWebSocketMessage;
 
     socket.onclose = (event) => {
+        if (socket !== currentSocket) return;
         console.log(`WebSocket disconnected. Code: ${event.code}`);
         isConnectedStore.set(false);
         socket = null;
-        scheduleReconnect();
+        if (shouldReconnect) scheduleReconnect();
     };
 
     socket.onerror = (error) => {
@@ -381,6 +378,8 @@ function setCoin(coinSymbol: string): void {
 }
 
 function disconnect(): void {
+    shouldReconnect = false;
+    authVersion++;
     clearReconnectTimer();
 
     if (socket) {
@@ -440,23 +439,38 @@ class WebSocketController {
         loadInitialTrades(mode);
     }
 
-    setUser(userId: string) {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({
-                type: 'set_user',
-                userId
-            }));
-        }
+    setUser(userId?: string) {
+        void authenticateUser(userId);
     }
 }
 
-// Auto-connect user when USER_DATA changes
-if (typeof window !== 'undefined') {
-    USER_DATA.subscribe(user => {
-        if (user?.id) {
-            websocketController.setUser(user.id.toString());
+async function authenticateUser(userId?: string): Promise<void> {
+    const version = ++authVersion;
+    const currentSocket = socket;
+    if (!currentSocket || currentSocket.readyState !== WebSocket.OPEN) return;
+    currentSocket.send(JSON.stringify({ type: 'set_user' }));
+    if (!userId) return;
+    try {
+        const response = await fetch('/api/websocket/token', { method: 'POST' });
+        if (!response.ok) return;
+        const { token } = await response.json();
+        if (version === authVersion && socket === currentSocket && isSocketConnected()) {
+            currentSocket.send(JSON.stringify({ type: 'set_user', token }));
         }
-    });
+    } catch (error) {
+        console.error('Failed to authenticate notifications:', error);
+    }
 }
 
 export const websocketController = new WebSocketController();
+
+// Auto-connect user when USER_DATA changes
+if (typeof window !== 'undefined') {
+    let subscribedUserId: string | undefined;
+    USER_DATA.subscribe(user => {
+        const userId = user?.id?.toString();
+        if (userId === subscribedUserId) return;
+        subscribedUserId = userId;
+        websocketController.setUser(userId);
+    });
+}

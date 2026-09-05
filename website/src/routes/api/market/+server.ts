@@ -1,3 +1,4 @@
+import type { RequestEvent } from './$types';
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { coin, user } from '$lib/server/db/schema';
@@ -36,18 +37,18 @@ const CHANGE_THRESHOLDS = {
     EXTREME_NEGATIVE: '-50.0000'
 } as const;
 
-export async function GET({ url }) {
+export async function GET({ url }: Pick<RequestEvent, 'url'>) {
     const searchQuery = url.searchParams.get('search') || '';
     const sortBy = url.searchParams.get('sortBy') || 'marketCap';
     const sortOrder = url.searchParams.get('sortOrder') || 'desc';
     const priceFilter = url.searchParams.get('priceFilter') || 'all';
     const changeFilter = url.searchParams.get('changeFilter') || 'all';
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '12');
+    const page = Number(url.searchParams.get('page') || '1');
+    const limit = Number(url.searchParams.get('limit') || '12');
 
     if (!VALID_SORT_FIELDS.includes(sortBy) || !VALID_SORT_ORDERS.includes(sortOrder)) {
         return json({ error: 'Invalid sort parameters' }, { status: 400 });
-    } if (page < 1 || limit < 1 || limit > 100) {
+    } if (!Number.isSafeInteger(page) || !Number.isSafeInteger(limit) || !Number.isSafeInteger((page - 1) * limit) || page < 1 || limit < 1 || limit > 100) {
         return json({ error: 'Invalid pagination parameters' }, { status: 400 });
     }
 
@@ -121,7 +122,7 @@ export async function GET({ url }) {
             }
         })();
 
-        const coins = await db.select({
+        const coinsQuery = db.select({
             symbol: coin.symbol,
             name: coin.name,
             icon: coin.icon,
@@ -130,8 +131,7 @@ export async function GET({ url }) {
             volume24h: coin.volume24h,
             change24h: coin.change24h,
             createdAt: coin.createdAt,
-            creatorName: user.name,
-            total: sql<number>`count(*) over()`
+            creatorName: user.name
         })
             .from(coin)
             .leftJoin(user, eq(coin.creatorId, user.id))
@@ -140,12 +140,11 @@ export async function GET({ url }) {
             .limit(limit)
             .offset((page - 1) * limit);
 
-        // count(*) over() only comes back when the page has rows; re-count for out-of-range pages
-        let total = coins.length > 0 ? Number(coins[0].total) : 0;
-        if (coins.length === 0 && page > 1) {
-            const [countRow] = await db.select({ total: count() }).from(coin).where(whereCondition);
-            total = countRow?.total || 0;
-        }
+        const [coins, [countRow]] = await Promise.all([
+            coinsQuery,
+            db.select({ total: count() }).from(coin).where(whereCondition)
+        ]);
+        const total = countRow?.total || 0;
 
         const formattedCoins = coins.map(c => ({
             symbol: c.symbol,

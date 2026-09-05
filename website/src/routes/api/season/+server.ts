@@ -17,7 +17,6 @@ import { RANKED_STAKE } from '$lib/data/seasons';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
 
 export const GET: RequestHandler = async ({ request, url }) => {
-	await ensureSeasonExists();
 
 	const limit = Math.min(Number(url.searchParams.get('limit')) || 10, 100);
 
@@ -62,7 +61,11 @@ export const GET: RequestHandler = async ({ request, url }) => {
 		});
 	}
 
-	const current = await getActiveSeason();
+	let current = await getActiveSeason();
+    if (!current) {
+        await ensureSeasonExists();
+        current = await getActiveSeason();
+    }
 	if (!current) {
 		return json({ season: null, leaderboard: [], me: null, pastSeasons: await pastSeasonsQuery });
 	}

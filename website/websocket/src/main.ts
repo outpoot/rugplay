@@ -13,6 +13,8 @@ if (!process.env.REDIS_URL) {
 }
 
 const redis = new Redis(process.env.REDIS_URL, { enableReadyCheck: false });
+const authRedis = new Redis(process.env.REDIS_URL, { enableReadyCheck: false });
+authRedis.on('error', (err) => console.error('WebSocket auth Redis error', err));
 
 const HEARTBEAT_INTERVAL = 30_000;
 
@@ -20,10 +22,12 @@ type WebSocketData = {
 	coinSymbol?: string;
 	userId?: string;
 	lastActivity: number;
+	authVersion: number;
 };
 
 const coinSockets = new Map<string, Set<ServerWebSocket<WebSocketData>>>();
 const userSockets = new Map<string, Set<ServerWebSocket<WebSocketData>>>();
+const connections = new Set<ServerWebSocket<WebSocketData>>();
 const pingIntervals = new WeakMap<ServerWebSocket<WebSocketData>, NodeJS.Timeout>();
 
 redis.on('error', (err) => console.error('Redis Client Error', err));
@@ -41,7 +45,6 @@ redis.on('connect', () => {
 });
 
 redis.on('pmessage', (pattern, channel, msg) => {
-	console.log(`[Redis pmessage RECEIVED] Pattern: "${pattern}", Channel: "${channel}", Message: "${msg}"`);
 	try {
 		if (channel.startsWith('comments:')) {
 			const coinSymbol = channel.substring('comments:'.length);
@@ -56,7 +59,6 @@ redis.on('pmessage', (pattern, channel, msg) => {
 		} else if (channel.startsWith('prices:')) {
 			const coinSymbol = channel.substring('prices:'.length);
 			const sockets = coinSockets.get(coinSymbol);
-			console.log(`Received price update for ${coinSymbol}:`, msg);
 			if (sockets) {
 				const priceData = JSON.parse(msg);
 				const priceMessage = JSON.stringify({
@@ -74,7 +76,6 @@ redis.on('pmessage', (pattern, channel, msg) => {
 		} else if (channel.startsWith('notifications:')) {
 			const userId = channel.substring('notifications:'.length);
 			const sockets = userSockets.get(userId);
-			console.log(`Received notification for user ${userId}:`, msg);
 			if (sockets) {
 				for (const ws of sockets) {
 					if (ws.readyState === WebSocket.OPEN) {
@@ -154,7 +155,7 @@ function handleSetCoin(ws: ServerWebSocket<WebSocketData>, coinSymbol: string) {
 	}
 }
 
-function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string) {
+function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId?: string) {
 	if (ws.data.userId) {
 		const prev = userSockets.get(ws.data.userId);
 		if (prev) {
@@ -166,6 +167,7 @@ function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string) {
 	}
 
 	ws.data.userId = userId;
+	if (!userId) return;
 
 	if (!userSockets.has(userId)) {
 		userSockets.set(userId, new Set([ws]));
@@ -176,11 +178,8 @@ function handleSetUser(ws: ServerWebSocket<WebSocketData>, userId: string) {
 
 function checkConnections() {
 	const now = Date.now();
-	for (const [coinSymbol, sockets] of coinSockets.entries()) {
-		const staleSockets = Array.from(sockets).filter(ws => now - ws.data.lastActivity > HEARTBEAT_INTERVAL * 2);
-		for (const socket of staleSockets) {
-			socket.terminate();
-		}
+	for (const socket of connections) {
+		if (now - socket.data.lastActivity > HEARTBEAT_INTERVAL * 2) socket.terminate();
 	}
 }
 
@@ -196,7 +195,7 @@ const server = Bun.serve<WebSocketData, undefined>({
 			return new Response(JSON.stringify({
 				status: 'ok',
 				timestamp: new Date().toISOString(),
-				activeConnections: Array.from(coinSockets.values()).reduce((total, set) => total + set.size, 0)
+				activeConnections: connections.size
 			}), {
 				headers: { 'Content-Type': 'application/json' }
 			});
@@ -205,6 +204,7 @@ const server = Bun.serve<WebSocketData, undefined>({
 		const upgraded = server.upgrade(request, {
 			data: {
 				coinSymbol: undefined,
+				authVersion: 0,
 				lastActivity: Date.now()
 			}
 		});
@@ -213,7 +213,8 @@ const server = Bun.serve<WebSocketData, undefined>({
 	},
 
 	websocket: {
-		message(ws, msg) {
+		maxPayloadLength: 4096,
+		async message(ws, msg) {
 			ws.data.lastActivity = Date.now();
 
 			if (typeof msg !== 'string') return;
@@ -223,12 +224,19 @@ const server = Bun.serve<WebSocketData, undefined>({
 					type: string;
 					coinSymbol?: string;
 					userId?: string;
+					token?: string;
 				};
 
-				if (data.type === 'set_coin' && data.coinSymbol) {
+				if (data.type === 'set_coin' && typeof data.coinSymbol === 'string' && data.coinSymbol.length <= 64) {
 					handleSetCoin(ws, data.coinSymbol);
-				} else if (data.type === 'set_user' && data.userId) {
-					handleSetUser(ws, data.userId);
+				} else if (data.type === 'set_user') {
+					const version = ++ws.data.authVersion;
+					handleSetUser(ws);
+					if (typeof data.token !== 'string' || !/^[a-f0-9]{64}$/.test(data.token)) return;
+					const userId = await authRedis.getdel(`websocket:token:${data.token}`);
+					if (userId && connections.has(ws) && version === ws.data.authVersion) {
+						handleSetUser(ws, userId);
+					}
 				} else if (data.type === 'pong') {
 					ws.data.lastActivity = Date.now();
 				}
@@ -237,9 +245,9 @@ const server = Bun.serve<WebSocketData, undefined>({
 			}
 		},
 		open(ws) {
+			connections.add(ws);
 			const interval = setInterval(() => {
 				if (ws.readyState === 1) {
-					ws.data.lastActivity = Date.now();
 					ws.send(JSON.stringify({ type: 'ping' }));
 				} else {
 					clearInterval(interval);
@@ -248,6 +256,7 @@ const server = Bun.serve<WebSocketData, undefined>({
 
 			pingIntervals.set(ws, interval);
 		}, close(ws) {
+			connections.delete(ws);
 			const interval = pingIntervals.get(ws);
 			if (interval) {
 				clearInterval(interval);

@@ -1,7 +1,7 @@
-import { json, error } from '@sveltejs/kit';
+import { json, error, isHttpError } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, coin, transaction, userPortfolio } from '$lib/server/db/schema';
-import { eq, desc, sql, count, and, gte } from 'drizzle-orm';
+import { eq, desc, sql, count, gte } from 'drizzle-orm';
 import { getUserTrophies, getBestTrophy } from '$lib/server/seasons';
 
 export async function GET({ params }) {
@@ -41,8 +41,10 @@ export async function GET({ params }) {
 
         const actualUserId = userProfile.id;
 
-        // get created coins
-        const createdCoins = await db
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const within24h = gte(transaction.timestamp, twentyFourHoursAgo);
+        const [createdCoins, portfolioHoldings, recentTransactions, transactionStats, seasonTrophies, { bestTrophy, trophyCount }] = await Promise.all([
+        db
             .select({
                 id: coin.id,
                 name: coin.name,
@@ -57,30 +59,18 @@ export async function GET({ params }) {
             .from(coin)
             .where(eq(coin.creatorId, actualUserId))
             .orderBy(desc(coin.createdAt))
-            .limit(10);
+            .limit(10),
 
-        // get portfolio value and holdings count
-        const portfolioHoldings = await db
+        db
             .select({
                 quantity: userPortfolio.quantity,
                 currentPrice: coin.currentPrice
             })
             .from(userPortfolio)
             .innerJoin(coin, eq(userPortfolio.coinId, coin.id))
-            .where(eq(userPortfolio.userId, actualUserId));
+            .where(eq(userPortfolio.userId, actualUserId)),
 
-        const holdingsValue = portfolioHoldings.reduce((total, holding) => {
-            const quantity = Number(holding.quantity);
-            const price = Number(holding.currentPrice);
-            return total + (quantity * price);
-        }, 0);
-
-        const portfolioStats = {
-            holdingsCount: portfolioHoldings.length,
-            totalValue: holdingsValue
-        };
-
-        const recentTransactions = await db
+        db
             .select({
                 id: transaction.id,
                 type: transaction.type,
@@ -100,41 +90,31 @@ export async function GET({ params }) {
             .innerJoin(coin, eq(transaction.coinId, coin.id))
             .where(eq(transaction.userId, actualUserId))
             .orderBy(desc(transaction.timestamp))
-            .limit(10);
+            .limit(10),
 
-        const baseCurrencyBalance = parseFloat(userProfile.baseCurrencyBalance);
-        const calculatedHoldingsValue = portfolioStats.totalValue || 0;
-        const totalPortfolioValue = baseCurrencyBalance + calculatedHoldingsValue;
-
-        // get all transaction statistics
-        const transactionStats = await db
+        db
             .select({
                 totalTransactions: count(),
                 totalBuyVolume: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'BUY' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END), 0)`,
-                totalSellVolume: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'SELL' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END), 0)`
+                totalSellVolume: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'SELL' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END), 0)`,
+                transactions24h: sql<number>`COUNT(*) FILTER (WHERE ${within24h})`.mapWith(Number),
+                buyVolume24h: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'BUY' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END) FILTER (WHERE ${within24h}), 0)`,
+                sellVolume24h: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'SELL' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END) FILTER (WHERE ${within24h}), 0)`
             })
             .from(transaction)
-            .where(eq(transaction.userId, actualUserId));
-
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const transactionStats24h = await db
-            .select({
-                transactions24h: count(),
-                buyVolume24h: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'BUY' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END), 0)`,
-                sellVolume24h: sql<number>`COALESCE(SUM(CASE WHEN ${transaction.type} = 'SELL' THEN CAST(${transaction.totalBaseCurrencyAmount} AS NUMERIC) ELSE 0 END), 0)`
-            })
-            .from(transaction)
-            .where(
-                and(
-                    eq(transaction.userId, actualUserId),
-                    gte(transaction.timestamp, twentyFourHoursAgo)
-                )
-            );
-
-        const [seasonTrophies, { bestTrophy, trophyCount }] = await Promise.all([
+            .where(eq(transaction.userId, actualUserId)),
             getUserTrophies(actualUserId),
             getBestTrophy(actualUserId)
         ]);
+
+        const holdingsValue = portfolioHoldings.reduce((total, holding) => {
+            const quantity = Number(holding.quantity);
+            const price = Number(holding.currentPrice);
+            return total + (quantity * price);
+        }, 0);
+        const baseCurrencyBalance = parseFloat(userProfile.baseCurrencyBalance);
+        const calculatedHoldingsValue = holdingsValue || 0;
+        const totalPortfolioValue = baseCurrencyBalance + calculatedHoldingsValue;
 
         return json({
             profile: {
@@ -148,20 +128,21 @@ export async function GET({ params }) {
                 totalPortfolioValue,
                 baseCurrencyBalance,
                 holdingsValue: calculatedHoldingsValue,
-                holdingsCount: portfolioStats.holdingsCount || 0,
+                holdingsCount: portfolioHoldings.length,
                 coinsCreated: createdCoins.length,
                 totalTransactions: transactionStats[0]?.totalTransactions || 0,
                 totalBuyVolume: transactionStats[0]?.totalBuyVolume || 0,
                 totalSellVolume: transactionStats[0]?.totalSellVolume || 0,
-                transactions24h: transactionStats24h[0]?.transactions24h || 0,
-                buyVolume24h: transactionStats24h[0]?.buyVolume24h || 0,
-                sellVolume24h: transactionStats24h[0]?.sellVolume24h || 0,
+                transactions24h: transactionStats[0]?.transactions24h || 0,
+                buyVolume24h: transactionStats[0]?.buyVolume24h || 0,
+                sellVolume24h: transactionStats[0]?.sellVolume24h || 0,
             },
             createdCoins,
             recentTransactions,
             seasonTrophies
         });
     } catch (e) {
+        if (isHttpError(e)) throw e;
         console.error('Failed to fetch user profile:', e);
         throw error(500, 'Failed to fetch user profile');
     }

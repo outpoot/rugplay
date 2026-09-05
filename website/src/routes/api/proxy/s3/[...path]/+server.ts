@@ -1,5 +1,5 @@
 import { PUBLIC_B2_BUCKET, PUBLIC_B2_ENDPOINT } from "$env/static/public";
-import { error } from '@sveltejs/kit';
+import { error, isHttpError } from '@sveltejs/kit';
 
 const EXPECTED_HOST = new URL(PUBLIC_B2_ENDPOINT).hostname;
 
@@ -21,14 +21,13 @@ export async function GET({ params, request }) {
     }
 
     try {
-        const response = await fetch(s3Url);
+        const response = await fetch(s3Url, { signal: request.signal });
 
         if (!response.ok) {
             throw error(response.status, 'Failed to fetch from S3');
         }
 
         const contentType = response.headers.get('content-type') || 'application/octet-stream';
-        const buffer = await response.arrayBuffer();
 
         let cacheControl: string;
         
@@ -40,7 +39,7 @@ export async function GET({ params, request }) {
             cacheControl = 'public, max-age=86400';
         }
 
-        return new Response(buffer, {
+        return new Response(response.body, {
             headers: {
                 'Content-Type': contentType,
                 'Cache-Control': cacheControl,
@@ -50,6 +49,7 @@ export async function GET({ params, request }) {
             }
         });
     } catch (e) {
+        if (isHttpError(e)) throw e;
         console.error('Proxy error:', e);
         throw error(500, 'Failed to proxy S3 request');
     }

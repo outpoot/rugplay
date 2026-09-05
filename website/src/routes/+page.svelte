@@ -7,6 +7,7 @@
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
 	import DataTable from '$lib/components/self/DataTable.svelte';
 	import HomeSkeleton from '$lib/components/self/skeletons/HomeSkeleton.svelte';
+	import HomeSeasonSkeleton from '$lib/components/self/skeletons/HomeSeasonSkeleton.svelte';
 	import SeasonCard from '$lib/components/self/SeasonCard.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { onMount } from 'svelte';
@@ -17,31 +18,42 @@
 	let coins = $state<any[]>([]);
 	let loading = $state(true);
 	let seasonData = $state<any>(null);
+	let seasonLoading = $state(true);
 
-	onMount(async () => {
-		try {
-			const [coinResult, loadedSeasonData] = await Promise.all([
-				fetch('/api/coins/top').then(async (response) => {
-					if (!response.ok) throw new Error('Failed to load coins');
-					return response.json();
-				}),
-				fetch('/api/season')
-					.then((response) => (response.ok ? response.json() : null))
-					.catch((e) => {
-						console.error('Failed to fetch season:', e);
-						return null;
-					})
-			]);
+	onMount(() => {
+		const controller = new AbortController();
+		const options = { signal: controller.signal };
 
-			coins = coinResult.coins;
-			seasonData = loadedSeasonData;
-		} catch (e) {
-			console.error('Failed to fetch coins:', e);
-			toast.error('Failed to load coins');
-		} finally {
-			loading = false;
-		}
+		fetch('/api/coins/top', options)
+			.then(async (response) => {
+				if (!response.ok) throw new Error('Failed to load coins');
+				const result = await response.json();
+				if (!controller.signal.aborted) coins = result.coins;
+			})
+			.catch((error) => {
+				if (controller.signal.aborted) return;
+				console.error('Failed to fetch coins:', error);
+				toast.error('Failed to load coins');
+			})
+			.finally(() => {
+				if (!controller.signal.aborted) loading = false;
+			});
+
+		fetch('/api/season', options)
+			.then(async (response) => {
+				const result = response.ok ? await response.json() : null;
+				if (!controller.signal.aborted) seasonData = result;
+			})
+			.catch((error) => {
+				if (!controller.signal.aborted) console.error('Failed to fetch season:', error);
+			})
+			.finally(() => {
+				if (!controller.signal.aborted) seasonLoading = false;
+			});
+
+		return () => controller.abort();
 	});
+
 	const marketColumns = [
 		{
 			key: 'name',
@@ -111,7 +123,7 @@
 	</header>
 
 	{#if loading}
-		<HomeSkeleton showSeason={!seasonData || !!seasonData.season} />
+		<HomeSkeleton showSeason={seasonLoading || !!seasonData?.season} />
 	{:else if coins.length === 0}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
@@ -121,9 +133,13 @@
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-			{#if seasonData?.season}
+			{#if seasonLoading || seasonData?.season}
 				<div class="order-last md:col-span-2 lg:order-none lg:col-span-1 lg:col-start-4 lg:row-span-2 lg:row-start-1">
-					<SeasonCard data={seasonData} />
+					{#if seasonLoading}
+						<HomeSeasonSkeleton />
+					{:else}
+						<SeasonCard data={seasonData} />
+					{/if}
 				</div>
 			{/if}
 			{#each coins.slice(0, 6) as coin (coin.symbol)}

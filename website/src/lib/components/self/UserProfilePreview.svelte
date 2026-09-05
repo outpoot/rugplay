@@ -14,29 +14,31 @@
 	let loading = $state(true);
 	let error = $state(false);
 
-	async function fetchUserData() {
+	async function fetchUserData(id: number, signal: AbortSignal) {
 		loading = true;
 		error = false;
 
 		try {
-			const response = await fetch(`/api/user/${userId}`);
+			const response = await fetch(`/api/user/${id}`, { signal });
 			if (response.ok) {
-				userData = await response.json();
-			} else {
+				const result = await response.json();
+				if (!signal.aborted) userData = result;
+			} else if (!signal.aborted) {
 				error = true;
 			}
 		} catch (e) {
+			if (signal.aborted) return;
 			console.error('Failed to fetch user data:', e);
 			error = true;
 		} finally {
-			loading = false;
+			if (!signal.aborted) loading = false;
 		}
 	}
 
 	$effect(() => {
 		if (userId) {
 			const abortController = new AbortController();
-			fetchUserData();
+			fetchUserData(userId, abortController.signal);
 
 			return () => {
 				abortController.abort();

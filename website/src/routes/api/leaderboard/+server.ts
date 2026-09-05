@@ -127,23 +127,27 @@ async function getLeaderboardData() {
             }
         }
 
+        const richestUsers = db.select().from(user)
+            .orderBy(desc(user.baseCurrencyBalance))
+            .limit(10)
+            .as('richest_users');
+
         const [cashKings, paperMillionaires] = await Promise.all([
             db.select({
-                userId: user.id,
-                username: user.username,
-                name: user.name,
-                image: user.image,
-                nameColor: user.nameColor,
-                founderBadge: user.founderBadge,
-                baseCurrencyBalance: user.baseCurrencyBalance,
+                userId: richestUsers.id,
+                username: richestUsers.username,
+                name: richestUsers.name,
+                image: richestUsers.image,
+                nameColor: richestUsers.nameColor,
+                founderBadge: richestUsers.founderBadge,
+                baseCurrencyBalance: richestUsers.baseCurrencyBalance,
                 coinValue: sql<number>`COALESCE(SUM(CAST(${userPortfolio.quantity} AS NUMERIC) * CAST(${coin.currentPrice} AS NUMERIC)), 0)`
             })
-                .from(user)
-                .leftJoin(userPortfolio, eq(userPortfolio.userId, user.id))
+                .from(richestUsers)
+                .leftJoin(userPortfolio, eq(userPortfolio.userId, richestUsers.id))
                 .leftJoin(coin, eq(coin.id, userPortfolio.coinId))
-                .groupBy(user.id, user.username, user.name, user.image, user.nameColor, user.founderBadge, user.baseCurrencyBalance)
-                .orderBy(desc(sql`CAST(${user.baseCurrencyBalance} AS NUMERIC)`))
-                .limit(10),
+                .groupBy(richestUsers.id, richestUsers.username, richestUsers.name, richestUsers.image, richestUsers.nameColor, richestUsers.founderBadge, richestUsers.baseCurrencyBalance)
+                .orderBy(desc(richestUsers.baseCurrencyBalance)),
 
             db.select({
                 userId: user.id,

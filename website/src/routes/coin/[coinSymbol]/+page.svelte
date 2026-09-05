@@ -26,7 +26,6 @@
 		CandlestickSeries,
 		HistogramSeries
 	} from 'lightweight-charts';
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
@@ -36,6 +35,7 @@
 	import { websocketController, type PriceUpdate, isConnectedStore } from '$lib/stores/websocket';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
+	import { untrack } from 'svelte';
 
 	const { data } = $props();
 	let coinSymbol = $derived(data.coinSymbol);
@@ -47,13 +47,14 @@
 	let isLoadingHistory = $state(false);
 	let noMoreHistory = $state(false);
 	let userHolding = $state(0);
+	let chartRevision = $state(0);
 	let buyModalOpen = $state(false);
 	let sellModalOpen = $state(false);
 	let selectedTimeframe = $state(data.timeframe || '1m');
 	let lastPriceUpdateTime = 0;
 	let shouldSignIn = $state(false);
 
-	let previousCoinSymbol = $state<string | null>(null);
+	let holdingController: AbortController | null = null;
 	let countdown = $state<number | null>(null);
 	let countdownInterval = $state<NodeJS.Timeout | null>(null);
 
@@ -73,33 +74,26 @@
 		oldestTimestamp = data.oldestTimestamp ?? null;
 		noMoreHistory = false;
 		selectedTimeframe = data.timeframe || '1m';
-	});
-
-	onMount(async () => {
-		await loadUserHolding();
-
-		websocketController.setCoin(coinSymbol.toUpperCase());
-		websocketController.subscribeToPriceUpdates(coinSymbol.toUpperCase(), handlePriceUpdate);
-
-		previousCoinSymbol = coinSymbol;
-	});
-
-	$effect(() => {
-		return () => {
-			if (previousCoinSymbol) {
-				websocketController.unsubscribeFromPriceUpdates(previousCoinSymbol.toUpperCase());
+		chartRevision += 1;
+		untrack(() => {
+			if (chart && candlestickSeries && volumeSeries && chartData.length > 0) {
+				candlestickSeries.setData(processCandles(chartData));
+				volumeSeries.setData(generateVolumeData(chartData, volumeData));
 			}
-		};
+		});
 	});
 
 	$effect(() => {
-		if (coinSymbol && previousCoinSymbol && coinSymbol !== previousCoinSymbol) {
-			websocketController.unsubscribeFromPriceUpdates(previousCoinSymbol.toUpperCase());
-			websocketController.setCoin(coinSymbol.toUpperCase());
-			websocketController.subscribeToPriceUpdates(coinSymbol.toUpperCase(), handlePriceUpdate);
-			loadUserHolding();
-			previousCoinSymbol = coinSymbol;
-		}
+		const symbol = coinSymbol.toUpperCase();
+		websocketController.setCoin(symbol);
+		websocketController.subscribeToPriceUpdates(symbol, handlePriceUpdate);
+		return () => websocketController.unsubscribeFromPriceUpdates(symbol);
+	});
+
+	$effect(() => {
+		userHolding = 0;
+		void loadUserHolding();
+		return () => holdingController?.abort();
 	});
 
 	$effect(() => {
@@ -153,6 +147,12 @@
 			volumeData = result.volumeData || [];
 			oldestTimestamp = result.oldestTimestamp ?? null;
 			noMoreHistory = false;
+			if (chart && candlestickSeries && volumeSeries) {
+				candlestickSeries.setData(processCandles(chartData));
+				volumeSeries.setData(generateVolumeData(chartData, volumeData));
+			} else {
+				chartRevision += 1;
+			}
 		} catch (e) {
 			console.error('Failed to fetch coin data:', e);
 			toast.error('Failed to load coin data');
@@ -162,17 +162,28 @@
 	}
 
 	async function loadUserHolding() {
-		if (!$USER_DATA) return;
+		holdingController?.abort();
+		const userId = $USER_DATA?.id;
+		const symbol = coinSymbol;
+		if (!userId) {
+			userHolding = 0;
+			return;
+		}
+		const controller = new AbortController();
+		holdingController = controller;
 
 		try {
-			const response = await fetch('/api/portfolio/total');
+			const response = await fetch(`/api/portfolio/holding/${encodeURIComponent(symbol)}`, {
+				signal: controller.signal
+			});
 			if (response.ok) {
 				const result = await response.json();
-				const holding = result.coinHoldings.find((h: any) => h.symbol === coinSymbol.toUpperCase());
-				userHolding = holding ? holding.quantity : 0;
+				if (!controller.signal.aborted && $USER_DATA?.id === userId && coinSymbol === symbol) {
+					userHolding = result.quantity;
+				}
 			}
 		} catch (e) {
-			console.error('Failed to load user holding:', e);
+			if (!controller.signal.aborted) console.error('Failed to load user holding:', e);
 		}
 	}
 	async function handleTradeSuccess() {
@@ -335,15 +346,35 @@
 	let chart: IChartApi | null = null;
 	let candlestickSeries: any = null;
 	let volumeSeries: any = null;
+	let hasChartData = $derived(chartData.length > 0);
+
+	function processCandles(candles: typeof chartData) {
+		return candles.map((candle: { open: number; close: number; high: number; low: number }) => {
+			if (candle.open !== candle.close) return candle;
+			const variation = candle.open * 0.001;
+			return {
+				...candle,
+				high: Math.max(candle.high, candle.open + variation),
+				low: Math.min(candle.low, candle.open - variation)
+			};
+		});
+	}
 
 	$effect(() => {
-		if (chart && chartData.length > 0) {
+		const container = chartContainer;
+		const hasData = hasChartData;
+		const symbol = coinSymbol;
+		chartRevision;
+
+		if (chart && hasData) {
 			chart.remove();
 			chart = null;
 		}
 
-		if (chartContainer && chartData.length > 0) {
-			chart = createChart(chartContainer, {
+		if (container && hasData && symbol) {
+			const initialChartData = untrack(() => chartData);
+			const initialVolumeData = untrack(() => volumeData);
+			chart = createChart(container, {
 				layout: {
 					textColor: '#666666',
 					background: { type: ColorType.Solid, color: 'transparent' },
@@ -397,21 +428,10 @@
 				1
 			);
 
-			const processedChartData = chartData.map((candle: { open: any; close: any; high: number; low: number; }) => {
-				if (candle.open === candle.close) {
-					const basePrice = candle.open;
-					const variation = basePrice * 0.001;
-					return {
-						...candle,
-						high: Math.max(candle.high, basePrice + variation),
-						low: Math.min(candle.low, basePrice - variation)
-					};
-				}
-				return candle;
-			});
+			const processedChartData = processCandles(initialChartData);
 
 			candlestickSeries.setData(processedChartData);
-			volumeSeries.setData(generateVolumeData(chartData, volumeData));
+			volumeSeries.setData(generateVolumeData(initialChartData, initialVolumeData));
 
 			const volumePane = chart.panes()[1];
 			if (volumePane) volumePane.setHeight(100);

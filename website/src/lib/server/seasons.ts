@@ -67,7 +67,6 @@ export async function getSeasonLeaderboard(seasonId: number, limit = 25) {
 			u.founder_badge AS "founderBadge",
 			u.prestige_level AS "prestigeLevel",
 			sp.starting_stake AS "startingStake",
-			(${realizableValueExpr}) AS "realizableValue",
 			(${realizableValueExpr}) AS "score"
 		FROM season_participant sp
 		JOIN "user" u ON u.id = sp.user_id
@@ -87,7 +86,7 @@ export async function getSeasonLeaderboard(seasonId: number, limit = 25) {
 		founderBadge: r.founderBadge,
 		prestigeLevel: Number(r.prestigeLevel ?? 0),
 		startingStake: Number(r.startingStake),
-		realizableValue: Number(r.realizableValue),
+		realizableValue: Number(r.score),
 		score: Number(r.score),
 		growth: Number(r.startingStake) > 0 ? Number(r.score) / Number(r.startingStake) : 0
 	}));
@@ -99,15 +98,14 @@ export async function getUserSeasonStanding(seasonId: number, userId: number) {
 			SELECT
 				sp.user_id,
 				sp.starting_stake,
-			(${realizableValueExpr}) AS realizable,
-			(${realizableValueExpr}) AS score
+				(${realizableValueExpr}) AS score
 			FROM season_participant sp
 			JOIN "user" u ON u.id = sp.user_id
 			WHERE sp.season_id = ${seasonId} AND u.is_banned = false
 		), ranked AS (
 			SELECT *, RANK() OVER (ORDER BY score DESC) AS rank FROM scored
 		)
-		SELECT rank, score, realizable, starting_stake AS "startingStake",
+		SELECT rank, score, starting_stake AS "startingStake",
 		       (SELECT COUNT(*) FROM scored) AS "totalEntrants"
 		FROM ranked WHERE user_id = ${userId}
 	`);
@@ -118,7 +116,7 @@ export async function getUserSeasonStanding(seasonId: number, userId: number) {
 	return {
 		rank: Number(row.rank),
 		score: Number(row.score),
-		realizableValue: Number(row.realizable),
+		realizableValue: Number(row.score),
 		startingStake: Number(row.startingStake),
 		totalEntrants: Number(row.totalEntrants),
 		growth: Number(row.startingStake) > 0 ? Number(row.score) / Number(row.startingStake) : 0

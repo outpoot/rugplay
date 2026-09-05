@@ -177,6 +177,7 @@ export const transaction = pgTable("transaction", {
 		typeIdx: index("transaction_type_idx").on(table.type),
 		timestampIdx: index("transaction_timestamp_idx").on(table.timestamp),
 		userCoinIdx: index("transaction_user_coin_idx").on(table.userId, table.coinId),
+		userTimestampIdx: index("transaction_user_id_timestamp_idx").on(table.userId, table.timestamp),
 		coinTypeIdx: index("transaction_coin_type_idx").on(table.coinId, table.type),
 		coinTimestampIdx: index("transaction_coin_id_timestamp_idx").on(table.coinId, table.timestamp),
 	};

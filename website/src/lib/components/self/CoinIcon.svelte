@@ -16,15 +16,17 @@
 	}>();
 
 	let sizeClass = $derived(`h-${size} w-${size}`);
+	let failedIcon = $state<string | null>(null);
 </script>
 
-{#if icon}
+{#if icon && icon !== failedIcon}
 	<img
 		src={getPublicUrl(icon)}
 		alt={name}
 		class="{sizeClass} rounded-full object-cover {className}"
 		loading="lazy"
 		decoding="async"
+		onerror={() => (failedIcon = icon ?? null)}
 	/>
 {:else}
 	<div

@@ -74,7 +74,7 @@
 		oldestTimestamp = data.oldestTimestamp ?? null;
 		noMoreHistory = false;
 		selectedTimeframe = data.timeframe || '1m';
-		chartRevision += 1;
+		chartRevision = untrack(() => chartRevision + 1);
 		untrack(() => {
 			if (chart && candlestickSeries && volumeSeries && chartData.length > 0) {
 				candlestickSeries.setData(processCandles(chartData));

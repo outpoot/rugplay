@@ -20,7 +20,7 @@ export const POST: RequestHandler = async (event) => {
         throw error(404, 'API key not found');
     }
 
-    if (existingKey.userId !== session.user.id) {
+    if (existingKey.referenceId !== session.user.id) {
         throw error(403, 'Not authorized to regenerate this API key');
     }
 
@@ -43,17 +43,16 @@ export const POST: RequestHandler = async (event) => {
     const newKey = await auth.api.createApiKey({
         body: {
             name: existingKey.name ?? undefined,
-            userId: existingKey.userId,
-            remaining: existingKey.remaining,
+            userId: existingKey.referenceId,
+            remaining: existingKey.remaining ?? undefined,
             refillAmount: existingKey.refillAmount ?? undefined,
             refillInterval: existingKey.refillInterval ?? undefined,
-            rateLimitEnabled: existingKey.rateLimitEnabled,
+            rateLimitEnabled: existingKey.rateLimitEnabled ?? undefined,
             rateLimitTimeWindow: existingKey.rateLimitTimeWindow ?? undefined,
             rateLimitMax: existingKey.rateLimitMax ?? undefined,
             permissions: parsedPermissions,
             metadata: existingKey.metadata
-        },
-        headers: event.request.headers
+        }
     });
     console.log(existingKey.remaining)
     console.log(newKey.remaining)

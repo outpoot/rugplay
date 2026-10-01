@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, decimal, serial, varchar, integer, primaryKey, pgEnum, index, unique, check } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, decimal, serial, varchar, integer, primaryKey, pgEnum, index, unique, check, customType } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const transactionTypeEnum = pgEnum('transaction_type', ['BUY', 'SELL', 'TRANSFER_IN', 'TRANSFER_OUT']);
@@ -320,13 +320,20 @@ export const notifications = pgTable("notification", {
 	};
 });
 
+const apiKeyUserId = customType<{ data: string; driverData: number }>({
+	dataType: () => "integer",
+	toDriver: (value) => Number(value),
+	fromDriver: (value) => String(value),
+});
+
 export const apikey = pgTable("apikey", {
 	id: serial("id").primaryKey(),
+	configId: text("config_id").notNull().default("default"),
 	name: text('name'),
 	start: text('start'),
 	prefix: text('prefix'),
 	key: text('key').notNull(),
-	userId: integer('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	userId: apiKeyUserId('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
 	refillInterval: integer('refill_interval'),
 	refillAmount: integer('refill_amount'),
 	lastRefillAt: timestamp('last_refill_at'),

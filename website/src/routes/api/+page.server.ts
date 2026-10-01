@@ -8,7 +8,7 @@ export const load: PageServerLoad = async (event) => {
         return { apiKey: null, todayUsage: 0 };
     }
 
-    const keys = await auth.api.listApiKeys({ headers: event.request.headers });
+    const { apiKeys: keys } = await auth.api.listApiKeys({ headers: event.request.headers });
     const key = keys.length > 0 ? keys[0] : null;
 
     const todayUsage = key ? 2000 - (key.remaining || 0) : 0;

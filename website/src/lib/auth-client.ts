@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/svelte";
-import { apiKeyClient } from "better-auth/client/plugins";
+import { apiKeyClient } from "@better-auth/api-key/client";
 import { env } from '$env/dynamic/public';
 
 export const client = createAuthClient({

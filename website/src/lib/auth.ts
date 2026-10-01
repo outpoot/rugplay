@@ -7,7 +7,7 @@ import { db } from "./server/db";
 import * as schema from "./server/db/schema";
 import { generateUsername } from "./utils/random";
 import { uploadProfilePicture } from "./server/s3";
-import { apiKey } from "better-auth/plugins";
+import { apiKey } from "@better-auth/api-key";
 
 if (!privateEnv.GOOGLE_CLIENT_ID) throw new Error('GOOGLE_CLIENT_ID is not set');
 if (!privateEnv.GOOGLE_CLIENT_SECRET) throw new Error('GOOGLE_CLIENT_SECRET is not set');
@@ -26,6 +26,11 @@ export const auth = betterAuth({
 
     plugins: [
         apiKey({
+            schema: {
+                apikey: {
+                    fields: { referenceId: 'userId' }
+                }
+            },
             defaultPrefix: 'rgpl_',
             rateLimit: {
                 enabled: true,
@@ -73,7 +78,7 @@ export const auth = betterAuth({
                 return {
                     name: profile.name,
                     email: profile.email,
-                    image: s3ImageKey,
+                    image: s3ImageKey ?? undefined,
                     username: newUsername,
                 };
             },
@@ -99,7 +104,7 @@ export const auth = betterAuth({
     },
     advanced: {
         database: {
-            generateId: false,
+            generateId: "serial",
         }
     }
 });

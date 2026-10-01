@@ -20,8 +20,8 @@ export async function verifyApiKeyAndGetUser(request: Request) {
     }
 
     const [owner] = await db.select({ isBanned: user.isBanned }).from(user)
-        .where(eq(user.id, Number(key.userId))).limit(1);
+        .where(eq(user.id, Number(key.referenceId))).limit(1);
     if (!owner || owner.isBanned) throw error(403, 'Account unavailable');
 
-    return key.userId;
+    return key.referenceId;
 }

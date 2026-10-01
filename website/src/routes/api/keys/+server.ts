@@ -11,7 +11,7 @@ export const GET: RequestHandler = async (event) => {
         throw error(401, 'Not authenticated');
     }
 
-    const keys = await auth.api.listApiKeys({
+    const { apiKeys: keys } = await auth.api.listApiKeys({
         headers: event.request.headers
     });
 
@@ -27,7 +27,7 @@ export const POST: RequestHandler = async (event) => {
         throw error(401, 'Not authenticated');
     }
 
-    const existingKeys = await auth.api.listApiKeys({
+    const { apiKeys: existingKeys } = await auth.api.listApiKeys({
         headers: event.request.headers
     });
 
@@ -43,8 +43,7 @@ export const POST: RequestHandler = async (event) => {
                 api: ['read']
             },
             userId: session.user.id
-        },
-        headers: event.request.headers
+        }
     });
 
     return json(apiKey);

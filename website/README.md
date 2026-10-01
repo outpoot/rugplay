@@ -40,6 +40,8 @@ npm run build
 npm run preview
 ```
 
+Before deploying the Better Auth 1.7.7 upgrade, run `npm run db:migrate` from the website directory with `DATABASE_URL` set. Migration `0011_better_auth_api_key_config` adds the default API key configuration while retaining existing keys and their owners. Rebuild and replace all app replicas together, and restart any sign-ins already in progress.
+
 ## Project Structure
 
 - `src/routes/`: Page components and API endpoints

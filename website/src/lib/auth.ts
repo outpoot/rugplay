@@ -53,7 +53,6 @@ export const auth = betterAuth({
             clientId: privateEnv.GOOGLE_CLIENT_ID,
             clientSecret: privateEnv.GOOGLE_CLIENT_SECRET,
             mapProfileToUser: async (profile) => {
-                const newUsername = generateUsername();
                 let s3ImageKey: string | null = null;
 
                 if (profile.picture) {
@@ -79,15 +78,14 @@ export const auth = betterAuth({
                     name: profile.name,
                     email: profile.email,
                     image: s3ImageKey ?? undefined,
-                    username: newUsername,
                 };
             },
         }
     },
     user: {
         additionalFields: {
-            username: { type: "string", required: true, input: false },
-            isAdmin: { type: "boolean", required: true, input: false },
+            username: { type: "string", required: true, input: false, defaultValue: () => generateUsername() },
+            isAdmin: { type: "boolean", required: true, input: false, defaultValue: false },
             isBanned: { type: "boolean", required: false, input: false },
             banReason: { type: "string", required: false, input: false },
             baseCurrencyBalance: { type: "string", required: false, input: false },

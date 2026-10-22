@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
+import { dev } from '$app/environment';
 import { db } from "./server/db";
 import * as schema from "./server/db/schema";
 import { generateUsername } from "./utils/random";
@@ -20,8 +21,7 @@ export const auth = betterAuth({
 
     trustedOrigins: [
         publicEnv.PUBLIC_BETTER_AUTH_URL,
-        "http://rugplay.com",
-        "http://localhost:5173",
+        ...(dev ? ["http://localhost:5173"] : []),
     ],
 
     plugins: [
@@ -89,7 +89,7 @@ export const auth = betterAuth({
             isBanned: { type: "boolean", required: false, input: false },
             banReason: { type: "string", required: false, input: false },
             baseCurrencyBalance: { type: "string", required: false, input: false },
-            bio: { type: "string", required: false },
+            bio: { type: "string", required: false, input: false },
             volumeMaster: { type: "string", required: false, input: false },
             volumeMuted: { type: "boolean", required: false, input: false },
         }

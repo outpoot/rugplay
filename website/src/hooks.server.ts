@@ -41,6 +41,12 @@ const RATE_RULES: Array<{
         key: 'bet',
         limit: 10,
         windowSecs: 60
+    },
+    {
+        match: (p, m) => p.startsWith('/api/transfer') && m !== 'GET',
+        key: 'transfer',
+        limit: 10,
+        windowSecs: 60
     }
 ];
 
@@ -139,6 +145,13 @@ setInterval(() => {
 }, CACHE_CLEANUP_INTERVAL);
 
 export const handle: Handle = async ({ event, resolve }) => {
+    if (event.url.pathname === '/api/auth/update-user') {
+        return new Response(JSON.stringify({ message: 'Profile updates are only available from the settings page' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
     if (event.url.pathname.startsWith('/.well-known/appspecific/com.chrome.devtools')) {
         return new Response(null, { status: 204 });
     }

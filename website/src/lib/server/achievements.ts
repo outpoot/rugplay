@@ -811,6 +811,19 @@ export async function getAchievementProgress(userId: number): Promise<Record<str
 			.where(and(eq(userInventory.userId, userId), eq(userInventory.itemType, 'namecolor')));
 		progress['own_10_colors'] = Number(colorCount?.cnt ?? 0);
 
+		const [seasonsEntered] = await db
+			.select({ cnt: count() })
+			.from(seasonParticipant)
+			.where(eq(seasonParticipant.userId, userId));
+		progress['season_regular'] = Number(seasonsEntered?.cnt ?? 0);
+		progress['season_veteran'] = Number(seasonsEntered?.cnt ?? 0);
+
+		const [seasonWins] = await db
+			.select({ cnt: count() })
+			.from(seasonTrophy)
+			.where(and(eq(seasonTrophy.userId, userId), eq(seasonTrophy.rank, 1)));
+		progress['season_dynasty'] = Number(seasonWins?.cnt ?? 0);
+
 		const dedicationResult = await db.execute(sql`
 			WITH daily_buys AS (
 				SELECT t.coin_id, DATE(t.timestamp AT TIME ZONE 'UTC') AS buy_date

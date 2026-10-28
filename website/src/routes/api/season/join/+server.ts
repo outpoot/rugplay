@@ -20,7 +20,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const stake = Number(current.rankedStake);
 
-	return await db.transaction(async (tx) => {
+	const result = await db.transaction(async (tx) => {
 		const [userData] = await tx
 			.select({
 				id: user.id,
@@ -78,15 +78,17 @@ export const POST: RequestHandler = async ({ request }) => {
 			link: '/season'
 		});
 
-		checkAndAwardAchievements(userId, ['season'], { seasonJoined: true });
-
-		return json({
+		return {
 			success: true,
 			seasonNumber: current.number,
 			seasonName: current.name,
 			startingStake: stake,
 			sacrificed,
 			coinsSold
-		});
+		};
 	});
+
+	checkAndAwardAchievements(userId, ['season'], { seasonJoined: true });
+
+	return json(result);
 };

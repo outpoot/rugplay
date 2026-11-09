@@ -2,7 +2,7 @@ import { auth } from '$lib/auth';
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, predictionQuestion, predictionBet } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
 
@@ -13,9 +13,18 @@ export const POST: RequestHandler = async ({ params, request }) => {
     const questionId = parseInt(params.id!);
     const { side, amount } = await request.json();
 
+    const MIN_BET = 0.01;
     const MAX_BET = 1_000_000;
-    if (typeof side !== 'boolean' || !amount || !Number.isFinite(amount) || amount <= 0 || amount > MAX_BET) {
+    if (typeof side !== 'boolean' || typeof amount !== 'number' || !Number.isFinite(amount)) {
         return json({ error: 'Invalid bet parameters' }, { status: 400 });
+    }
+
+    // Round once to cents and use only this value from here on. Sub-cent amounts used to be
+    // stored as 0.00000001 per bet while the question totals and the balance rounded back
+    // to their old values, so bets were free and payouts were inflated.
+    const betAmount = Math.round(amount * 100) / 100;
+    if (betAmount < MIN_BET || betAmount > MAX_BET) {
+        return json({ error: `Bet must be between $${MIN_BET} and $${MAX_BET.toLocaleString()}` }, { status: 400 });
     }
 
     const userId = Number(session.user.id);
@@ -56,18 +65,21 @@ export const POST: RequestHandler = async ({ params, request }) => {
                 .for('update')
                 .limit(1);
 
-            if (!userData || Number(userData.baseCurrencyBalance) < amount) {
+            if (!userData || Number(userData.baseCurrencyBalance) < betAmount) {
                 throw new Error('Insufficient balance');
             }
 
-            // Deduct amount from user balance
-            await tx
+            const betAmountStr = betAmount.toFixed(2);
+
+            // Deduct amount from user balance (numeric math in SQL, no float rounding)
+            const [updatedUser] = await tx
                 .update(user)
                 .set({
-                    baseCurrencyBalance: (Number(userData.baseCurrencyBalance) - amount).toFixed(8),
+                    baseCurrencyBalance: sql`${user.baseCurrencyBalance} - ${betAmountStr}::numeric`,
                     updatedAt: new Date()
                 })
-                .where(eq(user.id, userId));
+                .where(eq(user.id, userId))
+                .returning({ baseCurrencyBalance: user.baseCurrencyBalance });
 
             const [newBet] = await tx
                 .insert(predictionBet)
@@ -75,43 +87,39 @@ export const POST: RequestHandler = async ({ params, request }) => {
                     userId,
                     questionId,
                     side,
-                    amount: amount.toFixed(8),
+                    amount: betAmountStr,
                 })
                 .returning();
 
             // Update question totals
-            const currentYesAmount = Number(questionData.totalYesAmount);
-            const currentNoAmount = Number(questionData.totalNoAmount);
-            
-            await tx
+            const [updatedQuestion] = await tx
                 .update(predictionQuestion)
-                .set({
-                    totalYesAmount: side 
-                        ? (currentYesAmount + amount).toFixed(8)
-                        : currentYesAmount.toFixed(8),
-                    totalNoAmount: !side 
-                        ? (currentNoAmount + amount).toFixed(8)
-                        : currentNoAmount.toFixed(8),
-                })
-                .where(eq(predictionQuestion.id, questionId));
+                .set(side
+                    ? { totalYesAmount: sql`${predictionQuestion.totalYesAmount} + ${betAmountStr}::numeric` }
+                    : { totalNoAmount: sql`${predictionQuestion.totalNoAmount} + ${betAmountStr}::numeric` })
+                .where(eq(predictionQuestion.id, questionId))
+                .returning({
+                    totalYesAmount: predictionQuestion.totalYesAmount,
+                    totalNoAmount: predictionQuestion.totalNoAmount,
+                });
 
             // Calculate current potential winnings for response (dynamic)
-            const newTotalYes = side ? currentYesAmount + amount : currentYesAmount;
-            const newTotalNo = !side ? currentNoAmount + amount : currentNoAmount;
+            const newTotalYes = Number(updatedQuestion.totalYesAmount);
+            const newTotalNo = Number(updatedQuestion.totalNoAmount);
             const totalPool = newTotalYes + newTotalNo;
-            const currentPotentialWinnings = side 
-                ? (totalPool / newTotalYes) * amount
-                : (totalPool / newTotalNo) * amount;
+            const currentPotentialWinnings = side
+                ? (totalPool / newTotalYes) * betAmount
+                : (totalPool / newTotalNo) * betAmount;
 
             return json({
                 success: true,
                 bet: {
                     id: newBet.id,
                     side,
-                    amount,
+                    amount: betAmount,
                     potentialWinnings: currentPotentialWinnings,
                 },
-                newBalance: Number(userData.baseCurrencyBalance) - amount
+                newBalance: Number(updatedUser.baseCurrencyBalance)
             });
         });
 

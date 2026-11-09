@@ -79,6 +79,29 @@
 		betDisplay = raw;
 	}
 
+	async function handleRoundError(res: Response) {
+		const data = await res.json();
+		if (data.code === 'ROUND_EXPIRED' || data.code === 'ROUND_NOT_FOUND') {
+			playing = false;
+			token = null;
+			floor = 0;
+			multiplier = 1;
+			safePicks = {};
+			allBombs = null;
+			bombFloor = null;
+			gameResult = null;
+			justRevealed = null;
+			const summary = await fetchPortfolioSummary();
+			if (summary) {
+				balance = summary.baseCurrencyBalance;
+				onBalanceUpdate?.(balance);
+			}
+			toast.error('This arcade round has expired.');
+			return;
+		}
+		throw new Error(data.error || 'Failed');
+	}
+
 	async function step(f: number, t: number) {
 		if (!playing || f !== floor || busy) return;
 		busy = true;
@@ -88,7 +111,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ sessionToken: token, tileIndex: t })
 			});
-			if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+			if (!res.ok) { await handleRoundError(res); return; }
 			const data = await res.json();
 			if (data.hitBomb) {
 				playSound('lose');
@@ -134,7 +157,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ sessionToken: token })
 			});
-			if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+			if (!res.ok) { await handleRoundError(res); return; }
 			const data = await res.json();
 			balance = data.newBalance;
 			onBalanceUpdate?.(balance);

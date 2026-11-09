@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
-import { getSessionKey } from '$lib/server/games/mines';
+import { claimMinesSession, getSessionKey } from '$lib/server/games/mines';
 import { publishArcadeActivity } from '$lib/server/arcade-activity';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
 import type { RequestHandler } from './$types';
@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ request }) => {
         const userId = Number(session.user.id);
 
         const sessionRaw = await redis.get(getSessionKey(sessionToken));
-        const game = sessionRaw ? JSON.parse(sessionRaw) : null;
+        let game = sessionRaw ? JSON.parse(sessionRaw) : null;
 
         if (!game) {
             return json({ error: 'Invalid session' }, { status: 400 });
@@ -33,16 +33,11 @@ export const POST: RequestHandler = async ({ request }) => {
             return json({ error: 'Unauthorized: Session belongs to another user' }, { status: 403 });
         }
 
-        const deleted = await redis.del(getSessionKey(sessionToken));
-
-        if (!deleted) {
-            return json({ error: 'Session already processed' }, { status: 400 });
-        }
-
         const result = await db.transaction(async (tx) => {
             const [userData] = await tx
                 .select({
                     baseCurrencyBalance: user.baseCurrencyBalance,
+                    walletGeneration: user.arcadeWalletGeneration,
                     arcadeLosses: user.arcadeLosses,
                     arcadeWins: user.arcadeWins,
                     totalArcadeGamesPlayed: user.totalArcadeGamesPlayed,
@@ -54,6 +49,22 @@ export const POST: RequestHandler = async ({ request }) => {
                 .where(eq(user.id, userId))
                 .for('update')
                 .limit(1);
+
+            if (!userData || !Number.isInteger(game.walletGeneration) || game.walletGeneration < 0 || game.walletGeneration !== userData.walletGeneration) {
+                return { expired: true } as const;
+            }
+
+            // Refresh the board after acquiring the wallet lock; another move may have completed.
+            const currentRaw = await redis.get(getSessionKey(sessionToken));
+            if (!currentRaw) return { alreadyProcessed: true } as const;
+            game = JSON.parse(currentRaw);
+            if (game.userId !== userId) return { unauthorized: true } as const;
+            if (!Number.isInteger(game.walletGeneration) || game.walletGeneration < 0 || game.walletGeneration !== userData.walletGeneration) {
+                return { expired: true } as const;
+            }
+
+            const deleted = await claimMinesSession(sessionToken, game.version);
+            if (!deleted) return { alreadyProcessed: true } as const;
 
             const currentBalance = Number(userData.baseCurrencyBalance);
             const isAbort = game.revealedTiles.length === 0;
@@ -114,6 +125,16 @@ export const POST: RequestHandler = async ({ request }) => {
                 minePositions: game.minePositions
             };
         });
+
+        if ('expired' in result) {
+            return json({ code: 'ROUND_EXPIRED', error: 'This arcade round has expired.' }, { status: 410 });
+        }
+        if ('alreadyProcessed' in result) {
+            return json({ error: 'Session already processed' }, { status: 400 });
+        }
+        if ('unauthorized' in result) {
+            return json({ error: 'Unauthorized: Session belongs to another user' }, { status: 403 });
+        }
 
         if (!result.isAbort) {
             try {

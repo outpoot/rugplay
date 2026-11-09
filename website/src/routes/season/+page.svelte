@@ -363,10 +363,13 @@
 				</div>
 				<Separator />
 				<div class="flex justify-between gap-2">
-					<span class="text-muted-foreground">Everything above that</span>
+					<span class="text-muted-foreground">Cash and liquidated holdings above that</span>
 					<span class="text-destructive font-medium">Burned</span>
 				</div>
 			</div>
+			<p class="text-muted-foreground text-xs">
+				Open Mines and Tower rounds expire on entry and their stakes are lost. Settle or abort them before confirming if you want to recover their value.
+			</p>
 			<p class="text-muted-foreground text-xs">
 			Rankings are based only on your realizable portfolio value. Trophies you earn are permanent.
 			</p>

@@ -36,12 +36,13 @@ export const POST: RequestHandler = async ({ request }) => {
 
         const result = await db.transaction(async (tx) => {
             const [row] = await tx
-                .select({ baseCurrencyBalance: user.baseCurrencyBalance })
+                .select({ baseCurrencyBalance: user.baseCurrencyBalance, arcadeWalletGeneration: user.arcadeWalletGeneration })
                 .from(user)
                 .where(eq(user.id, userId))
                 .for('update')
                 .limit(1);
 
+            if (!row) throw new Error('User not found');
             const balance = Math.round(Number(row.baseCurrencyBalance) * 100000000) / 100000000;
 
             if (bet > balance) {
@@ -68,6 +69,7 @@ export const POST: RequestHandler = async ({ request }) => {
                     startTime: now,
                     lastActivity: now,
                     userId,
+                    walletGeneration: row.arcadeWalletGeneration,
                     version: 0
                 })
             );

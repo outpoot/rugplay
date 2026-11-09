@@ -2,7 +2,7 @@ import { error, json } from '@sveltejs/kit';
 import { auth } from '$lib/auth';
 import { db } from '$lib/server/db';
 import { user, seasonParticipant, notifications } from '$lib/server/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { getActiveSeason } from '$lib/server/seasons';
 import { liquidateHoldings } from '$lib/server/liquidate';
@@ -59,6 +59,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			.update(user)
 			.set({
 				baseCurrencyBalance: stake.toFixed(8),
+				arcadeWalletGeneration: sql`${user.arcadeWalletGeneration} + 1`,
 				updatedAt: new Date()
 			})
 			.where(eq(user.id, userId));

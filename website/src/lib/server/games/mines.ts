@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 import { calculateMinesMultiplier } from '$lib/utils';
 
@@ -15,10 +15,23 @@ interface MinesSession {
     status: 'active' | 'won' | 'lost';
     lastActivity: number;
     userId: number;
+    walletGeneration: number;
+    version: number;
 }
 
 const MINES_SESSION_PREFIX = 'mines:session:';
 export const getSessionKey = (token: string) => `${MINES_SESSION_PREFIX}${token}`;
+
+// Claim only the board that was read. A worker must not remove a newer move.
+export async function claimMinesSession(token: string, version: number | undefined) {
+    return await redis.eval(`
+        local current = redis.call("get", KEYS[1])
+        if not current then return 0 end
+        local state = cjson.decode(current)
+        if (state.version or 0) ~= tonumber(ARGV[1]) then return 0 end
+        return redis.call("del", KEYS[1])
+    `, { keys: [getSessionKey(token)], arguments: [String(version || 0)] });
+}
 
 // --- Mines cleanup logic for scheduler ---
 export async function minesCleanupInactiveGames() {
@@ -37,11 +50,13 @@ export async function minesCleanupInactiveGames() {
         if (now - game.lastActivity > 5 * 60 * 1000) {
             if (game.revealedTiles.length === 0) {
                 try {
-                    const deleted = await redis.del(getSessionKey(game.sessionToken));
+                    const deleted = await claimMinesSession(game.sessionToken, game.version);
 
                     if (!deleted) {
                         continue;
                     }
+
+                    if (!Number.isInteger(game.walletGeneration) || game.walletGeneration < 0) continue;
 
                     await db
                         .update(user)
@@ -49,12 +64,12 @@ export async function minesCleanupInactiveGames() {
                             baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${game.betAmount.toFixed(8)}::numeric`,
                             updatedAt: new Date()
                         })
-                        .where(eq(user.id, game.userId));
+                        .where(and(eq(user.id, game.userId), eq(user.arcadeWalletGeneration, game.walletGeneration)));
                 } catch (error) {
                     console.error(`Failed to refund inactive game ${game.sessionToken}:`, error);
                 }
             } else {
-                await redis.del(getSessionKey(game.sessionToken));
+                await claimMinesSession(game.sessionToken, game.version);
             }
         }
     }
@@ -81,11 +96,13 @@ export async function minesAutoCashout() {
             !game.revealedTiles.some(idx => game.minePositions.includes(idx))
         ) {
             try {
-                const deleted = await redis.del(getSessionKey(game.sessionToken));
+                const deleted = await claimMinesSession(game.sessionToken, game.version);
 
                 if (!deleted) {
                     continue;
                 }
+
+                if (!Number.isInteger(game.walletGeneration) || game.walletGeneration < 0) continue;
 
                 const roundedPayout = (game.betAmount * game.currentMultiplier).toFixed(8);
 
@@ -95,7 +112,7 @@ export async function minesAutoCashout() {
                         baseCurrencyBalance: sql`${user.baseCurrencyBalance} + ${roundedPayout}::numeric`,
                         updatedAt: new Date()
                     })
-                    .where(eq(user.id, game.userId));
+                    .where(and(eq(user.id, game.userId), eq(user.arcadeWalletGeneration, game.walletGeneration)));
 
             } catch (error) {
                 console.error(`Failed to auto cashout game ${game.sessionToken}:`, error);

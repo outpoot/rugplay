@@ -23,6 +23,7 @@ export const user = pgTable("user", {
 		precision: 30,
 		scale: 8,
 	}).notNull().default("100.00000000"), // $100
+	arcadeWalletGeneration: integer("arcade_wallet_generation").notNull().default(0),
 	bio: varchar("bio", { length: 160 }).default("Hello am 48 year old man from somalia. Sorry for my bed england. I selled my wife for internet connection for play “conter stirk”"),
 	username: varchar("username", { length: 30 }).notNull().unique(),
 

@@ -82,8 +82,10 @@ function createMemoryRedis() {
 
         async eval(_script: string, opts?: { keys?: string[]; arguments?: string[] }) {
             const key = opts?.keys?.[0];
-            const nextValue = opts?.arguments?.[0];
-            const expectedVersion = Number(opts?.arguments?.[1]);
+            const args = opts?.arguments ?? [];
+            const isClaim = args.length === 1 && _script.includes('redis.call("del", KEYS[1])');
+            const nextValue = args[0];
+            const expectedVersion = Number(isClaim ? args[0] : args[1]);
             if (!key || nextValue === undefined) return 0;
 
             const current = read(key);
@@ -96,6 +98,10 @@ function createMemoryRedis() {
                 return 0;
             }
 
+            if (isClaim) {
+                store.delete(key);
+                return 1;
+            }
             const existing = store.get(key);
             store.set(key, { value: nextValue, expiresAt: existing?.expiresAt ?? null });
             return 1;

@@ -42,6 +42,12 @@ npm run preview
 
 Before deploying the Better Auth 1.7.7 upgrade, run `npm run db:migrate` from the website directory with `DATABASE_URL` set. Migration `0011_better_auth_api_key_config` adds the default API key configuration while retaining existing keys and their owners. Rebuild and replace all app replicas together, and restart any sign-ins already in progress.
 
+### Ranked entry and arcade rounds
+
+Entering a ranked season resets the wallet to the configured season stake and expires all open Mines and Tower rounds, including their reserved wagers. Players can settle or abort those rounds before entry. Migration `0012_arcade_wallet_generation` adds the wallet generation used to reject settlements from an earlier wallet.
+
+For rollout, pause ranked entries and new Mines and Tower rounds, keep the scheduler running while draining existing `mines:session:*` and `tower:session:*` keys, and stop all old API and scheduler writers before applying the migration. Start only updated writers before reopening entry and games. Smoke-test a new round and an old round across entry, and monitor expired responses and settlement errors. For rollback, pause entry and arcade settlement while replacing writers, retain the additive column, and do not reopen ranked entry while any writer lacks the generation guard. Redis token claims and PostgreSQL credits are not atomic; a separate recovery design is still needed for failures between those operations.
+
 ## Project Structure
 
 - `src/routes/`: Page components and API endpoints

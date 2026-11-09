@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
-import { getSessionKey, type TowerSession } from '$lib/server/games/tower';
+import { claimTowerSession, getSessionKey, type TowerSession } from '$lib/server/games/tower';
 import { publishArcadeActivity } from '$lib/server/arcade-activity';
 import { checkAndAwardAchievements } from '$lib/server/achievements';
 import type { RequestHandler } from './$types';
@@ -18,18 +18,16 @@ export const POST: RequestHandler = async ({ request }) => {
         const userId = Number(session.user.id);
 
         const raw = await redis.get(getSessionKey(sessionToken));
-        const game = raw ? (JSON.parse(raw) as TowerSession) : null;
+        const snapshot = raw ? (JSON.parse(raw) as TowerSession) : null;
 
-        if (!game) return json({ error: 'Invalid session' }, { status: 400 });
-        if (game.userId !== userId) return json({ error: 'Unauthorized' }, { status: 403 });
-
-        const deleted = await redis.del(getSessionKey(sessionToken));
-        if (!deleted) return json({ error: 'Session already processed' }, { status: 400 });
+        if (!snapshot) return json({ code: 'ROUND_NOT_FOUND', error: 'Invalid session' }, { status: 400 });
+        if (snapshot.userId !== userId) return json({ error: 'Unauthorized' }, { status: 403 });
 
         const result = await db.transaction(async (tx) => {
             const [row] = await tx
                 .select({
                     baseCurrencyBalance: user.baseCurrencyBalance,
+                    arcadeWalletGeneration: user.arcadeWalletGeneration,
                     arcadeLosses: user.arcadeLosses,
                     arcadeWins: user.arcadeWins,
                     totalArcadeGamesPlayed: user.totalArcadeGamesPlayed,
@@ -42,13 +40,26 @@ export const POST: RequestHandler = async ({ request }) => {
                 .for('update')
                 .limit(1);
 
+            if (!row) throw new Error('User not found');
+            const currentRaw = await redis.get(getSessionKey(sessionToken));
+            if (!currentRaw) return { kind: 'missing' as const };
+            const game = JSON.parse(currentRaw) as TowerSession;
+            if (game.userId !== userId) return { kind: 'unauthorized' as const };
+            if (!Number.isInteger(game.walletGeneration) || game.walletGeneration < 0 || game.walletGeneration !== row.arcadeWalletGeneration) {
+                return { kind: 'expired' as const };
+            }
+            if (game.version !== snapshot.version) return { kind: 'modified' as const };
+
+            const deleted = await claimTowerSession(sessionToken, game.version);
+            if (!deleted) return { kind: 'missing' as const };
+
             const bal = Number(row.baseCurrencyBalance);
             const isAbort = game.currentFloor === 0;
 
             if (isAbort) {
                 const newBal = Math.round((bal + game.betAmount) * 100000000) / 100000000;
                 await tx.update(user).set({ baseCurrencyBalance: newBal.toFixed(8), updatedAt: new Date() }).where(eq(user.id, userId));
-                return { newBalance: newBal, payout: game.betAmount, amountWagered: game.betAmount, isAbort, allBombPositions: game.floorBombPositions };
+                return { kind: 'settled' as const, newBalance: newBal, payout: game.betAmount, amountWagered: game.betAmount, isAbort, allBombPositions: game.floorBombPositions };
             }
 
             const payout = Math.round(game.betAmount * game.currentMultiplier * 100000000) / 100000000;
@@ -74,8 +85,13 @@ export const POST: RequestHandler = async ({ request }) => {
             }
 
             await tx.update(user).set(update).where(eq(user.id, userId));
-            return { newBalance: newBal, payout, amountWagered: game.betAmount, isAbort, allBombPositions: game.floorBombPositions };
+            return { kind: 'settled' as const, newBalance: newBal, payout, amountWagered: game.betAmount, isAbort, allBombPositions: game.floorBombPositions };
         });
+
+        if (result.kind === 'expired') return json({ code: 'ROUND_EXPIRED', error: 'This arcade round has expired.' }, { status: 410 });
+        if (result.kind === 'missing') return json({ code: 'ROUND_NOT_FOUND', error: 'Session already processed' }, { status: 400 });
+        if (result.kind === 'unauthorized') return json({ error: 'Unauthorized' }, { status: 403 });
+        if (result.kind === 'modified') return json({ error: 'Session was modified' }, { status: 409 });
 
         if (!result.isAbort) {
             try {

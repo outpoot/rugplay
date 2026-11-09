@@ -45,7 +45,6 @@
 	let sessionToken = $state<string | null>(null);
 	let autoCashoutInterval: ReturnType<typeof setInterval>;
 	let hasRevealedTile = $state(false);
-	let isAutoCashout = $state(false);
 	let lastClickedTile = $state<number | null>(null);
 	let clickedSafeTiles = $state<number[]>([]);
 	let revealing = $state(false);
@@ -88,6 +87,23 @@
 		autoCashoutProgress = 0;
 	}
 
+	async function recoverExpiredRound() {
+		isPlaying = false;
+		sessionToken = null;
+		hasRevealedTile = false;
+		revealedTiles = [];
+		clickedSafeTiles = [];
+		minePositions = [];
+		currentMultiplier = 1;
+		resetAutoCashoutTimer();
+		toast.error('This arcade round has expired.');
+		const data = await fetchPortfolioSummary();
+		if (data) {
+			balance = data.baseCurrencyBalance;
+			onBalanceUpdate?.(balance);
+		}
+	}
+
 	function startAutoCashoutTimer() {
 		if (!hasRevealedTile) return;
 		resetAutoCashoutTimer();
@@ -97,7 +113,6 @@
 				autoCashoutProgress = (autoCashoutTimer / AUTO_CASHOUT_TIME) * 100;
 			}
 			if (autoCashoutTimer >= AUTO_CASHOUT_TIME) {
-				isAutoCashout = true;
 				clearInterval(autoCashoutInterval);
 				cashOut();
 			}
@@ -117,6 +132,10 @@
 			});
 			if (!response.ok) {
 				const errorData = await response.json();
+				if (errorData.code === 'ROUND_EXPIRED' || errorData.error === 'Invalid session' || errorData.error === 'Session already processed' || errorData.error === 'Session was modified or removed') {
+					await recoverExpiredRound();
+					return;
+				}
 				throw new Error(errorData.error || 'Failed to reveal tile');
 			}
 			const result = await response.json();
@@ -178,10 +197,11 @@
 			});
 			if (!response.ok) {
 				const errorData = await response.json();
-				if (!isAutoCashout || errorData.error !== 'Invalid session') {
-					throw new Error(errorData.error || 'Failed to cash out');
+				if (errorData.code === 'ROUND_EXPIRED' || errorData.error === 'Invalid session' || errorData.error === 'Session already processed') {
+					await recoverExpiredRound();
+					return;
 				}
-				return;
+				throw new Error(errorData.error || 'Failed to cash out');
 			}
 			const result = await response.json();
 			balance = result.newBalance;
@@ -192,7 +212,6 @@
 			isPlaying = false;
 			sessionToken = null;
 			hasRevealedTile = false;
-			isAutoCashout = false;
 			resetAutoCashoutTimer();
 			if (result.minePositions) {
 				minePositions = result.minePositions;

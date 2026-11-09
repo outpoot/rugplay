@@ -29,7 +29,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
         const result = await db.transaction(async (tx) => {
             const [userData] = await tx
-                .select({ baseCurrencyBalance: user.baseCurrencyBalance })
+                .select({ baseCurrencyBalance: user.baseCurrencyBalance, walletGeneration: user.arcadeWalletGeneration })
                 .from(user)
                 .where(eq(user.id, userId))
                 .for('update')
@@ -73,6 +73,7 @@ export const POST: RequestHandler = async ({ request }) => {
                     currentMultiplier: 1,
                     status: 'active',
                     userId,
+                    walletGeneration: userData.walletGeneration,
                     version: 0
                 })
             );

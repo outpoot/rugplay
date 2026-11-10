@@ -156,6 +156,12 @@ export const handle: Handle = async ({ event, resolve }) => {
         return new Response(null, { status: 204 });
     }
 
+    if (event.url.pathname.startsWith('/api/auth/')) {
+        const response = await svelteKitHandler({ event, resolve, auth, building });
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        return response;
+    }
+
     // Get session from auth
     const session = await auth.api.getSession({
         headers: event.request.headers

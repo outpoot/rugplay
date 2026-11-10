@@ -9,6 +9,8 @@ import * as schema from "./server/db/schema";
 import { generateUsername } from "./utils/random";
 import { uploadProfilePicture } from "./server/s3";
 import { apiKey } from "@better-auth/api-key";
+import { sveltekitCookies } from "better-auth/svelte-kit";
+import { getRequestEvent } from "$app/server";
 
 if (!privateEnv.GOOGLE_CLIENT_ID) throw new Error('GOOGLE_CLIENT_ID is not set');
 if (!privateEnv.GOOGLE_CLIENT_SECRET) throw new Error('GOOGLE_CLIENT_SECRET is not set');
@@ -43,6 +45,7 @@ export const auth = betterAuth({
                 }
             }
         }),
+        sveltekitCookies(getRequestEvent),
     ],
     database: drizzleAdapter(db, {
         provider: "pg",
@@ -95,6 +98,8 @@ export const auth = betterAuth({
         }
     },
     session: {
+        expiresIn: 60 * 60 * 24 * 365,
+        updateAge: 60 * 60 * 24,
         cookieCache: {
             enabled: true,
             maxAge: 60 * 5,

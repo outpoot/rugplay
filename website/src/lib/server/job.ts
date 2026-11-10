@@ -147,10 +147,16 @@ export async function resolveExpiredQuestions() {
                             isNull(predictionBet.settledAt)
                         )).orderBy(asc(predictionBet.userId), asc(predictionBet.id));
 
-                    const totalPool = Number(lockedQuestion.totalYesAmount) + Number(lockedQuestion.totalNoAmount);
-                    const winningSideTotal = resolution.resolution
-                        ? Number(lockedQuestion.totalYesAmount)
-                        : Number(lockedQuestion.totalNoAmount);
+                    // Use the bets themselves as the source of truth, not the stored running totals.
+                    // If those totals ever drift from the bets, payouts can't exceed what was staked.
+                    let totalYes = 0;
+                    let totalNo = 0;
+                    for (const bet of bets) {
+                        if (bet.side) totalYes += Number(bet.amount);
+                        else totalNo += Number(bet.amount);
+                    }
+                    const totalPool = totalYes + totalNo;
+                    const winningSideTotal = resolution.resolution ? totalYes : totalNo;
 
                     const notificationsToCreate: Array<{
                         userId: number;

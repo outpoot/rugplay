@@ -21,9 +21,18 @@
 		Refresh01Icon,
 		SlidersHorizontalIcon,
 		ArrowLeft01Icon,
-		ArrowRight01Icon
+		ArrowRight01Icon,
+		StarIcon
 	} from '@hugeicons/core-free-icons';
-	import { formatPrice, formatMarketCap, debounce, formatRelativeTime } from '$lib/utils';
+	import {
+		formatPrice,
+		formatMarketCap,
+		formatChange,
+		debounce,
+		formatRelativeTime
+	} from '$lib/utils';
+	import { USER_DATA } from '$lib/stores/user-data';
+	import { WATCHED_SYMBOLS, loadWatchedSymbols, toggleWatched } from '$lib/stores/watchlist';
 	import { MediaQuery } from 'svelte/reactivity';
 	import type { CoinData, FilterOption, VolatilityBadge, MarketResponse } from '$lib/types/market';
 
@@ -147,6 +156,7 @@
 
 	onMount(() => {
 		fetchMarketData();
+		if ($USER_DATA) loadWatchedSymbols();
 	});
 
 	function updateURL() {
@@ -551,16 +561,35 @@
 					onclick={() => goto(`/coin/${coin.symbol}`)}
 				>
 					<Card.Header>
-						<div class="flex items-start justify-between">
-							<div class="flex items-center gap-3">
-								<CoinIcon icon={coin.icon} symbol={coin.symbol} size={8} />
-								<div>
-									<h3 class="truncate max-w-44 text-lg font-semibold leading-tight">{coin.name}</h3>
+						<div class="flex items-start justify-between gap-2">
+							<div class="flex min-w-0 items-center gap-3">
+								<CoinIcon icon={coin.icon} symbol={coin.symbol} size={8} class="shrink-0" />
+								<div class="min-w-0">
+									<h3 class="truncate text-lg font-semibold leading-tight">{coin.name}</h3>
 									<p class="text-muted-foreground truncate text-sm">*{coin.symbol}</p>
 								</div>
 							</div>
-							<div class="text-right">
+							<div class="flex shrink-0 items-center gap-1 text-right">
 								<span class="text-muted-foreground font-mono text-xs">#{globalIndex}</span>
+								{#if $USER_DATA}
+									{@const watched = $WATCHED_SYMBOLS.has(coin.symbol)}
+									<button
+										class="hover:bg-muted -my-1 -mr-2 cursor-pointer rounded-md p-1.5 transition-opacity {watched
+											? ''
+											: 'opacity-40 group-hover:opacity-100 focus-visible:opacity-100'}"
+										aria-label={watched ? `Stop watching ${coin.symbol}` : `Watch ${coin.symbol}`}
+										aria-pressed={watched}
+										onclick={(event) => {
+											event.stopPropagation();
+											toggleWatched(coin.symbol);
+										}}
+									>
+										<HugeiconsIcon
+											icon={StarIcon}
+											class="h-4 w-4 {watched ? 'fill-yellow-400 text-yellow-500' : ''}"
+										/>
+									</button>
+								{/if}
 							</div>
 						</div>
 					</Card.Header>
@@ -574,7 +603,7 @@
 								</div>
 								<div class="mt-1 flex items-center gap-2">
 									<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="text-xs">
-										{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+										{formatChange(coin.change24h)}
 									</Badge>
 									{#if volatilityBadge}
 										<Badge variant={volatilityBadge.variant} class="text-xs">

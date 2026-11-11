@@ -32,6 +32,8 @@
 	let seasonLoading = $state(true);
 	let watchlist = $state<any[]>([]);
 	let following = $state<any[]>([]);
+	let followingTrades = $state<any[]>([]);
+	let followingTradesLoading = $state(true);
 
 	onMount(() => {
 		const controller = new AbortController();
@@ -78,6 +80,16 @@
 					if (result && !controller.signal.aborted) following = result.players;
 				})
 				.catch(() => {});
+
+			fetch('/api/following/trades?limit=4', options)
+				.then(async (response) => {
+					const result = response.ok ? await response.json() : null;
+					if (result && !controller.signal.aborted) followingTrades = result.trades;
+				})
+				.catch(() => {})
+				.finally(() => {
+					if (!controller.signal.aborted) followingTradesLoading = false;
+				});
 		}
 
 		return () => controller.abort();
@@ -377,7 +389,11 @@
 						<SeasonCard data={seasonData} limit={10} />
 					{/if}
 					{#if following.length > 0}
-						<FollowingCard players={following} />
+						<FollowingCard
+							players={following}
+							trades={followingTrades}
+							loading={followingTradesLoading}
+						/>
 					{/if}
 				</div>
 			{/if}
@@ -385,7 +401,11 @@
 
 		{#if !showSeason && following.length > 0}
 			<div class="mt-5">
-				<FollowingCard players={following} />
+				<FollowingCard
+							players={following}
+							trades={followingTrades}
+							loading={followingTradesLoading}
+						/>
 			</div>
 		{/if}
 

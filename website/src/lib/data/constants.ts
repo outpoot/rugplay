@@ -29,6 +29,10 @@ export const MAX_WATCHLIST_COINS = 50;
 
 // FOLLOWING
 export const MAX_FOLLOWING = 200;
+// The home page feed shows followed players' trades at least this large (the
+// same bar as the sidebar's live trades) from the last few days.
+export const FOLLOWING_FEED_MIN_VALUE = 1000;
+export const FOLLOWING_FEED_DAYS = 7;
 
 // PROMO CODES
 export const MAX_PROMO_REWARD = 1_000_000;

@@ -137,13 +137,8 @@
 										{(entry.name ?? entry.username ?? '?').charAt(0).toUpperCase()}
 									</Avatar.Fallback>
 								</Avatar.Root>
-								<span class="min-w-0 flex-1 leading-tight">
-									<span class="block truncate text-sm font-medium">
-										<UserName name={entry.name ?? entry.username} nameColor={entry.nameColor} />
-									</span>
-									<span class="text-muted-foreground block truncate text-[11px]">
-										@{entry.username}
-									</span>
+								<span class="min-w-0 flex-1 truncate text-sm font-medium">
+									<UserName name={entry.name ?? entry.username} nameColor={entry.nameColor} />
 								</span>
 								{@render score(entry.score, entry.growth)}
 							</HoverCard.Trigger>

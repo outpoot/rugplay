@@ -8,7 +8,7 @@
 
 <div class="container mx-auto">
 	<div class="grid grid-cols-1 gap-5 lg:grid-cols-4">
-		<div class="flex flex-col gap-5 {showSeason ? 'lg:col-span-3' : 'lg:col-span-4'}">
+		<div class={showSeason ? 'lg:col-span-3' : 'lg:col-span-4'}>
 			<div>
 				<Skeleton class="mb-2 h-5 w-28" />
 				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -34,21 +34,6 @@
 					{/each}
 				</div>
 			</div>
-
-			<div class="grid flex-1 grid-cols-1 gap-3 md:grid-cols-3">
-				{#each Array(3) as _}
-					<div class="bg-card rounded-xl border p-3">
-						<Skeleton class="mb-2.5 h-5 w-24" />
-						{#each Array(5) as _}
-							<div class="flex items-center gap-2 py-1.5">
-								<Skeleton class="h-5 w-5 shrink-0 rounded-full" />
-								<Skeleton class="h-4 flex-1" />
-								<Skeleton class="h-4 w-12" />
-							</div>
-						{/each}
-					</div>
-				{/each}
-			</div>
 		</div>
 
 		{#if showSeason}
@@ -57,6 +42,21 @@
 			</div>
 		{/if}
 	</div>
+
+	<div class="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+			{#each Array(3) as _}
+				<div class="bg-card rounded-xl border p-3">
+					<Skeleton class="mb-2.5 h-5 w-24" />
+					{#each Array(5) as _}
+						<div class="flex items-center gap-2 py-1.5">
+							<Skeleton class="h-5 w-5 shrink-0 rounded-full" />
+							<Skeleton class="h-4 flex-1" />
+							<Skeleton class="h-4 w-12" />
+						</div>
+					{/each}
+				</div>
+			{/each}
+		</div>
 
 	<!-- Market Overview Skeleton -->
 	<div class="mt-6">

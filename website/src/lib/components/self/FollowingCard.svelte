@@ -50,7 +50,7 @@
 	</Avatar.Root>
 {/snippet}
 
-<section class="bg-card rounded-xl border p-3">
+<section class="bg-card flex h-full flex-col rounded-xl border p-3">
 	<div class="mb-1.5 flex items-center justify-between">
 		<h2 class="flex items-center gap-1.5 text-sm font-semibold">
 			<HugeiconsIcon icon={UserCheck01Icon} class="text-primary h-4 w-4" />
@@ -82,7 +82,7 @@
 	{:else}
 		<div class="-mx-2">
 			{#each trades as trade (trade.id)}
-				<div class="hover:bg-muted flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors">
+				<div class="hover:bg-muted flex items-center gap-2 rounded-md px-2 py-1 transition-colors">
 					<a href={`/user/${trade.username}`} aria-label={`${trade.name}'s profile`}>
 						{@render avatar(trade, 'h-7 w-7')}
 					</a>

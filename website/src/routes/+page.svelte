@@ -268,146 +268,139 @@
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 gap-5 lg:grid-cols-4">
-			<div class="flex flex-col gap-5 {showSeason ? 'lg:col-span-3' : 'lg:col-span-4'}">
-				<section>
-					<div class="mb-2 flex items-center justify-between">
-						<h2 class="text-sm font-semibold">Biggest coins</h2>
+			<section class="flex flex-col {showSeason ? 'lg:col-span-3' : 'lg:col-span-4'}">
+				<div class="mb-2 flex items-center justify-between">
+					<h2 class="text-sm font-semibold">Biggest coins</h2>
+					<a
+						href="/market"
+						class="text-muted-foreground hover:text-foreground flex items-center gap-0.5 text-xs transition-colors"
+					>
+						All coins
+						<HugeiconsIcon icon={ArrowRight01Icon} class="h-3.5 w-3.5" />
+					</a>
+				</div>
+				<div class="grid flex-1 auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+					{#each coins.slice(0, 6) as coin (coin.symbol)}
 						<a
-							href="/market"
-							class="text-muted-foreground hover:text-foreground flex items-center gap-0.5 text-xs transition-colors"
+							href={`/coin/${coin.symbol}`}
+							class="bg-card hover:border-foreground/20 group relative flex flex-col justify-between gap-2 overflow-hidden rounded-xl border p-3 transition-all hover:shadow-md"
 						>
-							All coins
-							<HugeiconsIcon icon={ArrowRight01Icon} class="h-3.5 w-3.5" />
-						</a>
-					</div>
-					<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-						{#each coins.slice(0, 6) as coin (coin.symbol)}
-							<a
-								href={`/coin/${coin.symbol}`}
-								class="bg-card hover:border-foreground/20 group relative flex flex-col gap-2 overflow-hidden rounded-xl border p-3 transition-all hover:shadow-md"
-							>
-								<div class="flex min-w-0 items-center gap-2.5">
-									<CoinIcon
-										icon={coin.icon}
-										symbol={coin.symbol}
-										name={coin.name}
-										size={8}
-										class="shrink-0"
-									/>
-									<div class="min-w-0 flex-1">
-										<div class="truncate text-sm leading-tight font-semibold">{coin.name}</div>
-										<div class="text-muted-foreground truncate font-mono text-[11px]">
-											*{coin.symbol}
-										</div>
+							<div class="flex min-w-0 items-center gap-2.5">
+								<CoinIcon
+									icon={coin.icon}
+									symbol={coin.symbol}
+									name={coin.name}
+									size={8}
+									class="shrink-0"
+								/>
+								<div class="min-w-0 flex-1">
+									<div class="truncate text-sm leading-tight font-semibold">{coin.name}</div>
+									<div class="text-muted-foreground truncate font-mono text-[11px]">
+										*{coin.symbol}
 									</div>
-									<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="shrink-0">
-										{formatChange(coin.change24h)}
-									</Badge>
 								</div>
-								<div class="flex items-center justify-between gap-3">
-									<span class="truncate text-xl font-bold tracking-tight">
-										${formatPrice(coin.price)}
-									</span>
-									{#if coin.sparkline}
-										<Sparkline
-											points={coin.sparkline}
-											positive={coin.change24h >= 0}
-											class="h-9 min-w-16 max-w-36 flex-1"
-										/>
-									{/if}
-								</div>
-								<div class="text-muted-foreground flex justify-between gap-2 text-[11px] tabular-nums">
-									<span class="truncate">MCap {formatMarketCap(coin.marketCap)}</span>
-									<span class="truncate">Vol {formatMarketCap(coin.volume24h)}</span>
-								</div>
-							</a>
-						{/each}
-					</div>
-				</section>
-
-				<section class="grid flex-1 grid-cols-1 gap-3 md:grid-cols-3">
-					{#each movers as group (group.id)}
-						<div class="bg-card flex flex-col rounded-xl border p-3">
-							<div class="mb-1.5">
-								{@render sectionTitle(group.title, group.icon, group.iconClass)}
+								<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="shrink-0">
+									{formatChange(coin.change24h)}
+								</Badge>
 							</div>
-							{#if group.coins.length === 0}
-								<p class="text-muted-foreground flex flex-1 items-center justify-center py-4 text-xs">
-									{group.empty}
-								</p>
-							{:else}
-								{#each group.coins as coin, i (coin.symbol)}
-									<a
-										href={`/coin/${coin.symbol}`}
-										class="hover:bg-muted -mx-1.5 flex items-center gap-2 rounded-md px-1.5 py-1.5 text-sm transition-colors"
-									>
-										<span class="text-muted-foreground w-3 text-center text-xs tabular-nums">
-											{i + 1}
-										</span>
-										<CoinIcon
-											icon={coin.icon}
-											symbol={coin.symbol}
-											name={coin.name}
-											size={5}
-											class="shrink-0 [&>span]:text-[8px]"
-										/>
-										<span class="min-w-0 flex-1 truncate font-medium">*{coin.symbol}</span>
-										<span class="text-muted-foreground hidden font-mono text-xs sm:inline md:hidden 2xl:inline">
-											${formatPrice(coin.price)}
-										</span>
-										{#if group.id === 'volume'}
-											<span class="w-16 text-right font-mono text-xs font-medium tabular-nums">
-												{formatMarketCap(coin.volume24h)}
-											</span>
-										{:else}
-											<span
-												class="w-16 text-right font-mono text-xs font-medium tabular-nums {coin.change24h >=
-												0
-													? 'text-success'
-													: 'text-destructive'}"
-											>
-												{formatChange(coin.change24h)}
-											</span>
-										{/if}
-									</a>
-								{/each}
-							{/if}
-						</div>
+							<div class="flex items-center justify-between gap-3">
+								<span class="truncate text-xl font-bold tracking-tight">
+									${formatPrice(coin.price)}
+								</span>
+								{#if coin.sparkline}
+									<Sparkline
+										points={coin.sparkline}
+										positive={coin.change24h >= 0}
+										class="h-9 min-w-16 max-w-36 flex-1"
+									/>
+								{/if}
+							</div>
+							<div class="text-muted-foreground flex justify-between gap-2 text-[11px] tabular-nums">
+								<span class="truncate">MCap {formatMarketCap(coin.marketCap)}</span>
+								<span class="truncate">Vol {formatMarketCap(coin.volume24h)}</span>
+							</div>
+						</a>
 					{/each}
-				</section>
-			</div>
+				</div>
+			</section>
 
 			{#if showSeason}
-				<!-- With nobody followed the season card takes the whole column and
-				     lists more leaders; otherwise the two cards share it. -->
-				<div class="flex flex-col gap-5 lg:col-span-1">
+				<div class="lg:col-span-1">
 					{#if seasonLoading}
 						<HomeSeasonSkeleton />
-					{:else if following.length > 0}
-						<SeasonCard data={seasonData} fill={false} />
 					{:else}
-						<SeasonCard data={seasonData} limit={10} />
-					{/if}
-					{#if following.length > 0}
-						<FollowingCard
-							players={following}
-							trades={followingTrades}
-							loading={followingTradesLoading}
-						/>
+						<SeasonCard data={seasonData} />
 					{/if}
 				</div>
 			{/if}
 		</div>
 
-		{#if !showSeason && following.length > 0}
-			<div class="mt-5">
-				<FollowingCard
-							players={following}
-							trades={followingTrades}
-							loading={followingTradesLoading}
-						/>
+		<!-- Four quick lists in one row; the feed only exists for players who follow someone. -->
+		<section class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-4">
+			<div
+				class="grid grid-cols-1 gap-3 md:grid-cols-3 {following.length > 0
+					? 'lg:col-span-3'
+					: 'lg:col-span-4'}"
+			>
+			{#each movers as group (group.id)}
+				<div class="bg-card flex flex-col rounded-xl border p-3">
+					<div class="mb-1.5">
+						{@render sectionTitle(group.title, group.icon, group.iconClass)}
+					</div>
+					{#if group.coins.length === 0}
+						<p class="text-muted-foreground flex flex-1 items-center justify-center py-4 text-xs">
+							{group.empty}
+						</p>
+					{:else}
+						{#each group.coins as coin, i (coin.symbol)}
+							<a
+								href={`/coin/${coin.symbol}`}
+								class="hover:bg-muted -mx-1.5 flex items-center gap-2 rounded-md px-1.5 py-1.5 text-sm transition-colors"
+							>
+								<span class="text-muted-foreground w-3 text-center text-xs tabular-nums">
+									{i + 1}
+								</span>
+								<CoinIcon
+									icon={coin.icon}
+									symbol={coin.symbol}
+									name={coin.name}
+									size={5}
+									class="shrink-0 [&>span]:text-[8px]"
+								/>
+								<span class="min-w-0 flex-1 truncate font-medium">*{coin.symbol}</span>
+								<span class="text-muted-foreground hidden font-mono text-xs sm:inline md:hidden 2xl:inline">
+									${formatPrice(coin.price)}
+								</span>
+								{#if group.id === 'volume'}
+									<span class="w-16 text-right font-mono text-xs font-medium tabular-nums">
+										{formatMarketCap(coin.volume24h)}
+									</span>
+								{:else}
+									<span
+										class="w-16 text-right font-mono text-xs font-medium tabular-nums {coin.change24h >=
+										0
+											? 'text-success'
+											: 'text-destructive'}"
+									>
+										{formatChange(coin.change24h)}
+									</span>
+								{/if}
+							</a>
+						{/each}
+					{/if}
+				</div>
+			{/each}
 			</div>
-		{/if}
+			{#if following.length > 0}
+				<div class="lg:col-span-1">
+					<FollowingCard
+						players={following}
+						trades={followingTrades}
+						loading={followingTradesLoading}
+					/>
+				</div>
+			{/if}
+		</section>
 
 		<section class="mt-6">
 			<div class="mb-2 flex items-center justify-between">

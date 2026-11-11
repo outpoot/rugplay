@@ -31,8 +31,3 @@ export interface FilterOption {
 	value: string;
 	label: string;
 }
-
-export interface VolatilityBadge {
-	text: string;
-	variant: 'default' | 'secondary' | 'outline';
-}

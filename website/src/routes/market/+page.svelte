@@ -34,7 +34,7 @@
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { WATCHED_SYMBOLS, loadWatchedSymbols, toggleWatched } from '$lib/stores/watchlist';
 	import { MediaQuery } from 'svelte/reactivity';
-	import type { CoinData, FilterOption, VolatilityBadge, MarketResponse } from '$lib/types/market';
+	import type { CoinData, FilterOption, MarketResponse } from '$lib/types/market';
 
 	let { data } = $props();
 
@@ -310,13 +310,6 @@
 		fetchMarketData();
 		showFilterPopover = false;
 	}
-	function getVolatilityBadge(change: number): VolatilityBadge | null {
-		const absChange = Math.abs(change);
-		if (absChange > 50) return { text: '🚀 WILD', variant: 'default' as const };
-		if (absChange > 20) return { text: '📈 HOT', variant: 'secondary' as const };
-		if (absChange > 10) return { text: '⚡ ACTIVE', variant: 'outline' as const };
-		return null;
-	}
 
 	let hasActiveFilters = $derived(
 		searchQuery !== '' ||
@@ -551,7 +544,6 @@
 			bind:this={gridElement}
 		>
 			{#each coins as coin, index}
-				{@const volatilityBadge = getVolatilityBadge(coin.change24h)}
 				{@const globalIndex = (currentPage - 1) * perPage + index + 1}
 				<Card.Root
 					class="group cursor-pointer gap-1 transition-all duration-200 hover:shadow-lg {index ===
@@ -605,11 +597,6 @@
 									<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="text-xs">
 										{formatChange(coin.change24h)}
 									</Badge>
-									{#if volatilityBadge}
-										<Badge variant={volatilityBadge.variant} class="text-xs">
-											{volatilityBadge.text}
-										</Badge>
-									{/if}
 								</div>
 							</div>
 

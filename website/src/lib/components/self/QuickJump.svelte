@@ -111,6 +111,7 @@
 	let users = $state<any[]>([]);
 	let questions = $state<any[] | null>(null);
 	let watchlist = $state<any[]>([]);
+	let following = $state<any[]>([]);
 	let recents = $state<Recent[]>([]);
 	let searching = $state(false);
 	let selected = $state(0);
@@ -202,6 +203,15 @@
 			? []
 			: [
 					...(shows('coin') ? watchlist.slice(0, 5).map((coin) => coinItem(coin, 'Your watchlist')) : []),
+					...(shows('user')
+						? following.slice(0, filter === 'user' ? 12 : 4).map((user) => ({
+								kind: 'user' as const,
+								group: 'Following',
+								key: `following:${user.username}`,
+								url: `/user/${user.username}`,
+								user
+							}))
+						: []),
 					...recents
 						.filter((recent) => shows(recent.kind))
 						.map((recent) =>
@@ -287,8 +297,12 @@
 			load('/api/watchlist').then((result) => {
 				if (result && !controller.signal.aborted) watchlist = result.coins;
 			});
+			load('/api/following').then((result) => {
+				if (result && !controller.signal.aborted) following = result.players;
+			});
 		} else {
 			watchlist = [];
+			following = [];
 		}
 		// The questions endpoint has no text search, so fetch the active ones once
 		// and match them here.
@@ -327,7 +341,7 @@
 						: null,
 					wantUsers
 						? load(
-								`/api/leaderboard?search=${encodeURIComponent(term)}&limit=${filter === 'user' ? 10 : 4}`
+								`/api/users/search?q=${encodeURIComponent(term)}&limit=${filter === 'user' ? 10 : 4}`
 							)
 						: null
 				]);
@@ -391,7 +405,7 @@
 			: trimmed
 				? `Nothing found for "${trimmed}"`
 				: filter === 'user'
-					? 'Type at least two letters of a username'
+					? 'Type at least two letters of a name or username'
 					: filter === 'coin'
 						? 'Type a coin name or symbol'
 						: 'Nothing here yet'

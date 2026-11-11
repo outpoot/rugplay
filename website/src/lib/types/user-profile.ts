@@ -56,8 +56,19 @@ export interface RecentTransaction {
 	timestamp: Date;
 }
 
+export interface ProfileHolding {
+	symbol: string;
+	name: string;
+	icon: string | null;
+	quantity: number;
+	currentPrice: number;
+	value: number;
+	change24h: number;
+}
+
 export interface UserProfileData {
 	profile: UserProfile;
+	holdings?: ProfileHolding[];
 	stats: UserStats;
 	createdCoins: CreatedCoin[];
 	recentTransactions: RecentTransaction[];

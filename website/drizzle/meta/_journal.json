@@ -92,6 +92,13 @@
       "when": 1794402098916,
       "tag": "0012_user_watchlist",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794406712049,
+      "tag": "0013_user_follow",
+      "breakpoints": true
     }
   ]
 }

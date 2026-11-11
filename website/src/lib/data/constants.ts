@@ -27,5 +27,8 @@ export const CASH_TRANSFER_FEE_RATE = 0.01; // 1%
 // WATCHLIST
 export const MAX_WATCHLIST_COINS = 50;
 
+// FOLLOWING
+export const MAX_FOLLOWING = 200;
+
 // PROMO CODES
 export const MAX_PROMO_REWARD = 1_000_000;

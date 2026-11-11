@@ -22,8 +22,16 @@
 		PercentIcon,
 		Invoice03Icon,
 		Award05Icon,
-		UnavailableIcon
+		UnavailableIcon,
+		SentIcon,
+		UserAdd01Icon,
+		UserCheck01Icon,
+		Link01Icon,
+		Tick01Icon,
+		Briefcase01Icon
 	} from '@hugeicons/core-free-icons';
+	import SendMoneyModal from '$lib/components/self/SendMoneyModal.svelte';
+	import { fetchPortfolioData, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import * as Tooltip from '$lib/components/ui/tooltip';
@@ -51,15 +59,72 @@
 	let isBlocked = $state(false);
 	let blockLoading = $state(false);
 
-	async function checkBlockStatus() {
-		if (!$USER_DATA || isOwnProfile) return;
+	let isFollowing = $state(false);
+	let followLoading = $state(false);
+	let followerCount = $state(0);
+	let followingCount = $state(0);
+	let sendMoneyOpen = $state(false);
+	let linkCopied = $state(false);
+
+	// One small request for follow/block state and follower counts. This used to
+	// download the viewer's entire block list just to look for one username.
+	async function loadRelationship() {
+		const target = username;
+		isBlocked = false;
+		isFollowing = false;
 		try {
-			const res = await fetch('/api/settings/blocked');
-			if (res.ok) {
+			const res = await fetch(`/api/user/${encodeURIComponent(target)}/relationship`);
+			if (res.ok && target === username) {
 				const data = await res.json();
-				isBlocked = data.blocks?.some((b: any) => b.username === username) ?? false;
+				isBlocked = data.isBlocked;
+				isFollowing = data.isFollowing;
+				followerCount = data.followers;
+				followingCount = data.following;
 			}
 		} catch { /* silent */ }
+	}
+
+	async function toggleFollow() {
+		if (!$USER_DATA || isOwnProfile || followLoading) return;
+		followLoading = true;
+		const next = !isFollowing;
+		try {
+			const res = await fetch(`/api/user/${encodeURIComponent(username)}/follow`, {
+				method: next ? 'POST' : 'DELETE'
+			});
+			if (res.ok) {
+				isFollowing = next;
+				followerCount = Math.max(0, followerCount + (next ? 1 : -1));
+				haptic.trigger('light');
+				toast.success(next ? `Following @${username}` : `Unfollowed @${username}`);
+			} else {
+				const data = await res.json().catch(() => null);
+				toast.error(data?.message || 'Failed to update follow');
+			}
+		} catch {
+			toast.error('Failed to update follow');
+		} finally {
+			followLoading = false;
+		}
+	}
+
+	async function openSendMoney() {
+		// The dialog reads balances from the portfolio store, which is only filled
+		// on the Portfolio page otherwise.
+		void fetchPortfolioData();
+		sendMoneyOpen = true;
+	}
+
+	async function copyProfileLink() {
+		try {
+			await navigator.clipboard.writeText(`${window.location.origin}/user/${username}`);
+			linkCopied = true;
+			haptic.trigger('light');
+			toast.success('Profile link copied');
+			setTimeout(() => (linkCopied = false), 2000);
+		} catch {
+			toast.error('Could not copy the link');
+		}
 	}
 
 	async function toggleBlock() {
@@ -87,7 +152,7 @@
 	onMount(async () => {
 		previousUsername = username;
 		fetchAchievements();
-		checkBlockStatus();
+		loadRelationship();
 
 		if (isOwnProfile) {
 			await fetchTransactions();
@@ -98,7 +163,7 @@
 		if (username && previousUsername && username !== previousUsername) {
 			userAchievements = [];
 			fetchAchievements();
-			checkBlockStatus();
+			loadRelationship();
 			previousUsername = username;
 		}
 	});
@@ -160,6 +225,66 @@
 				})
 			: ''
 	);
+	let holdings = $derived<any[]>(profileData?.holdings ?? []);
+	let holdingsColumns = $derived([
+		{
+			key: 'coin',
+			label: 'Coin',
+			class: 'pl-6 font-medium',
+			render: (value: any, row: any) => ({
+				component: 'coin',
+				icon: row.icon,
+				symbol: row.symbol,
+				name: `*${row.symbol}`
+			})
+		},
+		{
+			key: 'quantity',
+			label: 'Quantity',
+			class: 'font-mono',
+			sortable: true,
+			render: (value: any) => formatQuantity(value)
+		},
+		{
+			key: 'currentPrice',
+			label: 'Price',
+			class: 'hidden font-mono sm:table-cell',
+			render: (value: any) => `$${formatPrice(value)}`
+		},
+		{
+			key: 'change24h',
+			label: '24h Change',
+			class: 'hidden md:table-cell',
+			sortable: true,
+			render: (value: any) => ({
+				component: 'badge',
+				variant: value >= 0 ? 'success' : 'destructive',
+				text: `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+			})
+		},
+		{
+			key: 'value',
+			label: 'Value',
+			class: 'font-mono font-medium',
+			sortable: true,
+			defaultSort: true,
+			render: (value: any) => formatValue(value)
+		},
+		{
+			key: 'share',
+			label: 'Portfolio %',
+			class: 'hidden lg:table-cell',
+			render: (value: any, row: any) => ({
+				component: 'badge',
+				variant: 'outline',
+				text:
+					profileData?.stats?.totalPortfolioValue > 0
+						? `${((row.value / profileData.stats.totalPortfolioValue) * 100).toFixed(1)}%`
+						: '-'
+			})
+		}
+	]);
+
 	let hasCreatedCoins = $derived(
 		profileData?.createdCoins?.length ? profileData.createdCoins.length > 0 : false
 	);
@@ -433,6 +558,14 @@
 	twitterCard="summary"
 />
 
+{#if $USER_DATA && !isOwnProfile}
+	<SendMoneyModal
+		bind:open={sendMoneyOpen}
+		prefilledUsername={username}
+		onSuccess={() => void fetchPortfolioSummary()}
+	/>
+{/if}
+
 <div class="container mx-auto max-w-6xl p-6">
 	{#if loading}
 		<ProfileSkeleton />
@@ -482,11 +615,54 @@
 						<div class="text-muted-foreground flex items-center gap-2 text-sm">
 							<HugeiconsIcon icon={Calendar01Icon} class="h-4 w-4" />
 							<span>Joined {memberSince}</span>
+							<span aria-hidden="true">·</span>
+							<span>
+								<span class="text-foreground font-medium">{followerCount.toLocaleString()}</span>
+								{followerCount === 1 ? 'follower' : 'followers'}
+							</span>
+							<span aria-hidden="true">·</span>
+							<span>
+								<span class="text-foreground font-medium">{followingCount.toLocaleString()}</span>
+								following
+							</span>
 						</div>
 
 					</div>
-					{#if $USER_DATA && !isOwnProfile}
-						<div class="ml-auto self-start">
+					<div class="ml-auto flex flex-wrap items-center gap-2 self-start">
+						{#if $USER_DATA && !isOwnProfile}
+							<Button
+								variant={isFollowing ? 'outline' : 'default'}
+								size="sm"
+								class="h-8"
+								onclick={toggleFollow}
+								disabled={followLoading}
+								aria-pressed={isFollowing}
+							>
+								<HugeiconsIcon icon={isFollowing ? UserCheck01Icon : UserAdd01Icon} class="h-4 w-4" />
+								{isFollowing ? 'Following' : 'Follow'}
+							</Button>
+							<Button variant="outline" size="sm" class="h-8" onclick={openSendMoney}>
+								<HugeiconsIcon icon={SentIcon} class="h-4 w-4" />
+								Send
+							</Button>
+						{/if}
+						<Tooltip.Provider>
+							<Tooltip.Root>
+								<Tooltip.Trigger>
+									<Button
+										variant="ghost"
+										size="icon"
+										class="text-muted-foreground h-8 w-8"
+										aria-label="Copy profile link"
+										onclick={copyProfileLink}
+									>
+										<HugeiconsIcon icon={linkCopied ? Tick01Icon : Link01Icon} class="h-4 w-4" />
+									</Button>
+								</Tooltip.Trigger>
+								<Tooltip.Content>{linkCopied ? 'Copied' : 'Copy profile link'}</Tooltip.Content>
+							</Tooltip.Root>
+						</Tooltip.Provider>
+						{#if $USER_DATA && !isOwnProfile}
 							<Tooltip.Provider>
 								<Tooltip.Root>
 									<Tooltip.Trigger>
@@ -503,8 +679,8 @@
 									<Tooltip.Content>{isBlocked ? 'Unblock' : 'Block'}</Tooltip.Content>
 								</Tooltip.Root>
 							</Tooltip.Provider>
-						</div>
-					{/if}
+						{/if}
+					</div>
 				</div>
 			</Card.Content>
 		</Card.Root>
@@ -752,6 +928,30 @@
 							</Tooltip.Root>
 						{/each}
 					</div>
+				</Card.Content>
+			</Card.Root>
+		{/if}
+
+		<!-- Holdings -->
+		{#if holdings.length > 0}
+			<Card.Root class="mb-6">
+				<Card.Header class="pb-3">
+					<Card.Title class="flex items-center gap-2">
+						<HugeiconsIcon icon={Briefcase01Icon} class="h-5 w-5" />
+						Holdings ({profileData.stats.holdingsCount})
+					</Card.Title>
+					<Card.Description>
+						{profileData.stats.holdingsCount > holdings.length
+							? `The ${holdings.length} largest positions held by ${profileData.profile.name}`
+							: `Coins held by ${profileData.profile.name}`}
+					</Card.Description>
+				</Card.Header>
+				<Card.Content class="p-0">
+					<DataTable
+						columns={holdingsColumns}
+						data={holdings}
+						onRowClick={(holding) => goto(`/coin/${holding.symbol}`)}
+					/>
 				</Card.Content>
 			</Card.Root>
 		{/if}

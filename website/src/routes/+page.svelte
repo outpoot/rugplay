@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { getTimeBasedGreeting, formatPrice, formatMarketCap } from '$lib/utils';
+	import { getTimeBasedGreeting, formatPrice, formatMarketCap, getPublicUrl } from '$lib/utils';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
@@ -14,7 +14,9 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { StarIcon } from '@hugeicons/core-free-icons';
+	import { StarIcon, UserCheck01Icon } from '@hugeicons/core-free-icons';
+	import * as Avatar from '$lib/components/ui/avatar';
+	import UserName from '$lib/components/self/UserName.svelte';
 
 	let shouldSignIn = $state(false);
 	let coins = $state<any[]>([]);
@@ -22,6 +24,7 @@
 	let seasonData = $state<any>(null);
 	let seasonLoading = $state(true);
 	let watchlist = $state<any[]>([]);
+	let following = $state<any[]>([]);
 
 	onMount(() => {
 		const controller = new AbortController();
@@ -59,6 +62,13 @@
 				.then(async (response) => {
 					const result = response.ok ? await response.json() : null;
 					if (result && !controller.signal.aborted) watchlist = result.coins;
+				})
+				.catch(() => {});
+
+			fetch('/api/following', options)
+				.then(async (response) => {
+					const result = response.ok ? await response.json() : null;
+					if (result && !controller.signal.aborted) following = result.players;
 				})
 				.catch(() => {});
 		}
@@ -156,6 +166,36 @@
 						<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="shrink-0 text-xs">
 							{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
 						</Badge>
+					</a>
+				{/each}
+			</div>
+		</section>
+	{/if}
+
+	{#if following.length > 0}
+		<section class="mb-8">
+			<h2 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+				<HugeiconsIcon icon={UserCheck01Icon} class="text-primary h-4 w-4" />
+				Following
+			</h2>
+			<div class="flex gap-3 overflow-x-auto pb-2">
+				{#each following as player (player.id)}
+					<a
+						href={`/user/${player.username}`}
+						class="bg-card hover:bg-card/50 flex min-w-[190px] shrink-0 items-center gap-3 rounded-xl border px-3 py-2.5 transition-all hover:shadow-md"
+					>
+						<Avatar.Root class="h-8 w-8 shrink-0">
+							<Avatar.Image src={getPublicUrl(player.image)} alt={player.name} />
+							<Avatar.Fallback class="text-xs">
+								{player.name?.charAt(0)?.toUpperCase() ?? '?'}
+							</Avatar.Fallback>
+						</Avatar.Root>
+						<div class="min-w-0 flex-1">
+							<div class="truncate text-sm font-semibold">
+								<UserName name={player.name} nameColor={player.nameColor} />
+							</div>
+							<div class="text-muted-foreground truncate text-xs">@{player.username}</div>
+						</div>
 					</a>
 				{/each}
 			</div>

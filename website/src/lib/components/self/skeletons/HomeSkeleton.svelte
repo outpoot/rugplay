@@ -22,12 +22,13 @@
 								</div>
 								<Skeleton class="h-5 w-14 rounded-full" />
 							</div>
-							<div class="flex items-end justify-between gap-2">
+							<div class="flex items-center justify-between gap-3">
 								<Skeleton class="h-7 w-24" />
-								<div class="space-y-1">
-									<Skeleton class="ml-auto h-3 w-16" />
-									<Skeleton class="ml-auto h-3 w-14" />
-								</div>
+								<Skeleton class="h-9 w-28" />
+							</div>
+							<div class="flex justify-between gap-2">
+								<Skeleton class="h-3 w-20" />
+								<Skeleton class="h-3 w-16" />
 							</div>
 						</div>
 					{/each}

@@ -24,6 +24,8 @@
 	} from '@hugeicons/core-free-icons';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import UserName from '$lib/components/self/UserName.svelte';
+	import Sparkline from '$lib/components/self/Sparkline.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	let shouldSignIn = $state(false);
 	let coins = $state<any[]>([]);
@@ -84,6 +86,24 @@
 	});
 
 	const MOVER_ROWS = 5;
+	const TABLE_PREVIEW_ROWS = 10;
+
+	let showAllCoins = $state(false);
+	let rankedCoins = $derived(coins.map((c, i) => ({ ...c, rank: i + 1 })));
+	let tableCoins = $derived(showAllCoins ? rankedCoins : rankedCoins.slice(0, TABLE_PREVIEW_ROWS));
+
+	// The day at a glance, from the same list the rest of the page uses.
+	let pulse = $derived.by(() => {
+		const up = coins.filter((c) => c.change24h > 0).length;
+		const down = coins.filter((c) => c.change24h < 0).length;
+		return {
+			marketCap: coins.reduce((sum, c) => sum + c.marketCap, 0),
+			volume: coins.reduce((sum, c) => sum + c.volume24h, 0),
+			up,
+			down,
+			upShare: up + down > 0 ? (up / (up + down)) * 100 : 50
+		};
+	});
 
 	let showSeason = $derived(seasonLoading || !!seasonData?.season);
 
@@ -127,6 +147,12 @@
 
 	const marketColumns = [
 		{
+			key: 'rank',
+			label: '#',
+			class: 'text-muted-foreground w-10 tabular-nums',
+			sortable: true
+		},
+		{
 			key: 'name',
 			label: 'Name',
 			class: 'font-medium',
@@ -142,11 +168,13 @@
 		},
 		{
 			key: 'price',
+			sortable: true,
 			label: 'Price',
 			render: (value: any) => `$${formatPrice(value)}`
 		},
 		{
 			key: 'change24h',
+			sortable: true,
 			label: '24h Change',
 			render: (value: any) => ({
 				component: 'badge',
@@ -156,11 +184,13 @@
 		},
 		{
 			key: 'marketCap',
+			sortable: true,
 			label: 'Market Cap',
 			render: (value: any) => formatMarketCap(value)
 		},
 		{
 			key: 'volume24h',
+			sortable: true,
 			label: 'Volume (24h)',
 			render: (value: any) => formatMarketCap(value)
 		}
@@ -183,21 +213,45 @@
 {/snippet}
 
 <div class="container mx-auto p-6">
-	<header class="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-		<h1 class="truncate text-2xl font-bold">
-			{$USER_DATA ? getTimeBasedGreeting($USER_DATA?.name) : 'Welcome to Rugplay!'}
-		</h1>
-		<p class="text-muted-foreground text-sm">
-			{#if $USER_DATA}
-				Here's the market overview for today.
-			{:else}
-				You need to <button
-					class="text-primary underline hover:cursor-pointer"
-					onclick={() => (shouldSignIn = !shouldSignIn)}>sign in</button
-				>
-				to play.
-			{/if}
-		</p>
+	<header class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+		<div class="min-w-0">
+			<h1 class="mb-2 truncate text-2xl font-bold sm:text-3xl">
+				{$USER_DATA ? getTimeBasedGreeting($USER_DATA?.name) : 'Welcome to Rugplay!'}
+			</h1>
+			<p class="text-muted-foreground">
+				{#if $USER_DATA}
+					Here's the market overview for today.
+				{:else}
+					You need to <button
+						class="text-primary underline hover:cursor-pointer"
+						onclick={() => (shouldSignIn = !shouldSignIn)}>sign in</button
+					>
+					to play.
+				{/if}
+			</p>
+		</div>
+
+		{#if coins.length > 0}
+			<dl class="bg-card grid shrink-0 grid-cols-3 divide-x rounded-xl border text-sm">
+				<div class="min-w-0 px-3 py-2.5 sm:px-4">
+					<dt class="text-muted-foreground text-xs">Market cap</dt>
+					<dd class="font-semibold tabular-nums">{formatMarketCap(pulse.marketCap)}</dd>
+				</div>
+				<div class="min-w-0 px-3 py-2.5 sm:px-4">
+					<dt class="text-muted-foreground text-xs">24h volume</dt>
+					<dd class="font-semibold tabular-nums">{formatMarketCap(pulse.volume)}</dd>
+				</div>
+				<div class="min-w-0 px-3 py-2.5 sm:min-w-36 sm:px-4">
+					<dt class="text-muted-foreground flex justify-between gap-3 text-xs">
+						<span><span class="text-success font-semibold">{pulse.up}</span> up</span>
+						<span><span class="text-destructive font-semibold">{pulse.down}</span> down</span>
+					</dt>
+					<dd class="bg-destructive mt-2 h-1.5 overflow-hidden rounded-full">
+						<div class="bg-success h-full" style="width: {pulse.upShare}%"></div>
+					</dd>
+				</div>
+			</dl>
+		{/if}
 	</header>
 
 	{#if watchlist.length > 0 || following.length > 0}
@@ -284,7 +338,7 @@
 						{#each coins.slice(0, 6) as coin (coin.symbol)}
 							<a
 								href={`/coin/${coin.symbol}`}
-								class="bg-card hover:bg-card/50 flex flex-col gap-2 rounded-xl border p-3 transition-all hover:shadow-md"
+								class="bg-card hover:border-foreground/20 group relative flex flex-col gap-2 overflow-hidden rounded-xl border p-3 transition-all hover:shadow-md"
 							>
 								<div class="flex min-w-0 items-center gap-2.5">
 									<CoinIcon
@@ -304,14 +358,21 @@
 										{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
 									</Badge>
 								</div>
-								<div class="flex items-end justify-between gap-2">
+								<div class="flex items-center justify-between gap-3">
 									<span class="truncate text-xl font-bold tracking-tight">
 										${formatPrice(coin.price)}
 									</span>
-									<span class="text-muted-foreground shrink-0 text-right text-[11px] leading-tight tabular-nums">
-										<span class="block">MCap {formatMarketCap(coin.marketCap)}</span>
-										<span class="block">Vol {formatMarketCap(coin.volume24h)}</span>
-									</span>
+									{#if coin.sparkline}
+										<Sparkline
+											points={coin.sparkline}
+											positive={coin.change24h >= 0}
+											class="h-9 min-w-16 max-w-36 flex-1"
+										/>
+									{/if}
+								</div>
+								<div class="text-muted-foreground flex justify-between gap-2 text-[11px] tabular-nums">
+									<span class="truncate">MCap {formatMarketCap(coin.marketCap)}</span>
+									<span class="truncate">Vol {formatMarketCap(coin.volume24h)}</span>
 								</div>
 							</a>
 						{/each}
@@ -329,11 +390,14 @@
 									{group.empty}
 								</p>
 							{:else}
-								{#each group.coins as coin (coin.symbol)}
+								{#each group.coins as coin, i (coin.symbol)}
 									<a
 										href={`/coin/${coin.symbol}`}
 										class="hover:bg-muted -mx-1.5 flex items-center gap-2 rounded-md px-1.5 py-1.5 text-sm transition-colors"
 									>
+										<span class="text-muted-foreground w-3 text-center text-xs tabular-nums">
+											{i + 1}
+										</span>
 										<CoinIcon
 											icon={coin.icon}
 											symbol={coin.symbol}
@@ -342,7 +406,7 @@
 											class="shrink-0 [&>span]:text-[8px]"
 										/>
 										<span class="min-w-0 flex-1 truncate font-medium">*{coin.symbol}</span>
-										<span class="text-muted-foreground font-mono text-xs">
+										<span class="text-muted-foreground hidden font-mono text-xs sm:inline md:hidden 2xl:inline">
 											${formatPrice(coin.price)}
 										</span>
 										{#if group.id === 'volume'}
@@ -379,15 +443,32 @@
 		</div>
 
 		<section class="mt-6">
-			<h2 class="mb-2 text-sm font-semibold">Market overview</h2>
-			<Card.Root class="py-2">
+			<div class="mb-2 flex items-center justify-between">
+				<h2 class="text-sm font-semibold">Market overview</h2>
+				<span class="text-muted-foreground text-xs">
+					Showing {tableCoins.length} of {coins.length}
+				</span>
+			</div>
+			<Card.Root class="gap-0 py-2">
 				<Card.Content class="px-3">
 					<DataTable
 						columns={marketColumns}
-						data={coins}
+						data={tableCoins}
 						onRowClick={(coin) => goto(`/coin/${coin.symbol}`)}
 					/>
 				</Card.Content>
+				{#if coins.length > TABLE_PREVIEW_ROWS}
+					<div class="border-t px-3 pt-2">
+						<Button
+							variant="ghost"
+							size="sm"
+							class="w-full"
+							onclick={() => (showAllCoins = !showAllCoins)}
+						>
+							{showAllCoins ? 'Show fewer' : `Show all ${coins.length} coins`}
+						</Button>
+					</div>
+				{/if}
 			</Card.Root>
 		</section>
 	{/if}

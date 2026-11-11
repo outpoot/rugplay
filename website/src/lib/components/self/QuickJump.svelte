@@ -21,7 +21,6 @@
 		Activity01Icon,
 		ReceiptDollarIcon,
 		Settings01Icon,
-		Loading03Icon,
 		UserIcon,
 		CrownIcon,
 		Key01Icon,
@@ -414,8 +413,8 @@
 
 		<div class="flex items-center gap-3 border-b px-4">
 			<HugeiconsIcon
-				icon={searching ? Loading03Icon : Search01Icon}
-				class="text-muted-foreground h-4 w-4 shrink-0 {searching ? 'animate-spin' : ''}"
+				icon={Search01Icon}
+				class="text-muted-foreground h-4 w-4 shrink-0"
 			/>
 			<!-- svelte-ignore a11y_autofocus -->
 			<input

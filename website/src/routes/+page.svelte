@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { getTimeBasedGreeting, formatPrice, formatMarketCap, getPublicUrl } from '$lib/utils';
+	import { getTimeBasedGreeting, formatPrice, formatMarketCap, formatChange } from '$lib/utils';
 	import { USER_DATA } from '$lib/stores/user-data';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
@@ -16,14 +16,11 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		StarIcon,
-		UserCheck01Icon,
 		ChartIncreaseIcon,
 		ChartDecreaseIcon,
 		FireIcon,
 		ArrowRight01Icon
 	} from '@hugeicons/core-free-icons';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import UserName from '$lib/components/self/UserName.svelte';
 	import Sparkline from '$lib/components/self/Sparkline.svelte';
 	import { Button } from '$lib/components/ui/button';
 
@@ -33,7 +30,6 @@
 	let seasonData = $state<any>(null);
 	let seasonLoading = $state(true);
 	let watchlist = $state<any[]>([]);
-	let following = $state<any[]>([]);
 
 	onMount(() => {
 		const controller = new AbortController();
@@ -73,13 +69,6 @@
 					if (result && !controller.signal.aborted) watchlist = result.coins;
 				})
 				.catch(() => {});
-
-			fetch('/api/following', options)
-				.then(async (response) => {
-					const result = response.ok ? await response.json() : null;
-					if (result && !controller.signal.aborted) following = result.players;
-				})
-				.catch(() => {});
 		}
 
 		return () => controller.abort();
@@ -92,18 +81,6 @@
 	let rankedCoins = $derived(coins.map((c, i) => ({ ...c, rank: i + 1 })));
 	let tableCoins = $derived(showAllCoins ? rankedCoins : rankedCoins.slice(0, TABLE_PREVIEW_ROWS));
 
-	// The day at a glance, from the same list the rest of the page uses.
-	let pulse = $derived.by(() => {
-		const up = coins.filter((c) => c.change24h > 0).length;
-		const down = coins.filter((c) => c.change24h < 0).length;
-		return {
-			marketCap: coins.reduce((sum, c) => sum + c.marketCap, 0),
-			volume: coins.reduce((sum, c) => sum + c.volume24h, 0),
-			up,
-			down,
-			upShare: up + down > 0 ? (up / (up + down)) * 100 : 50
-		};
-	});
 
 	let showSeason = $derived(seasonLoading || !!seasonData?.season);
 
@@ -179,7 +156,7 @@
 			render: (value: any) => ({
 				component: 'badge',
 				variant: value >= 0 ? 'success' : 'destructive',
-				text: `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+				text: formatChange(value)
 			})
 		},
 		{
@@ -213,101 +190,49 @@
 {/snippet}
 
 <div class="container mx-auto p-6">
-	<header class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-		<div class="min-w-0">
-			<h1 class="mb-2 truncate text-2xl font-bold sm:text-3xl">
-				{$USER_DATA ? getTimeBasedGreeting($USER_DATA?.name) : 'Welcome to Rugplay!'}
-			</h1>
-			<p class="text-muted-foreground">
-				{#if $USER_DATA}
-					Here's the market overview for today.
-				{:else}
-					You need to <button
-						class="text-primary underline hover:cursor-pointer"
-						onclick={() => (shouldSignIn = !shouldSignIn)}>sign in</button
-					>
-					to play.
-				{/if}
-			</p>
-		</div>
-
-		{#if coins.length > 0}
-			<dl class="bg-card grid shrink-0 grid-cols-3 divide-x rounded-xl border text-sm">
-				<div class="min-w-0 px-3 py-2.5 sm:px-4">
-					<dt class="text-muted-foreground text-xs">Market cap</dt>
-					<dd class="font-semibold tabular-nums">{formatMarketCap(pulse.marketCap)}</dd>
-				</div>
-				<div class="min-w-0 px-3 py-2.5 sm:px-4">
-					<dt class="text-muted-foreground text-xs">24h volume</dt>
-					<dd class="font-semibold tabular-nums">{formatMarketCap(pulse.volume)}</dd>
-				</div>
-				<div class="min-w-0 px-3 py-2.5 sm:min-w-36 sm:px-4">
-					<dt class="text-muted-foreground flex justify-between gap-3 text-xs">
-						<span><span class="text-success font-semibold">{pulse.up}</span> up</span>
-						<span><span class="text-destructive font-semibold">{pulse.down}</span> down</span>
-					</dt>
-					<dd class="bg-destructive mt-2 h-1.5 overflow-hidden rounded-full">
-						<div class="bg-success h-full" style="width: {pulse.upShare}%"></div>
-					</dd>
-				</div>
-			</dl>
-		{/if}
+	<header class="mb-6">
+		<h1 class="mb-2 truncate text-2xl font-bold sm:text-3xl">
+			{$USER_DATA ? getTimeBasedGreeting($USER_DATA?.name) : 'Welcome to Rugplay!'}
+		</h1>
+		<p class="text-muted-foreground">
+			{#if $USER_DATA}
+				Here's the market overview for today.
+			{:else}
+				You need to <button
+					class="text-primary underline hover:cursor-pointer"
+					onclick={() => (shouldSignIn = !shouldSignIn)}>sign in</button
+				>
+				to play.
+			{/if}
+		</p>
 	</header>
 
-	{#if watchlist.length > 0 || following.length > 0}
-		<section class="bg-card mb-5 divide-y rounded-xl border">
-			{#if watchlist.length > 0}
-				<div class="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
-					<div class="w-24 shrink-0">
-						{@render sectionTitle('Watchlist', StarIcon, 'fill-yellow-400 text-yellow-500')}
-					</div>
-					<div class="flex w-full min-w-0 flex-1 gap-2 overflow-x-auto">
-						{#each watchlist as coin (coin.symbol)}
-							<a
-								href={`/coin/${coin.symbol}`}
-								class="hover:bg-muted flex shrink-0 items-center gap-2 rounded-full border py-1 pr-2.5 pl-1 text-sm transition-colors"
-							>
-								<CoinIcon icon={coin.icon} symbol={coin.symbol} name={coin.name} size={6} class="shrink-0" />
-								<span class="font-semibold">*{coin.symbol}</span>
-								<span class="text-muted-foreground font-mono text-xs">${formatPrice(coin.price)}</span>
-								<span
-									class="font-mono text-xs font-medium {coin.change24h >= 0
-										? 'text-success'
-										: 'text-destructive'}"
-								>
-									{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
-								</span>
-							</a>
-						{/each}
-					</div>
+	{#if watchlist.length > 0}
+		<section class="bg-card mb-5 rounded-xl border">
+			<div class="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
+				<div class="w-24 shrink-0">
+					{@render sectionTitle('Watchlist', StarIcon, 'fill-yellow-400 text-yellow-500')}
 				</div>
-			{/if}
-			{#if following.length > 0}
-				<div class="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
-					<div class="w-24 shrink-0">
-						{@render sectionTitle('Following', UserCheck01Icon, 'text-primary')}
-					</div>
-					<div class="flex w-full min-w-0 flex-1 gap-2 overflow-x-auto">
-						{#each following as player (player.id)}
-							<a
-								href={`/user/${player.username}`}
-								class="hover:bg-muted flex shrink-0 items-center gap-2 rounded-full border py-1 pr-2.5 pl-1 text-sm transition-colors"
+				<div class="flex w-full min-w-0 flex-1 gap-2 overflow-x-auto">
+					{#each watchlist as coin (coin.symbol)}
+						<a
+							href={`/coin/${coin.symbol}`}
+							class="hover:bg-muted flex shrink-0 items-center gap-2 rounded-full border py-1 pr-2.5 pl-1 text-sm transition-colors"
+						>
+							<CoinIcon icon={coin.icon} symbol={coin.symbol} name={coin.name} size={6} class="shrink-0" />
+							<span class="font-semibold">*{coin.symbol}</span>
+							<span class="text-muted-foreground font-mono text-xs">${formatPrice(coin.price)}</span>
+							<span
+								class="font-mono text-xs font-medium {coin.change24h >= 0
+									? 'text-success'
+									: 'text-destructive'}"
 							>
-								<Avatar.Root class="h-6 w-6 shrink-0">
-									<Avatar.Image src={getPublicUrl(player.image)} alt={player.name} />
-									<Avatar.Fallback class="text-[10px]">
-										{player.name?.charAt(0)?.toUpperCase() ?? '?'}
-									</Avatar.Fallback>
-								</Avatar.Root>
-								<span class="font-semibold">
-									<UserName name={player.name} nameColor={player.nameColor} />
-								</span>
-								<span class="text-muted-foreground text-xs">@{player.username}</span>
-							</a>
-						{/each}
-					</div>
+								{formatChange(coin.change24h)}
+							</span>
+						</a>
+					{/each}
 				</div>
-			{/if}
+			</div>
 		</section>
 	{/if}
 
@@ -355,7 +280,7 @@
 										</div>
 									</div>
 									<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="shrink-0">
-										{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+										{formatChange(coin.change24h)}
 									</Badge>
 								</div>
 								<div class="flex items-center justify-between gap-3">
@@ -420,7 +345,7 @@
 													? 'text-success'
 													: 'text-destructive'}"
 											>
-												{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+												{formatChange(coin.change24h)}
 											</span>
 										{/if}
 									</a>

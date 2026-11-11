@@ -72,6 +72,19 @@ export function formatPrice(price: number): string {
     }
 }
 
+// Signed percentage for tight spaces: "+3.10%", "-41.30%", and "+10M%" once
+// a brand new coin's change no longer fits.
+export function formatChange(value: number): string {
+    const sign = value >= 0 ? '+' : '-';
+    const abs = Math.abs(value);
+    if (abs < 1000) return `${sign}${abs.toFixed(2)}%`;
+    const compact = new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        maximumFractionDigits: 1
+    }).format(abs);
+    return `${sign}${compact}%`;
+}
+
 export function formatValue(value: number | string): string {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     if (typeof numValue !== 'number' || isNaN(numValue)) return '$0.00';

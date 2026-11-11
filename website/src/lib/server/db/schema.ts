@@ -61,6 +61,7 @@ export const user = pgTable("user", {
 	return {
 		usernameIdx: index("user_username_idx").on(table.username),
 		usernameTrgmIdx: index("user_username_trgm_idx").using("gin", table.username.op("gin_trgm_ops")),
+		nameTrgmIdx: index("user_name_trgm_idx").using("gin", table.name.op("gin_trgm_ops")),
 		isBannedIdx: index("user_is_banned_idx").on(table.isBanned),
 		isAdminIdx: index("user_is_admin_idx").on(table.isAdmin),
 		createdAtIdx: index("user_created_at_idx").on(table.createdAt),
@@ -451,4 +452,22 @@ export const userBlock = pgTable("user_block", {
 	blockerIdIdx: index("user_block_blocker_id_idx").on(table.blockerId),
 	blockedIdIdx: index("user_block_blocked_id_idx").on(table.blockedId),
 	noSelfBlock: check("no_self_block", sql`blocker_id != blocked_id`),
+}));
+
+export const userWatchlist = pgTable("user_watchlist", {
+	userId: integer("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	coinId: integer("coin_id").notNull().references(() => coin.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+	pk: primaryKey({ columns: [table.userId, table.coinId] }),
+}));
+
+export const userFollow = pgTable("user_follow", {
+	followerId: integer("follower_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	followingId: integer("following_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+	pk: primaryKey({ columns: [table.followerId, table.followingId] }),
+	followingIdIdx: index("user_follow_following_id_idx").on(table.followingId),
+	noSelfFollow: check("no_self_follow", sql`follower_id != following_id`),
 }));

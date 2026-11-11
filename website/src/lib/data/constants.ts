@@ -24,5 +24,17 @@ export const SWAP_FEE_RATE = 0.003; // 0.3%
 // Burned on cash transfers between users
 export const CASH_TRANSFER_FEE_RATE = 0.01; // 1%
 
+// WATCHLIST
+export const MAX_WATCHLIST_COINS = 50;
+
+// FOLLOWING
+export const MAX_FOLLOWING = 200;
+// The home page feed shows followed players' trades at least this large (the
+// same bar as the sidebar's live trades) from the last few days.
+export const FOLLOWING_FEED_MIN_VALUE = 1000;
+export const FOLLOWING_FEED_DAYS = 7;
+// Most recent followers / followed players listed on a profile.
+export const FOLLOW_LIST_LIMIT = 200;
+
 // PROMO CODES
 export const MAX_PROMO_REWARD = 1_000_000;

@@ -1,3 +1,29 @@
+<script lang="ts" module>
+	import type { UserProfileData as CachedProfile } from '$lib/types/user-profile';
+
+	const CACHE_TTL_MS = 60_000;
+	const MAX_CACHED = 100;
+	const profileCache = new Map<number, { at: number; request: Promise<CachedProfile | null> }>();
+
+	function loadProfile(id: number): Promise<CachedProfile | null> {
+		const cached = profileCache.get(id);
+		if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.request;
+
+		const request = fetch(`/api/user/${id}`)
+			.then((response) => (response.ok ? (response.json() as Promise<CachedProfile>) : null))
+			.catch(() => null);
+
+		if (profileCache.size >= MAX_CACHED) {
+			profileCache.delete(profileCache.keys().next().value as number);
+		}
+		profileCache.set(id, { at: Date.now(), request });
+		request.then((result) => {
+			if (!result && profileCache.get(id)?.request === request) profileCache.delete(id);
+		});
+		return request;
+	}
+</script>
+
 <script lang="ts">
 	import * as Avatar from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
@@ -19,13 +45,10 @@
 		error = false;
 
 		try {
-			const response = await fetch(`/api/user/${id}`, { signal });
-			if (response.ok) {
-				const result = await response.json();
-				if (!signal.aborted) userData = result;
-			} else if (!signal.aborted) {
-				error = true;
-			}
+			const result = await loadProfile(id);
+			if (signal.aborted) return;
+			if (result) userData = result;
+			else error = true;
 		} catch (e) {
 			if (signal.aborted) return;
 			console.error('Failed to fetch user data:', e);

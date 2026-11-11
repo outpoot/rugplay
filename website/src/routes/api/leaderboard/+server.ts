@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, transaction, userPortfolio, coin } from '$lib/server/db/schema';
-import { eq, desc, gte, and, sql, inArray, ilike, count } from 'drizzle-orm';
+import { eq, desc, gte, and, or, sql, inArray, ilike, count } from 'drizzle-orm';
 import { redis } from '$lib/server/redis';
 
 const LEADERBOARD_CACHE_KEY = 'leaderboard:data:v1';
@@ -220,6 +220,11 @@ async function getLeaderboardData() {
 
 async function getSearchedUsers(query: string, limit = 9, offset = 0) {
     try {
+        const term = query.trim().replace(/^@/, '');
+        const escaped = term.replace(/[\\%_]/g, '\\$&');
+        const prefix = `${escaped}%`;
+        const matches = or(ilike(user.username, `%${escaped}%`), ilike(user.name, `%${escaped}%`));
+
         const results = await db.select({
             id: user.id,
             name: user.name,
@@ -236,12 +241,21 @@ async function getSearchedUsers(query: string, limit = 9, offset = 0) {
             .leftJoin(userPortfolio, eq(userPortfolio.userId, user.id))
             .leftJoin(coin, eq(coin.id, userPortfolio.coinId))
             .groupBy(user.id, user.name, user.username, user.image, user.nameColor, user.founderBadge, user.bio, user.baseCurrencyBalance)
-            .where(ilike(user.username, `%${query}%`))
-            .orderBy(desc(user.username))
+            .where(matches)
+            .orderBy(
+                sql`CASE
+                    WHEN lower(${user.username}) = lower(${term}) THEN 0
+                    WHEN lower(${user.name}) = lower(${term}) THEN 1
+                    WHEN ${user.username} ILIKE ${prefix} THEN 2
+                    WHEN ${user.name} ILIKE ${prefix} THEN 3
+                    ELSE 4
+                END`,
+                user.username
+            )
             .limit(limit)
             .offset(offset);
 
-        const total = await db.select({ count: count() }).from(user).where(ilike(user.username, `%${query}%`)).limit(1);
+        const total = await db.select({ count: count() }).from(user).where(matches).limit(1);
 
         return {
             results,

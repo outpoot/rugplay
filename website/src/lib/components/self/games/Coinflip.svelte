@@ -440,6 +440,9 @@
 						type="text"
 						value={betAmountDisplay}
 						oninput={handleBetAmountInput}
+						onkeydown={(event: KeyboardEvent) => {
+							if (event.key === 'Enter') flipCoin();
+						}}
 						onblur={handleBetAmountBlur}
 						disabled={isFlipping}
 						placeholder="Enter bet amount"

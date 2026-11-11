@@ -52,6 +52,7 @@
 	import { signOut } from '$lib/auth-client';
 	import { formatValue, getPublicUrl } from '$lib/utils';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { liveTradesStore, isLoadingTrades } from '$lib/stores/websocket';
 	import { onMount } from 'svelte';
 	import { UNREAD_COUNT, fetchNotifications } from '$lib/stores/notifications';
@@ -97,6 +98,18 @@
 			ARCADE_STATS.set(null);
 		}
 	});
+
+	function isNavActive(url: string, pathname: string): boolean {
+		if (url === '/') return pathname === '/';
+		if (url === '/coin/create') return pathname === url;
+		if (url === '/market') {
+			return (
+				pathname === url ||
+				(pathname.startsWith('/coin/') && pathname !== '/coin/create')
+			);
+		}
+		return pathname === url || pathname.startsWith(`${url}/`);
+	}
 
 	function handleNavClick(title: string) {
 		setOpenMobile(false);
@@ -209,11 +222,14 @@
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					{#each data.navMain as item}
+						{@const active = isNavActive(item.url, page.url.pathname)}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton>
+							<Sidebar.MenuButton isActive={active}>
 								{#snippet child({ props }: { props: MenuButtonProps })}
 									<a
 										href={item.url || '/'}
+										aria-current={active ? 'page' : undefined}
+										data-active={active}
 										onclick={() => handleNavClick(item.title)}
 										class={`${props.class} h-7! ${item.title === 'Notifications' && !$USER_DATA ? 'pointer-events-none opacity-50' : ''}`}
 									>

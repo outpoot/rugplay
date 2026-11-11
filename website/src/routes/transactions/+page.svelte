@@ -96,7 +96,15 @@
 		goto(url.toString(), { noScroll: true, replaceState: true });
 	}
 
+	let transactionsRequest: AbortController | null = null;
+
 	async function fetchTransactions() {
+		// Cancel the request in flight so an older, slower response cannot land on
+		// top of the results for the current search.
+		transactionsRequest?.abort();
+		const controller = new AbortController();
+		transactionsRequest = controller;
+
 		loading = true;
 		try {
 			const params = new URLSearchParams({
@@ -108,19 +116,21 @@
 				limit: perPage.toString()
 			});
 
-			const response = await fetch(`/api/transactions?${params}`);
+			const response = await fetch(`/api/transactions?${params}`, { signal: controller.signal });
 			if (response.ok) {
 				const result = await response.json();
+				if (controller.signal.aborted) return;
 				transactions = result.transactions;
 				totalCount = result.total;
 			} else {
 				toast.error('Failed to load transactions');
 			}
 		} catch (e) {
+			if (controller.signal.aborted) return;
 			console.error('Failed to fetch transactions:', e);
 			toast.error('Failed to load transactions');
 		} finally {
-			loading = false;
+			if (transactionsRequest === controller) loading = false;
 		}
 	}
 

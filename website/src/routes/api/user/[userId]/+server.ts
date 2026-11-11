@@ -64,7 +64,11 @@ export async function GET({ params }) {
         db
             .select({
                 quantity: userPortfolio.quantity,
-                currentPrice: coin.currentPrice
+                currentPrice: coin.currentPrice,
+                symbol: coin.symbol,
+                name: coin.name,
+                icon: coin.icon,
+                change24h: coin.change24h
             })
             .from(userPortfolio)
             .innerJoin(coin, eq(userPortfolio.coinId, coin.id))
@@ -112,6 +116,23 @@ export async function GET({ params }) {
             const price = Number(holding.currentPrice);
             return total + (quantity * price);
         }, 0);
+        const holdings = portfolioHoldings
+            .map((holding) => {
+                const quantity = Number(holding.quantity);
+                const price = Number(holding.currentPrice);
+                return {
+                    symbol: holding.symbol,
+                    name: holding.name,
+                    icon: holding.icon,
+                    quantity,
+                    currentPrice: price,
+                    value: quantity * price,
+                    change24h: Number(holding.change24h)
+                };
+            })
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 25);
+
         const baseCurrencyBalance = parseFloat(userProfile.baseCurrencyBalance);
         const calculatedHoldingsValue = holdingsValue || 0;
         const totalPortfolioValue = baseCurrencyBalance + calculatedHoldingsValue;
@@ -138,6 +159,7 @@ export async function GET({ params }) {
                 sellVolume24h: transactionStats[0]?.sellVolume24h || 0,
             },
             createdCoins,
+            holdings,
             recentTransactions,
             seasonTrophies
         });

@@ -29,6 +29,11 @@ export function getTimeBasedGreeting(name: string): string {
     }
 }
 
+export function isApplePlatform(): boolean {
+    if (typeof navigator === 'undefined') return false;
+    return /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent);
+}
+
 export function getPublicUrl(key: string | null): string | null {
     if (!key) return null;
     return `/api/proxy/s3/${key}`;
@@ -66,9 +71,22 @@ export function formatPrice(price: number): string {
     }
 }
 
+export function formatChange(value: number): string {
+    const sign = value >= 0 ? '+' : '-';
+    const abs = Math.abs(value);
+    if (abs < 1000) return `${sign}${abs.toFixed(2)}%`;
+    const compact = new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        maximumFractionDigits: 1
+    }).format(abs);
+    return `${sign}${compact}%`;
+}
+
 export function formatValue(value: number | string): string {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     if (typeof numValue !== 'number' || isNaN(numValue)) return '$0.00';
+
+    if (numValue < 0) return `-${formatValue(-numValue)}`;
 
     if (numValue >= 1e21) return `$${(numValue / 1e21).toFixed(2)}Sx`;
     if (numValue >= 1e18) return `$${(numValue / 1e18).toFixed(2)}Qi`;
@@ -176,7 +194,9 @@ export function formatTimeAgo(date: string) {
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
+    if (diffDays < 30) return `${diffDays}d ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+    return `${Math.floor(diffDays / 365)}y ago`;
 }
 
 export function formatTimeRemaining(timeMs: number): string {

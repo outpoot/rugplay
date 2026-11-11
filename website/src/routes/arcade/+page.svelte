@@ -17,10 +17,39 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Clock01Icon, PiggyBankIcon } from '@hugeicons/core-free-icons';
 	import { formatValue, formatRelativeTime, getPublicUrl } from '$lib/utils';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { replaceState } from '$app/navigation';
 
 	let shouldSignIn = $state(false);
 	let balance = $state(0);
-	let activeGame = $state('coinflip');
+	const GAMES = ['coinflip', 'slots', 'mines', 'dice', 'tower'];
+	const LAST_GAME_KEY = 'rugplay:arcade-game';
+
+	const requestedGame = page.url.searchParams.get('game');
+	let activeGame = $state(
+		requestedGame && GAMES.includes(requestedGame) ? requestedGame : 'coinflip'
+	);
+
+	onMount(() => {
+		if (requestedGame && GAMES.includes(requestedGame)) return;
+		try {
+			const lastGame = localStorage.getItem(LAST_GAME_KEY);
+			if (lastGame && GAMES.includes(lastGame)) selectGame(lastGame);
+		} catch {
+		}
+	});
+
+	function selectGame(game: string) {
+		activeGame = game;
+		try {
+			localStorage.setItem(LAST_GAME_KEY, game);
+		} catch {
+		}
+		const url = new URL(page.url);
+		url.searchParams.set('game', game);
+		replaceState(url, page.state);
+	}
 
 	// Filter activities to only show bets >= $1000
 	const filteredActivities = $derived(
@@ -75,31 +104,31 @@
 			<div class="flex justify-center gap-4">
 				<Button
 					variant={activeGame === 'coinflip' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'coinflip')}
+					onclick={() => selectGame('coinflip')}
 				>
 					Coinflip
 				</Button>
 				<Button
 					variant={activeGame === 'slots' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'slots')}
+					onclick={() => selectGame('slots')}
 				>
 					Slots
 				</Button>
 				<Button
 					variant={activeGame === 'mines' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'mines')}
+					onclick={() => selectGame('mines')}
 				>
 					Mines
 				</Button>
 				<Button
 					variant={activeGame === 'dice' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'dice')}
+					onclick={() => selectGame('dice')}
 				>
 					Dice
 				</Button>
 				<Button
 					variant={activeGame === 'tower' ? 'default' : 'outline'}
-					onclick={() => (activeGame = 'tower')}
+					onclick={() => selectGame('tower')}
 				>
 					Tower
 				</Button>

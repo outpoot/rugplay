@@ -1,8 +1,13 @@
 import { error } from '@sveltejs/kit';
 
-export async function load({ params, url, fetch }) {
+const TIMEFRAMES = ['1m', '5m', '15m', '1h', '4h', '1d'];
+
+export async function load({ params, url, fetch, cookies }) {
     const { coinSymbol } = params;
-    const timeframe = url.searchParams.get('timeframe') || '1m';
+    const remembered = cookies.get('chart_timeframe');
+    const timeframe =
+        url.searchParams.get('timeframe') ||
+        (remembered && TIMEFRAMES.includes(remembered) ? remembered : '1m');
 
     try {
         const response = await fetch(`/api/coin/${coinSymbol}?timeframe=${timeframe}`);

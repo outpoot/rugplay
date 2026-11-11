@@ -8,6 +8,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Label } from '$lib/components/ui/label';
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
+	import Kbd from '$lib/components/self/Kbd.svelte';
 	import MarketSkeleton from '$lib/components/self/skeletons/MarketSkeleton.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { onMount } from 'svelte';
@@ -20,11 +21,20 @@
 		Refresh01Icon,
 		SlidersHorizontalIcon,
 		ArrowLeft01Icon,
-		ArrowRight01Icon
+		ArrowRight01Icon,
+		StarIcon
 	} from '@hugeicons/core-free-icons';
-	import { formatPrice, formatMarketCap, debounce, formatRelativeTime } from '$lib/utils';
+	import {
+		formatPrice,
+		formatMarketCap,
+		formatChange,
+		debounce,
+		formatRelativeTime
+	} from '$lib/utils';
+	import { USER_DATA } from '$lib/stores/user-data';
+	import { WATCHED_SYMBOLS, loadWatchedSymbols, toggleWatched } from '$lib/stores/watchlist';
 	import { MediaQuery } from 'svelte/reactivity';
-	import type { CoinData, FilterOption, VolatilityBadge, MarketResponse } from '$lib/types/market';
+	import type { CoinData, FilterOption, MarketResponse } from '$lib/types/market';
 
 	let { data } = $props();
 
@@ -63,6 +73,72 @@
 		{ value: 'asc', label: 'Low to High' }
 	];
 
+	let searchInput = $state<HTMLInputElement | null>(null);
+	let gridElement = $state<HTMLDivElement>();
+	let selectedIndex = $state(-1);
+
+	$effect(() => {
+		coins;
+		selectedIndex = -1;
+	});
+
+	function gridColumns(): number {
+		const cards = gridElement?.children;
+		if (!cards || cards.length === 0) return 1;
+		const top = (cards[0] as HTMLElement).offsetTop;
+		let columns = 0;
+		for (const card of cards) {
+			if ((card as HTMLElement).offsetTop !== top) break;
+			columns++;
+		}
+		return Math.max(1, columns);
+	}
+
+	function moveSelection(delta: number) {
+		if (coins.length === 0) return;
+		const next = selectedIndex < 0 ? 0 : selectedIndex + delta;
+		if (next < 0 || next >= coins.length) return;
+		selectedIndex = next;
+		(gridElement?.children[next] as HTMLElement | undefined)?.scrollIntoView({ block: 'nearest' });
+	}
+
+	function handleMarketKeydown(event: KeyboardEvent) {
+		if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+
+		const target = event.target as HTMLElement | null;
+		const inSearch = target === searchInput;
+		const typingElsewhere =
+			!inSearch &&
+			!!target?.closest('input, textarea, select, button, [contenteditable="true"], [role="dialog"], [role="listbox"], [role="menu"]');
+		if (typingElsewhere || showFilterPopover) return;
+
+		if (event.key === '/' && !inSearch) {
+			event.preventDefault();
+			searchInput?.focus();
+			searchInput?.select();
+			return;
+		}
+
+		if (event.key === 'Escape' && inSearch) {
+			searchInput?.blur();
+			return;
+		}
+
+		if (loading) return;
+
+		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+			event.preventDefault();
+			const step = selectedIndex < 0 ? 0 : gridColumns();
+			moveSelection(event.key === 'ArrowDown' ? step : -step);
+		} else if ((event.key === 'ArrowRight' || event.key === 'ArrowLeft') && !inSearch) {
+			event.preventDefault();
+			moveSelection(event.key === 'ArrowRight' ? 1 : -1);
+		} else if (event.key === 'Enter' && selectedIndex >= 0 && coins[selectedIndex]) {
+			event.preventDefault();
+			goto(`/coin/${coins[selectedIndex].symbol}`);
+		}
+	}
+
 	const debouncedSearch = debounce(performSearch, 300);
 	let previousSearchQueryForEffect = $state(data.filters.searchQuery);
 
@@ -78,6 +154,7 @@
 
 	onMount(() => {
 		fetchMarketData();
+		if ($USER_DATA) loadWatchedSymbols();
 	});
 
 	function updateURL() {
@@ -121,7 +198,15 @@
 
 		goto(url.toString(), { noScroll: true, replaceState: true });
 	}
+	let marketRequest: AbortController | null = null;
+
 	async function fetchMarketData() {
+		// Cancel the request in flight so a slow, older response can never land on
+		// top of the results for what is typed now.
+		marketRequest?.abort();
+		const controller = new AbortController();
+		marketRequest = controller;
+
 		loading = true;
 		try {
 			const params = new URLSearchParams({
@@ -134,19 +219,21 @@
 				limit: perPage.toString()
 			});
 
-			const response = await fetch(`/api/market?${params}`);
+			const response = await fetch(`/api/market?${params}`, { signal: controller.signal });
 			if (response.ok) {
 				const result: MarketResponse = await response.json();
+				if (controller.signal.aborted) return;
 				coins = result.coins;
 				totalCount = result.total;
 			} else {
 				toast.error('Failed to load market data');
 			}
 		} catch (e) {
+			if (controller.signal.aborted) return;
 			console.error('Failed to fetch market data:', e);
 			toast.error('Failed to load market data');
 		} finally {
-			loading = false;
+			if (marketRequest === controller) loading = false;
 		}
 	}
 
@@ -160,7 +247,7 @@
 	}
 
 	function handleSearchKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter') {
+		if (event.key === 'Enter' && selectedIndex < 0) {
 			updateSearchUrl();
 		}
 	}
@@ -221,13 +308,6 @@
 		fetchMarketData();
 		showFilterPopover = false;
 	}
-	function getVolatilityBadge(change: number): VolatilityBadge | null {
-		const absChange = Math.abs(change);
-		if (absChange > 50) return { text: '🚀 WILD', variant: 'default' as const };
-		if (absChange > 20) return { text: '📈 HOT', variant: 'secondary' as const };
-		if (absChange > 10) return { text: '⚡ ACTIVE', variant: 'outline' as const };
-		return null;
-	}
 
 	let hasActiveFilters = $derived(
 		searchQuery !== '' ||
@@ -264,6 +344,8 @@
 	keywords="virtual cryptocurrency market, crypto trading game, coin discovery simulation, market analysis game, trading practice"
 />
 
+<svelte:window onkeydown={handleMarketKeydown} />
+
 <div class="container mx-auto max-w-7xl p-6">
 	<header class="mb-8">
 		<div class="text-center">
@@ -277,11 +359,17 @@
 					<HugeiconsIcon icon={Search01Icon} class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 					<Input
 						bind:value={searchQuery}
+						bind:ref={searchInput}
 						placeholder="Search coins by name or symbol..."
-						class="pl-10 pr-4"
+						class="pl-10 pr-10"
 						onblur={updateSearchUrl}
 						onkeydown={handleSearchKeydown}
 					/>
+					<Kbd
+						class="text-muted-foreground pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 lg:inline-flex"
+					>
+						/
+					</Kbd>
 				</div>
 
 				<Popover.Root bind:open={showFilterPopover}>
@@ -449,25 +537,49 @@
 			</div>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+		<div
+			class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+			bind:this={gridElement}
+		>
 			{#each coins as coin, index}
-				{@const volatilityBadge = getVolatilityBadge(coin.change24h)}
 				{@const globalIndex = (currentPage - 1) * perPage + index + 1}
 				<Card.Root
-					class="group cursor-pointer gap-1 transition-all duration-200 hover:shadow-lg"
+					class="group cursor-pointer gap-1 transition-all duration-200 hover:shadow-lg {index ===
+					selectedIndex
+						? 'ring-primary ring-2'
+						: ''}"
 					onclick={() => goto(`/coin/${coin.symbol}`)}
 				>
 					<Card.Header>
-						<div class="flex items-start justify-between">
-							<div class="flex items-center gap-3">
-								<CoinIcon icon={coin.icon} symbol={coin.symbol} size={8} />
-								<div>
-									<h3 class="truncate max-w-44 text-lg font-semibold leading-tight">{coin.name}</h3>
+						<div class="flex items-start justify-between gap-2">
+							<div class="flex min-w-0 items-center gap-3">
+								<CoinIcon icon={coin.icon} symbol={coin.symbol} size={8} class="shrink-0" />
+								<div class="min-w-0">
+									<h3 class="truncate text-lg font-semibold leading-tight">{coin.name}</h3>
 									<p class="text-muted-foreground truncate text-sm">*{coin.symbol}</p>
 								</div>
 							</div>
-							<div class="text-right">
+							<div class="flex shrink-0 items-center gap-1 text-right">
 								<span class="text-muted-foreground font-mono text-xs">#{globalIndex}</span>
+								{#if $USER_DATA}
+									{@const watched = $WATCHED_SYMBOLS.has(coin.symbol)}
+									<button
+										class="hover:bg-muted -my-1 -mr-2 cursor-pointer rounded-md p-1.5 transition-opacity {watched
+											? ''
+											: 'opacity-40 group-hover:opacity-100 focus-visible:opacity-100'}"
+										aria-label={watched ? `Stop watching ${coin.symbol}` : `Watch ${coin.symbol}`}
+										aria-pressed={watched}
+										onclick={(event) => {
+											event.stopPropagation();
+											toggleWatched(coin.symbol);
+										}}
+									>
+										<HugeiconsIcon
+											icon={StarIcon}
+											class="h-4 w-4 {watched ? 'fill-yellow-400 text-yellow-500' : ''}"
+										/>
+									</button>
+								{/if}
 							</div>
 						</div>
 					</Card.Header>
@@ -481,13 +593,8 @@
 								</div>
 								<div class="mt-1 flex items-center gap-2">
 									<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="text-xs">
-										{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+										{formatChange(coin.change24h)}
 									</Badge>
-									{#if volatilityBadge}
-										<Badge variant={volatilityBadge.variant} class="text-xs">
-											{volatilityBadge.text}
-										</Badge>
-									{/if}
 								</div>
 							</div>
 

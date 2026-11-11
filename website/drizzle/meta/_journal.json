@@ -85,6 +85,20 @@
       "when": 1790882431532,
       "tag": "0011_better_auth_api_key_config",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794402098916,
+      "tag": "0012_user_watchlist",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794406712049,
+      "tag": "0013_user_follow",
+      "breakpoints": true
     }
   ]
 }

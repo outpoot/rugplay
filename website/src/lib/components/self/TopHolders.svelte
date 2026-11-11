@@ -35,15 +35,17 @@
 		holders: Holder[];
 	}
 
-	let { coinSymbol } = $props<{ coinSymbol: string }>();
+	// Bump refreshKey to re-fetch in place (no skeleton), e.g. after the viewer trades.
+	let { coinSymbol, refreshKey = 0 } = $props<{ coinSymbol: string; refreshKey?: number }>();
 
 	let loading = $state(true);
 	let holdersData = $state<HoldersData | null>(null);
 	let modalOpen = $state(false);
 
 	async function fetchHolders() {
+		const symbol = coinSymbol;
 		try {
-			const response = await fetch(`/api/coin/${coinSymbol}/holders?limit=50`);
+			const response = await fetch(`/api/coin/${symbol}/holders?limit=50`);
 
 			if (!response.ok) {
 				if (response.status === 404) {
@@ -53,21 +55,36 @@
 			}
 
 			const result = await response.json();
-			holdersData = result;
+			if (symbol === coinSymbol) holdersData = result;
 		} catch (e) {
 			console.error('Failed to fetch holders:', e);
-			toast.error('Failed to load top holders');
+			if (symbol === coinSymbol) toast.error('Failed to load top holders');
 		} finally {
-			loading = false;
+			if (symbol === coinSymbol) loading = false;
 		}
 	}
 
+	let loadedSymbol: string | null = null;
+	let loadedRefreshKey = 0;
+
+	// The parent passes `coin.symbol`, so this effect re-runs every time the coin
+	// object is replaced (each live price tick). Only hit the API when the symbol
+	// or the refresh key really changed.
 	$effect(() => {
-		if (coinSymbol) {
+		const symbol = coinSymbol;
+		const key = refreshKey;
+		if (!symbol) return;
+
+		if (symbol !== loadedSymbol) {
 			loading = true;
 			holdersData = null;
-			fetchHolders();
+		} else if (key === loadedRefreshKey) {
+			return;
 		}
+
+		loadedSymbol = symbol;
+		loadedRefreshKey = key;
+		fetchHolders();
 	});
 
 	let holdersColumns = $derived([

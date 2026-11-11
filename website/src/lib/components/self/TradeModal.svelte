@@ -71,6 +71,47 @@
 	});
 	let canTrade = $derived(hasValidAmount && hasEnoughFunds() && !loading);
 
+	// How far this trade moves the pool price, so nobody is surprised by slippage.
+	let priceImpact = $derived.by(() => {
+		if (!hasValidAmount) return 0;
+		const poolCoin = Number(coin.poolCoinAmount);
+		const poolBase = Number(coin.poolBaseCurrencyAmount);
+		if (poolCoin <= 0 || poolBase <= 0) return 0;
+		const k = poolCoin * poolBase;
+
+		let newPoolCoin: number;
+		let newPoolBase: number;
+		if (type === 'BUY') {
+			newPoolBase = poolBase + numericAmount * (1 - SWAP_FEE_RATE);
+			newPoolCoin = k / newPoolBase;
+		} else {
+			newPoolCoin = poolCoin + (sellByDollar ? effectiveSellCoinAmount() : numericAmount);
+			newPoolBase = k / newPoolCoin;
+		}
+
+		const impact = (newPoolBase / newPoolCoin / (poolBase / poolCoin) - 1) * 100;
+		return Number.isFinite(impact) ? impact : 0;
+	});
+	let priceImpactSeverity = $derived(
+		Math.abs(priceImpact) >= 15 ? 'high' : Math.abs(priceImpact) >= 5 ? 'medium' : 'low'
+	);
+
+	const QUICK_AMOUNTS = [
+		{ label: '25%', fraction: 0.25 },
+		{ label: '50%', fraction: 0.5 },
+		{ label: '75%', fraction: 0.75 },
+		{ label: 'Max', fraction: 1 }
+	];
+
+	// Closing with Escape or a click outside skips handleClose, which used to leave
+	// a stale amount sitting in the input the next time the modal opened.
+	$effect(() => {
+		if (!open) {
+			amount = '';
+			sellByDollar = false;
+		}
+	});
+
 	function calculateEstimate(amount: number, tradeType: 'BUY' | 'SELL', price: number) {
 		if (!amount || !price || !coin) return { result: 0, fee: 0 };
 
@@ -150,6 +191,30 @@
 		}
 	}
 
+	function setQuickAmount(fraction: number) {
+		haptic.trigger('selection');
+		if (fraction >= 1) {
+			setMaxAmount();
+			return;
+		}
+
+		if (type === 'BUY') {
+			amount = (Math.floor(userBalance * fraction * 100) / 100).toFixed(2);
+		} else if (sellByDollar) {
+			const est = calculateEstimate(maxSellableAmount * fraction, 'SELL', currentPrice);
+			amount = (Math.floor(est.result * 100) / 100).toFixed(2);
+		} else {
+			amount = Number((maxSellableAmount * fraction).toFixed(8)).toString();
+		}
+	}
+
+	function handleAmountKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' && !event.isComposing) {
+			event.preventDefault();
+			handleTrade();
+		}
+	}
+
 	function setMaxAmount() {
 		if (type === 'SELL') {
 			if (sellByDollar) {
@@ -196,6 +261,7 @@
 						bind:value={amount}
 						placeholder="0.00"
 						class="flex-1"
+						onkeydown={handleAmountKeydown}
 					/>
 					{#if type === 'SELL'}
 						<Button variant="outline" size="icon" class="h-9 w-9 shrink-0" onclick={() => { haptic.trigger('selection'); sellByDollar = !sellByDollar; amount = ''; }}>
@@ -204,7 +270,19 @@
 							{/key}
 						</Button>
 					{/if}
-					<Button variant="outline" size="sm" class="h-9 shrink-0" onclick={setMaxAmount}>Max</Button>
+				</div>
+				<div class="grid grid-cols-4 gap-2">
+					{#each QUICK_AMOUNTS as quick (quick.label)}
+						<Button
+							variant="outline"
+							size="sm"
+							class="h-7 text-xs"
+							disabled={loading}
+							onclick={() => setQuickAmount(quick.fraction)}
+						>
+							{quick.label}
+						</Button>
+					{/each}
 				</div>
 				{#if type === 'SELL'}
 					<p class="text-muted-foreground text-xs">
@@ -244,6 +322,18 @@
 						</span>
 						<span class="text-muted-foreground text-xs">
 							-${estimatedResult.fee.toFixed(6)}
+						</span>
+					</div>
+					<div class="mt-1 flex items-center justify-between">
+						<span class="text-muted-foreground text-xs">Price impact</span>
+						<span
+							class="text-xs {priceImpactSeverity === 'high'
+								? 'font-semibold text-red-500'
+								: priceImpactSeverity === 'medium'
+									? 'font-medium text-amber-500'
+									: 'text-muted-foreground'}"
+						>
+							{priceImpact >= 0 ? '+' : ''}{priceImpact.toFixed(2)}%
 						</span>
 					</div>
 					<p class="text-muted-foreground mt-1 text-xs">

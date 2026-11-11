@@ -9,7 +9,6 @@
 	import CommentSection from '$lib/components/self/CommentSection.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import UserName from '$lib/components/self/UserName.svelte';
-	import CoinSkeleton from '$lib/components/self/skeletons/CoinSkeleton.svelte';
 	import TopHolders from '$lib/components/self/TopHolders.svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -40,7 +39,8 @@
 	const { data } = $props();
 	let coinSymbol = $derived(data.coinSymbol);
 	let coin = $state(data.coin);
-	let loading = $state(false);
+	let chartLoading = $state(false);
+	let holdersRefreshKey = $state(0);
 	let chartData = $state(data.chartData);
 	let volumeData = $state(data.volumeData);
 	let oldestTimestamp = $state<number | null>(data.oldestTimestamp ?? null);
@@ -131,9 +131,12 @@
 		};
 	});
 
-	async function loadCoinData() {
+	// Refreshes in place. This used to swap the whole page for a skeleton, which
+	// remounted the comments and holders (re-fetching both and wiping any comment
+	// draft) after every single trade.
+	async function loadCoinData({ recreateChart = false } = {}) {
+		const symbol = coinSymbol;
 		try {
-			loading = true;
 			const response = await fetch(`/api/coin/${coinSymbol}?timeframe=${selectedTimeframe}`);
 
 			if (!response.ok) {
@@ -142,12 +145,13 @@
 			}
 
 			const result = await response.json();
+			if (symbol !== coinSymbol) return;
 			coin = result.coin;
 			chartData = result.candlestickData || [];
 			volumeData = result.volumeData || [];
 			oldestTimestamp = result.oldestTimestamp ?? null;
 			noMoreHistory = false;
-			if (chart && candlestickSeries && volumeSeries) {
+			if (!recreateChart && chart && candlestickSeries && volumeSeries) {
 				candlestickSeries.setData(processCandles(chartData));
 				volumeSeries.setData(generateVolumeData(chartData, volumeData));
 			} else {
@@ -156,8 +160,6 @@
 		} catch (e) {
 			console.error('Failed to fetch coin data:', e);
 			toast.error('Failed to load coin data');
-		} finally {
-			loading = false;
 		}
 	}
 
@@ -187,6 +189,7 @@
 		}
 	}
 	async function handleTradeSuccess() {
+		holdersRefreshKey += 1;
 		await Promise.all([loadCoinData(), loadUserHolding(), fetchPortfolioSummary()]);
 	}
 	function handlePriceUpdate(priceUpdate: PriceUpdate) {
@@ -254,15 +257,13 @@
 
 	async function handleTimeframeChange(timeframe: string) {
 		selectedTimeframe = timeframe;
-		loading = true;
-
-		if (chart) {
-			chart.remove();
-			chart = null;
+		chartLoading = true;
+		try {
+			// The old chart stays up (dimmed) until the new candles arrive.
+			await loadCoinData({ recreateChart: true });
+		} finally {
+			chartLoading = false;
 		}
-
-		await loadCoinData();
-		loading = false;
 	}
 
 	async function loadOlderChartData() {
@@ -307,21 +308,7 @@
 			volumeData = [...uniqueNewVolume, ...volumeData];
 			oldestTimestamp = result.oldestTimestamp ?? oldestTimestamp;
 
-			// Process and set all data on chart
-			const processedChartData = chartData.map((candle: any) => {
-				if (candle.open === candle.close) {
-					const basePrice = candle.open;
-					const variation = basePrice * 0.001;
-					return {
-						...candle,
-						high: Math.max(candle.high, basePrice + variation),
-						low: Math.min(candle.low, basePrice - variation)
-					};
-				}
-				return candle;
-			});
-
-			candlestickSeries.setData(processedChartData);
+			candlestickSeries.setData(processCandles(chartData));
 			volumeSeries.setData(generateVolumeData(chartData, volumeData));
 
 			// Restore scroll position, shifted by the number of prepended candles
@@ -438,8 +425,11 @@
 
 			chart.timeScale().fitContent();
 
-			const handleResize = () => chart?.applyOptions({ width: chartContainer?.clientWidth });
-			window.addEventListener('resize', handleResize);
+			// Observe the container rather than the window so the chart also follows
+			// the sidebar opening and closing.
+			const handleResize = () => chart?.applyOptions({ width: container.clientWidth });
+			const resizeObserver = new ResizeObserver(handleResize);
+			resizeObserver.observe(container);
 			handleResize();
 
 			candlestickSeries.priceScale().applyOptions({ borderColor: '#71649C' });
@@ -457,7 +447,7 @@
 
 			return () => {
 				timeScale.unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
-				window.removeEventListener('resize', handleResize);
+				resizeObserver.disconnect();
 				if (chart) {
 					chart.remove();
 					chart = null;
@@ -511,14 +501,16 @@
 	}
 
 	function generateVolumeData(candlestickData: any[], volumeData: any[]) {
-		return candlestickData.map((candle, index) => {
-			// Find corresponding volume data for this time period
-			const volumePoint = volumeData.find((v) => v.time === candle.time);
-			const volume = volumePoint ? volumePoint.volume : 0;
+		// Indexed lookup: a find() per candle went quadratic once history was scrolled in.
+		const volumeByTime = new Map<number, number>();
+		for (const point of volumeData) {
+			if (!volumeByTime.has(point.time)) volumeByTime.set(point.time, point.volume);
+		}
 
+		return candlestickData.map((candle) => {
 			return {
 				time: candle.time,
-				value: volume,
+				value: volumeByTime.get(candle.time) ?? 0,
 				color: candle.close >= candle.open ? '#26a69a' : '#ef5350'
 			};
 		});
@@ -533,6 +525,31 @@
 	let isCreator = $derived(coin && $USER_DATA && coin.creatorId === Number($USER_DATA.id));
 	let isTradingLocked = $derived(coin?.isLocked && countdown !== null && countdown > 0);
 	let canTrade = $derived(!isTradingLocked || isCreator);
+	let canBuy = $derived(!!$USER_DATA && !!coin?.isListed && canTrade);
+	let canSell = $derived(canBuy && userHolding > 0);
+
+	// B / S open the buy / sell dialogs, unless the user is typing somewhere.
+	function handleShortcut(event: KeyboardEvent) {
+		if (event.defaultPrevented || event.repeat) return;
+		if (event.ctrlKey || event.metaKey || event.altKey) return;
+		if (buyModalOpen || sellModalOpen) return;
+
+		const target = event.target as HTMLElement | null;
+		if (
+			target?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="listbox"], [role="menu"]')
+		) {
+			return;
+		}
+
+		const key = event.key.toLowerCase();
+		if (key === 'b' && canBuy) {
+			event.preventDefault();
+			buyModalOpen = true;
+		} else if (key === 's' && canSell) {
+			event.preventDefault();
+			sellModalOpen = true;
+		}
+	}
 
 </script>
 
@@ -551,6 +568,8 @@
 	twitterCard="summary"
 />
 
+<svelte:window onkeydown={handleShortcut} />
+
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
 {#if coin}
@@ -564,9 +583,7 @@
 	/>
 {/if}
 <div class="container mx-auto max-w-7xl p-6">
-	{#if loading}
-		<CoinSkeleton />
-	{:else if !coin}
+	{#if !coin}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
 				<div class="text-muted-foreground mb-4 text-xl">Coin not found</div>
@@ -670,7 +687,7 @@
 										type="single"
 										bind:value={selectedTimeframe}
 										onValueChange={handleTimeframeChange}
-										disabled={loading}
+										disabled={chartLoading}
 									>
 										<Select.Trigger class="w-full">
 											{currentTimeframeLabel}
@@ -694,7 +711,13 @@
 									<p class="text-muted-foreground">No trading data available yet</p>
 								</div>
 							{:else}
-								<div class="h-full min-h-[500px] w-full" bind:this={chartContainer}></div>
+								<div
+									class="h-full min-h-[500px] w-full transition-opacity {chartLoading
+										? 'pointer-events-none opacity-40'
+										: ''}"
+									aria-busy={chartLoading}
+									bind:this={chartContainer}
+								></div>
 							{/if}
 						</Card.Content>
 					</Card.Root>
@@ -726,24 +749,26 @@
 							{#if $USER_DATA}
 								<div class="space-y-3">
 									<Button
-										class="w-full"
+										class="relative w-full"
 										variant="default"
 										size="lg"
 										onclick={() => (buyModalOpen = true)}
-										disabled={!coin.isListed || !canTrade}
+										disabled={!canBuy}
 									>
 										<HugeiconsIcon icon={TradeUpIcon} class="h-4 w-4" />
 										Buy {coin.symbol}
+										<kbd class="absolute right-3 hidden rounded border border-current/30 px-1.5 text-[10px] font-medium opacity-70 lg:inline">B</kbd>
 									</Button>
 									<Button
-										class="w-full"
+										class="relative w-full"
 										variant="outline"
 										size="lg"
 										onclick={() => (sellModalOpen = true)}
-										disabled={!coin.isListed || userHolding <= 0 || !canTrade}
+										disabled={!canSell}
 									>
 										<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4" />
 										Sell {coin.symbol}
+										<kbd class="absolute right-3 hidden rounded border border-current/30 px-1.5 text-[10px] font-medium opacity-70 lg:inline">S</kbd>
 									</Button>
 								</div>
 							{:else}
@@ -794,7 +819,7 @@
 						</Card.Content>
 					</Card.Root>
 					<!-- Top Holders -->
-					<TopHolders coinSymbol={coin.symbol} />
+					<TopHolders coinSymbol={coin.symbol} refreshKey={holdersRefreshKey} />
 				</div>
 			</div>
 

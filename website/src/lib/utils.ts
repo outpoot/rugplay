@@ -70,6 +70,9 @@ export function formatValue(value: number | string): string {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     if (typeof numValue !== 'number' || isNaN(numValue)) return '$0.00';
 
+    // Losses used to skip the abbreviations entirely and render as "$-1234567.00".
+    if (numValue < 0) return `-${formatValue(-numValue)}`;
+
     if (numValue >= 1e21) return `$${(numValue / 1e21).toFixed(2)}Sx`;
     if (numValue >= 1e18) return `$${(numValue / 1e18).toFixed(2)}Qi`;
     if (numValue >= 1e15) return `$${(numValue / 1e15).toFixed(2)}Qa`;
@@ -176,7 +179,9 @@ export function formatTimeAgo(date: string) {
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
+    if (diffDays < 30) return `${diffDays}d ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+    return `${Math.floor(diffDays / 365)}y ago`;
 }
 
 export function formatTimeRemaining(timeMs: number): string {

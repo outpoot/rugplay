@@ -121,7 +121,15 @@
 
 		goto(url.toString(), { noScroll: true, replaceState: true });
 	}
+	let marketRequest: AbortController | null = null;
+
 	async function fetchMarketData() {
+		// Cancel the request in flight so a slow, older response can never land on
+		// top of the results for what is typed now.
+		marketRequest?.abort();
+		const controller = new AbortController();
+		marketRequest = controller;
+
 		loading = true;
 		try {
 			const params = new URLSearchParams({
@@ -134,19 +142,21 @@
 				limit: perPage.toString()
 			});
 
-			const response = await fetch(`/api/market?${params}`);
+			const response = await fetch(`/api/market?${params}`, { signal: controller.signal });
 			if (response.ok) {
 				const result: MarketResponse = await response.json();
+				if (controller.signal.aborted) return;
 				coins = result.coins;
 				totalCount = result.total;
 			} else {
 				toast.error('Failed to load market data');
 			}
 		} catch (e) {
+			if (controller.signal.aborted) return;
 			console.error('Failed to fetch market data:', e);
 			toast.error('Failed to load market data');
 		} finally {
-			loading = false;
+			if (marketRequest === controller) loading = false;
 		}
 	}
 

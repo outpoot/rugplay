@@ -87,6 +87,7 @@
 			'/coin/create': 'Create Coin',
 			'/settings': 'Settings',
 			'/admin': 'Admin',
+			'/admin/users': 'User Management',
 			'/admin/promo': 'Promo Codes',
 			'/admin/seasons': 'Season Settings',
 			'/transactions': 'Transactions',
@@ -98,6 +99,12 @@
 			'/legal/privacy': 'Privacy Policy',
 			'/legal/terms': 'Terms of Service',
 			'/shop': 'Shop',
+			'/achievements': 'Achievements',
+			'/notifications': 'Notifications',
+			'/prestige': 'Prestige',
+			'/season': 'Season',
+			'/api': 'API',
+			'/banned': 'Banned'
 		};
 
 		// Handle dynamic routes

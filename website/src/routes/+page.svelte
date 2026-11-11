@@ -14,7 +14,14 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { StarIcon, UserCheck01Icon } from '@hugeicons/core-free-icons';
+	import {
+		StarIcon,
+		UserCheck01Icon,
+		ChartIncreaseIcon,
+		ChartDecreaseIcon,
+		FireIcon,
+		ArrowRight01Icon
+	} from '@hugeicons/core-free-icons';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import UserName from '$lib/components/self/UserName.svelte';
 
@@ -76,6 +83,48 @@
 		return () => controller.abort();
 	});
 
+	const MOVER_ROWS = 5;
+
+	let showSeason = $derived(seasonLoading || !!seasonData?.season);
+
+	// Three quick reads of the same list, so nobody has to sort the table to
+	// find out what is moving.
+	let movers = $derived([
+		{
+			id: 'gainers',
+			title: 'Top gainers',
+			icon: ChartIncreaseIcon,
+			iconClass: 'text-success',
+			empty: 'Nothing is up today',
+			coins: coins
+				.filter((c) => c.change24h > 0)
+				.sort((a, b) => b.change24h - a.change24h)
+				.slice(0, MOVER_ROWS)
+		},
+		{
+			id: 'losers',
+			title: 'Top losers',
+			icon: ChartDecreaseIcon,
+			iconClass: 'text-destructive',
+			empty: 'Nothing is down today',
+			coins: coins
+				.filter((c) => c.change24h < 0)
+				.sort((a, b) => a.change24h - b.change24h)
+				.slice(0, MOVER_ROWS)
+		},
+		{
+			id: 'volume',
+			title: 'Most traded',
+			icon: FireIcon,
+			iconClass: 'text-orange-500',
+			empty: 'No trades in the last 24h',
+			coins: coins
+				.filter((c) => c.volume24h > 0)
+				.sort((a, b) => b.volume24h - a.volume24h)
+				.slice(0, MOVER_ROWS)
+		}
+	]);
+
 	const marketColumns = [
 		{
 			key: 'name',
@@ -126,12 +175,19 @@
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
+{#snippet sectionTitle(title: string, icon: any, iconClass: string)}
+	<h2 class="flex items-center gap-1.5 text-sm font-semibold">
+		<HugeiconsIcon {icon} class="h-4 w-4 {iconClass}" />
+		{title}
+	</h2>
+{/snippet}
+
 <div class="container mx-auto p-6">
-	<header class="mb-8">
-		<h1 class="mb-2 truncate text-3xl font-bold">
+	<header class="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+		<h1 class="truncate text-2xl font-bold">
 			{$USER_DATA ? getTimeBasedGreeting($USER_DATA?.name) : 'Welcome to Rugplay!'}
 		</h1>
-		<p class="text-muted-foreground">
+		<p class="text-muted-foreground text-sm">
 			{#if $USER_DATA}
 				Here's the market overview for today.
 			{:else}
@@ -144,66 +200,65 @@
 		</p>
 	</header>
 
-	{#if watchlist.length > 0}
-		<section class="mb-8">
-			<h2 class="mb-3 flex items-center gap-2 text-lg font-semibold">
-				<HugeiconsIcon icon={StarIcon} class="h-4 w-4 fill-yellow-400 text-yellow-500" />
-				Your watchlist
-			</h2>
-			<div class="flex gap-3 overflow-x-auto pb-2">
-				{#each watchlist as coin (coin.symbol)}
-					<a
-						href={`/coin/${coin.symbol}`}
-						class="bg-card hover:bg-card/50 flex min-w-[210px] shrink-0 items-center gap-3 rounded-xl border px-3 py-2.5 transition-all hover:shadow-md"
-					>
-						<CoinIcon icon={coin.icon} symbol={coin.symbol} name={coin.name} size={8} class="shrink-0" />
-						<div class="min-w-0 flex-1">
-							<div class="truncate text-sm font-semibold">*{coin.symbol}</div>
-							<div class="text-muted-foreground truncate font-mono text-xs">
-								${formatPrice(coin.price)}
-							</div>
-						</div>
-						<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="shrink-0 text-xs">
-							{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
-						</Badge>
-					</a>
-				{/each}
-			</div>
-		</section>
-	{/if}
-
-	{#if following.length > 0}
-		<section class="mb-8">
-			<h2 class="mb-3 flex items-center gap-2 text-lg font-semibold">
-				<HugeiconsIcon icon={UserCheck01Icon} class="text-primary h-4 w-4" />
-				Following
-			</h2>
-			<div class="flex gap-3 overflow-x-auto pb-2">
-				{#each following as player (player.id)}
-					<a
-						href={`/user/${player.username}`}
-						class="bg-card hover:bg-card/50 flex min-w-[190px] shrink-0 items-center gap-3 rounded-xl border px-3 py-2.5 transition-all hover:shadow-md"
-					>
-						<Avatar.Root class="h-8 w-8 shrink-0">
-							<Avatar.Image src={getPublicUrl(player.image)} alt={player.name} />
-							<Avatar.Fallback class="text-xs">
-								{player.name?.charAt(0)?.toUpperCase() ?? '?'}
-							</Avatar.Fallback>
-						</Avatar.Root>
-						<div class="min-w-0 flex-1">
-							<div class="truncate text-sm font-semibold">
-								<UserName name={player.name} nameColor={player.nameColor} />
-							</div>
-							<div class="text-muted-foreground truncate text-xs">@{player.username}</div>
-						</div>
-					</a>
-				{/each}
-			</div>
+	{#if watchlist.length > 0 || following.length > 0}
+		<section class="bg-card mb-5 divide-y rounded-xl border">
+			{#if watchlist.length > 0}
+				<div class="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
+					<div class="w-24 shrink-0">
+						{@render sectionTitle('Watchlist', StarIcon, 'fill-yellow-400 text-yellow-500')}
+					</div>
+					<div class="flex w-full min-w-0 flex-1 gap-2 overflow-x-auto">
+						{#each watchlist as coin (coin.symbol)}
+							<a
+								href={`/coin/${coin.symbol}`}
+								class="hover:bg-muted flex shrink-0 items-center gap-2 rounded-full border py-1 pr-2.5 pl-1 text-sm transition-colors"
+							>
+								<CoinIcon icon={coin.icon} symbol={coin.symbol} name={coin.name} size={6} class="shrink-0" />
+								<span class="font-semibold">*{coin.symbol}</span>
+								<span class="text-muted-foreground font-mono text-xs">${formatPrice(coin.price)}</span>
+								<span
+									class="font-mono text-xs font-medium {coin.change24h >= 0
+										? 'text-success'
+										: 'text-destructive'}"
+								>
+									{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+								</span>
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/if}
+			{#if following.length > 0}
+				<div class="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
+					<div class="w-24 shrink-0">
+						{@render sectionTitle('Following', UserCheck01Icon, 'text-primary')}
+					</div>
+					<div class="flex w-full min-w-0 flex-1 gap-2 overflow-x-auto">
+						{#each following as player (player.id)}
+							<a
+								href={`/user/${player.username}`}
+								class="hover:bg-muted flex shrink-0 items-center gap-2 rounded-full border py-1 pr-2.5 pl-1 text-sm transition-colors"
+							>
+								<Avatar.Root class="h-6 w-6 shrink-0">
+									<Avatar.Image src={getPublicUrl(player.image)} alt={player.name} />
+									<Avatar.Fallback class="text-[10px]">
+										{player.name?.charAt(0)?.toUpperCase() ?? '?'}
+									</Avatar.Fallback>
+								</Avatar.Root>
+								<span class="font-semibold">
+									<UserName name={player.name} nameColor={player.nameColor} />
+								</span>
+								<span class="text-muted-foreground text-xs">@{player.username}</span>
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/if}
 		</section>
 	{/if}
 
 	{#if loading}
-		<HomeSkeleton showSeason={seasonLoading || !!seasonData?.season} />
+		<HomeSkeleton {showSeason} />
 	{:else if coins.length === 0}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
@@ -212,9 +267,108 @@
 			</div>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-			{#if seasonLoading || seasonData?.season}
-				<div class="order-last md:col-span-2 lg:order-none lg:col-span-1 lg:col-start-4 lg:row-span-2 lg:row-start-1">
+		<div class="grid grid-cols-1 gap-5 lg:grid-cols-4">
+			<div class="flex flex-col gap-5 {showSeason ? 'lg:col-span-3' : 'lg:col-span-4'}">
+				<section>
+					<div class="mb-2 flex items-center justify-between">
+						<h2 class="text-sm font-semibold">Biggest coins</h2>
+						<a
+							href="/market"
+							class="text-muted-foreground hover:text-foreground flex items-center gap-0.5 text-xs transition-colors"
+						>
+							All coins
+							<HugeiconsIcon icon={ArrowRight01Icon} class="h-3.5 w-3.5" />
+						</a>
+					</div>
+					<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+						{#each coins.slice(0, 6) as coin (coin.symbol)}
+							<a
+								href={`/coin/${coin.symbol}`}
+								class="bg-card hover:bg-card/50 flex flex-col gap-2 rounded-xl border p-3 transition-all hover:shadow-md"
+							>
+								<div class="flex min-w-0 items-center gap-2.5">
+									<CoinIcon
+										icon={coin.icon}
+										symbol={coin.symbol}
+										name={coin.name}
+										size={8}
+										class="shrink-0"
+									/>
+									<div class="min-w-0 flex-1">
+										<div class="truncate text-sm leading-tight font-semibold">{coin.name}</div>
+										<div class="text-muted-foreground truncate font-mono text-[11px]">
+											*{coin.symbol}
+										</div>
+									</div>
+									<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="shrink-0">
+										{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+									</Badge>
+								</div>
+								<div class="flex items-end justify-between gap-2">
+									<span class="truncate text-xl font-bold tracking-tight">
+										${formatPrice(coin.price)}
+									</span>
+									<span class="text-muted-foreground shrink-0 text-right text-[11px] leading-tight tabular-nums">
+										<span class="block">MCap {formatMarketCap(coin.marketCap)}</span>
+										<span class="block">Vol {formatMarketCap(coin.volume24h)}</span>
+									</span>
+								</div>
+							</a>
+						{/each}
+					</div>
+				</section>
+
+				<section class="grid flex-1 grid-cols-1 gap-3 md:grid-cols-3">
+					{#each movers as group (group.id)}
+						<div class="bg-card flex flex-col rounded-xl border p-3">
+							<div class="mb-1.5">
+								{@render sectionTitle(group.title, group.icon, group.iconClass)}
+							</div>
+							{#if group.coins.length === 0}
+								<p class="text-muted-foreground flex flex-1 items-center justify-center py-4 text-xs">
+									{group.empty}
+								</p>
+							{:else}
+								{#each group.coins as coin (coin.symbol)}
+									<a
+										href={`/coin/${coin.symbol}`}
+										class="hover:bg-muted -mx-1.5 flex items-center gap-2 rounded-md px-1.5 py-1.5 text-sm transition-colors"
+									>
+										<CoinIcon
+											icon={coin.icon}
+											symbol={coin.symbol}
+											name={coin.name}
+											size={5}
+											class="shrink-0 [&>span]:text-[8px]"
+										/>
+										<span class="min-w-0 flex-1 truncate font-medium">*{coin.symbol}</span>
+										<span class="text-muted-foreground font-mono text-xs">
+											${formatPrice(coin.price)}
+										</span>
+										{#if group.id === 'volume'}
+											<span class="w-16 text-right font-mono text-xs font-medium tabular-nums">
+												{formatMarketCap(coin.volume24h)}
+											</span>
+										{:else}
+											<span
+												class="w-16 text-right font-mono text-xs font-medium tabular-nums {coin.change24h >=
+												0
+													? 'text-success'
+													: 'text-destructive'}"
+											>
+												{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+											</span>
+										{/if}
+									</a>
+								{/each}
+							{/if}
+						</div>
+					{/each}
+				</section>
+			</div>
+
+			{#if showSeason}
+				<div class="lg:col-span-1">
 					{#if seasonLoading}
 						<HomeSeasonSkeleton />
 					{:else}
@@ -222,65 +376,12 @@
 					{/if}
 				</div>
 			{/if}
-			{#each coins.slice(0, 6) as coin (coin.symbol)}
-				<a href={`/coin/${coin.symbol}`} class="block h-full">
-					<Card.Root class="hover:bg-card/50 flex h-full flex-col gap-0 transition-all hover:shadow-md">
-						<Card.Header class="pb-4">
-							<Card.Title class="flex min-w-0 items-center gap-3">
-								<CoinIcon
-									icon={coin.icon}
-									symbol={coin.symbol}
-									name={coin.name}
-									size={10}
-									class="shrink-0"
-								/>
-								<div class="min-w-0 flex-1">
-									<div class="truncate text-base leading-tight font-semibold">{coin.name}</div>
-									<Badge
-										variant="secondary"
-										class="mt-1 max-w-full font-mono text-[11px] font-medium"
-									>
-										<span class="truncate">*{coin.symbol}</span>
-									</Badge>
-								</div>
-							</Card.Title>
-						</Card.Header>
-
-						<Card.Content class="flex flex-1 flex-col justify-center gap-2 py-2">
-							<span class="text-muted-foreground text-xs">Price</span>
-							<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-								<span class="text-3xl font-bold tracking-tight">${formatPrice(coin.price)}</span>
-								<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="shrink-0">
-									{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
-								</Badge>
-							</div>
-						</Card.Content>
-
-						<Card.Footer class="mt-4 border-t pt-4">
-							<div class="grid w-full grid-cols-2 gap-3">
-								<div class="min-w-0">
-									<div class="text-muted-foreground text-xs">Market Cap</div>
-									<div class="truncate text-sm font-medium tabular-nums">
-										{formatMarketCap(coin.marketCap)}
-									</div>
-								</div>
-								<div class="min-w-0 text-right">
-									<div class="text-muted-foreground text-xs">24h Volume</div>
-									<div class="truncate text-sm font-medium tabular-nums">
-										{formatMarketCap(coin.volume24h)}
-									</div>
-								</div>
-							</div>
-						</Card.Footer>
-					</Card.Root>
-				</a>
-			{/each}
 		</div>
 
-		<div class="mt-12">
-			<h2 class="mb-4 text-2xl font-bold">Market Overview</h2>
-			<Card.Root>
-				<Card.Content>
+		<section class="mt-6">
+			<h2 class="mb-2 text-sm font-semibold">Market overview</h2>
+			<Card.Root class="py-2">
+				<Card.Content class="px-3">
 					<DataTable
 						columns={marketColumns}
 						data={coins}
@@ -288,6 +389,6 @@
 					/>
 				</Card.Content>
 			</Card.Root>
-		</div>
+		</section>
 	{/if}
 </div>

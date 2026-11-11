@@ -22,6 +22,7 @@
 	import { mode } from 'mode-watcher';
 	import { browser } from '$app/environment';
 	import { haptic } from '$lib/stores/haptics';
+	import Kbd from '$lib/components/self/Kbd.svelte';
 	import {
 		createChart,
 		ColorType,
@@ -884,7 +885,7 @@
 									>
 										<HugeiconsIcon icon={TradeUpIcon} class="h-4 w-4" />
 										Buy {coin.symbol}
-										<kbd class="absolute right-3 hidden rounded border border-current/30 px-1.5 text-[10px] font-medium opacity-70 lg:inline">B</kbd>
+										<Kbd class="absolute right-3 hidden border-current/30 opacity-70 lg:inline-flex">B</Kbd>
 									</Button>
 									<Button
 										class="relative w-full"
@@ -895,7 +896,7 @@
 									>
 										<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4" />
 										Sell {coin.symbol}
-										<kbd class="absolute right-3 hidden rounded border border-current/30 px-1.5 text-[10px] font-medium opacity-70 lg:inline">S</kbd>
+										<Kbd class="absolute right-3 hidden border-current/30 opacity-70 lg:inline-flex">S</Kbd>
 									</Button>
 								</div>
 							{:else}

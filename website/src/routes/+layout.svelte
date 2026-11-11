@@ -14,6 +14,7 @@
 	import { websocketController } from '$lib/stores/websocket';
 	import { RenderScan } from 'svelte-render-scan';
 	import QuickJump from '$lib/components/self/QuickJump.svelte';
+	import Kbd from '$lib/components/self/Kbd.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Search01Icon } from '@hugeicons/core-free-icons';
@@ -170,9 +171,7 @@
 				>
 					<HugeiconsIcon icon={Search01Icon} class="h-4 w-4" />
 					<span class="hidden sm:inline">Search...</span>
-					<kbd class="ml-auto hidden rounded border px-1.5 text-[10px] font-medium sm:inline">
-						{shortcutLabel}
-					</kbd>
+					<Kbd class="ml-auto hidden sm:inline-flex">{shortcutLabel}</Kbd>
 				</Button>
 			</div>
 		</header>

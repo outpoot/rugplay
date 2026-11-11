@@ -20,6 +20,7 @@
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import UserName from '$lib/components/self/UserName.svelte';
+	import Kbd from '$lib/components/self/Kbd.svelte';
 	import { websocketController } from '$lib/stores/websocket';
 	import { haptic } from '$lib/stores/haptics';
 
@@ -244,11 +245,9 @@
 						maxlength={500}
 						onkeydown={handleKeydown}
 					/>
-					<kbd
-						class="bg-muted pointer-events-none absolute bottom-2 right-2 hidden h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-70 sm:flex"
-					>
-						{#if submitModifier === '⌘'}<span class="text-xs">⌘</span>{:else}Ctrl+{/if}Enter
-					</kbd>
+					<Kbd class="bg-muted pointer-events-none absolute bottom-2 right-2 hidden opacity-70 sm:inline-flex">
+						{submitModifier === '⌘' ? '⌘' : 'Ctrl'} Enter
+					</Kbd>
 				</div>
 				<div class="flex justify-between">
 					<span class="text-muted-foreground text-xs">

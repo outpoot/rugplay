@@ -8,6 +8,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Label } from '$lib/components/ui/label';
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
+	import Kbd from '$lib/components/self/Kbd.svelte';
 	import MarketSkeleton from '$lib/components/self/skeletons/MarketSkeleton.svelte';
 	import SEO from '$lib/components/self/SEO.svelte';
 	import { onMount } from 'svelte';
@@ -363,11 +364,11 @@
 						onblur={updateSearchUrl}
 						onkeydown={handleSearchKeydown}
 					/>
-					<kbd
-						class="text-muted-foreground pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border px-1.5 text-[10px] font-medium lg:inline"
+					<Kbd
+						class="text-muted-foreground pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 lg:inline-flex"
 					>
 						/
-					</kbd>
+					</Kbd>
 				</div>
 
 				<Popover.Root bind:open={showFilterPopover}>

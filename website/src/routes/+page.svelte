@@ -22,6 +22,7 @@
 		ArrowRight01Icon
 	} from '@hugeicons/core-free-icons';
 	import Sparkline from '$lib/components/self/Sparkline.svelte';
+	import FollowingCard from '$lib/components/self/FollowingCard.svelte';
 	import { Button } from '$lib/components/ui/button';
 
 	let shouldSignIn = $state(false);
@@ -30,6 +31,7 @@
 	let seasonData = $state<any>(null);
 	let seasonLoading = $state(true);
 	let watchlist = $state<any[]>([]);
+	let following = $state<any[]>([]);
 
 	onMount(() => {
 		const controller = new AbortController();
@@ -67,6 +69,13 @@
 				.then(async (response) => {
 					const result = response.ok ? await response.json() : null;
 					if (result && !controller.signal.aborted) watchlist = result.coins;
+				})
+				.catch(() => {});
+
+			fetch('/api/following', options)
+				.then(async (response) => {
+					const result = response.ok ? await response.json() : null;
+					if (result && !controller.signal.aborted) following = result.players;
 				})
 				.catch(() => {});
 		}
@@ -357,15 +366,28 @@
 			</div>
 
 			{#if showSeason}
-				<div class="lg:col-span-1">
+				<!-- With nobody followed the season card takes the whole column and
+				     lists more leaders; otherwise the two cards share it. -->
+				<div class="flex flex-col gap-5 lg:col-span-1">
 					{#if seasonLoading}
 						<HomeSeasonSkeleton />
+					{:else if following.length > 0}
+						<SeasonCard data={seasonData} fill={false} />
 					{:else}
-						<SeasonCard data={seasonData} />
+						<SeasonCard data={seasonData} limit={10} />
+					{/if}
+					{#if following.length > 0}
+						<FollowingCard players={following} />
 					{/if}
 				</div>
 			{/if}
 		</div>
+
+		{#if !showSeason && following.length > 0}
+			<div class="mt-5">
+				<FollowingCard players={following} />
+			</div>
+		{/if}
 
 		<section class="mt-6">
 			<div class="mb-2 flex items-center justify-between">

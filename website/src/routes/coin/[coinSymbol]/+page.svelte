@@ -51,6 +51,7 @@
 	let isLoadingHistory = $state(false);
 	let noMoreHistory = $state(false);
 	let userHolding = $state(0);
+	let userCostBasis = $state(0);
 	let chartRevision = $state(0);
 	let buyModalOpen = $state(false);
 	let sellModalOpen = $state(false);
@@ -99,6 +100,7 @@
 
 	$effect(() => {
 		userHolding = 0;
+		userCostBasis = 0;
 		void loadUserHolding();
 		return () => holdingController?.abort();
 	});
@@ -239,6 +241,7 @@
 				const result = await response.json();
 				if (!controller.signal.aborted && $USER_DATA?.id === userId && coinSymbol === symbol) {
 					userHolding = result.quantity;
+					userCostBasis = result.costBasis ?? 0;
 				}
 			}
 		} catch (e) {
@@ -605,6 +608,13 @@
 	let isCreator = $derived(coin && $USER_DATA && coin.creatorId === Number($USER_DATA.id));
 	let isTradingLocked = $derived(coin?.isLocked && countdown !== null && countdown > 0);
 	let canTrade = $derived(!isTradingLocked || isCreator);
+
+	// Your position, repriced live as the coin moves.
+	let positionValue = $derived(userHolding * (coin?.currentPrice ?? 0));
+	let positionProfit = $derived(userCostBasis > 0 ? positionValue - userCostBasis : null);
+	let positionProfitPercent = $derived(
+		positionProfit !== null ? (positionProfit / userCostBasis) * 100 : null
+	);
 	let canBuy = $derived(!!$USER_DATA && !!coin?.isListed && canTrade);
 	let canSell = $derived(canBuy && userHolding > 0);
 
@@ -830,6 +840,27 @@
 									You own: {formatSupply(userHolding)}
 									{coin.symbol}
 								</p>
+								<div class="bg-muted/50 mt-1 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-lg p-3 text-sm">
+									<span class="text-muted-foreground">Value</span>
+									<span class="text-right font-mono font-medium">
+										{formatMarketCap(positionValue)}
+									</span>
+									{#if positionProfit !== null && positionProfitPercent !== null}
+										<span class="text-muted-foreground">Avg buy</span>
+										<span class="text-right font-mono">
+											${formatPrice(userCostBasis / userHolding)}
+										</span>
+										<span class="text-muted-foreground">P&L</span>
+										<span
+											class="text-right font-mono font-medium {positionProfit >= 0
+												? 'text-success'
+												: 'text-red-500'}"
+										>
+											{positionProfit >= 0 ? '+' : '-'}{formatMarketCap(Math.abs(positionProfit))}
+											({positionProfit >= 0 ? '+' : ''}{positionProfitPercent.toFixed(2)}%)
+										</span>
+									{/if}
+								</div>
 							{/if}
 							{#if isTradingLocked}
 								<p class="text-muted-foreground text-sm">

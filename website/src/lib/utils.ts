@@ -29,6 +29,12 @@ export function getTimeBasedGreeting(name: string): string {
     }
 }
 
+/** True on macOS / iOS, where shortcuts use the Command key instead of Ctrl. */
+export function isApplePlatform(): boolean {
+    if (typeof navigator === 'undefined') return false;
+    return /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent);
+}
+
 export function getPublicUrl(key: string | null): string | null {
     if (!key) return null;
     return `/api/proxy/s3/${key}`;

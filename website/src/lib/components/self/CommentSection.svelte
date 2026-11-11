@@ -15,7 +15,8 @@
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { formatTimeAgo, getPublicUrl } from '$lib/utils';
+	import { formatTimeAgo, getPublicUrl, isApplePlatform } from '$lib/utils';
+	import { onMount } from 'svelte';
 	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 	import UserProfilePreview from '$lib/components/self/UserProfilePreview.svelte';
 	import UserName from '$lib/components/self/UserName.svelte';
@@ -30,6 +31,11 @@
 	let isLoading = $state(true);
 	let shouldSignIn = $state(false);
 	let expandedComments = $state(new Set<number>());
+	let submitModifier = $state<'⌘' | 'Ctrl'>('Ctrl');
+
+	onMount(() => {
+		if (isApplePlatform()) submitModifier = '⌘';
+	});
 
 	const MAX_COMMENTS = 50;
 	const MAX_LINES_PREVIEW = 3;
@@ -142,12 +148,27 @@
 			likesCount: wasLiked ? comment.likesCount - 1 : comment.likesCount + 1
 		};
 
+		// fetch only rejects on network failure, so a refused like (rate limit,
+		// server error) used to stay shown as liked.
+		const rollback = () => {
+			const index = comments.findIndex((c) => c.id === commentId);
+			if (index !== -1) {
+				comments[index] = {
+					...comments[index],
+					isLikedByUser: wasLiked,
+					likesCount: comment.likesCount
+				};
+			}
+		};
+
 		fetch(`/api/coin/${coinSymbol}/comments/${commentId}/like`, {
 			method: wasLiked ? 'DELETE' : 'POST',
 			headers: { 'Content-Type': 'application/json' }
-		}).catch(() => {
-			comments[commentIndex] = comment;
-		});
+		})
+			.then((response) => {
+				if (!response.ok) rollback();
+			})
+			.catch(rollback);
 	}
 
 	function handleLikeClick(commentId: number) {
@@ -226,7 +247,7 @@
 					<kbd
 						class="bg-muted pointer-events-none absolute bottom-2 right-2 hidden h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-70 sm:flex"
 					>
-						<span class="text-xs">⌘</span>Enter
+						{#if submitModifier === '⌘'}<span class="text-xs">⌘</span>{:else}Ctrl+{/if}Enter
 					</kbd>
 				</div>
 				<div class="flex justify-between">

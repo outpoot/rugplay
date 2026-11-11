@@ -13,6 +13,21 @@
 	import { page } from '$app/state';
 	import { websocketController } from '$lib/stores/websocket';
 	import { RenderScan } from 'svelte-render-scan';
+	import QuickJump from '$lib/components/self/QuickJump.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { Search01Icon } from '@hugeicons/core-free-icons';
+	import { isApplePlatform } from '$lib/utils';
+
+	let quickJumpOpen = $state(false);
+	let shortcutLabel = $state('Ctrl K');
+
+	function handleGlobalKeydown(event: KeyboardEvent) {
+		if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'k') {
+			event.preventDefault();
+			quickJumpOpen = !quickJumpOpen;
+		}
+	}
 
 	let { data, children } = $props<{
 		data: { userSession?: any };
@@ -25,6 +40,7 @@
 	});
 
 	onMount(() => {
+		if (isApplePlatform()) shortcutLabel = '⌘K';
 		websocketController.connect();
 
 		console.log(
@@ -123,6 +139,10 @@
 
 </script>
 
+<svelte:window onkeydown={handleGlobalKeydown} />
+
+<QuickJump bind:open={quickJumpOpen} />
+
 <!-- <RenderScan /> -->
 <ModeWatcher />
 <Toaster richColors={true} />
@@ -140,6 +160,20 @@
 				<h1 class="mr-6 text-base font-medium">
 					{getPageTitle(page.route.id)}
 				</h1>
+
+				<Button
+					variant="outline"
+					size="sm"
+					class="text-muted-foreground ml-auto h-8 gap-2 px-2 font-normal sm:w-56 sm:justify-start"
+					aria-label="Search coins, players and pages"
+					onclick={() => (quickJumpOpen = true)}
+				>
+					<HugeiconsIcon icon={Search01Icon} class="h-4 w-4" />
+					<span class="hidden sm:inline">Search...</span>
+					<kbd class="ml-auto hidden rounded border px-1.5 text-[10px] font-medium sm:inline">
+						{shortcutLabel}
+					</kbd>
+				</Button>
 			</div>
 		</header>
 

@@ -63,6 +63,74 @@
 		{ value: 'asc', label: 'Low to High' }
 	];
 
+	let searchInput = $state<HTMLInputElement | null>(null);
+	let gridElement = $state<HTMLDivElement>();
+	let selectedIndex = $state(-1);
+
+	// Any new result set starts with nothing highlighted.
+	$effect(() => {
+		coins;
+		selectedIndex = -1;
+	});
+
+	function gridColumns(): number {
+		const cards = gridElement?.children;
+		if (!cards || cards.length === 0) return 1;
+		const top = (cards[0] as HTMLElement).offsetTop;
+		let columns = 0;
+		for (const card of cards) {
+			if ((card as HTMLElement).offsetTop !== top) break;
+			columns++;
+		}
+		return Math.max(1, columns);
+	}
+
+	function moveSelection(delta: number) {
+		if (coins.length === 0) return;
+		const next = selectedIndex < 0 ? 0 : selectedIndex + delta;
+		if (next < 0 || next >= coins.length) return;
+		selectedIndex = next;
+		(gridElement?.children[next] as HTMLElement | undefined)?.scrollIntoView({ block: 'nearest' });
+	}
+
+	// "/" jumps to search, arrows walk the grid, Enter opens the highlighted coin.
+	function handleMarketKeydown(event: KeyboardEvent) {
+		if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+
+		const target = event.target as HTMLElement | null;
+		const inSearch = target === searchInput;
+		const typingElsewhere =
+			!inSearch &&
+			!!target?.closest('input, textarea, select, button, [contenteditable="true"], [role="dialog"], [role="listbox"], [role="menu"]');
+		if (typingElsewhere || showFilterPopover) return;
+
+		if (event.key === '/' && !inSearch) {
+			event.preventDefault();
+			searchInput?.focus();
+			searchInput?.select();
+			return;
+		}
+
+		if (event.key === 'Escape' && inSearch) {
+			searchInput?.blur();
+			return;
+		}
+
+		if (loading) return;
+
+		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+			event.preventDefault();
+			const step = selectedIndex < 0 ? 0 : gridColumns();
+			moveSelection(event.key === 'ArrowDown' ? step : -step);
+		} else if ((event.key === 'ArrowRight' || event.key === 'ArrowLeft') && !inSearch) {
+			event.preventDefault();
+			moveSelection(event.key === 'ArrowRight' ? 1 : -1);
+		} else if (event.key === 'Enter' && selectedIndex >= 0 && coins[selectedIndex]) {
+			event.preventDefault();
+			goto(`/coin/${coins[selectedIndex].symbol}`);
+		}
+	}
+
 	const debouncedSearch = debounce(performSearch, 300);
 	let previousSearchQueryForEffect = $state(data.filters.searchQuery);
 
@@ -170,7 +238,7 @@
 	}
 
 	function handleSearchKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter') {
+		if (event.key === 'Enter' && selectedIndex < 0) {
 			updateSearchUrl();
 		}
 	}
@@ -274,6 +342,8 @@
 	keywords="virtual cryptocurrency market, crypto trading game, coin discovery simulation, market analysis game, trading practice"
 />
 
+<svelte:window onkeydown={handleMarketKeydown} />
+
 <div class="container mx-auto max-w-7xl p-6">
 	<header class="mb-8">
 		<div class="text-center">
@@ -287,11 +357,17 @@
 					<HugeiconsIcon icon={Search01Icon} class="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 					<Input
 						bind:value={searchQuery}
+						bind:ref={searchInput}
 						placeholder="Search coins by name or symbol..."
-						class="pl-10 pr-4"
+						class="pl-10 pr-10"
 						onblur={updateSearchUrl}
 						onkeydown={handleSearchKeydown}
 					/>
+					<kbd
+						class="text-muted-foreground pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border px-1.5 text-[10px] font-medium lg:inline"
+					>
+						/
+					</kbd>
 				</div>
 
 				<Popover.Root bind:open={showFilterPopover}>
@@ -459,12 +535,18 @@
 			</div>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+		<div
+			class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+			bind:this={gridElement}
+		>
 			{#each coins as coin, index}
 				{@const volatilityBadge = getVolatilityBadge(coin.change24h)}
 				{@const globalIndex = (currentPage - 1) * perPage + index + 1}
 				<Card.Root
-					class="group cursor-pointer gap-1 transition-all duration-200 hover:shadow-lg"
+					class="group cursor-pointer gap-1 transition-all duration-200 hover:shadow-lg {index ===
+					selectedIndex
+						? 'ring-primary ring-2'
+						: ''}"
 					onclick={() => goto(`/coin/${coin.symbol}`)}
 				>
 					<Card.Header>

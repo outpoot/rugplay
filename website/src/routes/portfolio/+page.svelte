@@ -29,9 +29,26 @@
 	let sendMoneyModalOpen = $state(false);
 	let shouldSignIn = $state(false);
 
-	onMount(async () => {
-		await Promise.all([loadPortfolioData(), fetchRecentTransactions()]);
-		loading = false;
+	// Holdings used to load once and go stale until a reload. Refresh quietly
+	// while the tab is visible, and straight away when the player comes back.
+	const REFRESH_INTERVAL_MS = 15_000;
+
+	onMount(() => {
+		Promise.all([loadPortfolioData(), fetchRecentTransactions()]).then(() => {
+			loading = false;
+		});
+
+		const refresh = () => {
+			if (document.visibilityState !== 'visible' || !$USER_DATA || loading) return;
+			void fetchPortfolioData();
+		};
+		const interval = setInterval(refresh, REFRESH_INTERVAL_MS);
+		document.addEventListener('visibilitychange', refresh);
+
+		return () => {
+			clearInterval(interval);
+			document.removeEventListener('visibilitychange', refresh);
+		};
 	});
 
 	async function loadPortfolioData() {
@@ -77,6 +94,15 @@
 	let hasHoldings = $derived(portfolioData && portfolioData.coinHoldings.length > 0);
 	let hasTransactions = $derived(transactions.length > 0);
 
+	// Dollar profit per position; null when there is no buy history to price it
+	// against (e.g. coins that were only ever received as a transfer).
+	let holdingsRows = $derived(
+		(portfolioData?.coinHoldings ?? []).map((holding) => ({
+			...holding,
+			profit: holding.costBasis && holding.costBasis > 0 ? holding.value - holding.costBasis : null
+		}))
+	);
+
 	let holdingsColumns = $derived([
 		{
 			key: 'coin',
@@ -113,6 +139,17 @@
 				component: 'badge',
 				variant: value >= 0 ? 'success' : 'destructive',
 				text: `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+			})
+		},
+		{
+			key: 'profit',
+			label: 'P&L',
+			class: 'hidden md:table-cell md:w-[10%] font-mono',
+			sortable: true,
+			render: (value: any) => ({
+				component: 'text',
+				text: value === null ? '-' : `${value >= 0 ? '+' : ''}${formatValue(value)}`,
+				class: value === null ? 'text-muted-foreground' : value >= 0 ? 'text-success' : 'text-red-500'
 			})
 		},
 		{
@@ -374,7 +411,7 @@
 					<Card.Content>
 						<DataTable
 							columns={holdingsColumns}
-							data={portfolioData?.coinHoldings || []}
+							data={holdingsRows}
 							onRowClick={(holding) => goto(`/coin/${holding.symbol}`)}
 						/>
 					</Card.Content>

@@ -27,6 +27,16 @@
 
 	let amount = $state('');
 	let loading = $state(false);
+	const SELL_MODE_KEY = 'rugplay:sell-by-dollar';
+
+	function preferredSellByDollar(): boolean {
+		try {
+			return localStorage.getItem(SELL_MODE_KEY) === '1';
+		} catch {
+			return false;
+		}
+	}
+
 	let sellByDollar = $state(false);
 
 	let numericAmount = $derived(parseFloat(amount) || 0);
@@ -108,7 +118,9 @@
 	$effect(() => {
 		if (!open) {
 			amount = '';
-			sellByDollar = false;
+		} else if (type === 'SELL') {
+			// Reopen in whichever unit the player sold with last time.
+			sellByDollar = preferredSellByDollar();
 		}
 	});
 
@@ -142,7 +154,6 @@
 		open = false;
 		amount = '';
 		loading = false;
-		sellByDollar = false;
 	}
 
 	async function handleTrade() {
@@ -208,6 +219,17 @@
 		}
 	}
 
+	function toggleSellMode() {
+		haptic.trigger('selection');
+		sellByDollar = !sellByDollar;
+		amount = '';
+		try {
+			localStorage.setItem(SELL_MODE_KEY, sellByDollar ? '1' : '0');
+		} catch {
+			// Storage unavailable: the toggle still works for this session.
+		}
+	}
+
 	function handleAmountKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && !event.isComposing) {
 			event.preventDefault();
@@ -264,7 +286,7 @@
 						onkeydown={handleAmountKeydown}
 					/>
 					{#if type === 'SELL'}
-						<Button variant="outline" size="icon" class="h-9 w-9 shrink-0" onclick={() => { haptic.trigger('selection'); sellByDollar = !sellByDollar; amount = ''; }}>
+						<Button variant="outline" size="icon" class="h-9 w-9 shrink-0" onclick={toggleSellMode}>
 							{#key sellByDollar}
 								<HugeiconsIcon icon={sellByDollar ? Dollar02Icon : Coins01Icon} class="h-4 w-4" />
 							{/key}

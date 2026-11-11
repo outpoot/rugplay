@@ -14,6 +14,7 @@ export interface PortfolioData extends PortfolioSummary {
         currentPrice: number;
         value: number;
         percentageChange: number;
+        costBasis?: number;
         change24h: number;
         icon?: string;
         portfolioPercent: number;

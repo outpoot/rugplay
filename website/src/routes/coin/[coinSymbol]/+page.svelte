@@ -16,8 +16,12 @@
 		TradeDownIcon,
 		MoneyBag02Icon,
 		Coins01Icon,
-		Analytics01Icon
+		Analytics01Icon,
+		StarIcon
 	} from '@hugeicons/core-free-icons';
+	import { mode } from 'mode-watcher';
+	import { browser } from '$app/environment';
+	import { haptic } from '$lib/stores/haptics';
 	import {
 		createChart,
 		ColorType,
@@ -53,6 +57,9 @@
 	let selectedTimeframe = $state(data.timeframe || '1m');
 	let lastPriceUpdateTime = 0;
 	let shouldSignIn = $state(false);
+
+	let watched = $state(false);
+	let watchBusy = $state(false);
 
 	let holdingController: AbortController | null = null;
 	let countdown = $state<number | null>(null);
@@ -95,6 +102,56 @@
 		void loadUserHolding();
 		return () => holdingController?.abort();
 	});
+
+	$effect(() => {
+		const symbol = coinSymbol;
+		watched = false;
+		if (!$USER_DATA?.id) return;
+
+		const controller = new AbortController();
+		fetch(`/api/watchlist/${encodeURIComponent(symbol)}`, { signal: controller.signal })
+			.then((response) => (response.ok ? response.json() : null))
+			.then((result) => {
+				if (result && !controller.signal.aborted) watched = result.watched;
+			})
+			.catch(() => {});
+		return () => controller.abort();
+	});
+
+	async function toggleWatch() {
+		if (!$USER_DATA) {
+			shouldSignIn = true;
+			return;
+		}
+		if (watchBusy) return;
+
+		const symbol = coinSymbol;
+		const next = !watched;
+		watchBusy = true;
+		watched = next;
+		haptic.trigger('selection');
+		try {
+			const response = await fetch(`/api/watchlist/${encodeURIComponent(symbol)}`, {
+				method: next ? 'POST' : 'DELETE'
+			});
+			if (!response.ok) {
+				const result = await response.json().catch(() => null);
+				throw new Error(result?.message || 'Failed to update watchlist');
+			}
+			if (symbol === coinSymbol) {
+				toast.success(
+					next
+						? `Added *${coin.symbol} to your watchlist`
+						: `Removed *${coin.symbol} from your watchlist`
+				);
+			}
+		} catch (e) {
+			if (symbol === coinSymbol) watched = !next;
+			toast.error((e as Error).message);
+		} finally {
+			watchBusy = false;
+		}
+	}
 
 	$effect(() => {
 		if (coin?.isLocked && coin?.tradingUnlocksAt) {
@@ -257,6 +314,8 @@
 
 	async function handleTimeframeChange(timeframe: string) {
 		selectedTimeframe = timeframe;
+		// Remembered across coins and visits; the server load reads it back.
+		document.cookie = `chart_timeframe=${timeframe}; path=/; max-age=31536000; samesite=lax`;
 		chartLoading = true;
 		try {
 			// The old chart stays up (dimmed) until the new candles arrive.
@@ -335,6 +394,26 @@
 	let volumeSeries: any = null;
 	let hasChartData = $derived(chartData.length > 0);
 
+	// The grid used to be hardcoded for the dark theme and looked heavy on light.
+	function chartColors(isDark: boolean) {
+		return isDark
+			? { grid: '#2B2B43', border: '#71649C', text: '#666666' }
+			: { grid: '#e9e9ee', border: '#d4d4dc', text: '#666666' };
+	}
+
+	$effect(() => {
+		const colors = chartColors(mode.current !== 'light');
+		chartRevision;
+		if (!chart) return;
+		chart.applyOptions({
+			layout: { textColor: colors.text, panes: { separatorColor: colors.grid } },
+			grid: { vertLines: { color: colors.grid }, horzLines: { color: colors.grid } }
+		});
+		candlestickSeries?.priceScale().applyOptions({ borderColor: colors.border });
+		volumeSeries?.priceScale().applyOptions({ borderColor: colors.border });
+		chart.timeScale().applyOptions({ borderColor: colors.border });
+	});
+
 	function processCandles(candles: typeof chartData) {
 		return candles.map((candle: { open: number; close: number; high: number; low: number }) => {
 			if (candle.open !== candle.close) return candle;
@@ -361,20 +440,21 @@
 		if (container && hasData && symbol) {
 			const initialChartData = untrack(() => chartData);
 			const initialVolumeData = untrack(() => volumeData);
+			const colors = untrack(() => chartColors(mode.current !== 'light'));
 			chart = createChart(container, {
 				layout: {
-					textColor: '#666666',
+					textColor: colors.text,
 					background: { type: ColorType.Solid, color: 'transparent' },
 					attributionLogo: false,
 					panes: {
-						separatorColor: '#2B2B43',
+						separatorColor: colors.grid,
 						separatorHoverColor: 'rgba(107, 114, 142, 0.3)',
 						enableResize: true
 					}
 				},
 				grid: {
-					vertLines: { color: '#2B2B43' },
-					horzLines: { color: '#2B2B43' }
+					vertLines: { color: colors.grid },
+					horzLines: { color: colors.grid }
 				},
 				rightPriceScale: {
 					borderVisible: false,
@@ -432,9 +512,9 @@
 			resizeObserver.observe(container);
 			handleResize();
 
-			candlestickSeries.priceScale().applyOptions({ borderColor: '#71649C' });
-			volumeSeries.priceScale().applyOptions({ borderColor: '#71649C' });
-			chart.timeScale().applyOptions({ borderColor: '#71649C' });
+			candlestickSeries.priceScale().applyOptions({ borderColor: colors.border });
+			volumeSeries.priceScale().applyOptions({ borderColor: colors.border });
+			chart.timeScale().applyOptions({ borderColor: colors.border });
 
 			const timeScale = chart.timeScale();
 			const handleVisibleRangeChange = () => {
@@ -555,7 +635,9 @@
 
 <SEO
 	title={coin
-		? `${coin.name} (*${coin.symbol}) - Rugplay`
+		? browser
+			? `$${formatPrice(coin.currentPrice)} · *${coin.symbol} · ${coin.name} - Rugplay`
+			: `${coin.name} (*${coin.symbol}) - Rugplay`
 		: `Loading ${coinSymbol.toUpperCase()} - Rugplay`}
 	description={coin
 		? `Trade ${coin.name} (*${coin.symbol}) in the Rugplay simulation game. Current price: $${formatPrice(coin.currentPrice)}, Market cap: ${formatMarketCap(coin.marketCap)}, 24h change: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%.`
@@ -622,6 +704,20 @@
 							{#if !coin.isListed}
 								<Badge variant="destructive">Delisted</Badge>
 							{/if}
+							<Button
+								variant="outline"
+								size="sm"
+								class="h-7 gap-1.5 px-2 text-xs"
+								aria-pressed={watched}
+								disabled={watchBusy}
+								onclick={toggleWatch}
+							>
+								<HugeiconsIcon
+									icon={StarIcon}
+									class="h-3.5 w-3.5 {watched ? 'fill-yellow-400 text-yellow-500' : ''}"
+								/>
+								{watched ? 'Watching' : 'Watch'}
+							</Button>
 						</div>
 					</div>
 				</div>

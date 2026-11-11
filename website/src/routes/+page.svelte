@@ -13,12 +13,15 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
+	import { HugeiconsIcon } from '@hugeicons/svelte';
+	import { StarIcon } from '@hugeicons/core-free-icons';
 
 	let shouldSignIn = $state(false);
 	let coins = $state<any[]>([]);
 	let loading = $state(true);
 	let seasonData = $state<any>(null);
 	let seasonLoading = $state(true);
+	let watchlist = $state<any[]>([]);
 
 	onMount(() => {
 		const controller = new AbortController();
@@ -50,6 +53,15 @@
 			.finally(() => {
 				if (!controller.signal.aborted) seasonLoading = false;
 			});
+
+		if ($USER_DATA) {
+			fetch('/api/watchlist', options)
+				.then(async (response) => {
+					const result = response.ok ? await response.json() : null;
+					if (result && !controller.signal.aborted) watchlist = result.coins;
+				})
+				.catch(() => {});
+		}
 
 		return () => controller.abort();
 	});
@@ -121,6 +133,34 @@
 			{/if}
 		</p>
 	</header>
+
+	{#if watchlist.length > 0}
+		<section class="mb-8">
+			<h2 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+				<HugeiconsIcon icon={StarIcon} class="h-4 w-4 fill-yellow-400 text-yellow-500" />
+				Your watchlist
+			</h2>
+			<div class="flex gap-3 overflow-x-auto pb-2">
+				{#each watchlist as coin (coin.symbol)}
+					<a
+						href={`/coin/${coin.symbol}`}
+						class="bg-card hover:bg-card/50 flex min-w-[210px] shrink-0 items-center gap-3 rounded-xl border px-3 py-2.5 transition-all hover:shadow-md"
+					>
+						<CoinIcon icon={coin.icon} symbol={coin.symbol} name={coin.name} size={8} class="shrink-0" />
+						<div class="min-w-0 flex-1">
+							<div class="truncate text-sm font-semibold">*{coin.symbol}</div>
+							<div class="text-muted-foreground truncate font-mono text-xs">
+								${formatPrice(coin.price)}
+							</div>
+						</div>
+						<Badge variant={coin.change24h >= 0 ? 'success' : 'destructive'} class="shrink-0 text-xs">
+							{coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+						</Badge>
+					</a>
+				{/each}
+			</div>
+		</section>
+	{/if}
 
 	{#if loading}
 		<HomeSkeleton showSeason={seasonLoading || !!seasonData?.season} />

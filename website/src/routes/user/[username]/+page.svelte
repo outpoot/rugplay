@@ -81,7 +81,6 @@
 		try {
 			const res = await fetch(`/api/user/${encodeURIComponent(target)}/follows?type=${type}`);
 			const data = res.ok ? await res.json() : null;
-			// Ignore an answer for a list the viewer has already moved on from.
 			if (data && target === username && followListType === type) followListPlayers = data.players;
 		} catch {
 			toast.error('Failed to load the list');
@@ -92,8 +91,6 @@
 	let sendMoneyOpen = $state(false);
 	let linkCopied = $state(false);
 
-	// One small request for follow/block state and follower counts. This used to
-	// download the viewer's entire block list just to look for one username.
 	async function loadRelationship() {
 		const target = username;
 		isBlocked = false;

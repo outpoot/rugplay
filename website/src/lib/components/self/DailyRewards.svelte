@@ -34,8 +34,6 @@
 	let claimState = $state<ClaimState>('idle');
 	let error = $state<string | null>(null);
 
-	// When the next claim opens, by this browser's clock. The countdown ticks
-	// locally; this used to re-ask the server every minute from every open tab.
 	let claimableAt = $state<number | null>(null);
 	let now = $state(Date.now());
 	let timeRemaining = $derived(claimableAt === null ? 0 : Math.max(0, claimableAt - now));
@@ -45,7 +43,6 @@
 			fetchRewardStatus();
 			const interval = setInterval(() => {
 				now = Date.now();
-				// Cooldown over: one request to confirm and flip the button to "Claim".
 				if (rewardStatus && !rewardStatus.canClaim && claimableAt !== null && now >= claimableAt) {
 					claimableAt = null;
 					fetchRewardStatus();

@@ -12,7 +12,6 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 
-	// `fill` stretches the card to its container; `limit` is how many leaders to list.
 	let {
 		data = null,
 		limit = 5,

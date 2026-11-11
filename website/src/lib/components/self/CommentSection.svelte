@@ -149,8 +149,6 @@
 			likesCount: wasLiked ? comment.likesCount - 1 : comment.likesCount + 1
 		};
 
-		// fetch only rejects on network failure, so a refused like (rate limit,
-		// server error) used to stay shown as liked.
 		const rollback = () => {
 			const index = comments.findIndex((c) => c.id === commentId);
 			if (index !== -1) {

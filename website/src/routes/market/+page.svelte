@@ -77,7 +77,6 @@
 	let gridElement = $state<HTMLDivElement>();
 	let selectedIndex = $state(-1);
 
-	// Any new result set starts with nothing highlighted.
 	$effect(() => {
 		coins;
 		selectedIndex = -1;
@@ -103,7 +102,6 @@
 		(gridElement?.children[next] as HTMLElement | undefined)?.scrollIntoView({ block: 'nearest' });
 	}
 
-	// "/" jumps to search, arrows walk the grid, Enter opens the highlighted coin.
 	function handleMarketKeydown(event: KeyboardEvent) {
 		if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
 

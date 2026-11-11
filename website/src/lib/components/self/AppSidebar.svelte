@@ -99,8 +99,6 @@
 		}
 	});
 
-	// Highlights the section you are in. Coin pages count as Market, except the
-	// create form which has its own entry.
 	function isNavActive(url: string, pathname: string): boolean {
 		if (url === '/') return pathname === '/';
 		if (url === '/coin/create') return pathname === url;

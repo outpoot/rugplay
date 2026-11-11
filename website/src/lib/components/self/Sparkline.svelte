@@ -18,7 +18,6 @@
 		const step = WIDTH / (points.length - 1);
 		const coords = points.map((value, i) => {
 			const x = i * step;
-			// A flat series sits in the middle instead of on the floor.
 			const y =
 				max === min ? HEIGHT / 2 : PAD + (1 - (value - min) / range) * (HEIGHT - PAD * 2);
 			return `${x.toFixed(2)},${y.toFixed(2)}`;

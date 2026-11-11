@@ -82,7 +82,6 @@ export async function GET() {
                 change24h: Number(c.change24h),
                 marketCap: Number(c.marketCap),
                 volume24h: Number(c.volume24h),
-                // End on the live price so the line meets the number beside it.
                 ...(history ? { sparkline: [...history, Number(c.currentPrice)] } : {})
             };
         });

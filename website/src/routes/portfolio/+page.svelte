@@ -29,8 +29,6 @@
 	let sendMoneyModalOpen = $state(false);
 	let shouldSignIn = $state(false);
 
-	// Holdings used to load once and go stale until a reload. Refresh quietly
-	// while the tab is visible, and straight away when the player comes back.
 	const REFRESH_INTERVAL_MS = 15_000;
 
 	onMount(() => {
@@ -94,8 +92,6 @@
 	let hasHoldings = $derived(portfolioData && portfolioData.coinHoldings.length > 0);
 	let hasTransactions = $derived(transactions.length > 0);
 
-	// Dollar profit per position; null when there is no buy history to price it
-	// against (e.g. coins that were only ever received as a transfer).
 	let holdingsRows = $derived(
 		(portfolioData?.coinHoldings ?? []).map((holding) => ({
 			...holding,

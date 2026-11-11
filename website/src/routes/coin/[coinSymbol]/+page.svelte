@@ -191,9 +191,6 @@
 		};
 	});
 
-	// Refreshes in place. This used to swap the whole page for a skeleton, which
-	// remounted the comments and holders (re-fetching both and wiping any comment
-	// draft) after every single trade.
 	async function loadCoinData({ recreateChart = false } = {}) {
 		const symbol = coinSymbol;
 		try {
@@ -318,11 +315,9 @@
 
 	async function handleTimeframeChange(timeframe: string) {
 		selectedTimeframe = timeframe;
-		// Remembered across coins and visits; the server load reads it back.
 		document.cookie = `chart_timeframe=${timeframe}; path=/; max-age=31536000; samesite=lax`;
 		chartLoading = true;
 		try {
-			// The old chart stays up (dimmed) until the new candles arrive.
 			await loadCoinData({ recreateChart: true });
 		} finally {
 			chartLoading = false;
@@ -398,7 +393,6 @@
 	let volumeSeries: any = null;
 	let hasChartData = $derived(chartData.length > 0);
 
-	// The grid used to be hardcoded for the dark theme and looked heavy on light.
 	function chartColors(isDark: boolean) {
 		return isDark
 			? { grid: '#2B2B43', border: '#71649C', text: '#666666' }
@@ -509,8 +503,6 @@
 
 			chart.timeScale().fitContent();
 
-			// Observe the container rather than the window so the chart also follows
-			// the sidebar opening and closing.
 			const handleResize = () => chart?.applyOptions({ width: container.clientWidth });
 			const resizeObserver = new ResizeObserver(handleResize);
 			resizeObserver.observe(container);
@@ -585,7 +577,6 @@
 	}
 
 	function generateVolumeData(candlestickData: any[], volumeData: any[]) {
-		// Indexed lookup: a find() per candle went quadratic once history was scrolled in.
 		const volumeByTime = new Map<number, number>();
 		for (const point of volumeData) {
 			if (!volumeByTime.has(point.time)) volumeByTime.set(point.time, point.volume);
@@ -610,7 +601,6 @@
 	let isTradingLocked = $derived(coin?.isLocked && countdown !== null && countdown > 0);
 	let canTrade = $derived(!isTradingLocked || isCreator);
 
-	// Your position, repriced live as the coin moves.
 	let positionValue = $derived(userHolding * (coin?.currentPrice ?? 0));
 	let positionProfit = $derived(userCostBasis > 0 ? positionValue - userCostBasis : null);
 	let positionProfitPercent = $derived(
@@ -619,7 +609,6 @@
 	let canBuy = $derived(!!$USER_DATA && !!coin?.isListed && canTrade);
 	let canSell = $derived(canBuy && userHolding > 0);
 
-	// B / S open the buy / sell dialogs, unless the user is typing somewhere.
 	function handleShortcut(event: KeyboardEvent) {
 		if (event.defaultPrevented || event.repeat) return;
 		if (event.ctrlKey || event.metaKey || event.altKey) return;

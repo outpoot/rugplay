@@ -1,8 +1,6 @@
 <script lang="ts" module>
 	import type { UserProfileData as CachedProfile } from '$lib/types/user-profile';
 
-	// Shared by every hover card on the page. Hovering the same name again within
-	// a minute reuses the answer, and two cards for one player share one request.
 	const CACHE_TTL_MS = 60_000;
 	const MAX_CACHED = 100;
 	const profileCache = new Map<number, { at: number; request: Promise<CachedProfile | null> }>();
@@ -19,7 +17,6 @@
 			profileCache.delete(profileCache.keys().next().value as number);
 		}
 		profileCache.set(id, { at: Date.now(), request });
-		// Do not remember failures.
 		request.then((result) => {
 			if (!result && profileCache.get(id)?.request === request) profileCache.delete(id);
 		});

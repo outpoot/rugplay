@@ -116,8 +116,6 @@ export async function GET({ params }) {
             const price = Number(holding.currentPrice);
             return total + (quantity * price);
         }, 0);
-        // Largest positions first; capped so whales with hundreds of coins do not
-        // bloat every profile and hover card.
         const holdings = portfolioHoldings
             .map((holding) => {
                 const quantity = Number(holding.quantity);

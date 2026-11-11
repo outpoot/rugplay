@@ -140,7 +140,6 @@
 						(entry) =>
 							(!entry.auth || $USER_DATA) &&
 							(!entry.admin || $USER_DATA?.isAdmin) &&
-							// With nothing typed keep the list short: no per-game or admin rows.
 							(needle
 								? `${entry.title} ${entry.keywords ?? ''}`.toLowerCase().includes(needle)
 								: !entry.admin && !entry.title.startsWith('Arcade:'))
@@ -197,7 +196,6 @@
 		coin
 	});
 
-	// Nothing typed yet: lead with the player's own shortcuts.
 	let idleItems = $derived<Item[]>(
 		needle
 			? []
@@ -254,7 +252,6 @@
 		}
 	}
 
-	// Remember the coins and players you open, however you got there.
 	afterNavigate(({ to }) => {
 		const routeId = to?.route.id;
 		const recent: Recent | null =
@@ -272,11 +269,9 @@
 			].slice(0, MAX_RECENTS);
 			localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
 		} catch {
-			// Storage unavailable: recents are simply not kept.
 		}
 	});
 
-	// Reset on every open, and load what the idle view and Hopium search need.
 	$effect(() => {
 		if (!open) return;
 
@@ -304,8 +299,6 @@
 			watchlist = [];
 			following = [];
 		}
-		// The questions endpoint has no text search, so fetch the active ones once
-		// and match them here.
 		load('/api/hopium/questions?status=ACTIVE&limit=50').then((result) => {
 			if (result && !controller.signal.aborted) questions = result.questions ?? [];
 		});
@@ -313,7 +306,6 @@
 		return () => controller.abort();
 	});
 
-	// Debounced, cancellable search: only the latest keystroke's results land.
 	$effect(() => {
 		const term = trimmed;
 		const wantCoins = shows('coin');
@@ -350,7 +342,6 @@
 				users = userResult?.results ?? [];
 				selected = 0;
 			} catch {
-				// Aborted or offline: keep whatever is on screen.
 			} finally {
 				if (!controller.signal.aborted) searching = false;
 			}
@@ -362,7 +353,6 @@
 		};
 	});
 
-	// Keep the highlight inside the list as it changes under it.
 	$effect(() => {
 		if (selected >= items.length) selected = Math.max(0, items.length - 1);
 	});

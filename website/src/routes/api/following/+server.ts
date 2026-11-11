@@ -4,7 +4,6 @@ import { db } from '$lib/server/db';
 import { user, userFollow } from '$lib/server/db/schema';
 import { desc, eq } from 'drizzle-orm';
 
-// The players the signed-in user follows, most recently followed first.
 export async function GET({ request }) {
 	const session = await auth.api.getSession({ headers: request.headers });
 	if (!session?.user) throw error(401, 'Not authenticated');

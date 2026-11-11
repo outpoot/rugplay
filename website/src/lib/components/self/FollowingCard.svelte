@@ -30,8 +30,6 @@
 		coinIcon: string | null;
 	};
 
-	// What the players you follow have been doing, not who they are: the feed is
-	// the card, and the full list sits behind the count.
 	let {
 		players,
 		trades,

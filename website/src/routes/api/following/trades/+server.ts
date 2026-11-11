@@ -5,7 +5,6 @@ import { coin, transaction, user, userFollow } from '$lib/server/db/schema';
 import { and, desc, eq, gte, inArray } from 'drizzle-orm';
 import { FOLLOWING_FEED_DAYS, FOLLOWING_FEED_MIN_VALUE } from '$lib/data/constants';
 
-// Recent big buys and sells by the players the signed-in user follows.
 export async function GET({ request, url }) {
 	const session = await auth.api.getSession({ headers: request.headers });
 	if (!session?.user) throw error(401, 'Not authenticated');

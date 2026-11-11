@@ -220,7 +220,6 @@ async function getLeaderboardData() {
 
 async function getSearchedUsers(query: string, limit = 9, offset = 0) {
     try {
-        // Match usernames and display names, with LIKE wildcards taken literally.
         const term = query.trim().replace(/^@/, '');
         const escaped = term.replace(/[\\%_]/g, '\\$&');
         const prefix = `${escaped}%`;

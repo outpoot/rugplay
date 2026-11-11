@@ -105,8 +105,6 @@
 
 	let showSeason = $derived(seasonLoading || !!seasonData?.season);
 
-	// Three quick reads of the same list, so nobody has to sort the table to
-	// find out what is moving.
 	let movers = $derived([
 		{
 			id: 'gainers',
@@ -335,7 +333,6 @@
 			{/if}
 		</div>
 
-		<!-- Four quick lists in one row; the feed only exists for players who follow someone. -->
 		<section class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-4">
 			<div
 				class="grid grid-cols-1 gap-3 md:grid-cols-3 {following.length > 0

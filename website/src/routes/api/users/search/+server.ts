@@ -3,9 +3,6 @@ import { db } from '$lib/server/db';
 import { user } from '$lib/server/db/schema';
 import { ilike, or, sql } from 'drizzle-orm';
 
-// Lightweight player lookup for search boxes: identity fields only. The
-// leaderboard search also totals every match's portfolio and counts all
-// matches, which is far too heavy to run per keystroke.
 export async function GET({ url }) {
 	const query = (url.searchParams.get('q') ?? '').trim().replace(/^@/, '');
 	const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') ?? '6') || 6, 1), 20);
@@ -29,7 +26,6 @@ export async function GET({ url }) {
 		})
 		.from(user)
 		.where(or(ilike(user.username, contains), ilike(user.name, contains)))
-		// Best match first: exact username, then names that start with the query.
 		.orderBy(
 			sql`CASE
 				WHEN lower(${user.username}) = lower(${query}) THEN 0

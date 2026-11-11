@@ -1,8 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { toast } from 'svelte-sonner';
 
-// Symbols the signed-in user is watching, so lists of coins can show and
-// toggle the star without a request per coin.
 export const WATCHED_SYMBOLS = writable<Set<string>>(new Set());
 
 let inFlight: Promise<void> | null = null;
@@ -24,7 +22,6 @@ export function loadWatchedSymbols(): Promise<void> {
 
 const busy = new Set<string>();
 
-// Flips the star right away and puts it back if the server says no.
 export async function toggleWatched(symbol: string): Promise<void> {
 	if (busy.has(symbol)) return;
 	busy.add(symbol);

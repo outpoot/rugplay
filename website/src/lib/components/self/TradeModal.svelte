@@ -81,7 +81,6 @@
 	});
 	let canTrade = $derived(hasValidAmount && hasEnoughFunds() && !loading);
 
-	// How far this trade moves the pool price, so nobody is surprised by slippage.
 	let priceImpact = $derived.by(() => {
 		if (!hasValidAmount) return 0;
 		const poolCoin = Number(coin.poolCoinAmount);
@@ -113,13 +112,10 @@
 		{ label: 'Max', fraction: 1 }
 	];
 
-	// Closing with Escape or a click outside skips handleClose, which used to leave
-	// a stale amount sitting in the input the next time the modal opened.
 	$effect(() => {
 		if (!open) {
 			amount = '';
 		} else if (type === 'SELL') {
-			// Reopen in whichever unit the player sold with last time.
 			sellByDollar = preferredSellByDollar();
 		}
 	});
@@ -226,7 +222,6 @@
 		try {
 			localStorage.setItem(SELL_MODE_KEY, sellByDollar ? '1' : '0');
 		} catch {
-			// Storage unavailable: the toggle still works for this session.
 		}
 	}
 

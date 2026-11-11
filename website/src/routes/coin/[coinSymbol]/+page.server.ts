@@ -4,7 +4,6 @@ const TIMEFRAMES = ['1m', '5m', '15m', '1h', '4h', '1d'];
 
 export async function load({ params, url, fetch, cookies }) {
     const { coinSymbol } = params;
-    // An explicit ?timeframe= wins, then whatever the player last picked.
     const remembered = cookies.get('chart_timeframe');
     const timeframe =
         url.searchParams.get('timeframe') ||

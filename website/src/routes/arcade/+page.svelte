@@ -26,8 +26,6 @@
 	const GAMES = ['coinflip', 'slots', 'mines', 'dice', 'tower'];
 	const LAST_GAME_KEY = 'rugplay:arcade-game';
 
-	// ?game= makes a game linkable and survives a reload; without it, come back
-	// to whatever was played last instead of always landing on Coinflip.
 	const requestedGame = page.url.searchParams.get('game');
 	let activeGame = $state(
 		requestedGame && GAMES.includes(requestedGame) ? requestedGame : 'coinflip'
@@ -39,7 +37,6 @@
 			const lastGame = localStorage.getItem(LAST_GAME_KEY);
 			if (lastGame && GAMES.includes(lastGame)) selectGame(lastGame);
 		} catch {
-			// Storage unavailable: stay on the default.
 		}
 	});
 
@@ -48,7 +45,6 @@
 		try {
 			localStorage.setItem(LAST_GAME_KEY, game);
 		} catch {
-			// Storage unavailable: the URL below still carries the choice.
 		}
 		const url = new URL(page.url);
 		url.searchParams.set('game', game);

@@ -62,8 +62,6 @@
 		}
 	});
 
-	// Refreshes in place; this used to blank the whole page to a skeleton after
-	// every prediction.
 	async function fetchQuestion() {
 		try {
 			const response = await fetch(`/api/hopium/questions/${questionId}`);
@@ -176,7 +174,6 @@
 			lineSeries.setData(probabilityData);
 			chart.timeScale().fitContent();
 
-			// Follow the container, so the chart also resizes with the sidebar.
 			const handleResize = () => chart?.applyOptions({ width: container.clientWidth });
 			const resizeObserver = new ResizeObserver(handleResize);
 			resizeObserver.observe(container);

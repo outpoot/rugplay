@@ -29,7 +29,6 @@ export function getTimeBasedGreeting(name: string): string {
     }
 }
 
-/** True on macOS / iOS, where shortcuts use the Command key instead of Ctrl. */
 export function isApplePlatform(): boolean {
     if (typeof navigator === 'undefined') return false;
     return /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent);
@@ -72,8 +71,6 @@ export function formatPrice(price: number): string {
     }
 }
 
-// Signed percentage for tight spaces: "+3.10%", "-41.30%", and "+10M%" once
-// a brand new coin's change no longer fits.
 export function formatChange(value: number): string {
     const sign = value >= 0 ? '+' : '-';
     const abs = Math.abs(value);
@@ -89,7 +86,6 @@ export function formatValue(value: number | string): string {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     if (typeof numValue !== 'number' || isNaN(numValue)) return '$0.00';
 
-    // Losses used to skip the abbreviations entirely and render as "$-1234567.00".
     if (numValue < 0) return `-${formatValue(-numValue)}`;
 
     if (numValue >= 1e21) return `$${(numValue / 1e21).toFixed(2)}Sx`;

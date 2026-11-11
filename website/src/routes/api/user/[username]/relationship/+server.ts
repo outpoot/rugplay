@@ -4,8 +4,6 @@ import { db } from '$lib/server/db';
 import { user, userBlock, userFollow } from '$lib/server/db/schema';
 import { and, count, eq } from 'drizzle-orm';
 
-// Everything a profile needs to know about "you and this player" in one call:
-// follower counts for anyone, plus whether the viewer follows or blocks them.
 export async function GET({ request, params }) {
 	const [target] = await db
 		.select({ id: user.id })

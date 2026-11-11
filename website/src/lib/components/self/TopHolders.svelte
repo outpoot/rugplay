@@ -35,7 +35,6 @@
 		holders: Holder[];
 	}
 
-	// Bump refreshKey to re-fetch in place (no skeleton), e.g. after the viewer trades.
 	let { coinSymbol, refreshKey = 0 } = $props<{ coinSymbol: string; refreshKey?: number }>();
 
 	let loading = $state(true);

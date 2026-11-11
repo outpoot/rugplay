@@ -4,8 +4,6 @@ import { user, userFollow } from '$lib/server/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import { FOLLOW_LIST_LIMIT } from '$lib/data/constants';
 
-// A profile's followers or the players it follows, newest first. Public, like
-// the counts shown beside them.
 export async function GET({ params, url }) {
 	const type = url.searchParams.get('type') === 'following' ? 'following' : 'followers';
 

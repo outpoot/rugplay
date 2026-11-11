@@ -14,8 +14,6 @@
 		nameColor?: string | null;
 	};
 
-	// A filterable list of players in a dialog: who you follow, a profile's
-	// followers, and so on.
 	let {
 		open = $bindable(false),
 		title,

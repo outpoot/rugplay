@@ -299,6 +299,9 @@
 						type="text"
 						value={betAmountDisplay}
 						oninput={handleBetAmountInput}
+						onkeydown={(event: KeyboardEvent) => {
+							if (event.key === 'Enter') rollDice();
+						}}
 						onblur={handleBetAmountBlur}
 						disabled={isRolling}
 						placeholder="Enter bet amount"

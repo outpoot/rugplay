@@ -321,6 +321,9 @@
 						type="text"
 						value={betAmountDisplay}
 						oninput={handleBetAmountInput}
+						onkeydown={(event: KeyboardEvent) => {
+							if (event.key === 'Enter') spin();
+						}}
 						onblur={handleBetAmountBlur}
 						disabled={isSpinning}
 						placeholder="Enter bet amount"

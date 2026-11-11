@@ -34,14 +34,23 @@
 	let claimState = $state<ClaimState>('idle');
 	let error = $state<string | null>(null);
 
+	// When the next claim opens, by this browser's clock. The countdown ticks
+	// locally; this used to re-ask the server every minute from every open tab.
+	let claimableAt = $state<number | null>(null);
+	let now = $state(Date.now());
+	let timeRemaining = $derived(claimableAt === null ? 0 : Math.max(0, claimableAt - now));
+
 	$effect(() => {
 		if ($USER_DATA) {
 			fetchRewardStatus();
 			const interval = setInterval(() => {
-				if (rewardStatus && !rewardStatus.canClaim) {
+				now = Date.now();
+				// Cooldown over: one request to confirm and flip the button to "Claim".
+				if (rewardStatus && !rewardStatus.canClaim && claimableAt !== null && now >= claimableAt) {
+					claimableAt = null;
 					fetchRewardStatus();
 				}
-			}, 60000);
+			}, 15000);
 
 			return () => clearInterval(interval);
 		}
@@ -51,7 +60,10 @@
 		try {
 			const response = await fetch('/api/rewards/claim');
 			if (response.ok) {
-				rewardStatus = await response.json();
+				const status: RewardStatus = await response.json();
+				rewardStatus = status;
+				now = Date.now();
+				claimableAt = status.canClaim ? null : now + status.timeRemaining;
 				error = null;
 			} else {
 				error = 'Failed to fetch reward status';
@@ -167,6 +179,6 @@
 		<span>Claim ${formatCurrency(rewardStatus.rewardAmount)}</span>
 	{:else}
 		<HugeiconsIcon icon={Clock01Icon} class="h-4 w-4" />
-		<span>Next in {formatTimeRemaining(rewardStatus.timeRemaining)}</span>
+		<span>Next in {formatTimeRemaining(timeRemaining)}</span>
 	{/if}
 </Button>

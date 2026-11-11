@@ -365,6 +365,9 @@
 						type="text"
 						value={betAmountDisplay}
 						oninput={handleBetAmountInput}
+						onkeydown={(event: KeyboardEvent) => {
+							if (event.key === 'Enter') startGame();
+						}}
 						onblur={handleBetAmountBlur}
 						disabled={isPlaying}
 						placeholder="Enter bet amount"

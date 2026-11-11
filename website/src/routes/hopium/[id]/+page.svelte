@@ -29,6 +29,8 @@
 	import { createChart, ColorType, type IChartApi, LineSeries } from 'lightweight-charts';
 	import HopiumQuestionSkeleton from '$lib/components/self/skeletons/HopiumQuestionSkeleton.svelte';
 	import { haptic } from '$lib/stores/haptics';
+	import { mode } from 'mode-watcher';
+	import SignInConfirmDialog from '$lib/components/self/SignInConfirmDialog.svelte';
 
 	const { data } = $props();
 	let question = $state(data.question);
@@ -39,6 +41,7 @@
 	let betSide = $state<boolean>(true);
 	let placingBet = $state(false);
 	let customBetAmount = $state('');
+	let shouldSignIn = $state(false);
 
 	let userBalance = $derived($PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance : 0);
 	let questionId = $derived(data.questionId);
@@ -59,9 +62,10 @@
 		}
 	});
 
+	// Refreshes in place; this used to blank the whole page to a skeleton after
+	// every prediction.
 	async function fetchQuestion() {
 		try {
-			loading = true;
 			const response = await fetch(`/api/hopium/questions/${questionId}`);
 			if (response.ok) {
 				const result = await response.json();
@@ -76,14 +80,17 @@
 		} catch (e) {
 			console.error('Failed to fetch question:', e);
 			toast.error('Failed to load question');
-		} finally {
-			loading = false;
 		}
 	}
 
 	async function placeBet() {
+		if (placingBet) return;
 		if (!question || !customBetAmount || Number(customBetAmount) <= 0) {
 			toast.error('Please enter a valid amount');
+			return;
+		}
+		if (Number(customBetAmount) > userBalance) {
+			toast.error('Insufficient funds');
 			return;
 		}
 
@@ -124,16 +131,19 @@
 			chart = null;
 		}
 
-		if (chartContainer && probabilityData.length > 0 && question) {
-			chart = createChart(chartContainer, {
+		const container = chartContainer;
+		const gridColor = mode.current !== 'light' ? '#2B2B43' : '#e9e9ee';
+
+		if (container && probabilityData.length > 0 && question) {
+			chart = createChart(container, {
 				layout: {
 					textColor: '#666666',
 					background: { type: ColorType.Solid, color: 'transparent' },
 					attributionLogo: false
 				},
 				grid: {
-					vertLines: { color: '#2B2B43' },
-					horzLines: { color: '#2B2B43' }
+					vertLines: { color: gridColor },
+					horzLines: { color: gridColor }
 				},
 				rightPriceScale: {
 					borderVisible: false,
@@ -166,12 +176,14 @@
 			lineSeries.setData(probabilityData);
 			chart.timeScale().fitContent();
 
-			const handleResize = () => chart?.applyOptions({ width: chartContainer?.clientWidth });
-			window.addEventListener('resize', handleResize);
+			// Follow the container, so the chart also resizes with the sidebar.
+			const handleResize = () => chart?.applyOptions({ width: container.clientWidth });
+			const resizeObserver = new ResizeObserver(handleResize);
+			resizeObserver.observe(container);
 			handleResize();
 
 			return () => {
-				window.removeEventListener('resize', handleResize);
+				resizeObserver.disconnect();
 				if (chart) {
 					chart.remove();
 					chart = null;
@@ -214,6 +226,8 @@
 		: 'AI-powered prediction market question in the Rugplay simulation game.'}
 	keywords="AI prediction market question, virtual prediction, cryptocurrency prediction game, yes no prediction, forecasting simulation"
 />
+
+<SignInConfirmDialog bind:open={shouldSignIn} />
 
 <div class="container mx-auto max-w-7xl p-6">
 	{#if loading}
@@ -369,6 +383,9 @@
 									placeholder="Enter amount..."
 									bind:value={customBetAmount}
 									disabled={question.aiResolution !== null}
+									onkeydown={(event: KeyboardEvent) => {
+										if (event.key === 'Enter' && question.aiResolution === null) placeBet();
+									}}
 								/>
 							</div>
 
@@ -453,7 +470,7 @@
 							<Card.Content class="pb-6">
 								<div class="py-6 text-center">
 									<p class="text-muted-foreground mb-4 text-sm">Sign in to make predictions</p>
-									<Button size="lg" onclick={() => goto('/')}>Sign In</Button>
+									<Button size="lg" onclick={() => (shouldSignIn = true)}>Sign In</Button>
 								</div>
 							</Card.Content>
 						</Card.Root>

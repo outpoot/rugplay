@@ -276,6 +276,9 @@
 						type="text"
 						value={betDisplay}
 						oninput={onBetInput}
+						onkeydown={(event: KeyboardEvent) => {
+							if (event.key === 'Enter') start();
+						}}
 						onblur={() => (betDisplay = bet.toLocaleString())}
 						disabled={playing}
 						placeholder="Enter bet amount"

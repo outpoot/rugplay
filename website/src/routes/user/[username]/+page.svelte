@@ -31,6 +31,8 @@
 		Briefcase01Icon
 	} from '@hugeicons/core-free-icons';
 	import SendMoneyModal from '$lib/components/self/SendMoneyModal.svelte';
+	import PlayerListDialog from '$lib/components/self/PlayerListDialog.svelte';
+	import { FOLLOW_LIST_LIMIT } from '$lib/data/constants';
 	import { fetchPortfolioData, fetchPortfolioSummary } from '$lib/stores/portfolio-data';
 	import { goto } from '$app/navigation';
 	import { USER_DATA } from '$lib/stores/user-data';
@@ -63,6 +65,30 @@
 	let followLoading = $state(false);
 	let followerCount = $state(0);
 	let followingCount = $state(0);
+
+	let followListOpen = $state(false);
+	let followListType = $state<'followers' | 'following'>('followers');
+	let followListPlayers = $state<any[]>([]);
+	let followListLoading = $state(false);
+	let followListCount = $derived(followListType === 'followers' ? followerCount : followingCount);
+
+	async function openFollowList(type: 'followers' | 'following') {
+		const target = username;
+		followListType = type;
+		followListPlayers = [];
+		followListLoading = true;
+		followListOpen = true;
+		try {
+			const res = await fetch(`/api/user/${encodeURIComponent(target)}/follows?type=${type}`);
+			const data = res.ok ? await res.json() : null;
+			// Ignore an answer for a list the viewer has already moved on from.
+			if (data && target === username && followListType === type) followListPlayers = data.players;
+		} catch {
+			toast.error('Failed to load the list');
+		} finally {
+			if (followListType === type) followListLoading = false;
+		}
+	}
 	let sendMoneyOpen = $state(false);
 	let linkCopied = $state(false);
 
@@ -558,6 +584,17 @@
 	twitterCard="summary"
 />
 
+<PlayerListDialog
+	bind:open={followListOpen}
+	title={`${followListType === 'followers' ? 'Followers' : 'Following'} (${followListCount.toLocaleString()})`}
+	players={followListPlayers}
+	loading={followListLoading}
+	emptyMessage={followListType === 'followers'
+		? 'No followers yet.'
+		: 'Not following anyone yet.'}
+	footnote={followListCount > FOLLOW_LIST_LIMIT ? `Showing the ${FOLLOW_LIST_LIMIT} most recent.` : ''}
+/>
+
 {#if $USER_DATA && !isOwnProfile}
 	<SendMoneyModal
 		bind:open={sendMoneyOpen}
@@ -616,15 +653,21 @@
 							<HugeiconsIcon icon={Calendar01Icon} class="h-4 w-4" />
 							<span>Joined {memberSince}</span>
 							<span aria-hidden="true">·</span>
-							<span>
+							<button
+								class="hover:text-foreground cursor-pointer transition-colors hover:underline"
+								onclick={() => openFollowList('followers')}
+							>
 								<span class="text-foreground font-medium">{followerCount.toLocaleString()}</span>
 								{followerCount === 1 ? 'follower' : 'followers'}
-							</span>
+							</button>
 							<span aria-hidden="true">·</span>
-							<span>
+							<button
+								class="hover:text-foreground cursor-pointer transition-colors hover:underline"
+								onclick={() => openFollowList('following')}
+							>
 								<span class="text-foreground font-medium">{followingCount.toLocaleString()}</span>
 								following
-							</span>
+							</button>
 						</div>
 
 					</div>

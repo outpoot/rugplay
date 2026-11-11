@@ -1,7 +1,6 @@
 <script lang="ts">
 	import * as Avatar from '$lib/components/ui/avatar';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Input } from '$lib/components/ui/input';
+	import PlayerListDialog from '$lib/components/self/PlayerListDialog.svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import UserName from '$lib/components/self/UserName.svelte';
 	import CoinIcon from '$lib/components/self/CoinIcon.svelte';
@@ -40,19 +39,6 @@
 	}: { players: Player[]; trades: Trade[]; loading?: boolean } = $props();
 
 	let open = $state(false);
-	let query = $state('');
-
-	let filtered = $derived.by(() => {
-		const q = query.trim().toLowerCase().replace(/^@/, '');
-		if (!q) return players;
-		return players.filter(
-			(p) => p.username.toLowerCase().includes(q) || p.name?.toLowerCase().includes(q)
-		);
-	});
-
-	$effect(() => {
-		if (!open) query = '';
-	});
 </script>
 
 {#snippet avatar(person: { name: string; image: string | null }, size: string)}
@@ -133,29 +119,4 @@
 	{/if}
 </section>
 
-<Dialog.Root bind:open>
-	<Dialog.Content class="flex max-h-[80vh] flex-col gap-3 sm:max-w-md">
-		<Dialog.Header>
-			<Dialog.Title>Following ({players.length})</Dialog.Title>
-		</Dialog.Header>
-		<Input bind:value={query} placeholder="Filter players..." />
-		<div class="-mx-2 min-h-0 flex-1 overflow-y-auto">
-			{#each filtered as player (player.id)}
-				<a
-					href={`/user/${player.username}`}
-					class="hover:bg-muted flex items-center gap-2 rounded-md px-2 py-1 transition-colors"
-				>
-					{@render avatar(player, 'h-6 w-6')}
-					<span class="min-w-0 flex-1 truncate text-sm font-medium">
-						<UserName name={player.name} nameColor={player.nameColor} />
-					</span>
-					<span class="text-muted-foreground max-w-[45%] shrink-0 truncate text-xs">
-						@{player.username}
-					</span>
-				</a>
-			{:else}
-				<p class="text-muted-foreground py-6 text-center text-sm">No one matches "{query}".</p>
-			{/each}
-		</div>
-	</Dialog.Content>
-</Dialog.Root>
+<PlayerListDialog bind:open title={`Following (${players.length})`} {players} />

@@ -33,6 +33,8 @@ export const MAX_FOLLOWING = 200;
 // same bar as the sidebar's live trades) from the last few days.
 export const FOLLOWING_FEED_MIN_VALUE = 1000;
 export const FOLLOWING_FEED_DAYS = 7;
+// Most recent followers / followed players listed on a profile.
+export const FOLLOW_LIST_LIMIT = 200;
 
 // PROMO CODES
 export const MAX_PROMO_REWARD = 1_000_000;

@@ -25,6 +25,23 @@
 	let balance = $state(0);
 	const GAMES = ['coinflip', 'slots', 'mines', 'dice', 'tower'];
 	const LAST_GAME_KEY = 'rugplay:arcade-game';
+	const GAME_LABELS: Record<string, string> = {
+		coinflip: 'Coinflip',
+		slots: 'Slots',
+		mines: 'Mines',
+		dice: 'Dice',
+		tower: 'Tower'
+	};
+	let gameTabs = $state<HTMLDivElement | null>(null);
+
+	$effect(() => {
+		const tab = gameTabs?.querySelector<HTMLElement>(`[data-game="${activeGame}"]`);
+		if (!gameTabs || !tab || gameTabs.scrollWidth <= gameTabs.clientWidth) return;
+		const strip = gameTabs.getBoundingClientRect();
+		const rect = tab.getBoundingClientRect();
+		const offset = rect.left - strip.left - (strip.width - rect.width) / 2;
+		gameTabs.scrollBy({ left: offset, behavior: 'smooth' });
+	});
 
 	const requestedGame = page.url.searchParams.get('game');
 	let activeGame = $state(
@@ -87,7 +104,7 @@
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
-<div class="container mx-auto p-6">
+<div class="container mx-auto py-6 sm:px-6">
 	<h1 class="mb-6 text-center text-3xl font-bold">Arcade</h1>
 
 	{#if !$USER_DATA}
@@ -101,37 +118,20 @@
 	{:else}
 		<div class="mx-auto max-w-4xl space-y-6">
 			<!-- Game Selection -->
-			<div class="flex justify-center gap-4">
-				<Button
-					variant={activeGame === 'coinflip' ? 'default' : 'outline'}
-					onclick={() => selectGame('coinflip')}
-				>
-					Coinflip
-				</Button>
-				<Button
-					variant={activeGame === 'slots' ? 'default' : 'outline'}
-					onclick={() => selectGame('slots')}
-				>
-					Slots
-				</Button>
-				<Button
-					variant={activeGame === 'mines' ? 'default' : 'outline'}
-					onclick={() => selectGame('mines')}
-				>
-					Mines
-				</Button>
-				<Button
-					variant={activeGame === 'dice' ? 'default' : 'outline'}
-					onclick={() => selectGame('dice')}
-				>
-					Dice
-				</Button>
-				<Button
-					variant={activeGame === 'tower' ? 'default' : 'outline'}
-					onclick={() => selectGame('tower')}
-				>
-					Tower
-				</Button>
+			<div
+				bind:this={gameTabs}
+				class="scrollbar-none -mx-4 flex gap-2 overflow-x-auto overscroll-x-contain px-4 sm:mx-0 sm:justify-center sm:gap-4 sm:px-0 [&>*]:shrink-0"
+			>
+				{#each GAMES as game (game)}
+					<Button
+						variant={activeGame === game ? 'default' : 'outline'}
+						data-game={game}
+						aria-pressed={activeGame === game}
+						onclick={() => selectGame(game)}
+					>
+						{GAME_LABELS[game]}
+					</Button>
+				{/each}
 			</div>
 
 			<!-- Game Content -->

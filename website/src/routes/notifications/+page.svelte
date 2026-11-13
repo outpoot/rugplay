@@ -65,7 +65,7 @@
 
 	function getNotificationColorClasses(type: string, isNew: boolean, isRead: boolean) {
 		const base =
-			'hover:bg-muted/50 flex w-full items-start gap-4 rounded-md p-3 text-left transition-all duration-200';
+			'hover:bg-muted/50 pointer-coarse:active:bg-muted flex w-full items-start gap-3 rounded-md p-3 sm:gap-4 text-left transition-all duration-200';
 
 		if (isNew) {
 			return `${base} bg-primary/10`;
@@ -100,7 +100,7 @@
 	description="View your notifications and updates from Rugplay."
 />
 
-<div class="container mx-auto max-w-4xl p-6">
+<div class="container mx-auto max-w-4xl py-6 sm:px-6">
 	<header class="mb-8">
 		<div class="text-center">
 			<h1 class="mb-2 text-3xl font-bold">Notifications</h1>
@@ -108,8 +108,8 @@
 		</div>
 	</header>
 
-	<Card.Root class="gap-1">
-		<Card.Content>
+	<Card.Root class="gap-1 py-2 sm:py-6">
+		<Card.Content class="px-2 sm:px-6">
 			{#if !$USER_DATA}
 				<div class="py-12 text-center">
 					<div
@@ -133,7 +133,7 @@
 					<p class="text-muted-foreground">You'll see updates about your activities here</p>
 				</div>
 			{:else}
-				<ScrollArea class="h-[600px]">
+				<ScrollArea class="sm:h-[600px]">
 					<div class="space-y-1">
 						{#each $NOTIFICATIONS as notification, index (notification.id)}
 							{@const IconComponent = getNotificationIcon(notification.type)}
@@ -147,18 +147,22 @@
 									<HugeiconsIcon icon={IconComponent} class="h-4 w-4" />
 								</div>
 								<div class="min-w-0 flex-1">
-									<div class="mb-1 flex items-center gap-2">
-										<h3 class="truncate text-sm font-medium">{notification.title}</h3>
+									<div class="mb-1 flex items-start gap-2">
+										<h3 class="min-w-0 break-words text-sm font-medium">{notification.title}</h3>
 										{#if !notification.isRead && !isNewNotification}
-											<div class="bg-primary h-2 w-2 flex-shrink-0 rounded-full"></div>
+											<div class="bg-primary mt-1.5 h-2 w-2 flex-shrink-0 rounded-full"></div>
 										{/if}
 										{#if isNewNotification}
-											<Badge variant="default" class="px-1.5 py-0.5 text-xs">New</Badge>
+											<Badge variant="default" class="shrink-0 px-1.5 py-0.5 text-xs">New</Badge>
 										{/if}
 									</div>
 
-									<p class="text-muted-foreground text-xs leading-relaxed">
+									<p class="text-muted-foreground break-words text-xs leading-relaxed">
 										{notification.message}
+									</p>
+
+									<p class="text-muted-foreground mt-1 text-xs sm:hidden">
+										{formatTimeAgo(notification.createdAt)}
 									</p>
 
 									{#if notification.data}
@@ -182,7 +186,7 @@
 									{/if}
 								</div>
 
-								<div class="flex flex-shrink-0 flex-col items-end justify-center gap-1">
+								<div class="hidden flex-shrink-0 flex-col items-end justify-center gap-1 sm:flex">
 									<p class="text-muted-foreground text-right text-xs">
 										{formatTimeAgo(notification.createdAt)}
 									</p>

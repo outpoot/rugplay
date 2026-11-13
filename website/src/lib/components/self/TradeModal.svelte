@@ -13,17 +13,27 @@
 
 	let {
 		open = $bindable(false),
-		type,
+		type = $bindable(),
 		coin,
 		userHolding = 0,
+		switchable = false,
 		onSuccess
 	} = $props<{
 		open?: boolean;
 		type: 'BUY' | 'SELL';
 		coin: any;
 		userHolding?: number;
+		switchable?: boolean;
 		onSuccess?: () => void;
 	}>();
+
+	function switchType(next: 'BUY' | 'SELL') {
+		if (next === type || loading) return;
+		if (next === 'SELL' && userHolding <= 0) return;
+		haptic.trigger('selection');
+		amount = '';
+		type = next;
+	}
 
 	let amount = $state('');
 	let loading = $state(false);
@@ -244,10 +254,14 @@
 			amount = userBalance.toString();
 		}
 	}
+
+	function preventKeyboardOnTouch(event: Event) {
+		if (window.matchMedia('(pointer: coarse)').matches) event.preventDefault();
+	}
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="sm:max-w-md">
+	<Dialog.Content class="sm:max-w-md" onOpenAutoFocus={preventKeyboardOnTouch}>
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				{#if type === 'BUY'}
@@ -264,6 +278,35 @@
 		</Dialog.Header>
 
 		<div class="space-y-4">
+			{#if switchable}
+				<div role="tablist" aria-label="Trade side" class="bg-muted grid grid-cols-2 gap-1 rounded-lg p-1">
+					<button
+						type="button"
+						role="tab"
+						aria-selected={type === 'BUY'}
+						class="rounded-md py-2 text-sm font-semibold transition-colors {type === 'BUY'
+							? 'bg-background text-success shadow-sm'
+							: 'text-muted-foreground'}"
+						onclick={() => switchType('BUY')}
+					>
+						Buy
+					</button>
+					<button
+						type="button"
+						role="tab"
+						aria-selected={type === 'SELL'}
+						disabled={userHolding <= 0}
+						class="rounded-md py-2 text-sm font-semibold transition-colors disabled:opacity-40 {type ===
+						'SELL'
+							? 'bg-background text-red-500 shadow-sm'
+							: 'text-muted-foreground'}"
+						onclick={() => switchType('SELL')}
+					>
+						Sell
+					</button>
+				</div>
+			{/if}
+
 			<!-- Amount Input -->
 			<div class="space-y-2">
 				<Label for="amount">
@@ -273,6 +316,7 @@
 					<Input
 						id="amount"
 						type="number"
+						inputmode="decimal"
 						step={type === 'BUY' || sellByDollar ? '0.01' : '1'}
 						min="0"
 						bind:value={amount}
@@ -293,7 +337,7 @@
 						<Button
 							variant="outline"
 							size="sm"
-							class="h-7 text-xs"
+							class="h-10 text-sm sm:h-7 sm:text-xs"
 							disabled={loading}
 							onclick={() => setQuickAmount(quick.fraction)}
 						>
@@ -369,8 +413,11 @@
 		</div>
 
 		<Dialog.Footer class="flex gap-2">
-			<Button variant="outline" onclick={handleClose} disabled={loading}>Cancel</Button>
+			<Button variant="outline" class="max-sm:h-11" onclick={handleClose} disabled={loading}>
+				Cancel
+			</Button>
 			<Button
+				class="max-sm:h-11 max-sm:text-base"
 				onclick={handleTrade}
 				disabled={!canTrade}
 				variant={type === 'BUY' ? 'default' : 'destructive'}

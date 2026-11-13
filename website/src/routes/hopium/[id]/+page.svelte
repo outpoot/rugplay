@@ -41,6 +41,25 @@
 	let betSide = $state<boolean>(true);
 	let placingBet = $state(false);
 	let customBetAmount = $state('');
+	let predictionCard = $state<HTMLElement | null>(null);
+	let predictionCardVisible = $state(false);
+
+	$effect(() => {
+		if (!predictionCard) return;
+		const observer = new IntersectionObserver(
+			([entry]) => (predictionCardVisible = entry.isIntersecting),
+			{ threshold: 0.4 }
+		);
+		observer.observe(predictionCard);
+		return () => observer.disconnect();
+	});
+
+	function pickSide(side: boolean) {
+		haptic.trigger('selection');
+		betSide = side;
+		predictionCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+	}
+
 	let shouldSignIn = $state(false);
 
 	let userBalance = $derived($PORTFOLIO_SUMMARY ? $PORTFOLIO_SUMMARY.baseCurrencyBalance : 0);
@@ -155,6 +174,8 @@
 					timeVisible: true,
 					rightOffset: 5
 				},
+				// Let vertical swipes over the chart scroll the page on touch screens
+				handleScroll: { vertTouchDrag: false },
 				crosshair: {
 					mode: 1,
 					vertLine: { color: '#758696', width: 1, style: 2, visible: true, labelVisible: true },
@@ -171,7 +192,9 @@
 				}
 			});
 
-			lineSeries.setData(probabilityData);
+			const byTime = new Map<number, (typeof probabilityData)[number]>();
+			for (const point of probabilityData) byTime.set(Number(point.time), point);
+			lineSeries.setData([...byTime.values()].sort((a, b) => Number(a.time) - Number(b.time)));
 			chart.timeScale().fitContent();
 
 			const handleResize = () => chart?.applyOptions({ width: container.clientWidth });
@@ -226,7 +249,7 @@
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
-<div class="container mx-auto max-w-7xl p-6">
+<div class="container mx-auto max-w-7xl py-6 sm:px-6">
 	{#if loading}
 		<HopiumQuestionSkeleton />
 	{:else if !question}
@@ -239,12 +262,12 @@
 			</div>
 		</div>
 	{:else}
-		<div class="flex items-center gap-3">
-			<div class="bg-muted rounded-lg p-4">
-				<HugeiconsIcon icon={MessageQuestionIcon} class="h-14 w-14" />
+		<div class="flex items-start gap-3 sm:items-center">
+			<div class="bg-muted shrink-0 rounded-lg p-2 sm:p-4">
+				<HugeiconsIcon icon={MessageQuestionIcon} class="h-8 w-8 sm:h-14 sm:w-14" />
 			</div>
-			<div class="flex-1">
-				<h1 class="text-2xl font-semibold break-all">{question.question}</h1>
+			<div class="min-w-0 flex-1">
+				<h1 class="text-xl font-semibold break-words sm:text-2xl">{question.question}</h1>
 				{#if question.status === 'ACTIVE'}
 					<p class="text-muted-foreground mt-1 text-sm">
 						{formatTimeUntil(question.resolutionDate).startsWith('Ended')
@@ -295,7 +318,7 @@
 			</HoverCard.Root>
 		</div>
 
-		<div class="grid gap-8">
+		<div class="grid grid-cols-1 gap-8">
 			<!-- Main content grid with better spacing -->
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 				<!-- Left: Chart (2/3 width) -->
@@ -319,7 +342,7 @@
 						<Card.Content>
 							{#if probabilityData.length === 0}
 								<div
-									class="border-muted flex h-[400px] items-center justify-center rounded-lg border-2 border-dashed"
+									class="border-muted flex h-[240px] items-center justify-center rounded-lg border-2 border-dashed sm:h-[400px]"
 								>
 									<div class="text-center">
 										<HugeiconsIcon icon={ChartColumnIcon} class="text-muted-foreground mx-auto mb-3 h-12 w-12" />
@@ -327,7 +350,7 @@
 									</div>
 								</div>
 							{:else}
-								<div class="h-[400px] w-full rounded-lg border" bind:this={chartContainer}></div>
+								<div class="h-[280px] w-full rounded-lg border sm:h-[400px]" bind:this={chartContainer}></div>
 							{/if}
 						</Card.Content>
 					</Card.Root>
@@ -336,7 +359,7 @@
 				<!-- Right: Trading Controls (1/3 width) -->
 				<div class="space-y-6 lg:col-span-1">
 					<!-- Trading Card -->
-					<Card.Root>
+					<Card.Root bind:ref={predictionCard}>
 						<Card.Header>
 							<Card.Title>Make Prediction</Card.Title>
 						</Card.Header>
@@ -346,7 +369,7 @@
 								<Button
 									class={betSide
 										? 'bg-success/80 hover:bg-success/90 w-full'
-										: 'bg-muted hover:bg-muted/90 w-full'}
+										: 'bg-muted text-foreground hover:bg-muted/80 w-full'}
 									size="lg"
 								onclick={() => { haptic.trigger('selection'); betSide = true; }}
 								disabled={question.aiResolution !== null}
@@ -359,7 +382,7 @@
 							<Button
 								class={!betSide
 									? 'bg-destructive hover:bg-destructive/90 w-full'
-									: 'bg-muted hover:bg-muted/90 w-full'}
+									: 'bg-muted text-foreground hover:bg-muted/80 w-full'}
 								size="lg"
 								onclick={() => { haptic.trigger('selection'); betSide = false; }}
 									disabled={question.aiResolution !== null}
@@ -375,6 +398,7 @@
 							<div class="space-y-2">
 								<Input
 									type="number"
+									inputmode="decimal"
 									step="0.01"
 									min="0.01"
 									placeholder="Enter amount..."
@@ -604,15 +628,15 @@
 						<div class="space-y-4">
 							{#each question.recentBets as bet}
 								{#if bet.user}
-									<div class="flex items-center justify-between rounded-xl border p-4">
-										<div class="flex items-center gap-4">
+									<div class="flex items-center justify-between gap-3 rounded-xl border p-3 sm:p-4">
+										<div class="flex min-w-0 items-center gap-2 sm:gap-4">
 											<HoverCard.Root>
-												<HoverCard.Trigger>
+												<HoverCard.Trigger class="min-w-0">
 													<button
-														class="flex cursor-pointer items-center gap-3 text-left"
+														class="flex min-w-0 max-w-full cursor-pointer items-center gap-2 text-left sm:gap-3"
 														onclick={() => goto(`/user/${bet.user?.username}`)}
 													>
-														<Avatar.Root class="h-10 w-10">
+														<Avatar.Root class="h-8 w-8 shrink-0 sm:h-10 sm:w-10">
 															<Avatar.Image
 																src={getPublicUrl(bet.user?.image || null)}
 																alt={bet.user?.name || bet.user?.username}
@@ -623,11 +647,11 @@
 																)}</Avatar.Fallback
 															>
 														</Avatar.Root>
-														<div>
-															<div class="font-semibold hover:underline">
+														<div class="min-w-0">
+															<div class="truncate font-semibold hover:underline">
 																<UserName name={bet.user?.name || 'Deleted User'} nameColor={bet.user?.nameColor} />
 															</div>
-															<div class="text-muted-foreground text-sm">
+															<div class="text-muted-foreground truncate text-xs sm:text-sm">
 																@{bet.user?.username || 'deleted_user'}
 															</div>
 														</div>
@@ -639,13 +663,13 @@
 													{/if}
 												</HoverCard.Content>
 											</HoverCard.Root>
-											<Badge variant="destructive" class={bet.side ? 'bg-success/80!' : ''}>
+											<Badge variant="destructive" class="shrink-0 {bet.side ? 'bg-success/80!' : ''}">
 												{bet.side ? 'YES' : 'NO'}
 											</Badge>
 										</div>
-										<div class="text-right">
-											<div class="text-lg font-bold">${bet.amount.toFixed(2)}</div>
-											<div class="text-muted-foreground text-sm">
+										<div class="shrink-0 text-right">
+											<div class="text-base font-bold sm:text-lg">${bet.amount.toFixed(2)}</div>
+											<div class="text-muted-foreground text-xs sm:text-sm">
 												{new Date(bet.createdAt).toLocaleDateString()}
 											</div>
 										</div>
@@ -657,5 +681,41 @@
 				</Card.Root>
 			{/if}
 		</div>
+
+		{#if question.status === 'ACTIVE' && question.aiResolution === null}
+			<div
+				class="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 z-20 -mx-4 mt-6 border-t px-4 pb-3 pt-3 backdrop-blur transition-[translate,opacity] duration-200 max-md:bottom-[calc(3.5rem+env(safe-area-inset-bottom))] sm:-mx-10 sm:px-10 md:pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden [:root[data-typing]_&]:max-md:hidden {predictionCardVisible
+					? 'pointer-events-none translate-y-4 opacity-0'
+					: ''}"
+				aria-hidden={predictionCardVisible || undefined}
+			>
+				<p class="text-muted-foreground mb-2 truncate text-xs">
+					<span class="text-success font-medium">{question.yesPercentage.toFixed(1)}% YES</span>
+					· {formatTimeUntil(question.resolutionDate).startsWith('Ended')
+						? 'Resolving'
+						: `Ends in ${formatTimeUntil(question.resolutionDate)}`}
+				</p>
+				{#if $USER_DATA}
+					<div class="grid grid-cols-2 gap-2">
+						<Button
+							size="lg"
+							class="bg-success/80 hover:bg-success/90 h-11 text-white"
+							onclick={() => pickSide(true)}
+						>
+							<span class="font-bold">YES</span>
+							<span class="text-sm opacity-90">{question.yesPercentage.toFixed(1)}¢</span>
+						</Button>
+						<Button size="lg" variant="destructive" class="h-11" onclick={() => pickSide(false)}>
+							<span class="font-bold">NO</span>
+							<span class="text-sm opacity-90">{question.noPercentage.toFixed(1)}¢</span>
+						</Button>
+					</div>
+				{:else}
+					<Button size="lg" class="h-11 w-full" onclick={() => (shouldSignIn = true)}>
+						Sign in to predict
+					</Button>
+				{/if}
+			</div>
+		{/if}
 	{/if}
 </div>

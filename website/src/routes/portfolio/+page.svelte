@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PullToRefresh from '$lib/components/self/PullToRefresh.svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import DataTable from '$lib/components/self/DataTable.svelte';
@@ -270,7 +271,7 @@
 		{
 			key: 'timestamp',
 			label: 'Date',
-			class: 'hidden md:table-cell md:w-[18%] text-muted-foreground text-sm',
+			class: 'md:w-[18%] text-muted-foreground text-sm',
 			render: (value: any) => formatDate(value)
 		}
 	]);
@@ -290,7 +291,9 @@
 <SendMoneyModal bind:open={sendMoneyModalOpen} onSuccess={handleTransferSuccess} />
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
-<div class="container mx-auto max-w-7xl p-6">
+<PullToRefresh onRefresh={() => Promise.all([loadPortfolioData(), fetchRecentTransactions()])} />
+
+<div class="container mx-auto max-w-7xl py-6 sm:px-6">
 	<div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
 		<div>
 			<h1 class="text-3xl font-bold">Portfolio</h1>
@@ -328,9 +331,9 @@
 		<!-- Portfolio Overview -->
 		<div class="mb-8">
 			<!-- Portfolio Summary Cards -->
-			<div class="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
+			<div class="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
 				<!-- Total Portfolio Value -->
-				<Card.Root class="text-success gap-1">
+				<Card.Root class="text-success col-span-2 gap-1 lg:col-span-1">
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
 							<HugeiconsIcon icon={Wallet01Icon} class="h-4 w-4" />
@@ -343,15 +346,15 @@
 				</Card.Root>
 
 				<!-- Base Currency Balance -->
-				<Card.Root class="gap-1">
-					<Card.Header>
+				<Card.Root class="gap-1 py-4 sm:py-6">
+					<Card.Header class="px-4 sm:px-6">
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
 							<HugeiconsIcon icon={DollarCircleIcon} class="h-4 w-4" />
 							Cash Balance
 						</Card.Title>
 					</Card.Header>
-					<Card.Content>
-						<p class="text-3xl font-bold">
+					<Card.Content class="px-4 sm:px-6">
+						<p class="text-2xl font-bold sm:text-3xl">
 							{formatValue(portfolioData?.baseCurrencyBalance || 0)}
 						</p>
 						<p class="text-muted-foreground text-xs">
@@ -363,15 +366,15 @@
 				</Card.Root>
 
 				<!-- Coin Holdings Value -->
-				<Card.Root class="gap-1">
-					<Card.Header>
+				<Card.Root class="gap-1 py-4 sm:py-6">
+					<Card.Header class="px-4 sm:px-6">
 						<Card.Title class="flex items-center gap-2 text-sm font-medium">
 							<HugeiconsIcon icon={TradeUpIcon} class="h-4 w-4" />
 							Coin Holdings
 						</Card.Title>
 					</Card.Header>
-					<Card.Content>
-						<p class="text-3xl font-bold">{formatValue(portfolioData?.totalCoinValue || 0)}</p>
+					<Card.Content class="px-4 sm:px-6">
+						<p class="text-2xl font-bold sm:text-3xl">{formatValue(portfolioData?.totalCoinValue || 0)}</p>
 						<p class="text-muted-foreground text-xs">
 							{portfolioData?.coinHoldings.length || 0} positions
 						</p>
@@ -407,6 +410,7 @@
 					<Card.Content>
 						<DataTable
 							columns={holdingsColumns}
+							mobileColumnOrder={['coin', 'value', 'percentageChange', 'change24h']}
 							data={holdingsRows}
 							onRowClick={(holding) => goto(`/coin/${holding.symbol}`)}
 						/>
@@ -435,6 +439,7 @@
 				<Card.Content>
 					<DataTable
 						columns={transactionsColumns}
+						mobileColumnOrder={['type', 'coin', 'totalBaseCurrencyAmount']}
 						data={transactions}
 						onRowClick={(tx) => !tx.isTransfer && goto(`/coin/${tx.coin.symbol}`)}
 						emptyIcon={Invoice03Icon}

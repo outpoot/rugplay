@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PullToRefresh from '$lib/components/self/PullToRefresh.svelte';
 	import * as Card from '$lib/components/ui/card';
 	import * as Popover from '$lib/components/ui/popover';
 	import * as Pagination from '$lib/components/ui/pagination';
@@ -35,6 +36,9 @@
 	import { WATCHED_SYMBOLS, loadWatchedSymbols, toggleWatched } from '$lib/stores/watchlist';
 	import { MediaQuery } from 'svelte/reactivity';
 	import type { CoinData, FilterOption, MarketResponse } from '$lib/types/market';
+	import TradeModal from '$lib/components/self/TradeModal.svelte';
+	import { longPress } from '$lib/utils/long-press';
+	import { haptic } from '$lib/stores/haptics';
 
 	let { data } = $props();
 
@@ -198,6 +202,32 @@
 
 		goto(url.toString(), { noScroll: true, replaceState: true });
 	}
+	let quickTradeCoin = $state<any>(null);
+	let quickTradeHolding = $state(0);
+	let quickTradeOpen = $state(false);
+	let quickTradeType = $state<'BUY' | 'SELL'>('BUY');
+
+	async function openQuickTrade(symbol: string) {
+		if (!$USER_DATA) return;
+		haptic.trigger('medium');
+		try {
+			const [coinResponse, holdingResponse] = await Promise.all([
+				fetch(`/api/coin/${encodeURIComponent(symbol)}`),
+				fetch(`/api/portfolio/holding/${encodeURIComponent(symbol)}`)
+			]);
+			if (!coinResponse.ok) throw new Error('Failed to load coin');
+			const { coin: details } = await coinResponse.json();
+			const holding = holdingResponse.ok ? await holdingResponse.json() : null;
+			quickTradeCoin = details;
+			quickTradeHolding = holding?.quantity ?? 0;
+			quickTradeType = 'BUY';
+			quickTradeOpen = true;
+		} catch (e) {
+			console.error('Quick trade failed to open:', e);
+			toast.error(`Couldn't open trading for *${symbol}`);
+		}
+	}
+
 	let marketRequest: AbortController | null = null;
 
 	async function fetchMarketData() {
@@ -346,7 +376,9 @@
 
 <svelte:window onkeydown={handleMarketKeydown} />
 
-<div class="container mx-auto max-w-7xl p-6">
+<PullToRefresh onRefresh={fetchMarketData} />
+
+<div class="container mx-auto max-w-7xl py-6 sm:px-6">
 	<header class="mb-8">
 		<div class="text-center">
 			<h1 class="mb-2 text-3xl font-bold">Market</h1>
@@ -361,6 +393,10 @@
 						bind:value={searchQuery}
 						bind:ref={searchInput}
 						placeholder="Search coins by name or symbol..."
+						enterkeyhint="search"
+						autocapitalize="off"
+						autocorrect="off"
+						spellcheck="false"
 						class="pl-10 pr-10"
 						onblur={updateSearchUrl}
 						onkeydown={handleSearchKeydown}
@@ -506,6 +542,9 @@
 		<div class="mb-4 flex items-center justify-between">
 			<div class="text-muted-foreground text-sm">
 				Showing {startIndex}-{endIndex} of {totalCount} coins
+				{#if $USER_DATA}
+					<span class="[@media(hover:hover)]:hidden"> · Hold a coin to trade</span>
+				{/if}
 			</div>
 			{#if hasActiveFilters}
 				<Button variant="link" size="sm" onclick={resetFilters} class="h-auto p-0">
@@ -544,11 +583,12 @@
 			{#each coins as coin, index}
 				{@const globalIndex = (currentPage - 1) * perPage + index + 1}
 				<Card.Root
-					class="group cursor-pointer gap-1 transition-all duration-200 hover:shadow-lg {index ===
+					class="group cursor-pointer gap-1 transition-all duration-200 hover:shadow-lg pointer-coarse:active:scale-[0.98] pointer-coarse:active:bg-muted/40 {index ===
 					selectedIndex
 						? 'ring-primary ring-2'
-						: ''}"
+						: ''} pointer-coarse:select-none [-webkit-touch-callout:none]"
 					onclick={() => goto(`/coin/${coin.symbol}`)}
+					{@attach longPress(() => openQuickTrade(coin.symbol))}
 				>
 					<Card.Header>
 						<div class="flex items-start justify-between gap-2">
@@ -663,3 +703,14 @@
 		{/if}
 	{/if}
 </div>
+
+{#if quickTradeCoin}
+	<TradeModal
+		bind:open={quickTradeOpen}
+		bind:type={quickTradeType}
+		switchable
+		coin={quickTradeCoin}
+		userHolding={quickTradeHolding}
+		onSuccess={fetchMarketData}
+	/>
+{/if}

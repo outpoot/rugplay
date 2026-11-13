@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PullToRefresh from '$lib/components/self/PullToRefresh.svelte';
 	import * as Card from '$lib/components/ui/card';
 	import * as Popover from '$lib/components/ui/popover';
 	import * as Pagination from '$lib/components/ui/pagination';
@@ -346,7 +347,9 @@
 	keywords="trading history game, transaction records simulator, crypto trading log, virtual trading history"
 />
 
-<div class="container mx-auto max-w-7xl p-6">
+<PullToRefresh onRefresh={fetchTransactions} />
+
+<div class="container mx-auto max-w-7xl py-6 sm:px-6">
 	<header class="mb-8">
 		<div class="text-center">
 			<h1 class="mb-2 text-3xl font-bold">Transactions</h1>
@@ -360,6 +363,10 @@
 					<Input
 						bind:value={searchQuery}
 						placeholder="Search by coin name or symbol..."
+						enterkeyhint="search"
+						autocapitalize="off"
+						autocorrect="off"
+						spellcheck="false"
 						class="pl-10 pr-4"
 						onblur={updateSearchUrl}
 						onkeydown={handleSearchKeydown}
@@ -506,6 +513,7 @@
 			{:else}
 				<DataTable
 					columns={transactionsColumns}
+					mobileColumnOrder={['type', 'coin', 'totalBaseCurrencyAmount']}
 					data={transactions}
 					onRowClick={(tx) => {
 						if (tx.coin) {

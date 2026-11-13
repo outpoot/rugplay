@@ -369,7 +369,7 @@
 	keywords="game account settings, profile settings game, privacy settings, audio settings game"
 />
 
-<div class="container mx-auto max-w-2xl p-6">
+<div class="container mx-auto max-w-2xl py-6 sm:px-6">
 	<h1 class="mb-6 text-2xl font-bold">Settings</h1>
 
 	{#if !$USER_DATA}
@@ -391,7 +391,7 @@
 			<Card.Content>
 				<div class="mb-6 flex items-center gap-4">
 					<div
-						class="group relative cursor-pointer"
+						class="group relative shrink-0 cursor-pointer"
 						role="button"
 						tabindex="0"
 						onclick={handleAvatarClick}
@@ -407,9 +407,12 @@
 							<span class="text-xs text-white">Change</span>
 						</div>
 					</div>
-					<div>
-						<h3 class="text-lg font-semibold">{name}</h3>
-						<p class="text-muted-foreground text-sm">@{username}</p>
+					<div class="min-w-0">
+						<h3 class="break-words text-lg font-semibold">{name}</h3>
+						<p class="text-muted-foreground truncate text-sm">@{username}</p>
+						<p class="text-muted-foreground mt-1 text-xs [@media(hover:hover)]:hidden">
+							Tap your photo to change it
+						</p>
 					</div>
 				</div>
 
@@ -446,6 +449,9 @@
 								bind:value={username}
 								required
 								pattern={'^[a-zA-Z0-9_]{3,30}$'}
+								autocapitalize="none"
+								autocorrect="off"
+								spellcheck="false"
 								class="pl-8"
 							/>
 							<div class="absolute right-3 top-1.5">
@@ -620,7 +626,9 @@
 			</Card.Header>
 			<Card.Content class="space-y-4">
 				<div class="space-y-4">
-					<div class="flex items-center justify-between rounded-lg border p-4">
+					<div
+						class="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+					>
 						<div class="space-y-1">
 							<h4 class="text-sm font-medium">Download Your Data</h4>
 							<p class="text-muted-foreground text-xs">
@@ -633,7 +641,7 @@
 							size="sm"
 							onclick={downloadUserData}
 							disabled={isDownloading}
-							class="ml-4"
+							class="shrink-0 self-start sm:ml-4 sm:self-auto"
 						>
 							<HugeiconsIcon icon={Download01Icon} class="h-4 w-4" />
 							{isDownloading ? 'Downloading...' : 'Download Data'}
@@ -641,7 +649,7 @@
 					</div>
 
 					<div
-						class="border-destructive/20 bg-destructive/5 flex items-center justify-between rounded-lg border p-4"
+						class="border-destructive/20 bg-destructive/5 flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
 					>
 						<div class="space-y-1">
 							<h4 class="text-destructive text-sm font-medium">Delete Account</h4>
@@ -654,7 +662,7 @@
 							variant="destructive"
 							size="sm"
 							onclick={() => (deleteDialogOpen = true)}
-							class="ml-4"
+							class="shrink-0 self-start sm:ml-4 sm:self-auto"
 						>
 							<HugeiconsIcon icon={Delete01Icon} class="h-4 w-4" />
 							Delete Account

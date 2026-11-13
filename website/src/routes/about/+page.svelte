@@ -30,7 +30,7 @@
 	/>
 </svelte:head>
 
-<div class="container mx-auto space-y-8 px-4 py-8">
+<div class="container mx-auto space-y-8 py-8 sm:px-4">
 	<div class="space-y-4 text-center">
 		<div class="mb-4 flex items-center justify-center gap-2">
 			<img src="/rugplay.svg" class="h-12 w-12" alt="Rugplay" />

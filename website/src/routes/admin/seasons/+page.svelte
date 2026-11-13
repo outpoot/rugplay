@@ -81,7 +81,7 @@
 		</div>
 	</div>
 {:else}
-	<div class="container mx-auto max-w-3xl space-y-4 p-4">
+	<div class="container mx-auto max-w-3xl space-y-4 py-4 sm:px-4">
 		<div>
 			<h1 class="text-2xl font-bold">Season settings</h1>
 			<p class="text-muted-foreground text-sm">Schedule the next season and choose its cover image.</p>

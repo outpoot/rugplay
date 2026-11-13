@@ -530,9 +530,9 @@
 	</div>
 {/if}
 
-<div class="container mx-auto max-w-5xl space-y-14">
+<div class="container mx-auto max-w-5xl space-y-10 py-6 md:space-y-14 md:py-0">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
+	<div class="flex items-center justify-between gap-3">
 		<div>
 			<h1 class="flex items-center gap-2 text-2xl font-bold">
 				<HugeiconsIcon icon={ShoppingBasket01Icon} class="h-7 w-7" />
@@ -540,7 +540,7 @@
 			</h1>
 			<p class="text-muted-foreground mt-1 text-sm">Unlock cosmetics with Gems</p>
 		</div>
-		<div class="flex items-center gap-2 rounded-lg border px-4 py-2">
+		<div class="flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 sm:px-4">
 			<HugeiconsIcon icon={GemIcon} size={20} color="#ca00ff" strokeWidth={2} />
 			<span class="font-mono font-bold">
 				{$GEMS_BALANCE !== null ? $GEMS_BALANCE.toLocaleString() : '—'}

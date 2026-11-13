@@ -218,10 +218,10 @@
 	bind:this={fullscreenContainer}
 	class="treemap-container {isFullscreen ? 'fullscreen-mode' : ''}"
 >
-	<div class="container mx-auto px-4 py-8 {isFullscreen ? 'fullscreen-content' : ''}">
+	<div class="container mx-auto py-8 sm:px-4 {isFullscreen ? 'fullscreen-content' : ''}">
 		<div class="mb-6">
-			<div class="mb-2 flex items-center justify-between">
-				<div class="flex items-center gap-3">
+			<div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+				<div class="flex min-w-0 items-center gap-3">
 					<HugeiconsIcon icon={Analytics01Icon} class="h-6 w-6" />
 					<h1 class="text-2xl font-bold">Market Treemap</h1>
 				</div>
@@ -242,14 +242,14 @@
 							Paused
 						{/if}
 					</Button>
-					<Button variant="outline" size="sm" onclick={toggleFullscreen}>
-						{#if isFullscreen}
-							<HugeiconsIcon icon={FullScreenIcon} class="h-4 w-4" />
-							Exit Fullscreen
-						{:else}
-							<HugeiconsIcon icon={FullScreenIcon} class="h-4 w-4" />
-							Fullscreen
-						{/if}
+					<Button
+						variant="outline"
+						size="sm"
+						onclick={toggleFullscreen}
+						aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+					>
+						<HugeiconsIcon icon={FullScreenIcon} class="h-4 w-4" />
+						<span class="hidden sm:inline">{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
 					</Button>
 				</div>
 			</div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PullToRefresh from '$lib/components/self/PullToRefresh.svelte';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as HoverCard from '$lib/components/ui/hover-card';
@@ -179,7 +180,9 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-<div class="container mx-auto max-w-7xl p-6">
+<PullToRefresh onRefresh={fetchQuestions} />
+
+<div class="container mx-auto max-w-7xl py-6 sm:px-6">
 	<header class="mb-8">
 		<div class="text-center">
 			<h1 class="mb-2 flex items-center justify-center gap-2 text-3xl font-bold">
@@ -230,18 +233,18 @@
 				<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 					{#each questions as question}
 						<Card.Root
-							class="bg-card hover:bg-card/90 flex cursor-pointer flex-col overflow-hidden transition-colors"
+							class="bg-card hover:bg-card/90 pointer-coarse:active:scale-[0.98] pointer-coarse:active:bg-muted/40 flex cursor-pointer flex-col overflow-hidden transition-all"
 							onclick={() => goto(`/hopium/${question.id}`)}
 						>
 							<Card.Header class="pb-4">
 								<div class="flex items-start justify-between gap-3">
 									<div class="min-w-0 flex-1">
-										<h3 class="break-all text-lg font-medium">
+										<h3 class="break-words text-lg font-medium">
 											{question.question}
 										</h3>
 									</div>
 
-									<div class="flex flex-col items-end gap-2">
+									<div class="flex shrink-0 flex-col items-end gap-2">
 										{#if question.status === 'RESOLVED'}
 											<Badge
 												variant="destructive"

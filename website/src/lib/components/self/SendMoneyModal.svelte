@@ -211,6 +211,9 @@
 					type="text"
 					bind:value={recipientUsername}
 					placeholder="Enter username (without @)"
+					autocapitalize="none"
+					autocorrect="off"
+					spellcheck="false"
 					class="flex-1"
 				/>
 			</div>
@@ -275,6 +278,7 @@
 					<Input
 						id="amount"
 						type="number"
+						inputmode="decimal"
 						step={transferType === 'CASH' ? '0.01' : '0.000001'}
 						min="0"
 						bind:value={amount}

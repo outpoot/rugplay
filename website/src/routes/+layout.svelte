@@ -4,11 +4,13 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Toaster } from '$lib/components/ui/sonner';
 
+	import MobileTabBar from '$lib/components/self/MobileTabBar.svelte';
 	import AppSidebar from '$lib/components/self/AppSidebar.svelte';
 
 	import { USER_DATA } from '$lib/stores/user-data';
 	import { onMount, untrack } from 'svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { MediaQuery } from 'svelte/reactivity';
+	import { invalidateAll, onNavigate } from '$app/navigation';
 	import { ModeWatcher } from 'mode-watcher';
 	import { page } from '$app/state';
 	import { websocketController } from '$lib/stores/websocket';
@@ -41,6 +43,9 @@
 	});
 
 	onMount(() => {
+		// iOS Safari only applies :active (pressed) styles when some touch listener exists
+		const noop = () => {};
+		document.addEventListener('touchstart', noop, { passive: true });
 		if (isApplePlatform()) shortcutLabel = '⌘K';
 		websocketController.connect();
 
@@ -138,6 +143,56 @@
 		return titleMap[routeId] || 'Rugplay';
 	}
 
+
+	let pageHeadingInView = $state(true);
+	onMount(() => {
+		let frame = 0;
+		const check = () => {
+			frame = 0;
+			const heading = document.querySelector<HTMLElement>('.main-content-area h1');
+			pageHeadingInView = !!heading && heading.getBoundingClientRect().bottom > 52;
+		};
+		const schedule = () => {
+			if (!frame) frame = requestAnimationFrame(check);
+		};
+		// Headings often render after data loads
+		const content = document.querySelector('.main-content-area');
+		const observer = new MutationObserver(schedule);
+		if (content) observer.observe(content, { childList: true, subtree: true });
+		window.addEventListener('scroll', schedule, { passive: true });
+		check();
+		return () => {
+			observer.disconnect();
+			window.removeEventListener('scroll', schedule);
+			if (frame) cancelAnimationFrame(frame);
+		};
+	});
+
+	const hasTabBar = new MediaQuery('max-width: 767px', false);
+	let toastOffset = $derived(
+		hasTabBar.current
+			? { top: 'calc(3.5rem + env(safe-area-inset-top))', left: '16px', right: '16px' }
+			: undefined
+	);
+
+	onNavigate((navigation) => {
+		if (
+			!document.startViewTransition ||
+			navigation.from?.url.pathname === navigation.to?.url.pathname ||
+			!window.matchMedia('(max-width: 767px)').matches ||
+			window.matchMedia('(prefers-reduced-motion: reduce)').matches
+		) {
+			return;
+		}
+		return new Promise((resolve) => {
+			const transition = document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+			// A skipped transition still navigates; don't surface it as an error
+			transition.ready.catch(() => {});
+		});
+	});
 </script>
 
 <svelte:window onkeydown={handleGlobalKeydown} />
@@ -146,19 +201,31 @@
 
 <!-- <RenderScan /> -->
 <ModeWatcher />
-<Toaster richColors={true} />
+<Toaster
+	richColors={true}
+	position={hasTabBar.current ? 'top-center' : undefined}
+	offset={toastOffset}
+	mobileOffset={toastOffset}
+/>
 
 <Sidebar.Provider>
 	<AppSidebar />
 
 	<Sidebar.Inset class="sidebar-container">
 		<header
-			class="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear"
+			style="view-transition-name: mobile-header;"
+			class="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 max-md:bg-background/90 max-md:supports-[backdrop-filter]:bg-background/75 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height,border-color] ease-linear max-md:sticky max-md:top-0 max-md:z-30 max-md:backdrop-blur {pageHeadingInView
+				? 'max-md:border-transparent'
+				: ''}"
 		>
 			<div class="flex w-full items-center gap-4 px-4 lg:px-6">
-				<Sidebar.Trigger class="-ml-1" />
+				<Sidebar.Trigger class="-ml-1 max-md:hidden" />
 
-				<h1 class="mr-6 text-base font-medium">
+				<h1
+					class="mr-6 min-w-0 truncate text-base font-medium max-md:transition-opacity max-md:duration-200 {pageHeadingInView
+						? 'max-md:opacity-0'
+						: ''}"
+				>
 					{getPageTitle(page.route.id)}
 				</h1>
 
@@ -176,7 +243,7 @@
 			</div>
 		</header>
 
-		<div class="main-content-area">
+		<div class="main-content-area max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
 			<div class="@container/main flex flex-col gap-2">
 				<div class="flex flex-col gap-4 md:gap-6">
 					<div class="px-4 md:py-4 lg:px-6">
@@ -186,4 +253,6 @@
 			</div>
 		</div>
 	</Sidebar.Inset>
+
+	<MobileTabBar />
 </Sidebar.Provider>

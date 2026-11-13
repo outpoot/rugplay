@@ -290,13 +290,13 @@
 
 					<div class="border-border border-b pb-4 last:border-b-0">
 						<div class="flex items-start gap-3">
-							<button onclick={() => goto(`/user/${comment.userUsername}`)} class="cursor-pointer">
+							<button onclick={() => goto(`/user/${comment.userUsername}`)} class="shrink-0 cursor-pointer">
 								<Avatar.Root class="h-8 w-8">
 									<Avatar.Image src={getPublicUrl(comment.userImage)} alt={comment.userName} />
 									<Avatar.Fallback>{comment.userName?.charAt(0) || '?'}</Avatar.Fallback>
 								</Avatar.Root>
 							</button>
-							<div class="flex-1 space-y-1">
+							<div class="min-w-0 flex-1 space-y-1">
 								<div class="flex items-center gap-2">
 									<HoverCard.Root>
 										<HoverCard.Trigger
@@ -345,7 +345,7 @@
 									{/if}
 								</div>
 							</div>
-							<div class="flex items-center">
+							<div class="flex shrink-0 items-center">
 								<Button
 									variant="ghost"
 									size="sm"

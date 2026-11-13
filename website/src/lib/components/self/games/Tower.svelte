@@ -274,6 +274,7 @@
 					<Input
 						id="tower-bet"
 						type="text"
+						inputmode="decimal"
 						value={betDisplay}
 						oninput={onBetInput}
 						onkeydown={(event: KeyboardEvent) => {

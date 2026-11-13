@@ -79,7 +79,7 @@
 
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
-<div class="container mx-auto max-w-4xl space-y-6 p-4 md:p-8">
+<div class="container mx-auto max-w-4xl space-y-6 py-4 md:p-8">
 	<div class="flex flex-col items-center justify-center">
 		<h1 class="text-3xl font-bold">API Access</h1>
 		<p class="text-muted-foreground">Manage your API access and usage</p>

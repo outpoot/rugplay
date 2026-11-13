@@ -126,6 +126,74 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  a, button, input, select, textarea, label, summary, [role='button'], [role='tab'] {
+    touch-action: manipulation;
+  }
+}
+
+/* viewport-fit=cover: keep content clear of the notch in landscape */
+[data-slot="sidebar-container"] {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+[data-slot="sidebar-inset"] {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+@media (max-width: 767px) {
+  [data-slot="sidebar-inset"] {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+
+  ::view-transition-old(root) {
+    animation: 90ms ease-out both vt-fade-out;
+  }
+  ::view-transition-new(root) {
+    animation: 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both vt-rise-in;
+  }
+  ::view-transition-old(mobile-tab-bar),
+  ::view-transition-new(mobile-tab-bar),
+  ::view-transition-old(mobile-header),
+  ::view-transition-new(mobile-header) {
+    animation: none;
+  }
+}
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+@keyframes vt-rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+/* Already off screen after a swipe; the exit animation would make it jump back first */
+[data-swipe-dismissed] {
+  animation: none !important;
+}
+
+/* Keep scrolled-to content out from under the sticky phone header */
+@media (max-width: 767px) {
+  html {
+    scroll-padding-top: 3.5rem;
+  }
+}
+
+/* Scroll shadows: the "local" covers move with the content and hide each shadow at its edge */
+@utility scroll-shadow-x {
+  background:
+    linear-gradient(to right, var(--card) 40%, transparent) left center / 32px 100% no-repeat local,
+    linear-gradient(to left, var(--card) 40%, transparent) right center / 32px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, color-mix(in oklab, var(--foreground) 30%, transparent), transparent) left center / 16px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, color-mix(in oklab, var(--foreground) 30%, transparent), transparent) right center / 16px 100% no-repeat scroll;
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Animated name colors */

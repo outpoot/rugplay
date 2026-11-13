@@ -10,7 +10,7 @@
 
     function getNotificationColorClasses(type: string, isNew: boolean, isRead: boolean) {
         const base =
-            'hover:bg-muted/50 flex w-full items-start gap-4 rounded-md p-3 text-left transition-all duration-200';
+            'hover:bg-muted/50 pointer-coarse:active:bg-muted flex w-full items-start gap-3 rounded-md p-3 sm:gap-4 text-left transition-all duration-200';
 
         if (isNew) {
             return `${base} bg-primary/10`;

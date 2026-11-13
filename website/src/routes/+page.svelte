@@ -145,7 +145,7 @@
 		{
 			key: 'rank',
 			label: '#',
-			class: 'text-muted-foreground w-10 tabular-nums',
+			class: 'text-muted-foreground hidden w-10 tabular-nums sm:table-cell',
 			sortable: true
 		},
 		{
@@ -208,7 +208,7 @@
 	</h2>
 {/snippet}
 
-<div class="container mx-auto p-6">
+<div class="container mx-auto py-6 sm:px-6">
 	<header class="mb-6">
 		<h1 class="mb-2 truncate text-2xl font-bold sm:text-3xl">
 			{$USER_DATA ? getTimeBasedGreeting($USER_DATA?.name) : 'Welcome to Rugplay!'}
@@ -236,7 +236,7 @@
 					{#each watchlist as coin (coin.symbol)}
 						<a
 							href={`/coin/${coin.symbol}`}
-							class="hover:bg-muted flex shrink-0 items-center gap-2 rounded-full border py-1 pr-2.5 pl-1 text-sm transition-colors"
+							class="hover:bg-muted pointer-coarse:active:bg-muted flex shrink-0 items-center gap-2 rounded-full border py-1 pr-2.5 pl-1 text-sm transition-colors"
 						>
 							<CoinIcon icon={coin.icon} symbol={coin.symbol} name={coin.name} size={6} class="shrink-0" />
 							<span class="font-semibold">*{coin.symbol}</span>
@@ -281,7 +281,7 @@
 					{#each coins.slice(0, 6) as coin (coin.symbol)}
 						<a
 							href={`/coin/${coin.symbol}`}
-							class="bg-card hover:border-foreground/20 group relative flex flex-col justify-between gap-2 overflow-hidden rounded-xl border p-3 transition-all hover:shadow-md"
+							class="bg-card hover:border-foreground/20 pointer-coarse:active:scale-[0.98] pointer-coarse:active:bg-muted/40 group relative flex flex-col justify-between gap-2 overflow-hidden rounded-xl border p-3 transition-all hover:shadow-md"
 						>
 							<div class="flex min-w-0 items-center gap-2.5">
 								<CoinIcon
@@ -352,7 +352,7 @@
 						{#each group.coins as coin, i (coin.symbol)}
 							<a
 								href={`/coin/${coin.symbol}`}
-								class="hover:bg-muted -mx-1.5 flex items-center gap-2 rounded-md px-1.5 py-1.5 text-sm transition-colors"
+								class="hover:bg-muted pointer-coarse:active:bg-muted -mx-1.5 flex items-center gap-2 rounded-md px-1.5 py-1.5 text-sm transition-colors"
 							>
 								<span class="text-muted-foreground w-3 text-center text-xs tabular-nums">
 									{i + 1}

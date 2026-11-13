@@ -559,7 +559,7 @@
 		{
 			key: 'timestamp',
 			label: 'Date',
-			class: 'hidden md:table-cell md:w-[18%] text-muted-foreground text-sm',
+			class: 'md:w-[18%] text-muted-foreground text-sm',
 			render: (value: any) => formatDate(value)
 		}
 	];
@@ -600,7 +600,7 @@
 	/>
 {/if}
 
-<div class="container mx-auto max-w-6xl p-6">
+<div class="container mx-auto max-w-6xl py-6 sm:px-6">
 	{#if loading}
 		<ProfileSkeleton />
 	{:else if !profileData}
@@ -613,7 +613,7 @@
 	{:else}
 		<!-- Profile Header Card -->
 		<Card.Root class="mb-6 py-0">
-			<Card.Content class="p-6">
+			<Card.Content class="p-4 sm:p-6">
 				<div class="flex flex-col gap-4 sm:flex-row sm:items-start">
 					<!-- Avatar -->
 					<div class="flex-shrink-0">
@@ -632,23 +632,23 @@
 					<div class="min-w-0 flex-1">
 						<div class="mb-3">
 							<div class="mb-1 flex flex-wrap items-center gap-2">
-								<h1 class="text-2xl font-bold sm:text-3xl"><UserName name={profileData.profile.name} nameColor={profileData.profile.nameColor} /></h1>
+								<h1 class="min-w-0 break-words text-2xl font-bold sm:text-3xl"><UserName name={profileData.profile.name} nameColor={profileData.profile.nameColor} truncate={false} /></h1>
 
 								<!-- Badges -->
 								<ProfileBadges user={profileData.profile} />
 							</div>
-							<p class="text-muted-foreground text-lg">@{profileData.profile.username}</p>
+							<p class="text-muted-foreground truncate text-lg">@{profileData.profile.username}</p>
 						</div>
 
 						{#if profileData.profile.bio}
-							<p class="text-muted-foreground mb-3 max-w-2xl leading-relaxed">
+							<p class="text-muted-foreground mb-3 max-w-2xl break-words leading-relaxed">
 								{profileData.profile.bio}
 							</p>
 						{/if}
 
-						<div class="text-muted-foreground flex items-center gap-2 text-sm">
-							<HugeiconsIcon icon={Calendar01Icon} class="h-4 w-4" />
-							<span>Joined {memberSince}</span>
+						<div class="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+							<HugeiconsIcon icon={Calendar01Icon} class="h-4 w-4 shrink-0" />
+							<span class="whitespace-nowrap">Joined {memberSince}</span>
 							<span aria-hidden="true">·</span>
 							<button
 								class="hover:text-foreground cursor-pointer transition-colors hover:underline"
@@ -668,7 +668,7 @@
 						</div>
 
 					</div>
-					<div class="ml-auto flex flex-wrap items-center gap-2 self-start">
+					<div class="flex flex-wrap items-center gap-2 self-start sm:ml-auto">
 						{#if $USER_DATA && !isOwnProfile}
 							<Button
 								variant={isFollowing ? 'outline' : 'default'}
@@ -726,15 +726,15 @@
 		</Card.Root>
 
 		<!-- Main Portfolio Stats -->
-		<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+		<div class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
 			<!-- Total Portfolio Value -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-muted-foreground text-sm font-medium">Total Portfolio</div>
-						<HugeiconsIcon icon={Wallet01Icon} class="text-muted-foreground h-4 w-4" />
+						<HugeiconsIcon icon={Wallet01Icon} class="text-muted-foreground h-4 w-4 shrink-0" />
 					</div>
-					<div class="mt-1 text-2xl font-bold">
+					<div class="mt-1 text-xl font-bold sm:text-2xl">
 						{formatValue(totalPortfolioValue)}
 					</div>
 					<p class="text-muted-foreground text-xs">{profileData.stats.holdingsCount} holdings</p>
@@ -743,11 +743,11 @@
 
 			<!-- Liquid Value -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-muted-foreground text-sm font-medium">Liquid Value</div>
 					</div>
-					<div class="text-success mt-1 text-2xl font-bold">
+					<div class="text-success mt-1 text-xl font-bold sm:text-2xl">
 						{formatValue(baseCurrencyBalance)}
 					</div>
 					<p class="text-muted-foreground text-xs">Available cash</p>
@@ -756,11 +756,11 @@
 
 			<!-- Illiquid Value -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-muted-foreground text-sm font-medium">Illiquid Value</div>
 					</div>
-					<div class="text-success mt-1 text-2xl font-bold">
+					<div class="text-success mt-1 text-xl font-bold sm:text-2xl">
 						{formatValue(holdingsValue)}
 					</div>
 					<p class="text-muted-foreground text-xs">Coin holdings</p>
@@ -769,15 +769,15 @@
 
 			<!-- Buy/Sell Ratio -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-muted-foreground text-sm font-medium">Buy/Sell Ratio</div>
 						<div class="flex gap-1">
 							<div class="bg-success h-2 w-2 rounded-full"></div>
 							<div class="h-2 w-2 rounded-full bg-red-500"></div>
 						</div>
 					</div>
-					<div class="mt-1 flex items-center gap-2">
+					<div class="mt-1 flex flex-wrap items-baseline gap-x-2">
 						<span class="text-success text-xl font-bold">{buyPercentage.toFixed(1)}%</span>
 						<span class="text-muted-foreground text-xs">buy</span>
 						<span class="text-xl font-bold text-red-600">{sellPercentage.toFixed(1)}%</span>
@@ -788,16 +788,16 @@
 		</div>
 
 		<!-- Buy & Sell Activity Breakdown -->
-		<div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
+		<div class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
 			<!-- Buy Activity -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-foreground text-sm font-medium">Buy Activity</div>
 						<HugeiconsIcon icon={TradeUpIcon} class="text-success h-4 w-4" />
 					</div>
 					<div class="mt-1">
-						<div class="text-success text-2xl font-bold">
+						<div class="text-success text-xl font-bold sm:text-2xl">
 							{formatValue(totalBuyVolume)}
 						</div>
 						<div class="text-muted-foreground text-xs">Total amount spent</div>
@@ -813,13 +813,13 @@
 
 			<!-- Sell Activity -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-foreground text-sm font-medium">Sell Activity</div>
 						<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4 text-red-600" />
 					</div>
 					<div class="mt-1">
-						<div class="text-2xl font-bold text-red-600">
+						<div class="text-xl font-bold sm:text-2xl text-red-600">
 							{formatValue(totalSellVolume)}
 						</div>
 						<div class="text-muted-foreground text-xs">Total amount received</div>
@@ -835,12 +835,12 @@
 
 			<!-- Total Trading Volume -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-muted-foreground text-sm font-medium">Total Trading Volume</div>
-						<Badge variant="outline" class="text-xs">All Time</Badge>
+						<Badge variant="outline" class="hidden shrink-0 text-xs sm:inline-flex">All Time</Badge>
 					</div>
-					<div class="mt-1 text-2xl font-bold">
+					<div class="mt-1 text-xl font-bold sm:text-2xl">
 						{formatValue(totalTradingVolumeAllTime)}
 					</div>
 					<div class="text-muted-foreground text-xs">
@@ -851,12 +851,12 @@
 
 			<!-- 24h Trading Volume -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-muted-foreground text-sm font-medium">24h Trading Volume</div>
-						<Badge variant="outline" class="text-xs">24h</Badge>
+						<Badge variant="outline" class="hidden shrink-0 text-xs sm:inline-flex">24h</Badge>
 					</div>
-					<div class="mt-1 text-2xl font-bold">
+					<div class="mt-1 text-xl font-bold sm:text-2xl">
 						{formatValue(totalTradingVolume24h)}
 					</div>
 					<div class="text-muted-foreground text-xs">
@@ -867,15 +867,15 @@
 		</div>
 
 		<!-- Arcade Stats -->
-		<div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
+		<div class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
 			<!-- Total Wins -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-foreground text-sm font-medium">Total Wins</div>
 						<HugeiconsIcon icon={TradeUpIcon} class="text-success h-4 w-4" />
 					</div>
-					<div class="text-success mt-1 text-2xl font-bold">
+					<div class="text-success mt-1 text-xl font-bold sm:text-2xl">
 						{formatValue(arcadeWins)}
 					</div>
 					<div class="text-muted-foreground text-xs">Total arcade winnings</div>
@@ -884,12 +884,12 @@
 
 			<!-- Total Losses -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-foreground text-sm font-medium">Total Losses</div>
 						<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4 text-red-600" />
 					</div>
-					<div class="mt-1 text-2xl font-bold text-red-600">
+					<div class="mt-1 text-xl font-bold sm:text-2xl text-red-600">
 						{formatValue(arcadeLosses)}
 					</div>
 					<div class="text-muted-foreground text-xs">Total arcade losses</div>
@@ -898,12 +898,12 @@
 
 			<!-- Win Rate -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-muted-foreground text-sm font-medium">Win Rate</div>
 						<HugeiconsIcon icon={PercentIcon} class="text-muted-foreground h-4 w-4" />
 					</div>
-					<div class="mt-1 text-2xl font-bold">
+					<div class="mt-1 text-xl font-bold sm:text-2xl">
 						{winRate}%
 					</div>
 					<div class="text-muted-foreground text-xs">Percentage of wins</div>
@@ -912,11 +912,11 @@
 
 			<!-- Net Profit -->
 			<Card.Root class="py-0">
-				<Card.Content class="p-4">
-					<div class="flex items-center justify-between">
+				<Card.Content class="p-3 sm:p-4">
+					<div class="flex items-start justify-between gap-2">
 						<div class="text-muted-foreground text-sm font-medium">Net Profit</div>
 					</div>
-					<div class="mt-1 text-2xl font-bold" class:text-success={netProfit >= 0} class:text-red-600={netProfit < 0}>
+					<div class="mt-1 text-xl font-bold sm:text-2xl" class:text-success={netProfit >= 0} class:text-red-600={netProfit < 0}>
 						{#if netProfit >= 0}
 							{formatValue(netProfit)}
 						{:else}
@@ -989,6 +989,7 @@
 				<Card.Content class="p-0">
 					<DataTable
 						columns={holdingsColumns}
+						mobileColumnOrder={['coin', 'value', 'change24h']}
 						data={holdings}
 						onRowClick={(holding) => goto(`/coin/${holding.symbol}`)}
 					/>
@@ -1009,6 +1010,7 @@
 				<Card.Content class="p-0">
 					<DataTable
 						columns={createdCoinsColumns}
+						mobileColumnOrder={['coin', 'currentPrice', 'change24h']}
 						data={profileData.createdCoins}
 						onRowClick={(coin) => goto(`/coin/${coin.symbol}`)}
 					/>
@@ -1028,6 +1030,7 @@
 			<Card.Content class="p-0">
 				<DataTable
 					columns={transactionsColumns}
+					mobileColumnOrder={['type', 'coin', 'totalBaseCurrencyAmount']}
 					data={recentTransactions}
 					emptyIcon={Invoice03Icon}
 					emptyTitle="No recent activity"

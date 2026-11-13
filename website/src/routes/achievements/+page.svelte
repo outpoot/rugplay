@@ -141,7 +141,7 @@
 	keywords="crypto game achievements, trading simulator challenges, virtual trading rewards"
 />
 
-<div class="container mx-auto max-w-7xl p-4 md:p-6">
+<div class="container mx-auto max-w-7xl py-4 md:p-6">
 	<header class="mb-6 md:mb-8">
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 			<div>
@@ -180,7 +180,9 @@
 	</header>
 
 	<!-- Category filter -->
-	<div class="mb-6 flex flex-wrap gap-2">
+	<div
+		class="scrollbar-none -mx-4 mb-6 flex gap-2 overflow-x-auto overscroll-x-contain px-4 sm:mx-0 sm:flex-wrap sm:px-0 [&>*]:shrink-0"
+	>
 		<Button
 			variant={selectedCategory === 'all' ? 'default' : 'outline'}
 			size="sm"

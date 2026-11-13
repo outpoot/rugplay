@@ -6,7 +6,7 @@
 	import CoinIcon from './CoinIcon.svelte';
 	import UserProfilePreview from './UserProfilePreview.svelte';
 	import UserName from './UserName.svelte';
-	import { getPublicUrl } from '$lib/utils';
+	import { cn, getPublicUrl } from '$lib/utils';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { ArrowUp01Icon, ArrowDown01Icon, ArrowUpDownIcon } from '@hugeicons/core-free-icons';
 
@@ -27,7 +27,8 @@
 		emptyIcon,
 		emptyTitle = 'No data',
 		emptyDescription = '',
-		enableUserPreview = false
+		enableUserPreview = false,
+		mobileColumnOrder
 	}: {
 		columns: Column[];
 		data: any[];
@@ -37,7 +38,39 @@
 		emptyTitle?: string;
 		emptyDescription?: string;
 		enableUserPreview?: boolean;
+		mobileColumnOrder?: string[];
 	} = $props();
+
+	let displayColumns = $derived.by(() => {
+		const plain = columns.map((col) => ({
+			column: col,
+			id: col.key,
+			headClass: col.class || 'min-w-[80px]',
+			cellClass: col.class
+		}));
+		if (!mobileColumnOrder?.length) return plain;
+		const phoneFirst = mobileColumnOrder
+			.map((key) => columns.find((col) => col.key === key))
+			.filter((col): col is Column => !!col)
+			.map((col) => ({
+				column: col,
+				id: `${col.key}:phone`,
+				headClass: cn(col.class || 'min-w-[80px]', 'sm:hidden'),
+				cellClass: cn(col.class, 'sm:hidden')
+			}));
+		return [
+			...phoneFirst,
+			...plain.map((entry) =>
+				mobileColumnOrder.includes(entry.id)
+					? {
+							...entry,
+							headClass: cn(entry.headClass, 'max-sm:hidden'),
+							cellClass: cn(entry.cellClass, 'max-sm:hidden')
+						}
+					: entry
+			)
+		];
+	});
 
 	const defaultSortColumn = $derived(columns.find((col) => col.defaultSort));
 	let sortColumn = $state<string | null>(null);
@@ -154,8 +187,8 @@
 	<Table.Root>
 		<Table.Header>
 			<Table.Row>
-				{#each columns as column (column.key)}
-					<Table.Head class={column.class || 'min-w-[80px]'}>
+				{#each displayColumns as { column, id, headClass } (id)}
+					<Table.Head class={headClass}>
 						{#if column.sortable}
 							<button
 								onclick={() => handleSort(column.key)}
@@ -182,11 +215,11 @@
 		<Table.Body>
 			{#each sortedData as row, index (row.symbol || row.id || index)}
 				<Table.Row
-					class={onRowClick ? 'hover:bg-muted/50 cursor-pointer transition-colors' : ''}
+					class={onRowClick ? 'hover:bg-muted/50 pointer-coarse:active:bg-muted cursor-pointer transition-colors' : ''}
 					onclick={onRowClick ? () => onRowClick(row) : undefined}
 				>
-					{#each columns as column (column.key)}
-						<Table.Cell class={column.class}>
+					{#each displayColumns as { column, id, cellClass } (id)}
+						<Table.Cell class={cellClass}>
 							{@const cellData = renderCell(column, row, row[column.key], index)}
 							{#if cellData.type === 'badge'}
 								<Badge variant={cellData.variant} class={cellData.class}>
@@ -198,14 +231,14 @@
 									{cellData.text}
 								</Badge>
 							{:else if cellData.type === 'coin'}
-								<div class="flex items-center gap-2">
+								<div class="flex min-w-0 items-center gap-2">
 									<CoinIcon icon={cellData.icon} symbol={cellData.symbol} size={cellData.size} />
-									<span class="font-medium max-w-44 truncate">{cellData.name}</span>
+									<span class="max-w-[6.5rem] truncate font-medium sm:max-w-44">{cellData.name}</span>
 								</div>
 							{:else if cellData.type === 'rank'}
 								<div class="flex items-center gap-2">
 									<div
-										class={`${cellData.color} flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium`}
+										class={`${cellData.color} hidden h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium sm:flex`}
 									>
 										<HugeiconsIcon icon={cellData.icon} class="h-3.5 w-3.5" />
 									</div>
@@ -216,15 +249,15 @@
 									<HoverCard.Root>
 										<HoverCard.Trigger>
 											<div class="flex items-center gap-2">
-												<Avatar.Root class="h-7 w-7">
+												<Avatar.Root class="h-7 w-7 shrink-0">
 													<Avatar.Image src={getPublicUrl(cellData.image)} alt={cellData.name} />
 													<Avatar.Fallback class="text-xs">
 														{cellData.name?.charAt(0) || '?'}
 													</Avatar.Fallback>
 												</Avatar.Root>
-												<div class="flex flex-col items-start">
+												<div class="flex min-w-0 max-w-[7.5rem] flex-col items-start sm:max-w-[16rem]">
 													<UserName name={cellData.name} nameColor={cellData.nameColor} founderBadge={cellData.founderBadge} class="text-sm font-medium" />
-													<span class="text-muted-foreground text-xs">@{cellData.username}</span>
+													<span class="text-muted-foreground max-w-full truncate text-xs">@{cellData.username}</span>
 												</div>
 											</div>
 										</HoverCard.Trigger>
@@ -234,15 +267,15 @@
 									</HoverCard.Root>
 								{:else}
 									<div class="flex items-center gap-2">
-										<Avatar.Root class="h-7 w-7">
+										<Avatar.Root class="h-7 w-7 shrink-0">
 											<Avatar.Image src={getPublicUrl(cellData.image)} alt={cellData.name} />
 											<Avatar.Fallback class="text-xs"
 												>{cellData.name?.charAt(0) || '?'}</Avatar.Fallback
 											>
 										</Avatar.Root>
-										<div class="flex flex-col items-start">
+										<div class="flex min-w-0 max-w-[7.5rem] flex-col items-start sm:max-w-[16rem]">
 											<UserName name={cellData.name} nameColor={cellData.nameColor} founderBadge={cellData.founderBadge} class="text-sm font-medium" />
-											<span class="text-muted-foreground text-xs">@{cellData.username}</span>
+											<span class="text-muted-foreground max-w-full truncate text-xs">@{cellData.username}</span>
 										</div>
 									</div>
 								{/if}

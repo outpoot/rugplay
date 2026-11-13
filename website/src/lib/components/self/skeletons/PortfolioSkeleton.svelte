@@ -6,16 +6,18 @@
 
 <div class="container mx-auto max-w-7xl">
 	<!-- Portfolio Summary Cards -->
-	<div class="mb-6 grid grid-cols-1 gap-4 md:mb-8 lg:grid-cols-3">
-		{#each Array(3) as _}
-			<Card.Root class="gap-1 overflow-hidden">
-				<Card.Header>
+	<div class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 md:mb-8 lg:grid-cols-3">
+		{#each Array(3) as _, i}
+			<Card.Root
+				class="gap-1 overflow-hidden {i === 0 ? 'col-span-2 lg:col-span-1' : 'py-4 sm:py-6'}"
+			>
+				<Card.Header class={i === 0 ? '' : 'px-4 sm:px-6'}>
 					<Card.Title class="flex items-center gap-2">
 						<Skeleton class="h-4 w-4" />
 						<Skeleton class="h-4 w-16" />
 					</Card.Title>
 				</Card.Header>
-				<Card.Content>
+				<Card.Content class={i === 0 ? '' : 'px-4 sm:px-6'}>
 					<Skeleton class="h-8 w-24 md:h-9 md:w-32" />
 					<Skeleton class="mt-2 h-3 w-20 md:w-24" />
 				</Card.Content>

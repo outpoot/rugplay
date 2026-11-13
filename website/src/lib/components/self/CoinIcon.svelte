@@ -16,6 +16,7 @@
 	}>();
 
 	let sizeClass = $derived(`h-${size} w-${size}`);
+	let textClass = $derived(size <= 4 ? 'text-[7px]' : size <= 5 ? 'text-[9px]' : 'text-xs');
 	let failedIcon = $state<string | null>(null);
 </script>
 
@@ -23,15 +24,15 @@
 	<img
 		src={getPublicUrl(icon)}
 		alt={name}
-		class="{sizeClass} rounded-full object-cover {className}"
+		class="{sizeClass} shrink-0 rounded-full object-cover {className}"
 		loading="lazy"
 		decoding="async"
 		onerror={() => (failedIcon = icon ?? null)}
 	/>
 {:else}
 	<div
-		class="{sizeClass} bg-primary flex items-center justify-center overflow-hidden rounded-full {className}"
+		class="{sizeClass} bg-primary flex shrink-0 items-center justify-center overflow-hidden rounded-full {className}"
 	>
-		<span class="text-xs font-bold text-white">{symbol.slice(0, 2)}</span>
+		<span class="{textClass} font-bold leading-none text-white">{symbol.slice(0, 2)}</span>
 	</div>
 {/if}

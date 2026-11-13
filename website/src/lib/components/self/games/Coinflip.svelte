@@ -438,6 +438,7 @@
 					<Input
 						id="bet-amount"
 						type="text"
+						inputmode="decimal"
 						value={betAmountDisplay}
 						oninput={handleBetAmountInput}
 						onkeydown={(event: KeyboardEvent) => {

@@ -140,7 +140,7 @@
 		</div>
 	</div>
 {:else}
-	<div class="container mx-auto space-y-4 p-4">
+	<div class="container mx-auto space-y-4 py-4 sm:px-4">
 		<div class="flex items-center gap-2">
 			<HugeiconsIcon icon={Ticket01Icon} class="h-5 w-5" />
 			<h1 class="text-2xl font-bold">Promo Codes</h1>

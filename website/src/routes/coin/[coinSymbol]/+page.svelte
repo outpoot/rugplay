@@ -54,8 +54,13 @@
 	let userHolding = $state(0);
 	let userCostBasis = $state(0);
 	let chartRevision = $state(0);
-	let buyModalOpen = $state(false);
-	let sellModalOpen = $state(false);
+	let tradeOpen = $state(false);
+	let tradeType = $state<'BUY' | 'SELL'>('BUY');
+
+	function openTrade(side: 'BUY' | 'SELL') {
+		tradeType = side;
+		tradeOpen = true;
+	}
 	let selectedTimeframe = $state(data.timeframe || '1m');
 	let lastPriceUpdateTime = 0;
 	let shouldSignIn = $state(false);
@@ -190,6 +195,14 @@
 			}
 		};
 	});
+
+	function formatCompactChartPrice(price: number): string {
+		const abs = Math.abs(price);
+		if (abs >= 1000) return formatPrice(price);
+		if (abs >= 1) return price.toFixed(2);
+		if (abs === 0) return '0';
+		return Number(price.toPrecision(4)).toString();
+	}
 
 	async function loadCoinData({ recreateChart = false } = {}) {
 		const symbol = coinSymbol;
@@ -467,6 +480,8 @@
 					rightOffset: 5,
 					minBarSpacing: 8
 				},
+				// Let vertical swipes over the chart scroll the page on touch screens
+				handleScroll: { vertTouchDrag: false },
 				crosshair: {
 					mode: 1,
 					vertLine: { color: '#758696', width: 1, style: 2, visible: true, labelVisible: true },
@@ -481,7 +496,9 @@
 				borderDownColor: '#ef5350',
 				wickUpColor: '#26a69a',
 				wickDownColor: '#ef5350',
-				priceFormat: { type: 'price', precision: 8, minMove: 0.00000001 }
+				priceFormat: window.matchMedia('(max-width: 639px)').matches
+					? { type: 'custom', minMove: 0.00000001, formatter: formatCompactChartPrice }
+					: { type: 'price', precision: 8, minMove: 0.00000001 }
 			});
 
 			volumeSeries = chart.addSeries(
@@ -612,7 +629,7 @@
 	function handleShortcut(event: KeyboardEvent) {
 		if (event.defaultPrevented || event.repeat) return;
 		if (event.ctrlKey || event.metaKey || event.altKey) return;
-		if (buyModalOpen || sellModalOpen) return;
+		if (tradeOpen) return;
 
 		const target = event.target as HTMLElement | null;
 		if (
@@ -624,10 +641,10 @@
 		const key = event.key.toLowerCase();
 		if (key === 'b' && canBuy) {
 			event.preventDefault();
-			buyModalOpen = true;
+			openTrade('BUY');
 		} else if (key === 's' && canSell) {
 			event.preventDefault();
-			sellModalOpen = true;
+			openTrade('SELL');
 		}
 	}
 
@@ -655,16 +672,16 @@
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
 {#if coin}
-	<TradeModal bind:open={buyModalOpen} type="BUY" {coin} onSuccess={handleTradeSuccess} />
 	<TradeModal
-		bind:open={sellModalOpen}
-		type="SELL"
+		bind:open={tradeOpen}
+		bind:type={tradeType}
+		switchable
 		{coin}
 		{userHolding}
 		onSuccess={handleTradeSuccess}
 	/>
 {/if}
-<div class="container mx-auto max-w-7xl p-6">
+<div class="container mx-auto max-w-7xl py-6 sm:px-6">
 	{#if !coin}
 		<div class="flex h-96 items-center justify-center">
 			<div class="text-center">
@@ -766,7 +783,7 @@
 			{/if}
 		</header>
 
-		<div class="grid gap-6">
+		<div class="grid grid-cols-1 gap-6">
 			<!-- Price Chart with Trading Actions -->
 			<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 				<!-- Chart (2/3 width) -->
@@ -803,12 +820,12 @@
 						</Card.Header>
 						<Card.Content class="flex-1 pt-0">
 							{#if chartData.length === 0}
-								<div class="flex h-full min-h-[500px] items-center justify-center">
+								<div class="flex h-full min-h-[320px] items-center justify-center sm:min-h-[500px]">
 									<p class="text-muted-foreground">No trading data available yet</p>
 								</div>
 							{:else}
 								<div
-									class="h-full min-h-[500px] w-full transition-opacity {chartLoading
+									class="h-full min-h-[320px] w-full transition-opacity sm:min-h-[500px] {chartLoading
 										? 'pointer-events-none opacity-40'
 										: ''}"
 									aria-busy={chartLoading}
@@ -822,7 +839,7 @@
 				<!-- Right side - Trading Actions + Liquidity Pool + Top Holders (1/3 width) -->
 				<div class="space-y-6 lg:col-span-1">
 					<!-- Trading Actions -->
-					<Card.Root>
+					<Card.Root class={userHolding > 0 || isTradingLocked ? '' : 'hidden lg:flex'}>
 						<Card.Header>
 							<Card.Title>Trade {coin.symbol}</Card.Title>
 							{#if userHolding > 0}
@@ -862,14 +879,14 @@
 								</p>
 							{/if}
 						</Card.Header>
-						<Card.Content>
+						<Card.Content class="hidden lg:block">
 							{#if $USER_DATA}
 								<div class="space-y-3">
 									<Button
 										class="relative w-full"
 										variant="default"
 										size="lg"
-										onclick={() => (buyModalOpen = true)}
+										onclick={() => openTrade('BUY')}
 										disabled={!canBuy}
 									>
 										<HugeiconsIcon icon={TradeUpIcon} class="h-4 w-4" />
@@ -880,7 +897,7 @@
 										class="relative w-full"
 										variant="outline"
 										size="lg"
-										onclick={() => (sellModalOpen = true)}
+										onclick={() => openTrade('SELL')}
 										disabled={!canSell}
 									>
 										<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4" />
@@ -941,7 +958,7 @@
 			</div>
 
 			<!-- Statistics Grid -->
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+			<div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
 				<!-- Market Cap -->
 				<Card.Root class="gap-1">
 					<Card.Header>
@@ -983,7 +1000,7 @@
 					<Card.Content>
 						<p class="text-xl font-bold">
 							{formatSupply(coin.circulatingSupply)}<span
-								class="text-muted-foreground ml-1 text-xs"
+								class="text-muted-foreground block text-xs font-normal sm:ml-1 sm:inline sm:font-bold"
 							>
 								of {formatSupply(coin.initialSupply)} total
 							</span>
@@ -1013,6 +1030,73 @@
 
 			<!-- Comments Section -->
 			<CommentSection {coinSymbol} />
+		</div>
+
+		<div
+			class="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 z-20 -mx-4 mt-6 border-t px-4 pb-3 pt-3 backdrop-blur max-md:bottom-[calc(3.5rem+env(safe-area-inset-bottom))] sm:-mx-10 sm:px-10 md:pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden [:root[data-typing]_&]:max-md:hidden"
+		>
+			{#if $USER_DATA && userHolding > 0}
+				<div class="text-muted-foreground mb-2 flex items-center justify-between gap-3 text-xs">
+					<span class="truncate">
+						You own
+						<span class="text-foreground font-mono font-medium">{formatSupply(userHolding)}</span>
+						· {formatMarketCap(positionValue)}
+					</span>
+					{#if positionProfit !== null && positionProfitPercent !== null}
+						<span
+							class="shrink-0 font-mono font-medium {positionProfit >= 0
+								? 'text-success'
+								: 'text-red-500'}"
+						>
+							P&L {positionProfit >= 0 ? '+' : ''}{positionProfitPercent.toFixed(2)}%
+						</span>
+					{/if}
+				</div>
+			{/if}
+			<div class="flex items-center gap-2">
+				<div class="min-w-0 flex-1">
+					<p class="truncate font-mono text-base font-bold leading-tight">
+						${formatPrice(coin.currentPrice)}
+					</p>
+					<p
+						class="truncate text-xs font-medium leading-tight {coin.change24h >= 0
+							? 'text-success'
+							: 'text-red-500'}"
+					>
+						{coin.change24h >= 0 ? '+' : ''}{Number(coin.change24h).toFixed(2)}% · 24h
+					</p>
+				</div>
+				{#if $USER_DATA}
+					<Button
+						variant="outline"
+						size="lg"
+						class="h-11 px-5"
+						disabled={!canSell}
+						onclick={() => openTrade('SELL')}
+					>
+						<HugeiconsIcon icon={TradeDownIcon} class="h-4 w-4" />
+						Sell
+					</Button>
+					<Button
+						size="lg"
+						class="h-11 px-6"
+						disabled={!canBuy}
+						onclick={() => openTrade('BUY')}
+					>
+						<HugeiconsIcon icon={TradeUpIcon} class="h-4 w-4" />
+						Buy
+					</Button>
+				{:else}
+					<Button size="lg" class="h-11" onclick={() => (shouldSignIn = true)}>
+						Sign in to trade
+					</Button>
+				{/if}
+			</div>
+			{#if isTradingLocked && !isCreator}
+				<p class="text-muted-foreground mt-2 text-xs">
+					🔒 Trading unlocks in {countdown !== null ? formatCountdown(countdown) : ''}
+				</p>
+			{/if}
 		</div>
 	{/if}
 </div>

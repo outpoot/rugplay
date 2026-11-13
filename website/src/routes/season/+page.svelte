@@ -141,7 +141,7 @@
 />
 <SignInConfirmDialog bind:open={shouldSignIn} />
 
-<div class="container mx-auto max-w-5xl px-4 py-6">
+<div class="container mx-auto max-w-5xl py-6 sm:px-4">
 	{#if loading}
 		<SeasonSkeleton />
 	{:else if !season}
@@ -167,7 +167,7 @@
 					Current season
 				</a>
 			{/if}
-			<div class="flex items-start justify-between gap-4">
+			<div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
 				<h1 class="flex min-w-0 flex-wrap items-center gap-2 text-2xl font-bold sm:text-3xl">
 					<span class="truncate">{season.name}</span>
 					{#if archived}
@@ -176,12 +176,12 @@
 						<Badge variant="success" class="shrink-0">Live</Badge>
 					{/if}
 				</h1>
-				<div class="shrink-0 text-right">
+				<div class="flex shrink-0 items-baseline gap-2 sm:block sm:text-right">
 					{#if archived}
 						<div class="text-lg font-semibold sm:text-xl">{formatDate(season.endedAt)}</div>
 						<div class="text-muted-foreground text-xs">final standings</div>
 					{:else}
-						<div class="font-mono text-2xl font-bold tabular-nums sm:text-3xl">{countdown}</div>
+						<div class="font-mono text-xl font-bold tabular-nums sm:text-3xl">{countdown}</div>
 						<div class="text-muted-foreground text-xs">remaining</div>
 					{/if}
 				</div>
@@ -229,13 +229,13 @@
 						{archived ? 'No standings were recorded for this season.' : 'No one has entered yet. Be the first.'}
 					</p>
 				{:else}
-					<div class="-mx-2 overflow-x-auto">
-						<div class="min-w-[420px] px-2">
+					<div class="-mx-2">
+						<div class="px-2">
 							{#each leaderboard as entry (entry.userId)}
 								<HoverCard.Root openDelay={200} closeDelay={100}>
 									<HoverCard.Trigger
 										href={`/user/${entry.username}`}
-										class="hover:bg-muted/60 flex items-center gap-3 rounded-md px-2 py-2 transition-colors {me?.userId ===
+										class="hover:bg-muted/60 flex items-center gap-2 rounded-md px-2 py-2 transition-colors sm:gap-3 {me?.userId ===
 									entry.userId
 										? 'bg-muted/40'
 										: ''}"
@@ -264,19 +264,23 @@
 									</Avatar.Root>
 									<span class="min-w-0 flex-1 truncate text-sm font-medium">
 										<UserName name={entry.name ?? entry.username} nameColor={entry.nameColor} />
-										<span class="text-muted-foreground font-normal">(@{entry.username})</span>
+										<span class="text-muted-foreground hidden font-normal sm:inline">(@{entry.username})</span>
 									</span>
 									<span
-										class="w-16 shrink-0 text-right font-mono text-xs tabular-nums {entry.growth >= 1
-											? 'text-success'
-											: 'text-destructive'}"
+										class="flex shrink-0 flex-col items-end leading-tight sm:flex-row sm:items-center sm:gap-3"
 									>
-										{entry.growth.toFixed(2)}x
-									</span>
-									<span
-										class="w-24 shrink-0 text-right font-mono text-sm font-semibold tabular-nums"
-									>
-										{formatValue(entry.score)}
+										<span
+											class="order-2 text-right font-mono text-[10px] tabular-nums sm:order-1 sm:w-16 sm:text-xs {entry.growth >= 1
+												? 'text-success'
+												: 'text-destructive'}"
+										>
+											{entry.growth.toFixed(2)}x
+										</span>
+										<span
+											class="order-1 text-right font-mono text-sm font-semibold tabular-nums sm:order-2 sm:w-24"
+										>
+											{formatValue(entry.score)}
+										</span>
 									</span>
 									</HoverCard.Trigger>
 									<HoverCard.Content class="w-80" side="top" sideOffset={14} customAnchor={cursorAnchor}>
@@ -287,7 +291,7 @@
 
 							{#if showOwnRow}
 								<Separator class="my-2" />
-								<div class="bg-muted/40 flex items-center gap-3 rounded-md px-2 py-2">
+								<div class="bg-muted/40 flex items-center gap-2 rounded-md px-2 py-2 sm:gap-3">
 									<span class="w-7 shrink-0 text-center text-sm font-semibold tabular-nums">
 										{me.rank}
 									</span>
@@ -299,14 +303,20 @@
 									</Avatar.Root>
 									<span class="min-w-0 flex-1 truncate text-sm font-medium">You</span>
 									<span
-										class="w-16 shrink-0 text-right font-mono text-xs tabular-nums {me.growth >= 1
-											? 'text-success'
-											: 'text-destructive'}"
+										class="flex shrink-0 flex-col items-end leading-tight sm:flex-row sm:items-center sm:gap-3"
 									>
-										{me.growth.toFixed(2)}x
-									</span>
-									<span class="w-24 shrink-0 text-right font-mono text-sm font-semibold tabular-nums">
-										{formatValue(me.score)}
+										<span
+											class="order-2 text-right font-mono text-[10px] tabular-nums sm:order-1 sm:w-16 sm:text-xs {me.growth >= 1
+												? 'text-success'
+												: 'text-destructive'}"
+										>
+											{me.growth.toFixed(2)}x
+										</span>
+										<span
+											class="order-1 text-right font-mono text-sm font-semibold tabular-nums sm:order-2 sm:w-24"
+										>
+											{formatValue(me.score)}
+										</span>
 									</span>
 								</div>
 							{/if}

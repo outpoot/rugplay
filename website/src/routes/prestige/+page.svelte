@@ -193,7 +193,7 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-<div class="container mx-auto max-w-7xl p-6">
+<div class="container mx-auto max-w-7xl py-6 sm:px-6">
 	<header class="mb-8">
 		<div class="text-center">
 			<div class="mb-2 flex items-center justify-center gap-3">

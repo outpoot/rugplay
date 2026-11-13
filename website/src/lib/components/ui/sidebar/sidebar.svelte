@@ -4,6 +4,7 @@
 	import type { HTMLAttributes } from "svelte/elements";
 	import { SIDEBAR_WIDTH_MOBILE } from "./constants.js";
 	import { useSidebar } from "./context.svelte.js";
+	import { swipeToDismiss } from "$lib/utils/swipe-dismiss";
 
 	let {
 		ref = $bindable(null),
@@ -20,6 +21,17 @@
 	} = $props();
 
 	const sidebar = useSidebar();
+
+	let mobileSheet = $state<HTMLElement | null>(null);
+	$effect(() => {
+		if (!mobileSheet || side !== "left") return;
+		return swipeToDismiss(mobileSheet, {
+			direction: "left",
+			onDismiss: () => sidebar.setOpenMobile(false),
+			getBackdrop: () =>
+				document.querySelector<HTMLElement>('[data-slot="sheet-overlay"][data-state="open"]')
+		});
+	});
 </script>
 
 {#if collapsible === "none"}
@@ -39,6 +51,7 @@
 		{...restProps}
 	>
 		<Sheet.Content
+			bind:ref={mobileSheet}
 			data-sidebar="sidebar"
 			data-slot="sidebar"
 			data-mobile="true"

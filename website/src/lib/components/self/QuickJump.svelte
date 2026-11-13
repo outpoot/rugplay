@@ -403,6 +403,7 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
+		sheet={false}
 		class="top-[12%] translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-xl [&>button:last-child]:hidden"
 	>
 		<Dialog.Title class="sr-only">Quick jump</Dialog.Title>
@@ -424,6 +425,9 @@
 				autocomplete="off"
 				spellcheck="false"
 				placeholder="Search coins, players, predictions, pages..."
+				enterkeyhint="search"
+				autocapitalize="off"
+				autocorrect="off"
 				class="placeholder:text-muted-foreground h-12 w-full bg-transparent text-sm outline-none"
 			/>
 			<Kbd class="text-muted-foreground hidden sm:inline-flex">Esc</Kbd>

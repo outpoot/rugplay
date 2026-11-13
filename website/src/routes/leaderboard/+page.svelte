@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PullToRefresh from '$lib/components/self/PullToRefresh.svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import DataTable from '$lib/components/self/DataTable.svelte';
@@ -120,6 +121,7 @@
 		{
 			key: 'rank',
 			label: 'Rank',
+			class: 'w-12 sm:w-auto sm:min-w-[80px]',
 			render: (value: any, row: any, index: number) => {
 				const rankInfo = getRankIcon(index);
 				return {
@@ -154,6 +156,7 @@
 		{
 			key: 'rank',
 			label: 'Rank',
+			class: 'w-12 sm:w-auto sm:min-w-[80px]',
 			render: (value: any, row: any, index: number) => {
 				const rankInfo = getRankIcon(index);
 				return {
@@ -188,6 +191,7 @@
 		{
 			key: 'rank',
 			label: 'Rank',
+			class: 'w-12 sm:w-auto sm:min-w-[80px]',
 			render: (value: any, row: any, index: number) => {
 				const rankInfo = getRankIcon(index);
 				return {
@@ -222,6 +226,7 @@
 		{
 			key: 'rank',
 			label: 'Rank',
+			class: 'w-12 sm:w-auto sm:min-w-[80px]',
 			render: (value: any, row: any, index: number) => {
 				const rankInfo = getRankIcon(index);
 				return {
@@ -272,7 +277,9 @@
 	keywords="crypto game leaderboard, trading simulation rankings, virtual portfolio rankings, crypto game winners"
 />
 
-<div class="container mx-auto max-w-7xl p-4 md:p-6">
+<PullToRefresh onRefresh={() => fetchLeaderboardData()} />
+
+<div class="container mx-auto max-w-7xl py-4 md:p-6">
 	<header class="mb-6 md:mb-8">
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 			<div>
@@ -285,6 +292,10 @@
 					<Input
 						type="text"
 						placeholder="Search by username..."
+						enterkeyhint="search"
+						autocapitalize="off"
+						autocorrect="off"
+						spellcheck="false"
 						class="flex-grow pl-10"
 						bind:value={searchQuery}
 						onkeydown={handleSearchKeydown}

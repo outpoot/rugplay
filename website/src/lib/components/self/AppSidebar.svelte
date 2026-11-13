@@ -388,10 +388,10 @@
 								</div>
 							</div>
 						{:else}
-							<div class="flex items-center justify-between">
+							<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
 								<div class="flex items-center gap-2">
 									<HugeiconsIcon icon={Wallet01Icon} class="text-muted-foreground h-4 w-4" />
-									<span class="text-sm font-medium">Total Value</span>
+									<span class="whitespace-nowrap text-sm font-medium">Total Value</span>
 								</div>
 								<Badge variant="secondary" class="font-mono">
 									${formatCurrency($PORTFOLIO_SUMMARY.totalValue)}
